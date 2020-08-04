@@ -7,19 +7,10 @@ This module offers an annotation based Kubernetes extension implementation for b
 ```ballerina
 import ballerina/http;
 import ballerina/log;
-import ballerinax/kubernetes;
+import ballerina/c2c as _;
 
-@kubernetes:Ingress{
-    hostname: "abc.com"
-}
-@kubernetes:Service {
-    name:"hello"
-}
 listener http:Listener helloEP = new(9090);
 
-@kubernetes:Deployment {
-    livenessProbe: true
-}
 @http:ServiceConfig {
     basePath: "/helloWorld"
 }

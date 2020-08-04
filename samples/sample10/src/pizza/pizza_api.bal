@@ -7,7 +7,7 @@ listener http:Listener pizzaEP = new(9099);
 @http:ServiceConfig {
     basePath: "/pizza"
 }
-service s1 = service PizzaAPI on pizzaEP {
+service PizzaAPI on pizzaEP {
     @http:ResourceConfig {
         methods: ["GET"],
         path: "/menu"

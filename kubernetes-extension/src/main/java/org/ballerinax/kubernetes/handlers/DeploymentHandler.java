@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -52,6 +52,7 @@ import org.ballerinax.kubernetes.models.ProbeModel;
 import org.ballerinax.kubernetes.models.SecretModel;
 import org.ballerinax.kubernetes.models.ServiceAccountTokenModel;
 import org.ballerinax.kubernetes.utils.KubernetesUtils;
+import org.ballerinax.kubernetes.utils.TomlResolver;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -263,6 +264,9 @@ public class DeploymentHandler extends AbstractArtifactHandler {
      * @throws KubernetesPluginException If an error occurs while generating artifact.
      */
     private void generate(DeploymentModel deploymentModel) throws KubernetesPluginException {
+
+        TomlResolver toml = new TomlResolver(KubernetesContext.getInstance().getDataHolder().getBallerinaCloudPath());
+        deploymentModel.setReplicas(Math.toIntExact(toml.getToml().getLong("cloud.deployment.replicas", (long) 2)));
         List<ContainerPort> containerPorts = null;
         if (deploymentModel.getPorts() != null) {
             containerPorts = populatePorts(deploymentModel.getPorts());

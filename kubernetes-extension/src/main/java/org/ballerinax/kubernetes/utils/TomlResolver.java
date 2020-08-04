@@ -5,8 +5,8 @@ import com.moandjiezana.toml.Toml;
 import java.io.File;
 import java.nio.file.Path;
 
-/*
-    Toml Resolver class.
+/**
+ * Toml Resolver class.
  */
 public class TomlResolver {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -122,10 +122,5 @@ public class ArtifactManager {
     private void setDefaultKubernetesInstructions() {
         instructions.put("\tExecute the below command to deploy the Kubernetes artifacts: ",
                 "\tkubectl apply -f " + this.kubernetesDataHolder.getK8sArtifactOutputPath().toAbsolutePath());
-
-        DeploymentModel model = this.kubernetesDataHolder.getDeploymentModel();
-        instructions.put("\tExecute the below command to install the application using Helm: ",
-                "\thelm install --name " + model.getName() + " " +
-                        this.kubernetesDataHolder.getK8sArtifactOutputPath().resolve(model.getName()).toAbsolutePath());
     }
 }

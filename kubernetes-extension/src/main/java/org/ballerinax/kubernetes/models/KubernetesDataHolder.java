@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -38,7 +38,6 @@ public class KubernetesDataHolder {
     private Map<String, ServiceModel> bListenerToK8sServiceMap;
     private Map<String, Set<SecretModel>> bListenerToSecretMap;
     private Set<SecretModel> secretModelSet;
-    private Set<IngressModel> ingressModelSet;
     private Set<ConfigMapModel> configMapModelSet;
     private Set<PersistentVolumeClaimModel> volumeClaimModelSet;
     private Set<ResourceQuotaModel> resourceQuotaModels;
@@ -58,7 +57,6 @@ public class KubernetesDataHolder {
         this.secretModelSet = new HashSet<>();
         this.configMapModelSet = new HashSet<>();
         this.volumeClaimModelSet = new HashSet<>();
-        this.ingressModelSet = new HashSet<>();
         this.deploymentModel = new DeploymentModel();
         this.resourceQuotaModels = new HashSet<>();
         this.dockerModel = new DockerModel();
@@ -130,18 +128,6 @@ public class KubernetesDataHolder {
 
     public void addBListenerToK8sServiceMap(String listenerName, ServiceModel serviceModel) {
         this.bListenerToK8sServiceMap.put(listenerName, serviceModel);
-    }
-
-    public ServiceModel getServiceModel(String listener) {
-        return bListenerToK8sServiceMap.get(listener);
-    }
-
-    public Set<IngressModel> getIngressModelSet() {
-        return ingressModelSet;
-    }
-
-    public void addIngressModel(IngressModel ingressModel) {
-        this.ingressModelSet.add(ingressModel);
     }
 
     public JobModel getJobModel() {

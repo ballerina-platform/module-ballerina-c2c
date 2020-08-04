@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -21,12 +21,9 @@ package org.ballerinax.kubernetes.processors;
 import org.ballerinalang.model.tree.AnnotationAttachmentNode;
 import org.ballerinalang.model.tree.ServiceNode;
 import org.ballerinalang.model.tree.SimpleVariableNode;
-import org.ballerinax.kubernetes.KubernetesConstants;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
 import org.ballerinax.kubernetes.models.KubernetesContext;
-import org.ballerinax.kubernetes.models.PrometheusModel;
 import org.ballerinax.kubernetes.models.ServiceModel;
-import org.wso2.ballerinalang.compiler.tree.BLangAnnotationAttachment;
 import org.wso2.ballerinalang.compiler.tree.BLangIdentifier;
 import org.wso2.ballerinalang.compiler.tree.BLangService;
 import org.wso2.ballerinalang.compiler.tree.BLangSimpleVariable;
@@ -40,9 +37,6 @@ import java.util.List;
 
 import static org.ballerinax.kubernetes.KubernetesConstants.SVC_POSTFIX;
 import static org.ballerinax.kubernetes.utils.KubernetesUtils.convertRecordFields;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getIntValue;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getMap;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getStringValue;
 import static org.ballerinax.kubernetes.utils.KubernetesUtils.getValidName;
 import static org.ballerinax.kubernetes.utils.KubernetesUtils.isBlank;
 
@@ -50,40 +44,6 @@ import static org.ballerinax.kubernetes.utils.KubernetesUtils.isBlank;
  * Service annotation processor.
  */
 public class ServiceAnnotationProcessor extends AbstractAnnotationProcessor {
-
-    /**
-     * Construct Prometheus Config.
-     *
-     * @param keyValue key values to extract configs
-     * @return PrometheusModel
-     * @throws KubernetesPluginException if an error occurs
-     */
-    private PrometheusModel getPrometheusConfig(BLangRecordLiteral.BLangRecordKeyValueField keyValue) throws
-            KubernetesPluginException {
-        PrometheusModel prometheusModel = new PrometheusModel();
-        for (BLangRecordLiteral.RecordField prometheusConfig : ((BLangRecordLiteral) keyValue.valueExpr).fields) {
-            BLangRecordLiteral.BLangRecordKeyValueField prometheusConfigKeyValue =
-                    ((BLangRecordLiteral.BLangRecordKeyValueField) prometheusConfig);
-            switch (prometheusConfigKeyValue.getKey().toString()) {
-                case "port":
-                    prometheusModel.setPort(
-                            getIntValue(((BLangRecordLiteral.BLangRecordKeyValueField) prometheusConfig).getValue()));
-                    break;
-                case "serviceType":
-                    prometheusModel.setServiceType(
-                            getStringValue(((BLangRecordLiteral.BLangRecordKeyValueField) prometheusConfig)
-                                    .getValue()));
-                    break;
-                case "nodePort":
-                    prometheusModel.setNodePort(
-                            getIntValue(((BLangRecordLiteral.BLangRecordKeyValueField) prometheusConfig).getValue()));
-                    break;
-                default:
-                    break;
-            }
-        }
-        return prometheusModel;
-    }
 
     @Override
     public void processAnnotation(ServiceNode serviceNode, AnnotationAttachmentNode attachmentNode) throws
@@ -96,7 +56,7 @@ public class ServiceAnnotationProcessor extends AbstractAnnotationProcessor {
                         "supported when the service has an anonymous listener");
             }
         }
-        ServiceModel serviceModel = getServiceModelFromAnnotation(attachmentNode);
+        ServiceModel serviceModel = new ServiceModel();
         if (isBlank(serviceModel.getName())) {
             serviceModel.setName(getValidName(serviceNode.getName().getValue()) + SVC_POSTFIX);
         }
@@ -133,7 +93,7 @@ public class ServiceAnnotationProcessor extends AbstractAnnotationProcessor {
     @Override
     public void processAnnotation(SimpleVariableNode variableNode, AnnotationAttachmentNode attachmentNode)
             throws KubernetesPluginException {
-        ServiceModel serviceModel = getServiceModelFromAnnotation(attachmentNode);
+        ServiceModel serviceModel = new ServiceModel();
         if (isBlank(serviceModel.getName())) {
             serviceModel.setName(getValidName(variableNode.getName().getValue()) + SVC_POSTFIX);
         }
@@ -199,53 +159,6 @@ public class ServiceAnnotationProcessor extends AbstractAnnotationProcessor {
         return false;
     }
 
-    private ServiceModel getServiceModelFromAnnotation(AnnotationAttachmentNode attachmentNode) throws
-            KubernetesPluginException {
-        ServiceModel serviceModel = new ServiceModel();
-        BLangRecordLiteral recordLiteral = (BLangRecordLiteral) ((BLangAnnotationAttachment) attachmentNode).expr;
-        List<BLangRecordLiteral.BLangRecordKeyValueField> keyValues = convertRecordFields(recordLiteral.getFields());
-        for (BLangRecordLiteral.BLangRecordKeyValueField keyValue : keyValues) {
-            ServiceConfiguration serviceConfiguration =
-                    ServiceConfiguration.valueOf(keyValue.getKey().toString());
-            switch (serviceConfiguration) {
-                case name:
-                    serviceModel.setName(getValidName(getStringValue(keyValue.getValue())));
-                    break;
-                case labels:
-                    serviceModel.setLabels(getMap(keyValue.getValue()));
-                    break;
-                case annotations:
-                    serviceModel.setAnnotations(getMap(keyValue.getValue()));
-                    break;
-                case serviceType:
-                    serviceModel.setServiceType(KubernetesConstants.ServiceType.valueOf(
-                            getStringValue(keyValue.getValue())).name());
-                    break;
-                case portName:
-                    serviceModel.setPortName(getStringValue(keyValue.getValue()));
-                    break;
-                case port:
-                    serviceModel.setPort(getIntValue(keyValue.getValue()));
-                    break;
-                case targetPort:
-                    serviceModel.setTargetPort(getIntValue(keyValue.getValue()));
-                    break;
-                case nodePort:
-                    serviceModel.setNodePort(getIntValue(keyValue.getValue()));
-                    break;
-                case sessionAffinity:
-                    serviceModel.setSessionAffinity(getStringValue(keyValue.getValue()));
-                    break;
-                case prometheus:
-                    serviceModel.setPrometheusModel(getPrometheusConfig(keyValue));
-                    break;
-                default:
-                    break;
-            }
-        }
-        return serviceModel;
-    }
-
     /**
      * Enum for Service configurations.
      */
@@ -254,11 +167,7 @@ public class ServiceAnnotationProcessor extends AbstractAnnotationProcessor {
         labels,
         annotations,
         serviceType,
-        portName,
         port,
-        targetPort,
-        nodePort,
-        sessionAffinity,
-        prometheus
+        sessionAffinity
     }
 }
