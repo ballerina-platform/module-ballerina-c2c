@@ -24,17 +24,8 @@ import org.ballerinalang.model.tree.ServiceNode;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
 import org.ballerinax.kubernetes.models.KubernetesContext;
 import org.ballerinax.kubernetes.models.PodAutoscalerModel;
-import org.wso2.ballerinalang.compiler.tree.BLangAnnotationAttachment;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangRecordLiteral;
-
-import java.util.List;
 
 import static org.ballerinax.kubernetes.KubernetesConstants.MAIN_FUNCTION_NAME;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.convertRecordFields;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getIntValue;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getMap;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getStringValue;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getValidName;
 
 /**
  * HPA annotation processor.
@@ -44,62 +35,22 @@ public class HPAAnnotationProcessor extends AbstractAnnotationProcessor {
     @Override
     public void processAnnotation(ServiceNode serviceNode, AnnotationAttachmentNode attachmentNode) throws
             KubernetesPluginException {
-        processHPA(attachmentNode);
+        processHPA();
     }
-    
+
     @Override
     public void processAnnotation(FunctionNode functionNode, AnnotationAttachmentNode attachmentNode) throws
             KubernetesPluginException {
         if (!MAIN_FUNCTION_NAME.equals(functionNode.getName().getValue())) {
             throw new KubernetesPluginException("@kubernetes:HPA{} annotation cannot be attached to a non main " +
-                                                "function.");
+                    "function.");
         }
-        
-        processHPA(attachmentNode);
+        processHPA();
     }
-    
-    private void processHPA(AnnotationAttachmentNode attachmentNode) throws KubernetesPluginException {
+
+    private void processHPA() {
         PodAutoscalerModel podAutoscalerModel = new PodAutoscalerModel();
-        List<BLangRecordLiteral.BLangRecordKeyValueField> keyValues =
-            convertRecordFields(((BLangRecordLiteral) ((BLangAnnotationAttachment) attachmentNode).expr).getFields());
-        for (BLangRecordLiteral.BLangRecordKeyValueField keyValue : keyValues) {
-            PodAutoscalerConfiguration podAutoscalerConfiguration =
-                    PodAutoscalerConfiguration.valueOf(keyValue.getKey().toString());
-            switch (podAutoscalerConfiguration) {
-                case name:
-                    podAutoscalerModel.setName(getValidName(getStringValue(keyValue.getValue())));
-                    break;
-                case labels:
-                    podAutoscalerModel.setLabels(getMap(keyValue.getValue()));
-                    break;
-                case annotations:
-                    podAutoscalerModel.setAnnotations(getMap(keyValue.getValue()));
-                    break;
-                case cpuPercentage:
-                    podAutoscalerModel.setCpuPercentage(getIntValue(keyValue.getValue()));
-                    break;
-                case minReplicas:
-                    podAutoscalerModel.setMinReplicas(getIntValue(keyValue.getValue()));
-                    break;
-                case maxReplicas:
-                    podAutoscalerModel.setMaxReplicas(getIntValue(keyValue.getValue()));
-                    break;
-                default:
-                    break;
-            }
-        }
         KubernetesContext.getInstance().getDataHolder().setPodAutoscalerModel(podAutoscalerModel);
     }
 
-    /**
-     * Enum class for pod autoscaler configurations.
-     */
-    private enum PodAutoscalerConfiguration {
-        name,
-        labels,
-        annotations,
-        minReplicas,
-        maxReplicas,
-        cpuPercentage
-    }
 }

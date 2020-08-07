@@ -87,7 +87,7 @@ public class ServiceHandler extends AbstractArtifactHandler {
     public void createArtifacts() throws KubernetesPluginException {
         // Service
         DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
-        Map<String, ServiceModel> serviceModels = dataHolder.getbListenerToK8sServiceMap();
+        Map<String, ServiceModel> serviceModels = dataHolder.getBListenerToK8sServiceMap();
         int count = 0;
         for (ServiceModel serviceModel : serviceModels.values()) {
             count++;

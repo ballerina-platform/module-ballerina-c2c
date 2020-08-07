@@ -1,4 +1,4 @@
-[container_image]
+[container.image]
 repository= "choreoctrlplane.azurecr.io/choreoipaas" # optional default is local
 name="linker" # optional
 tag="v0.1.1"  # default is latest
@@ -8,6 +8,7 @@ run_as="ballerina" # optional. Default is ballerina
 
 
 # This section specifies deployment related requirements
+[cloud]
 [cloud.deployment]
 # runtime requirements
 min_memory="100Mi" # optional
@@ -17,10 +18,9 @@ max_cpu="1500m" # optional
 replicas=3
 
 [cloud.deployment.autoscaling]
-enable=true
 min_replicas=2
 max_replicas=3
-scale_up_condition="cpu-utilization > 0.75"
+cpu=0.75
 
 [cloud.deployment.probes]
 readiness=":9091/readyz"

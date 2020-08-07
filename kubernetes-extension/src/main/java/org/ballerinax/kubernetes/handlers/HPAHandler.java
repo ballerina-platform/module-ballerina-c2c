@@ -18,6 +18,7 @@
 
 package org.ballerinax.kubernetes.handlers;
 
+import com.moandjiezana.toml.Toml;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerBuilder;
 import io.fabric8.kubernetes.api.model.MetricSpec;
@@ -66,13 +67,13 @@ public class HPAHandler extends AbstractArtifactHandler {
             throw new KubernetesPluginException(errorMessage, e);
         }
     }
-    
+
     private MetricSpec generateTargetCPUUtilizationPercentage(int percentage) {
         MetricTarget cpuMetricTarget = new MetricTargetBuilder()
                 .withType("Utilization")
                 .withAverageUtilization(percentage)
                 .build();
-    
+
         return new MetricSpecBuilder()
                 .withType("Resource")
                 .withNewResource()
@@ -80,6 +81,19 @@ public class HPAHandler extends AbstractArtifactHandler {
                 .withTarget(cpuMetricTarget)
                 .endResource()
                 .build();
+    }
+
+    private void resolveToml(PodAutoscalerModel hpa) {
+        Toml ballerinaCloud = dataHolder.getBallerinaCloud();
+        if (ballerinaCloud != null) {
+            final String autoscaling = "cloud.deployment.autoscaling.";
+            hpa.setMaxReplicas(Math.toIntExact(ballerinaCloud.getLong(autoscaling + "max_replicas",
+                    (long) hpa.getMaxReplicas())));
+            hpa.setMinReplicas(Math.toIntExact(ballerinaCloud.getLong(autoscaling + "min_replicas",
+                    (long) hpa.getMinReplicas())));
+            hpa.setCpuPercentage(Math.toIntExact(ballerinaCloud.getLong(autoscaling + "cpu",
+                    (long) hpa.getCpuPercentage())));
+        }
     }
 
     @Override

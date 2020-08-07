@@ -40,7 +40,7 @@ Follow the steps mentioned in "[Extend kubectl with plugins](https://kubernetes.
 . Check if the plugin is available using the command `kubectl plugin list`.
 
 
-### Annotation Usage Sample:
+### Usage Sample:
 
 ```ballerina
 import ballerina/http;

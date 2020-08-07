@@ -19,6 +19,7 @@
 package org.ballerinax.kubernetes.handlers;
 
 
+import com.moandjiezana.toml.Toml;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -52,7 +53,6 @@ import org.ballerinax.kubernetes.models.ProbeModel;
 import org.ballerinax.kubernetes.models.SecretModel;
 import org.ballerinax.kubernetes.models.ServiceAccountTokenModel;
 import org.ballerinax.kubernetes.utils.KubernetesUtils;
-import org.ballerinax.kubernetes.utils.TomlResolver;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -257,6 +257,17 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         return imagePullSecrets;
     }
 
+    private void resolveToml() {
+        Toml ballerinaCloud = dataHolder.getBallerinaCloud();
+        if (ballerinaCloud != null) {
+            DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
+            deploymentModel.setReplicas(Math.toIntExact(ballerinaCloud.getLong("cloud.deployment.replicas",
+                    (long) deploymentModel.getReplicas())));
+            String probes = ballerinaCloud.getString("cloud.deployment.probes.readiness");
+
+        }
+    }
+
     /**
      * Generate kubernetes deployment definition from annotation.
      *
@@ -264,9 +275,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
      * @throws KubernetesPluginException If an error occurs while generating artifact.
      */
     private void generate(DeploymentModel deploymentModel) throws KubernetesPluginException {
-
-        TomlResolver toml = new TomlResolver(KubernetesContext.getInstance().getDataHolder().getBallerinaCloudPath());
-        deploymentModel.setReplicas(Math.toIntExact(toml.getToml().getLong("cloud.deployment.replicas", (long) 2)));
+        resolveToml();
         List<ContainerPort> containerPorts = null;
         if (deploymentModel.getPorts() != null) {
             containerPorts = populatePorts(deploymentModel.getPorts());

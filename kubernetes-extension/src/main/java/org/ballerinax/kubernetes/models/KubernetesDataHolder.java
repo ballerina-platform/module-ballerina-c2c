@@ -18,6 +18,8 @@
 
 package org.ballerinax.kubernetes.models;
 
+import com.moandjiezana.toml.Toml;
+import lombok.Data;
 import org.ballerinalang.model.elements.PackageID;
 import org.ballerinax.docker.generator.models.DockerModel;
 
@@ -30,6 +32,7 @@ import java.util.Set;
 /**
  * Class to store kubernetes models.
  */
+@Data
 public class KubernetesDataHolder {
     private boolean canProcess;
     private DeploymentModel deploymentModel;
@@ -48,7 +51,7 @@ public class KubernetesDataHolder {
     private String namespace;
     private Path sourceRoot;
     private PackageID packageID;
-    private Path ballerinaCloudPath;
+    private Toml ballerinaCloud;
 
     KubernetesDataHolder(Path sourceRoot) {
         this.sourceRoot = sourceRoot;
@@ -60,145 +63,23 @@ public class KubernetesDataHolder {
         this.deploymentModel = new DeploymentModel();
         this.resourceQuotaModels = new HashSet<>();
         this.dockerModel = new DockerModel();
-    }
-
-    public Path getSourceRoot() {
-        return sourceRoot;
-    }
-
-    public DeploymentModel getDeploymentModel() {
-        return deploymentModel;
-    }
-
-    public void setDeploymentModel(DeploymentModel deploymentModel) {
-        this.deploymentModel = deploymentModel;
-    }
-
-    public PodAutoscalerModel getPodAutoscalerModel() {
-        return podAutoscalerModel;
-    }
-
-    public void setPodAutoscalerModel(PodAutoscalerModel podAutoscalerModel) {
-        this.podAutoscalerModel = podAutoscalerModel;
-    }
-
-    public Map<String, Set<SecretModel>> getSecretModels() {
-        return bListenerToSecretMap;
-    }
-
-    public void addListenerSecret(String listenerName, Set<SecretModel> secretModel) {
-        this.bListenerToSecretMap.put(listenerName, secretModel);
-    }
-
-    public Set<SecretModel> getSecretModelSet() {
-        return secretModelSet;
+        this.ballerinaCloud = null;
     }
 
     public void addSecrets(Set<SecretModel> secrets) {
         this.secretModelSet.addAll(secrets);
     }
 
-    public Set<ConfigMapModel> getConfigMapModelSet() {
-        return configMapModelSet;
-    }
-
     public void addConfigMaps(Set<ConfigMapModel> configMaps) {
         this.configMapModelSet.addAll(configMaps);
-    }
-
-    public Set<PersistentVolumeClaimModel> getVolumeClaimModelSet() {
-        return volumeClaimModelSet;
     }
 
     public void addPersistentVolumeClaims(Set<PersistentVolumeClaimModel> persistentVolumeClaims) {
         this.volumeClaimModelSet.addAll(persistentVolumeClaims);
     }
 
-    public Set<ResourceQuotaModel> getResourceQuotaModels() {
-        return resourceQuotaModels;
-    }
-
-    public void setResourceQuotaModels(Set<ResourceQuotaModel> resourceQuotaModels) {
-        this.resourceQuotaModels = resourceQuotaModels;
-    }
-
-    public Map<String, ServiceModel> getbListenerToK8sServiceMap() {
-        return bListenerToK8sServiceMap;
-    }
-
     public void addBListenerToK8sServiceMap(String listenerName, ServiceModel serviceModel) {
         this.bListenerToK8sServiceMap.put(listenerName, serviceModel);
     }
 
-    public JobModel getJobModel() {
-        return jobModel;
-    }
-
-    public void setJobModel(JobModel jobModel) {
-        this.jobModel = jobModel;
-    }
-
-    public boolean isCanProcess() {
-        return canProcess;
-    }
-
-    public void setCanProcess(boolean canProcess) {
-        this.canProcess = canProcess;
-    }
-
-    public Path getUberJarPath() {
-        return uberJarPath;
-    }
-
-    public void setUberJarPath(Path uberJarPath) {
-        this.uberJarPath = uberJarPath;
-    }
-
-    public Path getK8sArtifactOutputPath() {
-        return k8sArtifactOutputPath;
-    }
-
-    public void setK8sArtifactOutputPath(Path k8sArtifactOutputPath) {
-        this.k8sArtifactOutputPath = k8sArtifactOutputPath;
-    }
-
-    public Path getDockerArtifactOutputPath() {
-        return dockerArtifactOutputPath;
-    }
-
-    public void setDockerArtifactOutputPath(Path dockerArtifactOutputPath) {
-        this.dockerArtifactOutputPath = dockerArtifactOutputPath;
-    }
-
-    public DockerModel getDockerModel() {
-        return dockerModel;
-    }
-
-    public void setDockerModel(DockerModel dockerModel) {
-        this.dockerModel = dockerModel;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
-
-    public PackageID getPackageID() {
-        return packageID;
-    }
-
-    public void setPackageID(PackageID packageID) {
-        this.packageID = packageID;
-    }
-
-    public Path getBallerinaCloudPath() {
-        return ballerinaCloudPath;
-    }
-
-    public void setBallerinaCloudPath(Path ballerinaCloudPath) {
-        this.ballerinaCloudPath = ballerinaCloudPath;
-    }
 }

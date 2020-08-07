@@ -18,6 +18,7 @@
 
 package org.ballerinax.kubernetes;
 
+import com.moandjiezana.toml.Toml;
 import org.ballerinalang.compiler.JarResolver;
 import org.ballerinalang.compiler.plugins.AbstractCompilerPlugin;
 import org.ballerinalang.compiler.plugins.SupportedAnnotationPackages;
@@ -244,7 +245,6 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                 // artifacts location for a single bal file.
                 Path kubernetesOutputPath = executableJarFile.getParent().resolve(KUBERNETES);
                 Path dockerOutputPath = executableJarFile.getParent().resolve(DOCKER);
-                Path ballerinaCloudPath = executableJarFile.getParent().resolve("Ballerina.cloud");
                 if (null != executableJarFile.getParent().getParent().getParent() &&
                         Files.exists(executableJarFile.getParent().getParent().getParent())) {
                     // if executable came from a ballerina project
@@ -256,7 +256,11 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                         dockerOutputPath = projectRoot.resolve("target")
                                 .resolve(DOCKER)
                                 .resolve(extractJarName(executableJarFile));
-                        ballerinaCloudPath = projectRoot.resolve("Ballerina.cloud");
+                        //Read and parse ballerina cloud
+                        Path ballerinaCloudPath = projectRoot.resolve("Ballerina.cloud");
+                        if (Files.exists(ballerinaCloudPath)) {
+                            dataHolder.setBallerinaCloud(new Toml().read(ballerinaCloudPath.toFile()));
+                        }
                     }
                 }
                 if (!dataHolder.getDockerModel().isUberJar()) {
@@ -267,7 +271,6 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                 dataHolder.setUberJarPath(executableJarFile);
                 dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
                 dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
-                dataHolder.setBallerinaCloudPath(ballerinaCloudPath);
                 ArtifactManager artifactManager = new ArtifactManager();
                 try {
                     KubernetesUtils.deleteDirectory(kubernetesOutputPath);

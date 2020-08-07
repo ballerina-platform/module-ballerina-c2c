@@ -27,8 +27,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.isBlank;
-
 /**
  * Class to hold Kubernetes data holder against package id.
  */
@@ -68,35 +66,16 @@ public class KubernetesContext {
         return this.packageIDtoDataHolderMap.get(packageID);
     }
 
-    public Map<PackageID, KubernetesDataHolder> getPackageIDtoDataHolderMap() {
-        return packageIDtoDataHolderMap;
-    }
-
     public String getServiceName(String dependsOn) throws KubernetesPluginException {
         String packageName = dependsOn.substring(0, dependsOn.indexOf(Names.VERSION_SEPARATOR.value));
         String listener = dependsOn.substring(dependsOn.indexOf(Names.VERSION_SEPARATOR.value) + 1);
         for (PackageID packageID : packageIDtoDataHolderMap.keySet()) {
             if (packageName.equals(packageID.name.value)) {
-                return getDataHolder(packageID).getbListenerToK8sServiceMap().get(listener).getName();
+                return getDataHolder(packageID).getBListenerToK8sServiceMap().get(listener).getName();
             }
         }
         throw new KubernetesPluginException("dependent listener " + dependsOn + " is not annotated with " +
                 "@kubernetes:Service{}");
-    }
-
-    public String getDeploymentNameFromListener(String dependsOn) throws KubernetesPluginException {
-        if (isBlank(dependsOn) || !dependsOn.contains(Names.VERSION_SEPARATOR.value) || !(dependsOn.indexOf
-                (Names.VERSION_SEPARATOR.value) > 1)) {
-            throw new KubernetesPluginException("@kubernetes:Deployment{} invalid dependsOn format specified " +
-                    dependsOn);
-        }
-        String packageName = dependsOn.substring(0, dependsOn.indexOf(Names.VERSION_SEPARATOR.value));
-        for (PackageID packageID : packageIDtoDataHolderMap.keySet()) {
-            if (packageName.equals(packageID.name.value)) {
-                return getDataHolder(packageID).getDeploymentModel().getName();
-            }
-        }
-        throw new KubernetesPluginException("dependent listener " + dependsOn + " not found.");
     }
 
     public CompilerContext getCompilerContext() {
