@@ -45,6 +45,7 @@ import org.ballerinax.kubernetes.KubernetesConstants;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
 import org.ballerinax.kubernetes.models.ConfigMapModel;
 import org.ballerinax.kubernetes.models.DeploymentModel;
+import org.ballerinax.kubernetes.models.EnvVarValueModel;
 import org.ballerinax.kubernetes.models.KubernetesContext;
 import org.ballerinax.kubernetes.models.KubernetesDataHolder;
 import org.ballerinax.kubernetes.models.PersistentVolumeClaimModel;
@@ -255,6 +256,12 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             probeToml = ballerinaCloud.getTable("cloud.deployment.probes.liveness");
             if (probeToml != null) {
                 deploymentModel.setLivenessProbe(resolveToml(probeToml));
+            }
+            Toml envVars = ballerinaCloud.getTable("cloud.config");
+            if (envVars != null) {
+                envVars.toMap().forEach((k, v) -> {
+                    deploymentModel.addEnv(k, new EnvVarValueModel((String) v));
+                });
             }
         }
     }

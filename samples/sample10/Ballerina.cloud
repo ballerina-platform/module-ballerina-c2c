@@ -6,6 +6,14 @@ base="openjdk:slim"
 run_as="ballerina" # optional. Default is ballerina
 
 # This section specifies deployment related requirements
+[cloud]
+#This section contains the configs required
+[cloud.config]
+# Simple KV pairs
+FOO="value1"
+BAR="value2"
+
+
 [cloud.deployment]
 # runtime requirements
 min_memory="100Mi" # optional
