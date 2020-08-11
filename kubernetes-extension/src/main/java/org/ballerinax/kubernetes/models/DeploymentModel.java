@@ -17,6 +17,7 @@
  */
 package org.ballerinax.kubernetes.models;
 
+import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStrategy;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,10 +41,8 @@ import static org.ballerinax.docker.generator.DockerGenConstants.OPENJDK_8_JRE_A
 public class DeploymentModel extends KubernetesModel {
     private Map<String, String> podAnnotations;
     private int replicas;
-    private boolean prometheus;
-    private int prometheusPort;
-    private ProbeModel livenessProbe;
-    private ProbeModel readinessProbe;
+    private Probe livenessProbe;
+    private Probe readinessProbe;
     private String namespace;
     private String imagePullPolicy;
     private String image;
@@ -79,7 +78,6 @@ public class DeploymentModel extends KubernetesModel {
     public DeploymentModel() {
         // Initialize with default values.
         this.replicas = 1;
-        this.prometheus = false;
         this.buildImage = true;
         this.baseImage = OPENJDK_8_JRE_ALPINE_BASE_IMAGE;
         this.push = false;
@@ -107,43 +105,13 @@ public class DeploymentModel extends KubernetesModel {
         return podAnnotations;
     }
 
-    public void setPodAnnotations(Map<String, String> podAnnotations) {
-        this.podAnnotations = podAnnotations;
-    }
 
-    public void setPrometheusPort(int port) {
-        this.prometheusPort = port;
-        this.addPort(port);
-    }
-
-    public void setLivenessProbe(ProbeModel livenessProbe) {
+    public void setLivenessProbe(Probe livenessProbe) {
         this.livenessProbe = livenessProbe;
-
-        // setting default values
-        if (null != this.livenessProbe) {
-            if (this.livenessProbe.getInitialDelaySeconds() == -1) {
-                this.livenessProbe.setInitialDelaySeconds(10);
-            }
-
-            if (this.livenessProbe.getPeriodSeconds() == -1) {
-                this.livenessProbe.setPeriodSeconds(5);
-            }
-        }
     }
 
-    public void setReadinessProbe(ProbeModel readinessProbe) {
+    public void setReadinessProbe(Probe readinessProbe) {
         this.readinessProbe = readinessProbe;
-
-        // setting default values
-        if (null != this.readinessProbe) {
-            if (this.readinessProbe.getInitialDelaySeconds() == -1) {
-                this.readinessProbe.setInitialDelaySeconds(3);
-            }
-
-            if (this.readinessProbe.getPeriodSeconds() == -1) {
-                this.readinessProbe.setPeriodSeconds(1);
-            }
-        }
     }
 
     public void addPort(int port) {

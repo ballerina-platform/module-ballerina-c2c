@@ -51,8 +51,6 @@ public class KubernetesConstants {
     public static final String BALLERINA_CONF_FILE_NAME = "ballerina.conf";
     public static final String DOCKER_HOST = "DOCKER_HOST";
     public static final String DOCKER_CERT_PATH = "DOCKER_CERT_PATH";
-    public static final String PROMETHEUS_CMD = "CMD java -jar ${APP} --b7a.observability.enabled=true " +
-            "--b7a.observability.metrics.prometheus.port=";
 
     /**
      * Restart policy enum.

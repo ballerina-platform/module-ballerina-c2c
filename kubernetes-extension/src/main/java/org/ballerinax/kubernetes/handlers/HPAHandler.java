@@ -91,8 +91,8 @@ public class HPAHandler extends AbstractArtifactHandler {
                     (long) hpa.getMaxReplicas())));
             hpa.setMinReplicas(Math.toIntExact(ballerinaCloud.getLong(autoscaling + "min_replicas",
                     (long) hpa.getMinReplicas())));
-            hpa.setCpuPercentage(Math.toIntExact(ballerinaCloud.getLong(autoscaling + "cpu",
-                    (long) hpa.getCpuPercentage())));
+            hpa.setCpuPercentage(Math.toIntExact((ballerinaCloud.getLong(autoscaling + "cpu",
+                    (long) hpa.getCpuPercentage()))));
         }
     }
 
@@ -115,6 +115,7 @@ public class HPAHandler extends AbstractArtifactHandler {
         if (podAutoscalerModel.getName() == null || podAutoscalerModel.getName().length() == 0) {
             podAutoscalerModel.setName(getValidName(balxFileName) + HPA_POSTFIX);
         }
+        resolveToml(podAutoscalerModel);
         generate(podAutoscalerModel);
         OUT.println();
         OUT.print("\t@kubernetes:HPA \t\t\t - complete 1/1");

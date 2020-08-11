@@ -24,12 +24,12 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.HTTPGetAction;
+import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
-import io.fabric8.kubernetes.api.model.TCPSocketAction;
-import io.fabric8.kubernetes.api.model.TCPSocketActionBuilder;
 import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.api.model.TolerationBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
@@ -49,7 +49,6 @@ import org.ballerinax.kubernetes.models.KubernetesContext;
 import org.ballerinax.kubernetes.models.KubernetesDataHolder;
 import org.ballerinax.kubernetes.models.PersistentVolumeClaimModel;
 import org.ballerinax.kubernetes.models.PodTolerationModel;
-import org.ballerinax.kubernetes.models.ProbeModel;
 import org.ballerinax.kubernetes.models.SecretModel;
 import org.ballerinax.kubernetes.models.ServiceAccountTokenModel;
 import org.ballerinax.kubernetes.utils.KubernetesUtils;
@@ -65,7 +64,6 @@ import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarNam
 import static org.ballerinax.kubernetes.KubernetesConstants.DEPLOYMENT_FILE_POSTFIX;
 import static org.ballerinax.kubernetes.KubernetesConstants.EXECUTABLE_JAR;
 import static org.ballerinax.kubernetes.KubernetesConstants.YAML;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.isBlank;
 import static org.ballerinax.kubernetes.utils.KubernetesUtils.populateEnvVar;
 
 /**
@@ -152,8 +150,8 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 .withPorts(containerPorts)
                 .withEnv(populateEnvVar(deploymentModel.getEnv()))
                 .withVolumeMounts(populateVolumeMounts(deploymentModel))
-                .withLivenessProbe(generateProbe(deploymentModel.getLivenessProbe()))
-                .withReadinessProbe(generateProbe(deploymentModel.getReadinessProbe()))
+                .withLivenessProbe(deploymentModel.getLivenessProbe())
+                .withReadinessProbe(deploymentModel.getReadinessProbe())
                 .build();
     }
 
@@ -214,20 +212,6 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         return volumes;
     }
 
-    private Probe generateProbe(ProbeModel probeModel) {
-        if (null == probeModel) {
-            return null;
-        }
-        TCPSocketAction tcpSocketAction = new TCPSocketActionBuilder()
-                .withNewPort(probeModel.getPort())
-                .build();
-        return new ProbeBuilder()
-                .withInitialDelaySeconds(probeModel.getInitialDelaySeconds())
-                .withPeriodSeconds(probeModel.getPeriodSeconds())
-                .withTcpSocket(tcpSocketAction)
-                .build();
-    }
-
     private List<Toleration> populatePodTolerations(List<PodTolerationModel> podTolerationModels) {
         List<Toleration> tolerations = null;
 
@@ -263,9 +247,26 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
             deploymentModel.setReplicas(Math.toIntExact(ballerinaCloud.getLong("cloud.deployment.replicas",
                     (long) deploymentModel.getReplicas())));
-            String probes = ballerinaCloud.getString("cloud.deployment.probes.readiness");
+            Toml probeToml = ballerinaCloud.getTable("cloud.deployment.probes.readiness");
+            if (probeToml != null) {
+                deploymentModel.setReadinessProbe(resolveToml(probeToml));
 
+            }
+            probeToml = ballerinaCloud.getTable("cloud.deployment.probes.liveness");
+            if (probeToml != null) {
+                deploymentModel.setLivenessProbe(resolveToml(probeToml));
+            }
         }
+    }
+
+    private Probe resolveToml(Toml probeToml) {
+        //Resolve Readiness Probe.
+        Probe readinessProbe = new ProbeBuilder().build();
+        HTTPGetAction httpGet = new HTTPGetAction();
+        httpGet.setPort(new IntOrString(Math.toIntExact(probeToml.getLong("port"))));
+        httpGet.setPort(new IntOrString(probeToml.getString("path")));
+        readinessProbe.setHttpGet(httpGet);
+        return readinessProbe;
     }
 
     /**
@@ -329,22 +330,26 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             deploymentModel.setSecretModels(dataHolder.getSecretModelSet());
             deploymentModel.setConfigMapModels(dataHolder.getConfigMapModelSet());
             deploymentModel.setVolumeClaimModels(dataHolder.getVolumeClaimModelSet());
-            if (null != deploymentModel.getLivenessProbe() && deploymentModel.getLivenessProbe().getPort() == 0) {
+            if (null != deploymentModel.getLivenessProbe() &&
+                    deploymentModel.getLivenessProbe().getHttpGet().getPort().getIntVal() == 0) {
                 //set first port as liveness port
                 if (deploymentModel.getPorts().size() == 0) {
                     throw new KubernetesPluginException("unable to detect port for liveness probe." +
                             "missing @kubernetes:Service annotation on listener.");
                 }
-                deploymentModel.getLivenessProbe().setPort(deploymentModel.getPorts().iterator().next());
+                deploymentModel.getLivenessProbe().getHttpGet().setPort(new
+                        IntOrString(deploymentModel.getPorts().iterator().next()));
             }
 
-            if (null != deploymentModel.getReadinessProbe() && deploymentModel.getReadinessProbe().getPort() == 0) {
+            if (null != deploymentModel.getReadinessProbe() &&
+                    deploymentModel.getReadinessProbe().getHttpGet().getPort().getIntVal() == 0) {
                 //set first port as readiness port
                 if (deploymentModel.getPorts().size() == 0) {
                     throw new KubernetesPluginException("unable to detect port for readiness probe. " +
                             "missing @kubernetes:Service annotation on listener.");
                 }
-                deploymentModel.getReadinessProbe().setPort(deploymentModel.getPorts().iterator().next());
+                deploymentModel.getReadinessProbe().getHttpGet().setPort(new
+                        IntOrString(deploymentModel.getPorts().iterator().next()));
             }
             generate(deploymentModel);
             OUT.println();
@@ -379,10 +384,6 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         dockerModel.setUsername(deploymentModel.getUsername());
         dockerModel.setPassword(deploymentModel.getPassword());
         dockerModel.setPush(deploymentModel.isPush());
-        if (isBlank(deploymentModel.getCmd()) && deploymentModel.isPrometheus()) {
-            // Add cmd to Dockerfile if prometheus is enabled.
-            deploymentModel.setCmd(KubernetesConstants.PROMETHEUS_CMD + deploymentModel.getPrometheusPort());
-        }
         dockerModel.setDockerConfig(deploymentModel.getDockerConfigPath());
         dockerModel.setCmd(deploymentModel.getCmd());
         dockerModel.setJarFileName(extractJarName(this.dataHolder.getUberJarPath()) + EXECUTABLE_JAR);

@@ -24,7 +24,6 @@ import org.ballerinax.kubernetes.KubernetesConstants;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
 import org.ballerinax.kubernetes.models.DeploymentModel;
 import org.ballerinax.kubernetes.models.EnvVarValueModel;
-import org.ballerinax.kubernetes.models.ProbeModel;
 import org.ballerinax.kubernetes.utils.Utils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -57,9 +56,6 @@ public class KubernetesDeploymentGeneratorTests extends HandlerTestSuite {
         deploymentModel.setLabels(labels);
         deploymentModel.setImage(imageName);
         deploymentModel.setImagePullPolicy(imagePullPolicy);
-        ProbeModel probeModel = new ProbeModel();
-        probeModel.setPort(9090);
-        deploymentModel.setLivenessProbe(probeModel);
         deploymentModel.setSingleYAML(false);
         Map<String, EnvVarValueModel> env = new HashMap<>();
         EnvVarValueModel testEnvVar = new EnvVarValueModel("ENV");

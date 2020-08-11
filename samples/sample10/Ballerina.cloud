@@ -5,10 +5,7 @@ tag="v0.1.1"  # default is latest
 base="openjdk:slim"
 run_as="ballerina" # optional. Default is ballerina
 
-
-
 # This section specifies deployment related requirements
-[cloud]
 [cloud.deployment]
 # runtime requirements
 min_memory="100Mi" # optional
@@ -16,12 +13,14 @@ max_memory="256Mi" # optional
 min_cpu="1000m" # optional
 max_cpu="1500m" # optional
 replicas=3
-
-[cloud.deployment.autoscaling]
-min_replicas=2
-max_replicas=3
-cpu=0.75
-
-[cloud.deployment.probes]
-readiness=":9091/readyz"
-liveness=":9091/healthz"
+    [cloud.deployment.autoscaling]
+        min_replicas=2
+        max_replicas=3
+        cpu=50
+    [cloud.deployment.probes]
+        [cloud.deployment.probes.readiness]
+            port=9091
+            path="/readyz"
+        [cloud.deployment.probes.liveness]
+            port=9091
+            path="/healthz"
