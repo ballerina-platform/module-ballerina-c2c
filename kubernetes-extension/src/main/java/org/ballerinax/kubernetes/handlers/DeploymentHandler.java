@@ -75,6 +75,7 @@ import static org.ballerinax.kubernetes.KubernetesConstants.BALLERINA_HOME;
 import static org.ballerinax.kubernetes.KubernetesConstants.BALLERINA_RUNTIME;
 import static org.ballerinax.kubernetes.KubernetesConstants.CONFIG_MAP_POSTFIX;
 import static org.ballerinax.kubernetes.KubernetesConstants.DEPLOYMENT_FILE_POSTFIX;
+import static org.ballerinax.kubernetes.KubernetesConstants.DEPLOYMENT_POSTFIX;
 import static org.ballerinax.kubernetes.KubernetesConstants.EXECUTABLE_JAR;
 import static org.ballerinax.kubernetes.KubernetesConstants.YAML;
 import static org.ballerinax.kubernetes.utils.KubernetesUtils.getValidName;
@@ -280,10 +281,11 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 // Config files
                 Toml configFiles = envVars.getTable("files");
                 if (configFiles != null) {
+                    final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
                     Toml ballerinaConf = configFiles.getTable("ballerina.conf");
                     if (ballerinaConf != null) {
                         ConfigMapModel configMapModel = getBallerinaConfConfigMap(ballerinaConf.getString("file"),
-                                deploymentModel.getName().replace(DEPLOYMENT_FILE_POSTFIX, ""));
+                                deploymentName);
                         dataHolder.addConfigMaps(Collections.singleton(configMapModel));
                     }
 
@@ -313,6 +315,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                                     "path: " + BALLERINA_CONF_MOUNT_PATH);
                         }
                         ConfigMapModel configMapModel = new ConfigMapModel();
+                        configMapModel.setName(deploymentName + "-" + getValidName(k));
                         configMapModel.setData(getDataForConfigMap(path));
                         configMapModel.setMountPath(mountPath.toString());
                         dataHolder.addConfigMaps(Collections.singleton(configMapModel));
