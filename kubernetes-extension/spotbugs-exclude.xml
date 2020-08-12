@@ -14,7 +14,7 @@
 -->
 <FindBugsFilter>
     <Match>
-        <Class name="org.ballerinax.kubernetes.processors.ConfigMapAnnotationProcessor"/>
+        <Class name="org.ballerinax.kubernetes.handlers.DeploymentHandler"/>
         <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME"/>
     </Match>
     <Match>

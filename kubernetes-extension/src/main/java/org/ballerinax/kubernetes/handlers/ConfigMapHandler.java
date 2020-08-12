@@ -18,6 +18,7 @@
 
 package org.ballerinax.kubernetes.handlers;
 
+import com.moandjiezana.toml.Toml;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.client.internal.SerializationUtils;
@@ -57,6 +58,13 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
         }
     }
 
+    private void resolveToml() {
+        Toml ballerinaCloud = dataHolder.getBallerinaCloud();
+        if (ballerinaCloud != null) {
+            ballerinaCloud.getTable("cloud.config.files");
+        }
+    }
+
     @Override
     public void createArtifacts() throws KubernetesPluginException {
         //configMap
@@ -74,10 +82,11 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
                 DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
                 deploymentModel.setCommandArgs(" --b7a.config.file=${CONFIG_FILE}");
                 EnvVarValueModel envVarValueModel = new EnvVarValueModel(configMapModel.getMountPath() +
-                                                                         BALLERINA_CONF_FILE_NAME);
+                        BALLERINA_CONF_FILE_NAME);
                 deploymentModel.addEnv("CONFIG_FILE", envVarValueModel);
                 dataHolder.setDeploymentModel(deploymentModel);
             }
+            resolveToml();
             generate(configMapModel);
             OUT.print("\t@kubernetes:ConfigMap \t\t\t - complete " + count + "/" + configMapModels.size() + "\r");
         }

@@ -8,18 +8,22 @@ run_as="ballerina" # optional. Default is ballerina
 # This section specifies deployment related requirements
 [cloud]
 #This section contains the configs required
-[cloud.config]
-# Simple KV pairs
-FOO="value1"
-BAR="value2"
-
+    [cloud.config]
+    # Simple KV pairs
+    FOO="value1"
+    BAR="value2"
+    # Config files which will be mounted
+    [cloud.config.files]
+        [cloud.config.files.ballerina.conf] # optional
+            file="resource/ballerina.conf"
+        [cloud.config.files.application1]  # optional
+            file="resource/application1.properties"
+            mount_path="/home/ballerina/foo/app1.properties"
+        [cloud.config.files.application2]  # optional
+            file="resource/application2.properties"
+            mount_path="/home/ballerina/bar/app2.properties"
 
 [cloud.deployment]
-# runtime requirements
-min_memory="100Mi" # optional
-max_memory="256Mi" # optional
-min_cpu="1000m" # optional
-max_cpu="1500m" # optional
 replicas=3
     [cloud.deployment.autoscaling]
         min_replicas=2

@@ -19,7 +19,6 @@
 package org.ballerinax.kubernetes;
 
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
-import org.ballerinax.kubernetes.handlers.ConfigMapHandler;
 import org.ballerinax.kubernetes.handlers.DeploymentHandler;
 import org.ballerinax.kubernetes.handlers.DockerHandler;
 import org.ballerinax.kubernetes.handlers.HPAHandler;
@@ -81,7 +80,6 @@ public class ArtifactManager {
             new SecretHandler().createArtifacts();
             new PersistentVolumeClaimHandler().createArtifacts();
             new ResourceQuotaHandler().createArtifacts();
-            new ConfigMapHandler().createArtifacts();
             new DeploymentHandler().createArtifacts();
             new HPAHandler().createArtifacts();
             new DockerHandler().createArtifacts();

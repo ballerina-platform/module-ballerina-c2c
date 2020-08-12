@@ -55,16 +55,29 @@ import org.ballerinax.kubernetes.models.ServiceAccountTokenModel;
 import org.ballerinax.kubernetes.utils.KubernetesUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.ballerinax.docker.generator.DockerGenConstants.REGISTRY_SEPARATOR;
 import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
+import static org.ballerinax.kubernetes.KubernetesConstants.BALLERINA_CONF_FILE_NAME;
+import static org.ballerinax.kubernetes.KubernetesConstants.BALLERINA_CONF_MOUNT_PATH;
+import static org.ballerinax.kubernetes.KubernetesConstants.BALLERINA_HOME;
+import static org.ballerinax.kubernetes.KubernetesConstants.BALLERINA_RUNTIME;
+import static org.ballerinax.kubernetes.KubernetesConstants.CONFIG_MAP_POSTFIX;
 import static org.ballerinax.kubernetes.KubernetesConstants.DEPLOYMENT_FILE_POSTFIX;
 import static org.ballerinax.kubernetes.KubernetesConstants.EXECUTABLE_JAR;
 import static org.ballerinax.kubernetes.KubernetesConstants.YAML;
+import static org.ballerinax.kubernetes.utils.KubernetesUtils.getValidName;
 import static org.ballerinax.kubernetes.utils.KubernetesUtils.populateEnvVar;
 
 /**
@@ -242,7 +255,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         return imagePullSecrets;
     }
 
-    private void resolveToml() {
+    private void resolveToml() throws KubernetesPluginException {
         Toml ballerinaCloud = dataHolder.getBallerinaCloud();
         if (ballerinaCloud != null) {
             DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
@@ -251,7 +264,6 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             Toml probeToml = ballerinaCloud.getTable("cloud.deployment.probes.readiness");
             if (probeToml != null) {
                 deploymentModel.setReadinessProbe(resolveToml(probeToml));
-
             }
             probeToml = ballerinaCloud.getTable("cloud.deployment.probes.liveness");
             if (probeToml != null) {
@@ -259,11 +271,88 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             }
             Toml envVars = ballerinaCloud.getTable("cloud.config");
             if (envVars != null) {
-                envVars.toMap().forEach((k, v) -> {
-                    deploymentModel.addEnv(k, new EnvVarValueModel((String) v));
-                });
+                // Env vars
+                envVars.entrySet().stream()
+                        .filter(entry -> !"files".equals(entry.getKey()))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                        .forEach((k, v) -> deploymentModel.addEnv(k, new EnvVarValueModel((String) v)));
+
+                // Config files
+                Toml configFiles = envVars.getTable("files");
+                if (configFiles != null) {
+                    Toml ballerinaConf = configFiles.getTable("ballerina.conf");
+                    if (ballerinaConf != null) {
+                        ConfigMapModel configMapModel = getBallerinaConfConfigMap(ballerinaConf.getString("file"),
+                                deploymentModel.getName().replace(DEPLOYMENT_FILE_POSTFIX, ""));
+                        dataHolder.addConfigMaps(Collections.singleton(configMapModel));
+                    }
+
+                    for (Map.Entry<String, Object> e : configFiles.entrySet().stream()
+                            .filter(entry -> !"ballerina".equals(entry.getKey()))
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).entrySet()) {
+                        String k = e.getKey();
+                        String path = configFiles.getTable(k).getString("file");
+                        // validate mount path is not set to ballerina home or ballerina runtime
+                        final Path mountPath = Paths.get(configFiles.getTable(k).getString("mount_path"));
+                        final Path homePath = Paths.get(BALLERINA_HOME);
+                        final Path runtimePath = Paths.get(BALLERINA_RUNTIME);
+                        final Path confPath = Paths.get(BALLERINA_CONF_MOUNT_PATH);
+                        if (mountPath.equals(homePath)) {
+                            throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
+                                    "cannot be ballerina home: " +
+                                    BALLERINA_HOME);
+                        }
+                        if (mountPath.equals(runtimePath)) {
+                            throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
+                                    "cannot be ballerina runtime: " +
+                                    BALLERINA_RUNTIME);
+                        }
+                        if (mountPath.equals(confPath)) {
+                            throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
+                                    "cannot be ballerina conf file mount " +
+                                    "path: " + BALLERINA_CONF_MOUNT_PATH);
+                        }
+                        ConfigMapModel configMapModel = new ConfigMapModel();
+                        configMapModel.setData(getDataForConfigMap(path));
+                        configMapModel.setMountPath(mountPath.toString());
+                        dataHolder.addConfigMaps(Collections.singleton(configMapModel));
+                    }
+                    new ConfigMapHandler().createArtifacts();
+                }
             }
         }
+    }
+
+    private Map<String, String> getDataForConfigMap(String path) throws KubernetesPluginException {
+        Map<String, String> dataMap = new HashMap<>();
+        Path dataFilePath = Paths.get(path);
+        if (!dataFilePath.isAbsolute()) {
+            dataFilePath = KubernetesContext.getInstance().getDataHolder().getSourceRoot().resolve(dataFilePath);
+        }
+        String key = String.valueOf(dataFilePath.getFileName());
+        String content = new String(KubernetesUtils.readFileContent(dataFilePath), StandardCharsets.UTF_8);
+        dataMap.put(key, content);
+        return dataMap;
+    }
+
+    private ConfigMapModel getBallerinaConfConfigMap(String configFilePath, String serviceName) throws
+            KubernetesPluginException {
+        //create a new config map model with ballerina conf
+        ConfigMapModel configMapModel = new ConfigMapModel();
+        configMapModel.setName(getValidName(serviceName) + "-ballerina-conf" + CONFIG_MAP_POSTFIX);
+        configMapModel.setMountPath(BALLERINA_CONF_MOUNT_PATH);
+        Path dataFilePath = Paths.get(configFilePath);
+        if (!dataFilePath.isAbsolute()) {
+            dataFilePath = KubernetesContext.getInstance().getDataHolder().getSourceRoot().resolve(dataFilePath)
+                    .normalize();
+        }
+        String content = new String(KubernetesUtils.readFileContent(dataFilePath), StandardCharsets.UTF_8);
+        Map<String, String> dataMap = new HashMap<>();
+        dataMap.put(BALLERINA_CONF_FILE_NAME, content);
+        configMapModel.setData(dataMap);
+        configMapModel.setBallerinaConf(configFilePath);
+        configMapModel.setReadOnly(false);
+        return configMapModel;
     }
 
     private Probe resolveToml(Toml probeToml) {
@@ -271,7 +360,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         Probe readinessProbe = new ProbeBuilder().build();
         HTTPGetAction httpGet = new HTTPGetAction();
         httpGet.setPort(new IntOrString(Math.toIntExact(probeToml.getLong("port"))));
-        httpGet.setPort(new IntOrString(probeToml.getString("path")));
+        httpGet.setPath(probeToml.getString("path"));
         readinessProbe.setHttpGet(httpGet);
         return readinessProbe;
     }
