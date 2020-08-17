@@ -61,6 +61,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -109,12 +110,14 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             volumeMounts.add(volumeMount);
         }
         for (ConfigMapModel configMapModel : deploymentModel.getConfigMapModels()) {
-            VolumeMount volumeMount = new VolumeMountBuilder()
-                    .withMountPath(configMapModel.getMountPath())
-                    .withName(configMapModel.getName() + "-volume")
-                    .withReadOnly(configMapModel.isReadOnly())
-                    .build();
-            volumeMounts.add(volumeMount);
+            if (configMapModel.getMountPath() != null) {
+                VolumeMount volumeMount = new VolumeMountBuilder()
+                        .withMountPath(configMapModel.getMountPath())
+                        .withName(configMapModel.getName() + "-volume")
+                        .withReadOnly(configMapModel.isReadOnly())
+                        .build();
+                volumeMounts.add(volumeMount);
+            }
         }
         for (ServiceAccountTokenModel volumeClaimModel : deploymentModel.getServiceAccountTokenModel()) {
             VolumeMount volumeMount = new VolumeMountBuilder()
@@ -270,59 +273,81 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             if (probeToml != null) {
                 deploymentModel.setLivenessProbe(resolveToml(probeToml));
             }
-            Toml envVars = ballerinaCloud.getTable("cloud.config");
-            if (envVars != null) {
+            Toml configToml = ballerinaCloud.getTable("cloud.config");
+            if (configToml != null) {
+                Map<String, String> data = new HashMap<>();
+                String configMapName =
+                        deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, CONFIG_MAP_POSTFIX);
                 // Env vars
-                envVars.entrySet().stream()
+                for (Map.Entry<String, Object> e : configToml.entrySet().stream()
                         .filter(entry -> !"files".equals(entry.getKey()))
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-                        .forEach((k, v) -> deploymentModel.addEnv(k, new EnvVarValueModel((String) v)));
-
-                // Config files
-                Toml configFiles = envVars.getTable("files");
-                if (configFiles != null) {
-                    final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
-                    Toml ballerinaConf = configFiles.getTable("ballerina.conf");
-                    if (ballerinaConf != null) {
-                        ConfigMapModel configMapModel = getBallerinaConfConfigMap(ballerinaConf.getString("file"),
-                                deploymentName);
-                        dataHolder.addConfigMaps(Collections.singleton(configMapModel));
-                    }
-
-                    for (Map.Entry<String, Object> e : configFiles.entrySet().stream()
-                            .filter(entry -> !"ballerina".equals(entry.getKey()))
-                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).entrySet()) {
-                        String k = e.getKey();
-                        String path = configFiles.getTable(k).getString("file");
-                        // validate mount path is not set to ballerina home or ballerina runtime
-                        final Path mountPath = Paths.get(configFiles.getTable(k).getString("mount_path"));
-                        final Path homePath = Paths.get(BALLERINA_HOME);
-                        final Path runtimePath = Paths.get(BALLERINA_RUNTIME);
-                        final Path confPath = Paths.get(BALLERINA_CONF_MOUNT_PATH);
-                        if (mountPath.equals(homePath)) {
-                            throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
-                                    "cannot be ballerina home: " +
-                                    BALLERINA_HOME);
-                        }
-                        if (mountPath.equals(runtimePath)) {
-                            throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
-                                    "cannot be ballerina runtime: " +
-                                    BALLERINA_RUNTIME);
-                        }
-                        if (mountPath.equals(confPath)) {
-                            throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
-                                    "cannot be ballerina conf file mount " +
-                                    "path: " + BALLERINA_CONF_MOUNT_PATH);
-                        }
-                        ConfigMapModel configMapModel = new ConfigMapModel();
-                        configMapModel.setName(deploymentName + "-" + getValidName(k));
-                        configMapModel.setData(getDataForConfigMap(path));
-                        configMapModel.setMountPath(mountPath.toString());
-                        dataHolder.addConfigMaps(Collections.singleton(configMapModel));
-                    }
-                    new ConfigMapHandler().createArtifacts();
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).entrySet()) {
+                    String k = e.getKey();
+                    data.put(k, e.getValue().toString());
+                    EnvVarValueModel.ConfigMapKeyValue configMapKeyRefModel =
+                            new EnvVarValueModel.ConfigMapKeyValue();
+                    configMapKeyRefModel.setKey(k);
+                    configMapKeyRefModel.setName(configMapName);
+                    Map<String, EnvVarValueModel> envVarMap = new LinkedHashMap<>();
+                    EnvVarValueModel envVarValue = new EnvVarValueModel(configMapKeyRefModel);
+                    envVarMap.put(k, envVarValue);
+                    deploymentModel.setEnv(envVarMap);
                 }
+                ConfigMapModel configMapModel = new ConfigMapModel();
+                configMapModel.setData(data);
+                configMapModel.setName(configMapName);
+                dataHolder.addConfigMaps(Collections.singleton(configMapModel));
+                // Config files
+                resolveConfigMap(deploymentModel, configToml);
             }
+        }
+
+    }
+
+    private void resolveConfigMap(DeploymentModel deploymentModel, Toml envVars) throws KubernetesPluginException {
+        Toml configFiles = envVars.getTable("files");
+        if (configFiles != null) {
+            final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
+            Toml ballerinaConf = configFiles.getTable("ballerina.conf");
+            if (ballerinaConf != null) {
+                // Resolve ballerina.conf
+                ConfigMapModel configMapModel = getBallerinaConfConfigMap(ballerinaConf.getString("file"),
+                        deploymentName);
+                dataHolder.addConfigMaps(Collections.singleton(configMapModel));
+            }
+
+            for (Map.Entry<String, Object> e : configFiles.entrySet().stream()
+                    .filter(entry -> !"ballerina".equals(entry.getKey()))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).entrySet()) {
+                String k = e.getKey();
+                String path = configFiles.getTable(k).getString("file");
+                // validate mount path is not set to ballerina home or ballerina runtime
+                final Path mountPath = Paths.get(configFiles.getTable(k).getString("mount_path"));
+                final Path homePath = Paths.get(BALLERINA_HOME);
+                final Path runtimePath = Paths.get(BALLERINA_RUNTIME);
+                final Path confPath = Paths.get(BALLERINA_CONF_MOUNT_PATH);
+                if (mountPath.equals(homePath)) {
+                    throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
+                            "cannot be ballerina home: " +
+                            BALLERINA_HOME);
+                }
+                if (mountPath.equals(runtimePath)) {
+                    throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
+                            "cannot be ballerina runtime: " +
+                            BALLERINA_RUNTIME);
+                }
+                if (mountPath.equals(confPath)) {
+                    throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
+                            "cannot be ballerina conf file mount " +
+                            "path: " + BALLERINA_CONF_MOUNT_PATH);
+                }
+                ConfigMapModel configMapModel = new ConfigMapModel();
+                configMapModel.setName(deploymentName + "-" + getValidName(k));
+                configMapModel.setData(getDataForConfigMap(path));
+                configMapModel.setMountPath(mountPath.toString());
+                dataHolder.addConfigMaps(Collections.singleton(configMapModel));
+            }
+            new ConfigMapHandler().createArtifacts();
         }
     }
 
