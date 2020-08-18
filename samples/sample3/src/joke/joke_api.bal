@@ -21,6 +21,7 @@ function invokeJokeAPI() returns @tainted json|error {
         }
         blockedItems = blockedItems.substring( 0, blockedItems.length()-1);
         io:println("blocked: ", blockedItems);
+
         http:Client clientEP = new ("https://sv443.net/jokeapi");
         http:Response resp = check clientEP->get("/v2/joke/Programming,Miscellaneous?blacklistFlags="+blockedItems);
         json payload = check resp.getJsonPayload();

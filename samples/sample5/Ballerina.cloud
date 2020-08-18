@@ -1,6 +1,6 @@
 [container.image]
 repository= "anuruddhal" # optional default is local
-name="jokeapi" # optional
+name="math" # optional
 tag="sample5"  # default is latest
 
 [cloud.deployment]
@@ -9,6 +9,6 @@ max_memory="256Mi" # optional
 min_cpu="200m" # optional
 max_cpu="500m" # optional
     [cloud.deployment.autoscaling]
-        min_replicas=2
+        min_replicas=1
         max_replicas=5
         cpu=50

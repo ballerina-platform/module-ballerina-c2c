@@ -395,6 +395,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             httpGet.setPort(new IntOrString(Math.toIntExact(port)));
         }
         httpGet.setPath(probeToml.getString("path"));
+        probe.setInitialDelaySeconds(30);
         probe.setHttpGet(httpGet);
         return probe;
     }
