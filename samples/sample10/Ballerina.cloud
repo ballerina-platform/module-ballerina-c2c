@@ -25,6 +25,10 @@ run_as="ballerina" # optional. Default is ballerina
 
 [cloud.deployment]
 replicas=3
+min_memory="100Mi" # optional
+max_memory="256Mi" # optional
+min_cpu="1000m" # optional
+max_cpu="1500m" # optional
     [cloud.deployment.autoscaling]
         min_replicas=2
         max_replicas=3

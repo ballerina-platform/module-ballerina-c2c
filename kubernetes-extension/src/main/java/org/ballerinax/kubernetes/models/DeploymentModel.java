@@ -18,6 +18,9 @@
 package org.ballerinax.kubernetes.models;
 
 import io.fabric8.kubernetes.api.model.Probe;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStrategy;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,6 +28,7 @@ import org.ballerinax.docker.generator.models.CopyFileModel;
 import org.ballerinax.kubernetes.KubernetesConstants;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -74,6 +78,7 @@ public class DeploymentModel extends KubernetesModel {
     private List<ServiceAccountTokenModel> serviceAccountTokenModel;
     private boolean uberJar;
     private String dockerConfigPath;
+    private ResourceRequirements resourceRequirements;
 
     public DeploymentModel() {
         // Initialize with default values.
@@ -99,6 +104,16 @@ public class DeploymentModel extends KubernetesModel {
         this.registry = "";
         this.serviceAccountTokenModel = new ArrayList<>();
         this.uberJar = false;
+        Map<String, Quantity> limit = new HashMap<>();
+        limit.put("cpu", new Quantity("500m"));
+        limit.put("memory", new Quantity("256Mi"));
+        Map<String, Quantity> resource = new HashMap<>();
+        resource.put("cpu", new Quantity("200m"));
+        resource.put("memory", new Quantity("100Mi"));
+        this.resourceRequirements = new ResourceRequirementsBuilder()
+                .withLimits(limit)
+                .withRequests(resource)
+                .build();
     }
 
     public Map<String, String> getPodAnnotations() {

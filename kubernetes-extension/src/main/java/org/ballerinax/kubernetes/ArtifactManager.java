@@ -120,5 +120,10 @@ public class ArtifactManager {
     private void setDefaultKubernetesInstructions() {
         instructions.put("\tExecute the below command to deploy the Kubernetes artifacts: ",
                 "\tkubectl apply -f " + this.kubernetesDataHolder.getK8sArtifactOutputPath().toAbsolutePath());
+
+        instructions.put("\tExecute the below command to access service via NodePort: ",
+                "\tkubectl expose deployment " + this.kubernetesDataHolder.getDeploymentModel().getName() + " --type" +
+                        "=NodePort --name=" + kubernetesDataHolder.getDeploymentModel().getName()
+                        .replace(DEPLOYMENT_POSTFIX, "-svc-local"));
     }
 }

@@ -1,0 +1,12 @@
+[container.image]
+repository= "anuruddhal" # optional default is local
+name="jokeapi" # optional
+tag="sample4"  # default is latest
+
+[cloud.config.files]
+    [cloud.config.files.ballerina.conf] # optional
+        file="resource/ballerina.conf"
+
+[cloud.deployment.probes]
+    [cloud.deployment.probes.liveness]
+        path="JokeAPI/healthz"

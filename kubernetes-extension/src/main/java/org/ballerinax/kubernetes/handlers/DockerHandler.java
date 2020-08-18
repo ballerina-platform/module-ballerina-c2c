@@ -18,10 +18,8 @@
 
 package org.ballerinax.kubernetes.handlers;
 
-import com.moandjiezana.toml.Toml;
 import org.ballerinax.docker.generator.DockerArtifactHandler;
 import org.ballerinax.docker.generator.exceptions.DockerGenException;
-import org.ballerinax.docker.generator.models.DockerModel;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
 
 /**
@@ -29,24 +27,10 @@ import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
  */
 public class DockerHandler extends AbstractArtifactHandler {
 
-    public static final String CONTAINER_IMAGE = "container.image";
-
-    private void resolveToml() {
-        Toml toml = dataHolder.getBallerinaCloud();
-        if (toml != null) {
-            DockerModel dockerModel = dataHolder.getDockerModel();
-            dockerModel.setName(toml.getString(CONTAINER_IMAGE + ".name", dockerModel.getName()));
-            dockerModel.setRegistry(toml.getString(CONTAINER_IMAGE + ".repository", dockerModel.getRegistry()));
-            dockerModel.setTag(toml.getString(CONTAINER_IMAGE + ".tag", dockerModel.getTag()));
-            dockerModel.setBaseImage(toml.getString(CONTAINER_IMAGE + ".base", dockerModel.getBaseImage()));
-        }
-    }
-
     @Override
     public void createArtifacts() throws KubernetesPluginException {
         try {
             // Generate docker artifacts
-            resolveToml();
             DockerArtifactHandler dockerArtifactHandler = new DockerArtifactHandler(dataHolder.getDockerModel());
             OUT.println();
             dockerArtifactHandler.createArtifacts(OUT, "\t@kubernetes:Docker \t\t\t", dataHolder.getUberJarPath(),

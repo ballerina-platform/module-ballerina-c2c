@@ -38,7 +38,7 @@ import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.client.internal.SerializationUtils;
+import io.fabric8.kubernetes.client.utils.Serialization;
 import org.ballerinax.docker.generator.exceptions.DockerGenException;
 import org.ballerinax.docker.generator.models.DockerModel;
 import org.ballerinax.kubernetes.KubernetesConstants;
@@ -170,6 +170,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 .withVolumeMounts(populateVolumeMounts(deploymentModel))
                 .withLivenessProbe(deploymentModel.getLivenessProbe())
                 .withReadinessProbe(deploymentModel.getReadinessProbe())
+                .withResources(deploymentModel.getResourceRequirements())
                 .build();
     }
 
@@ -267,11 +268,11 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                     (long) deploymentModel.getReplicas())));
             Toml probeToml = ballerinaCloud.getTable("cloud.deployment.probes.readiness");
             if (probeToml != null) {
-                deploymentModel.setReadinessProbe(resolveToml(probeToml));
+                deploymentModel.setReadinessProbe(resolveProbeToml(probeToml));
             }
             probeToml = ballerinaCloud.getTable("cloud.deployment.probes.liveness");
             if (probeToml != null) {
-                deploymentModel.setLivenessProbe(resolveToml(probeToml));
+                deploymentModel.setLivenessProbe(resolveProbeToml(probeToml));
             }
             Toml configToml = ballerinaCloud.getTable("cloud.config");
             if (configToml != null) {
@@ -383,14 +384,19 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         return configMapModel;
     }
 
-    private Probe resolveToml(Toml probeToml) {
-        //Resolve Readiness Probe.
-        Probe readinessProbe = new ProbeBuilder().build();
+    private Probe resolveProbeToml(Toml probeToml) {
+        //Resolve Probe.
+        Probe probe = new ProbeBuilder().build();
         HTTPGetAction httpGet = new HTTPGetAction();
-        httpGet.setPort(new IntOrString(Math.toIntExact(probeToml.getLong("port"))));
+        int defaultPort = dataHolder.getDeploymentModel().getPorts().iterator().next();
+        httpGet.setPort(new IntOrString(defaultPort));
+        final Long port = probeToml.getLong("port");
+        if (port != null) {
+            httpGet.setPort(new IntOrString(Math.toIntExact(port)));
+        }
         httpGet.setPath(probeToml.getString("path"));
-        readinessProbe.setHttpGet(httpGet);
-        return readinessProbe;
+        probe.setHttpGet(httpGet);
+        return probe;
     }
 
     /**
@@ -438,11 +444,25 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 .build();
 
         try {
-            String deploymentContent = SerializationUtils.dumpWithoutRuntimeStateAsYaml(deployment);
+            String deploymentContent = Serialization.asYaml(deployment);
             KubernetesUtils.writeToFile(deploymentContent, DEPLOYMENT_FILE_POSTFIX + YAML);
         } catch (IOException e) {
             String errorMessage = "error while generating yaml file for deployment: " + deploymentModel.getName();
             throw new KubernetesPluginException(errorMessage, e);
+        }
+    }
+
+    private void resolveDockerToml() {
+        final String containerImage = "container.image";
+        Toml toml = dataHolder.getBallerinaCloud();
+        if (toml != null) {
+            DockerModel dockerModel = dataHolder.getDockerModel();
+            dockerModel.setName(toml.getString(containerImage + ".name", dockerModel.getName()));
+            dockerModel.setRegistry(toml.getString(containerImage + ".repository", dockerModel.getRegistry()));
+            dockerModel.setTag(toml.getString(containerImage + ".tag", dockerModel.getTag()));
+            dockerModel.setBaseImage(toml.getString(containerImage + ".base", dockerModel.getBaseImage()));
+            dataHolder.getDeploymentModel().setImage
+                    (dockerModel.getRegistry() + "/" + dockerModel.getName() + ":" + dockerModel.getTag());
         }
     }
 
@@ -475,6 +495,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 deploymentModel.getReadinessProbe().getHttpGet().setPort(new
                         IntOrString(deploymentModel.getPorts().iterator().next()));
             }
+            resolveDockerToml();
             generate(deploymentModel);
             OUT.println();
             OUT.print("\t@kubernetes:Deployment \t\t\t - complete 1/1");

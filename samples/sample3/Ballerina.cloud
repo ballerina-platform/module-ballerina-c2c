@@ -1,0 +1,8 @@
+[container.image]
+repository= "anuruddhal" # optional default is local
+name="jokeapi" # optional
+tag="sample3"  # default is latest
+
+[cloud.config.files]
+    [cloud.config.files.ballerina.conf] # optional
+        file="resource/ballerina.conf"
