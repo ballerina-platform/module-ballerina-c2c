@@ -8,5 +8,5 @@ tag="sample4"  # default is latest
         file="resource/ballerina.conf"
 
 [cloud.deployment.probes]
-    [cloud.deployment.probes.liveness]
+    [cloud.deployment.probes.readiness]
         path="JokeAPI/healthz"
