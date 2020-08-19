@@ -4,5 +4,5 @@ name="jokeapi" # optional
 tag="sample3"  # default is latest
 
 [cloud.config.files]
-    [cloud.config.files.ballerina.conf] # optional
+    [cloud.config.files.ballerina.conf] 
         file="resource/ballerina.conf"

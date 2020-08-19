@@ -15,19 +15,19 @@ type StringArray string[];
 function invokeJokeAPI() returns @tainted json|error {
     string[]|error blockList = config:getAsArray("BlockList").cloneWithType(StringArray);
     if (blockList is string[] && blockList.length() > 0) {
-        string blockedItems="";
+        string blockedItems = "";
         foreach var item in blockList {
-           blockedItems = blockedItems.concat(item,",");
+            blockedItems = blockedItems.concat(item, ",");
         }
-        blockedItems = blockedItems.substring( 0, blockedItems.length()-1);
+        blockedItems = blockedItems.substring(0, blockedItems.length() - 1);
         io:println("blocked: ", blockedItems);
 
         http:Client clientEP = new ("https://sv443.net/jokeapi");
-        http:Response resp = check clientEP->get("/v2/joke/Programming,Miscellaneous?blacklistFlags="+blockedItems);
+        http:Response resp = check clientEP->get("/v2/joke/Programming,Miscellaneous?blacklistFlags=" + blockedItems);
         json payload = check resp.getJsonPayload();
         return payload;
-    } else { 
-        json errorJson = {"Message":"Unable to read block list from ballerina.conf"};
+    } else {
+        json errorJson = {"Message": "Unable to read block list from ballerina.conf"};
         return errorJson;
     }
 }
