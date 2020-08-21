@@ -175,7 +175,6 @@ public class JobAnnotationProcessor extends AbstractAnnotationProcessor {
         dockerCertPath,
         copyFiles,
         singleYAML,
-        dependsOn,
         imagePullSecrets,
         registry,
         nodeSelector,

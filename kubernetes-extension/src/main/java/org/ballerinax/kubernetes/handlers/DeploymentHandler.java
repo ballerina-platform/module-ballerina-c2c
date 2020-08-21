@@ -26,6 +26,8 @@ import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.HTTPGetAction;
 import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.Lifecycle;
+import io.fabric8.kubernetes.api.model.LifecycleBuilder;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Probe;
@@ -160,6 +162,13 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         if (null != dockerRegistry && !"".equals(dockerRegistry)) {
             deploymentImageName = dockerRegistry + REGISTRY_SEPARATOR + deploymentImageName;
         }
+        Lifecycle preStop = new LifecycleBuilder()
+                .withNewPreStop()
+                .withNewExec()
+                .withCommand("sleep", "15")
+                .endExec()
+                .endPreStop()
+                .build();
 
         return new ContainerBuilder()
                 .withName(deploymentModel.getName())
@@ -171,6 +180,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 .withLivenessProbe(deploymentModel.getLivenessProbe())
                 .withReadinessProbe(deploymentModel.getReadinessProbe())
                 .withResources(deploymentModel.getResourceRequirements())
+                .withLifecycle(preStop)
                 .build();
     }
 
