@@ -63,10 +63,17 @@ public type ResourceQuotas record {|
 # @kubernetes:ResourcesQuotas annotation to configure Resource Quotas.
 public const annotation ResourceQuotas ResourceQuota on source service, source function;
 
-
-# Kubernetes job configuration.
-public type JobConfig record {|
+public type ScheduleConfig record {|
+     string minutes;
+     string hours;
+     string dayOfMonth;
+     string monthOfYear;
+     string daysOfWeek;
 |};
 
-# @kubernetes:Job annotation to configure kubernetes jobs.
-public const annotation JobConfig Job on source function;
+public type TaskConfig record{|
+    ScheduleConfig schedule?;
+|};
+
+# @c2c:Task annotation to configure cron job.
+public const annotation TaskConfig Task on source function;

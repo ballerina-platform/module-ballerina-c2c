@@ -36,14 +36,12 @@ import static org.ballerinax.kubernetes.utils.KubernetesUtils.isBlank;
 public class DeploymentAnnotationProcessor extends AbstractAnnotationProcessor {
 
     @Override
-    public void processAnnotation(ServiceNode entityName, AnnotationAttachmentNode attachmentNode) throws
-            KubernetesPluginException {
+    public void processAnnotation(ServiceNode entityName, AnnotationAttachmentNode attachmentNode) {
         processDeployment();
     }
 
     @Override
-    public void processAnnotation(SimpleVariableNode variableNode, AnnotationAttachmentNode attachmentNode) throws
-            KubernetesPluginException {
+    public void processAnnotation(SimpleVariableNode variableNode, AnnotationAttachmentNode attachmentNode) {
         processDeployment();
     }
 

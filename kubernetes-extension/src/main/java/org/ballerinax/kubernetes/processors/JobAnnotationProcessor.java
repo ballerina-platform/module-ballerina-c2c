@@ -18,7 +18,7 @@ package org.ballerinax.kubernetes.processors;
 
 import org.ballerinalang.model.tree.AnnotationAttachmentNode;
 import org.ballerinalang.model.tree.FunctionNode;
-import org.ballerinax.kubernetes.KubernetesConstants;
+import org.ballerinalang.model.tree.expressions.RecordLiteralNode;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
 import org.ballerinax.kubernetes.models.JobModel;
 import org.ballerinax.kubernetes.models.KubernetesContext;
@@ -30,14 +30,7 @@ import java.util.List;
 import static org.ballerinax.kubernetes.KubernetesConstants.DOCKER_CERT_PATH;
 import static org.ballerinax.kubernetes.KubernetesConstants.DOCKER_HOST;
 import static org.ballerinax.kubernetes.utils.KubernetesUtils.convertRecordFields;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getBooleanValue;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getEnvVarMap;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getExternalFileMap;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getImagePullSecrets;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getIntValue;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getMap;
 import static org.ballerinax.kubernetes.utils.KubernetesUtils.getStringValue;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getValidName;
 import static org.ballerinax.kubernetes.utils.KubernetesUtils.isBlank;
 
 /**
@@ -54,88 +47,35 @@ public class JobAnnotationProcessor extends AbstractAnnotationProcessor {
         for (BLangRecordLiteral.BLangRecordKeyValueField keyValue : keyValues) {
             JobConfiguration jobConfiguration =
                     JobConfiguration.valueOf(keyValue.getKey().toString());
-            switch (jobConfiguration) {
-                case name:
-                    jobModel.setName(getValidName(getStringValue(keyValue.getValue())));
-                    break;
-                case namespace:
-                    KubernetesContext.getInstance().getDataHolder().setNamespace(getStringValue(keyValue.getValue()));
-                    break;
-                case labels:
-                    jobModel.setLabels(getMap(keyValue.getValue()));
-                    break;
-                case annotations:
-                    jobModel.setAnnotations(getMap(keyValue.getValue()));
-                    break;
-                case restartPolicy:
-                    jobModel.setRestartPolicy(KubernetesConstants.RestartPolicy.valueOf(
-                            getStringValue(keyValue.getValue())).name());
-                    break;
-                case backoffLimit:
-                    jobModel.setBackoffLimit(getIntValue(keyValue.getValue()));
-                    break;
-                case activeDeadlineSeconds:
-                    jobModel.setActiveDeadlineSeconds(getIntValue(keyValue.getValue()));
-                    break;
-                case schedule:
-                    jobModel.setSchedule(getStringValue(keyValue.getValue()));
-                    break;
-                case username:
-                    jobModel.setUsername(getStringValue(keyValue.getValue()));
-                    break;
-                case env:
-                    jobModel.setEnv(getEnvVarMap(keyValue.getValue()));
-                    break;
-                case password:
-                    jobModel.setPassword(getStringValue(keyValue.getValue()));
-                    break;
-                case baseImage:
-                    jobModel.setBaseImage(getStringValue(keyValue.getValue()));
-                    break;
-                case push:
-                    jobModel.setPush(getBooleanValue(keyValue.getValue()));
-                    break;
-                case cmd:
-                    jobModel.setCmd(getStringValue(keyValue.getValue()));
-                    break;
-                case buildImage:
-                    jobModel.setBuildImage(getBooleanValue(keyValue.getValue()));
-                    break;
-                case image:
-                    jobModel.setImage(getStringValue(keyValue.getValue()));
-                    break;
-                case dockerHost:
-                    jobModel.setDockerHost(getStringValue(keyValue.getValue()));
-                    break;
-                case dockerCertPath:
-                    jobModel.setDockerCertPath(getStringValue(keyValue.getValue()));
-                    break;
-                case imagePullPolicy:
-                    jobModel.setImagePullPolicy(getStringValue(keyValue.getValue()));
-                    break;
-                case copyFiles:
-                    jobModel.setCopyFiles(getExternalFileMap(keyValue));
-                    break;
-                case singleYAML:
-                    jobModel.setSingleYAML(getBooleanValue(keyValue.getValue()));
-                    break;
-                case imagePullSecrets:
-                    jobModel.setImagePullSecrets(getImagePullSecrets(keyValue));
-                    break;
-                case registry:
-                    jobModel.setRegistry(getStringValue(keyValue.getValue()));
-                    break;
-                case nodeSelector:
-                    jobModel.setNodeSelector(getMap(keyValue.getValue()));
-                    break;
-                case uberJar:
-                    jobModel.setUberJar(getBooleanValue(keyValue.getValue()));
-                    break;
-                case dockerConfigPath:
-                    jobModel.setDockerConfigPath(getStringValue(keyValue.getValue()));
-                    break;
-                default:
-                    break;
+            if (jobConfiguration == JobConfiguration.schedule) {
+                String minutes = null, hours = null, dayOfMonth = null, monthOfYear = null, daysOfWeek = null;
+                for (RecordLiteralNode.RecordField recordField :
+                        ((BLangRecordLiteral) keyValue.getValue()).getFields()) {
+                    BLangRecordLiteral.BLangRecordKeyValueField schedule =
+                            (BLangRecordLiteral.BLangRecordKeyValueField) recordField;
+                    ScheduleConfig scheduleConfig = ScheduleConfig.valueOf(schedule.getKey().toString());
+                    switch (scheduleConfig) {
+                        case minutes:
+                            minutes = getStringValue(schedule.getValue());
+                            break;
+                        case hours:
+                            hours = getStringValue(schedule.getValue());
+                            break;
+                        case dayOfMonth:
+                            dayOfMonth = getStringValue(schedule.getValue());
+                            break;
+                        case monthOfYear:
+                            monthOfYear = getStringValue(schedule.getValue());
+                            break;
+                        case daysOfWeek:
+                            daysOfWeek = getStringValue(schedule.getValue());
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                jobModel.setSchedule(minutes + " " + hours + " " + dayOfMonth + " "
+                        + monthOfYear + " " + daysOfWeek);
             }
         }
         String dockerHost = System.getenv(DOCKER_HOST);
@@ -154,31 +94,14 @@ public class JobAnnotationProcessor extends AbstractAnnotationProcessor {
      * Enum class for JobConfiguration.
      */
     private enum JobConfiguration {
-        name,
-        namespace,
-        labels,
-        annotations,
-        restartPolicy,
-        backoffLimit,
-        activeDeadlineSeconds,
         schedule,
-        env,
-        buildImage,
-        dockerHost,
-        username,
-        password,
-        baseImage,
-        image,
-        imagePullPolicy,
-        push,
-        cmd,
-        dockerCertPath,
-        copyFiles,
-        singleYAML,
-        imagePullSecrets,
-        registry,
-        nodeSelector,
-        uberJar,
-        dockerConfigPath
+    }
+
+    private enum ScheduleConfig {
+        minutes,
+        hours,
+        dayOfMonth,
+        monthOfYear,
+        daysOfWeek
     }
 }

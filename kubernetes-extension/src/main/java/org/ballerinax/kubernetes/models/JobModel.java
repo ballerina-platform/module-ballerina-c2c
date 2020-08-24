@@ -64,7 +64,7 @@ public class JobModel extends KubernetesModel {
         this.labels = new HashMap<>();
         this.env = new LinkedHashMap<>();
         this.copyFiles = new HashSet<>();
-        this.restartPolicy = KubernetesConstants.RestartPolicy.Never.name();
+        this.restartPolicy = KubernetesConstants.RestartPolicy.OnFailure.name();
         this.setBaseImage(OPENJDK_8_JRE_ALPINE_BASE_IMAGE);
         this.setPush(false);
         this.buildImage = true;

@@ -43,10 +43,8 @@ public class AnnotationProcessorFactory {
                 return new ConfigMapAnnotationProcessor();
             case PersistentVolumeClaim:
                 return new VolumeClaimAnnotationProcessor();
-            case Job:
+            case Task:
                 return new JobAnnotationProcessor();
-            case ResourceQuota:
-                return new ResourceQuotaAnnotationPreprocessor();
             default:
                 KubernetesContext.getInstance().getDataHolder().setCanProcess(false);
                 throw new KubernetesPluginException("error while getting annotation processor for type: " + type);
@@ -60,7 +58,6 @@ public class AnnotationProcessorFactory {
         Secret,
         ConfigMap,
         PersistentVolumeClaim,
-        Job,
-        ResourceQuota
+        Task
     }
 }
