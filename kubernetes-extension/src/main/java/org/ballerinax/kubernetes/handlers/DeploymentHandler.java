@@ -32,6 +32,7 @@ import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
+import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.api.model.TolerationBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
@@ -88,6 +89,8 @@ import static org.ballerinax.kubernetes.utils.KubernetesUtils.populateEnvVar;
  * Generates kubernetes deployment from annotations.
  */
 public class DeploymentHandler extends AbstractArtifactHandler {
+
+    public static final String CLOUD_DEPLOYMENT = "cloud.deployment.";
 
     private List<ContainerPort> populatePorts(Set<Integer> ports) {
         List<ContainerPort> containerPorts = new ArrayList<>();
@@ -274,13 +277,14 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         Toml ballerinaCloud = dataHolder.getBallerinaCloud();
         if (ballerinaCloud != null) {
             DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
-            deploymentModel.setReplicas(Math.toIntExact(ballerinaCloud.getLong("cloud.deployment.replicas",
+            deploymentModel.setReplicas(Math.toIntExact(ballerinaCloud.getLong(CLOUD_DEPLOYMENT + "replicas",
                     (long) deploymentModel.getReplicas())));
-            Toml probeToml = ballerinaCloud.getTable("cloud.deployment.probes.readiness");
+            resolveResources(deploymentModel, ballerinaCloud);
+            Toml probeToml = ballerinaCloud.getTable(CLOUD_DEPLOYMENT + "probes.readiness");
             if (probeToml != null) {
                 deploymentModel.setReadinessProbe(resolveProbeToml(probeToml));
             }
-            probeToml = ballerinaCloud.getTable("cloud.deployment.probes.liveness");
+            probeToml = ballerinaCloud.getTable(CLOUD_DEPLOYMENT + "probes.liveness");
             if (probeToml != null) {
                 deploymentModel.setLivenessProbe(resolveProbeToml(probeToml));
             }
@@ -313,6 +317,27 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             }
         }
 
+    }
+
+    private void resolveResources(DeploymentModel deploymentModel, Toml deploymentToml) {
+        Map<String, Quantity> requests = deploymentModel.getResourceRequirements().getRequests();
+        String minMemory = deploymentToml.getString(CLOUD_DEPLOYMENT + "min_memory");
+        String minCPU = deploymentToml.getString(CLOUD_DEPLOYMENT + "min_cpu");
+        if (minMemory != null) {
+            requests.put("memory", new Quantity(minMemory));
+        }
+        if (minCPU != null) {
+            requests.put("cpu", new Quantity(minCPU));
+        }
+        Map<String, Quantity> limits = deploymentModel.getResourceRequirements().getLimits();
+        String maxMemory = deploymentToml.getString("max_memory");
+        String maxCPU = deploymentToml.getString("max_cpu");
+        if (maxMemory != null) {
+            limits.put("memory", new Quantity(maxMemory));
+        }
+        if (maxCPU != null) {
+            limits.put("cpu", new Quantity(maxCPU));
+        }
     }
 
     private void resolveConfigMap(DeploymentModel deploymentModel, Toml envVars) throws KubernetesPluginException {
