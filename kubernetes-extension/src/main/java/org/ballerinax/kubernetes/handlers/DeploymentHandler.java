@@ -488,12 +488,13 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         }
     }
 
-    private void resolveDockerToml() {
+    private void resolveDockerToml(DeploymentModel deploymentModel) {
         final String containerImage = "container.image";
         Toml toml = dataHolder.getBallerinaCloud();
         if (toml != null) {
             DockerModel dockerModel = dataHolder.getDockerModel();
-            dockerModel.setName(toml.getString(containerImage + ".name", dockerModel.getName()));
+            dockerModel.setName(toml.getString(containerImage + ".name",
+                    deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "")));
             dockerModel.setRegistry(toml.getString(containerImage + ".repository", dockerModel.getRegistry()));
             dockerModel.setTag(toml.getString(containerImage + ".tag", dockerModel.getTag()));
             dockerModel.setBaseImage(toml.getString(containerImage + ".base", dockerModel.getBaseImage()));
@@ -531,7 +532,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 deploymentModel.getReadinessProbe().getHttpGet().setPort(new
                         IntOrString(deploymentModel.getPorts().iterator().next()));
             }
-            resolveDockerToml();
+            resolveDockerToml(deploymentModel);
             generate(deploymentModel);
             OUT.println();
             OUT.print("\t@kubernetes:Deployment \t\t\t - complete 1/1");
