@@ -31,18 +31,11 @@
 
     <test name="ballerina-kubernetes-tests" parallel="false">
         <classes>
-            <class name="org.ballerinax.kubernetes.test.EnvVarTest"/>
-            <class name="org.ballerinax.kubernetes.test.ResourceQuotaTest"/>
             <class name="org.ballerinax.kubernetes.test.JobTest"/>
             <class name="org.ballerinax.kubernetes.test.MainFunctionDeploymentTest"/>
             <class name="org.ballerinax.kubernetes.test.ServiceTest"/>
-            <class name="org.ballerinax.kubernetes.test.DeploymentTest"/>
-            <class name="org.ballerinax.kubernetes.test.StrategyTest"/>
             <class name="org.ballerinax.kubernetes.test.LivenessProbeTest"/>
-            <class name="org.ballerinax.kubernetes.test.ReadinessProbeTest"/>
             <class name="org.ballerinax.kubernetes.test.NoAnnotationsTest"/>
-            <class name="org.ballerinax.kubernetes.test.DefaultModeTest"/>
-            <class name="org.ballerinax.kubernetes.test.PrometheusTest"/>
         </classes>
     </test>
 

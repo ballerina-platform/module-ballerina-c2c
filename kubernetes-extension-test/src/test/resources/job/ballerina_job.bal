@@ -15,22 +15,8 @@
 // under the License.
 
 import ballerina/io;
-import ballerina/kubernetes;
+import ballerina/c2c as _;
 
-@kubernetes:Job {
-    env: {
-        "location": "SL"
-    },
-    image: "my-ballerina-job:1.0",
-    labels: { "lang": "ballerina" },
-    copyFiles: [
-        {
-            target: "/home/ballerina/data/data.txt",
-            sourceFile: "./data/data.txt"
-        }
-    ],
-    singleYAML: false
-}
 public function main(string... args) {
     io:println("hello world");
 }

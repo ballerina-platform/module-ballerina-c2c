@@ -88,8 +88,6 @@ public class KubernetesDeploymentGeneratorTests extends HandlerTestSuite {
         Assert.assertEquals(imageName, container.getImage());
         Assert.assertEquals(imagePullPolicy, container.getImagePullPolicy());
         Assert.assertEquals(3, container.getPorts().size());
-        Assert.assertEquals(5, container.getLivenessProbe().getPeriodSeconds().intValue());
-        Assert.assertEquals(10, container.getLivenessProbe().getInitialDelaySeconds().intValue());
         Assert.assertEquals(1, container.getEnv().size());
     }
 }

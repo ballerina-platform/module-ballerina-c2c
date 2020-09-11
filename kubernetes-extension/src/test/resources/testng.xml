@@ -30,7 +30,6 @@
             <class name="org.ballerinax.kubernetes.handlers.KubernetesDeploymentGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesHPAGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesServiceGeneratorTests"/>
-            <class name="org.ballerinax.kubernetes.handlers.KubernetesIngressGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesSecretGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesVolumeClaimGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesJobGeneratorTests"/>
