@@ -24,7 +24,6 @@
     <test name="ballerinax-kubernetes-unit-tests" parallel="false">
         <classes>
             <class name="org.ballerinax.kubernetes.handlers.HandlerTestSuite"/>
-            <class name="org.ballerinax.kubernetes.handlers.DockerGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesConfigMapGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesDeploymentGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesHPAGeneratorTests"/>
