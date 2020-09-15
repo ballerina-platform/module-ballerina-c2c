@@ -25,15 +25,12 @@
         <classes>
             <class name="org.ballerinax.kubernetes.handlers.HandlerTestSuite"/>
             <class name="org.ballerinax.kubernetes.handlers.DockerGeneratorTests"/>
-            <class name="org.ballerinax.kubernetes.handlers.KubernetesSecretGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesConfigMapGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesDeploymentGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesHPAGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesServiceGeneratorTests"/>
-            <class name="org.ballerinax.kubernetes.handlers.KubernetesSecretGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesVolumeClaimGeneratorTests"/>
             <class name="org.ballerinax.kubernetes.handlers.KubernetesJobGeneratorTests"/>
-            <class name="org.ballerinax.kubernetes.handlers.KubernetesResourceQuotaGeneratorTests"/>
         </classes>
     </test>
 

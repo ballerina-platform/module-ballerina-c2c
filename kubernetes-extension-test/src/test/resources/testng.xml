@@ -32,10 +32,6 @@
     <test name="ballerina-kubernetes-tests" parallel="false">
         <classes>
             <class name="org.ballerinax.kubernetes.test.JobTest"/>
-            <class name="org.ballerinax.kubernetes.test.MainFunctionDeploymentTest"/>
-            <class name="org.ballerinax.kubernetes.test.ServiceTest"/>
-            <class name="org.ballerinax.kubernetes.test.LivenessProbeTest"/>
-            <class name="org.ballerinax.kubernetes.test.NoAnnotationsTest"/>
         </classes>
     </test>
 

@@ -56,7 +56,7 @@ public class JobTest {
         InspectImageResponse imageInspect = getDockerImage(DOCKER_IMAGE_JOB);
         Assert.assertNotNull(imageInspect.getConfig());
 
-        File jobYAML = KUBERNETES_TARGET_PATH.resolve("ballerina_job_job.yaml").toFile();
+        File jobYAML = KUBERNETES_TARGET_PATH.resolve("ballerina_job.yaml").toFile();
         Job job = KubernetesTestUtils.loadYaml(jobYAML);
         Assert.assertEquals(job.getMetadata().getName(), "ballerina-job-job");
         Assert.assertEquals(job.getSpec().getTemplate().getSpec().getContainers().size(), 1);
@@ -65,7 +65,7 @@ public class JobTest {
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE_JOB);
         Assert.assertEquals(container.getImagePullPolicy(), KubernetesConstants.ImagePullPolicy.IfNotPresent.name());
         Assert.assertEquals(job.getSpec().getTemplate().getSpec()
-                .getRestartPolicy(), KubernetesConstants.RestartPolicy.Never.name());
+                .getRestartPolicy(), KubernetesConstants.RestartPolicy.OnFailure.name());
     }
 
     @AfterClass

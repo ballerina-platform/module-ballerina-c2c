@@ -44,6 +44,7 @@ public class AnnotationProcessorFactory {
             case PersistentVolumeClaim:
                 return new VolumeClaimAnnotationProcessor();
             case Task:
+            case Job:
                 return new JobAnnotationProcessor();
             default:
                 KubernetesContext.getInstance().getDataHolder().setCanProcess(false);
@@ -58,6 +59,7 @@ public class AnnotationProcessorFactory {
         Secret,
         ConfigMap,
         PersistentVolumeClaim,
-        Task
+        Task,
+        Job
     }
 }

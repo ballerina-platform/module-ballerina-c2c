@@ -20,6 +20,7 @@ package org.ballerinax.kubernetes.test.samples;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -60,6 +61,7 @@ public class Sample1Test extends SampleTest {
     private static final String DOCKER_IMAGE = "hello_world_k8s:latest";
     private Deployment deployment;
     private Service service;
+    private HorizontalPodAutoscaler podAutoscaler;
 
     @BeforeClass
     public void compileSample() throws IOException, InterruptedException {
@@ -75,6 +77,9 @@ public class Sample1Test extends SampleTest {
                     break;
                 case "Service":
                     service = (Service) data;
+                    break;
+                case "HorizontalPodAutoscaler":
+                    podAutoscaler = (HorizontalPodAutoscaler) data;
                     break;
                 default:
                     Assert.fail("Unexpected k8s resource found: " + data.getKind());
@@ -104,7 +109,7 @@ public class Sample1Test extends SampleTest {
         Assert.assertEquals(service.getMetadata().getName(), "helloworld-svc");
         Assert.assertEquals(service.getMetadata().getLabels().get(KubernetesConstants
                 .KUBERNETES_SELECTOR_KEY), "hello_world_k8s");
-        Assert.assertEquals(service.getSpec().getType(), KubernetesConstants.ServiceType.NodePort.name());
+        Assert.assertEquals(service.getSpec().getType(), KubernetesConstants.ServiceType.ClusterIP.name());
         Assert.assertEquals(service.getSpec().getPorts().size(), 1);
         Assert.assertEquals(service.getSpec().getPorts().get(0).getPort().intValue(), 9090);
     }
