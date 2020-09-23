@@ -48,7 +48,6 @@ import static org.ballerinax.kubernetes.test.utils.KubernetesTestUtils.deleteK8s
 import static org.ballerinax.kubernetes.test.utils.KubernetesTestUtils.deployK8s;
 import static org.ballerinax.kubernetes.test.utils.KubernetesTestUtils.getExposedPorts;
 import static org.ballerinax.kubernetes.test.utils.KubernetesTestUtils.loadImage;
-import static org.ballerinax.kubernetes.test.utils.KubernetesTestUtils.validateService;
 
 /**
  * Test cases for sample 1.
@@ -134,8 +133,6 @@ public class Sample1Test extends SampleTest {
     public void deploySample() throws IOException, InterruptedException {
         Assert.assertEquals(0, loadImage(DOCKER_IMAGE));
         Assert.assertEquals(0, deployK8s(KUBERNETES_TARGET_PATH));
-        Assert.assertTrue(validateService("http://172.17.0.2:32001/helloWorld/sayHello",
-                "Hello, World from service helloWorld !"));
         Assert.assertEquals(0, deleteK8s(KUBERNETES_TARGET_PATH));
     }
 
