@@ -11,11 +11,8 @@ Code2cloud extension implementation for ballerina.
 - Kubernetes readiness probe support
 - Kubernetes horizontal pod autoscaler support.
 - Docker image generation. 
-- Docker push support with remote docker registry.
 - Kubernetes secret support.
 - Kubernetes config map support.
-- Kubernetes persistent volume claim support.
-- Kubernetes resource quotas.
 
 **Refer [samples](samples) for more info.**
 

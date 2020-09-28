@@ -43,7 +43,6 @@ public class KubernetesDataHolder {
     private Set<SecretModel> secretModelSet;
     private Set<ConfigMapModel> configMapModelSet;
     private Set<PersistentVolumeClaimModel> volumeClaimModelSet;
-    private Set<ResourceQuotaModel> resourceQuotaModels;
     private JobModel jobModel;
     private Path uberJarPath;
     private Path k8sArtifactOutputPath;
@@ -61,7 +60,6 @@ public class KubernetesDataHolder {
         this.configMapModelSet = new HashSet<>();
         this.volumeClaimModelSet = new HashSet<>();
         this.deploymentModel = new DeploymentModel();
-        this.resourceQuotaModels = new HashSet<>();
         this.dockerModel = new DockerModel();
         this.ballerinaCloud = null;
     }

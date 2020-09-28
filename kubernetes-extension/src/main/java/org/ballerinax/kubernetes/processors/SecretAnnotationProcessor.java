@@ -203,7 +203,6 @@ public class SecretAnnotationProcessor extends AbstractAnnotationProcessor {
         mountPath,
         readOnly,
         data,
-        conf,
         defaultMode
     }
 }
