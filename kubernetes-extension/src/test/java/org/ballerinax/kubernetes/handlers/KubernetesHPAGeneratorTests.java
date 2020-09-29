@@ -18,6 +18,7 @@
 
 package org.ballerinax.kubernetes.handlers;
 
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import org.ballerinax.kubernetes.KubernetesConstants;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
@@ -52,9 +53,9 @@ public class KubernetesHPAGeneratorTests extends HandlerTestSuite {
         deploymentModel.setName(deploymentName);
         Map<String, String> labels = new HashMap<>();
         labels.put(KubernetesConstants.KUBERNETES_SELECTOR_KEY, selector);
-        deploymentModel.addPort(9090);
-        deploymentModel.addPort(9091);
-        deploymentModel.addPort(9092);
+        deploymentModel.addPort(new ContainerPortBuilder().withContainerPort(9090).build());
+        deploymentModel.addPort(new ContainerPortBuilder().withContainerPort(9091).build());
+        deploymentModel.addPort(new ContainerPortBuilder().withContainerPort(9092).build());
         deploymentModel.setLabels(labels);
         deploymentModel.setSingleYAML(false);
         Map<String, EnvVarValueModel> env = new HashMap<>();

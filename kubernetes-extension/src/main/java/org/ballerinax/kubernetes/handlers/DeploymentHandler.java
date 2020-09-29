@@ -23,7 +23,6 @@ import com.moandjiezana.toml.Toml;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
-import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.HTTPGetAction;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Lifecycle;
@@ -44,7 +43,6 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import org.ballerinax.docker.generator.exceptions.DockerGenException;
 import org.ballerinax.docker.generator.models.DockerModel;
-import org.ballerinax.kubernetes.KubernetesConstants;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
 import org.ballerinax.kubernetes.models.ConfigMapModel;
 import org.ballerinax.kubernetes.models.DeploymentModel;
@@ -68,7 +66,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.ballerinax.docker.generator.DockerGenConstants.REGISTRY_SEPARATOR;
@@ -91,18 +88,6 @@ import static org.ballerinax.kubernetes.utils.KubernetesUtils.populateEnvVar;
 public class DeploymentHandler extends AbstractArtifactHandler {
 
     public static final String CLOUD_DEPLOYMENT = "cloud.deployment.";
-
-    private List<ContainerPort> populatePorts(Set<Integer> ports) {
-        List<ContainerPort> containerPorts = new ArrayList<>();
-        for (int port : ports) {
-            ContainerPort containerPort = new ContainerPortBuilder()
-                    .withContainerPort(port)
-                    .withProtocol(KubernetesConstants.KUBERNETES_SVC_PROTOCOL)
-                    .build();
-            containerPorts.add(containerPort);
-        }
-        return containerPorts;
-    }
 
     private List<VolumeMount> populateVolumeMounts(DeploymentModel deploymentModel) {
         List<VolumeMount> volumeMounts = new ArrayList<>();
@@ -423,7 +408,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         //Resolve Probe.
         Probe probe = new ProbeBuilder().build();
         HTTPGetAction httpGet = new HTTPGetAction();
-        int defaultPort = dataHolder.getDeploymentModel().getPorts().iterator().next();
+        int defaultPort = dataHolder.getDeploymentModel().getPorts().iterator().next().getContainerPort();
         httpGet.setPort(new IntOrString(defaultPort));
         final Long port = probeToml.getLong("port");
         if (port != null) {
@@ -445,7 +430,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         resolveToml();
         List<ContainerPort> containerPorts = null;
         if (deploymentModel.getPorts() != null) {
-            containerPorts = populatePorts(deploymentModel.getPorts());
+            containerPorts = deploymentModel.getPorts();
         }
         Container container = generateContainer(deploymentModel, containerPorts);
         Deployment deployment = new DeploymentBuilder()
@@ -519,7 +504,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                             "missing @kubernetes:Service annotation on listener.");
                 }
                 deploymentModel.getLivenessProbe().getHttpGet().setPort(new
-                        IntOrString(deploymentModel.getPorts().iterator().next()));
+                        IntOrString(deploymentModel.getPorts().iterator().next().getContainerPort()));
             }
 
             if (null != deploymentModel.getReadinessProbe() &&
@@ -530,7 +515,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                             "missing @kubernetes:Service annotation on listener.");
                 }
                 deploymentModel.getReadinessProbe().getHttpGet().setPort(new
-                        IntOrString(deploymentModel.getPorts().iterator().next()));
+                        IntOrString(deploymentModel.getPorts().iterator().next().getContainerPort()));
             }
             resolveDockerToml(deploymentModel);
             generate(deploymentModel);
@@ -568,8 +553,10 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         dockerModel.setPush(deploymentModel.isPush());
         dockerModel.setDockerConfig(deploymentModel.getDockerConfigPath());
         dockerModel.setCmd(deploymentModel.getCmd());
-        dockerModel.setJarFileName(extractJarName(this.dataHolder.getUberJarPath()) + EXECUTABLE_JAR);
-        dockerModel.setPorts(deploymentModel.getPorts());
+        dockerModel.setJarFileName(extractJarName(this.dataHolder.getJarPath()) + EXECUTABLE_JAR);
+        dockerModel.setPorts(deploymentModel.getPorts().stream()
+                .map(ContainerPort::getContainerPort)
+                .collect(Collectors.toSet()));
         dockerModel.setUberJar(deploymentModel.isUberJar());
         dockerModel.setService(true);
         dockerModel.setDockerHost(deploymentModel.getDockerHost());

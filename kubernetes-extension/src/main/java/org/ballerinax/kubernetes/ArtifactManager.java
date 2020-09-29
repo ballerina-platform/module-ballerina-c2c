@@ -99,7 +99,7 @@ public class ArtifactManager {
     public void populateDeploymentModel() {
         DeploymentModel deploymentModel = kubernetesDataHolder.getDeploymentModel();
         kubernetesDataHolder.setDeploymentModel(deploymentModel);
-        String balxFileName = extractJarName(kubernetesDataHolder.getUberJarPath());
+        String balxFileName = extractJarName(kubernetesDataHolder.getJarPath());
         if (isBlank(deploymentModel.getName())) {
             if (balxFileName != null) {
                 deploymentModel.setName(getValidName(balxFileName) + DEPLOYMENT_POSTFIX);

@@ -34,9 +34,6 @@ import org.apache.commons.io.FileUtils;
 import org.ballerinalang.model.tree.AnnotationAttachmentNode;
 import org.ballerinalang.model.tree.IdentifierNode;
 import org.ballerinalang.model.tree.NodeKind;
-import org.ballerinalang.model.tree.expressions.ExpressionNode;
-import org.ballerinax.docker.generator.models.CopyFileModel;
-import org.ballerinax.kubernetes.KubernetesConstants;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
 import org.ballerinax.kubernetes.models.DeploymentModel;
 import org.ballerinax.kubernetes.models.EnvVarValueModel;
@@ -48,7 +45,6 @@ import org.wso2.ballerinalang.compiler.semantics.model.types.BFiniteType;
 import org.wso2.ballerinalang.compiler.tree.BLangAnnotationAttachment;
 import org.wso2.ballerinalang.compiler.tree.BLangIdentifier;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangExpression;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangListConstructorExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangRecordLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangSimpleVarRef;
@@ -63,14 +59,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
@@ -81,7 +73,7 @@ import static org.ballerinax.kubernetes.KubernetesConstants.YAML;
  */
 public class KubernetesUtils {
 
-    private static final boolean DEBUG_ENABLED = "true".equals(System.getenv(KubernetesConstants.ENABLE_DEBUG_LOGS));
+
     private static final PrintStream ERR = System.err;
     private static final PrintStream OUT = System.out;
 
@@ -107,14 +99,14 @@ public class KubernetesUtils {
      */
     public static void writeToFile(Path outputDir, String context, String fileSuffix) throws IOException {
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
-        Path artifactFileName = outputDir.resolve(extractJarName(dataHolder.getUberJarPath()) + fileSuffix);
+        Path artifactFileName = outputDir.resolve(extractJarName(dataHolder.getJarPath()) + fileSuffix);
         DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
         JobModel jobModel = dataHolder.getJobModel();
         // Priority given for job, then deployment.
         if (jobModel != null && jobModel.isSingleYAML()) {
-            artifactFileName = outputDir.resolve(extractJarName(dataHolder.getUberJarPath()) + YAML);
+            artifactFileName = outputDir.resolve(extractJarName(dataHolder.getJarPath()) + YAML);
         } else if (jobModel == null && deploymentModel != null && deploymentModel.isSingleYAML()) {
-            artifactFileName = outputDir.resolve(extractJarName(dataHolder.getUberJarPath()) + YAML);
+            artifactFileName = outputDir.resolve(extractJarName(dataHolder.getJarPath()) + YAML);
 
         }
         File newFile = artifactFileName.toFile();
@@ -180,41 +172,12 @@ public class KubernetesUtils {
 
 
     /**
-     * Prints an Information message.
-     *
-     * @param msg message to be printed
-     */
-    public static void printInfo(String msg) {
-        OUT.println(msg);
-    }
-
-    /**
      * Prints an Error message.
      *
      * @param msg message to be printed
      */
     public static void printError(String msg) {
         ERR.println("error [k8s plugin]: " + msg);
-    }
-
-    /**
-     * Prints a debug message.
-     *
-     * @param msg message to be printed
-     */
-    public static void printDebug(String msg) {
-        if (DEBUG_ENABLED) {
-            OUT.println("debug [k8s plugin]: " + msg);
-        }
-    }
-
-    /**
-     * Print warning message.
-     *
-     * @param message Message content.
-     */
-    public static void printWarning(String message) {
-        OUT.println("warning [k8s plugin]: " + message);
     }
 
     /**
@@ -261,51 +224,8 @@ public class KubernetesUtils {
                     return false;
                 }
             }
-            return true;
-        } else {
-            return true;
         }
-    }
-
-    /**
-     * Resolve the given value by processing $env{} place-holders.
-     *
-     * @param value The user provided value
-     * @return The resolved value
-     */
-    public static String resolveValue(String value) throws KubernetesPluginException {
-        int startIndex;
-        if ((startIndex = value.indexOf("$env{")) >= 0) {
-            int endIndex = value.indexOf("}", startIndex);
-            if (endIndex > 0) {
-                String varName = value.substring(startIndex + 5, endIndex).trim();
-                String resolvedVar = Optional.ofNullable(System.getenv(varName)).orElseThrow(() ->
-                        new KubernetesPluginException("error resolving value: " + varName +
-                                " is not set in the environment."));
-                String rest = (value.length() > endIndex + 1) ? resolveValue(value.substring(endIndex + 1)) : "";
-                return value.substring(0, startIndex) + resolvedVar + rest;
-            }
-        }
-        return value;
-    }
-
-    /**
-     * Generate array of string using a {@link BLangListConstructorExpr}.
-     *
-     * @param expr Array literal.
-     * @return Convert string.
-     */
-    public static List<String> getList(BLangExpression expr) throws KubernetesPluginException {
-        if (expr.getKind() != NodeKind.LIST_CONSTRUCTOR_EXPR) {
-            throw new KubernetesPluginException("unable to parse value: " + expr.toString());
-        } else {
-            BLangListConstructorExpr array = (BLangListConstructorExpr) expr;
-            List<String> scopeSet = new LinkedList<>();
-            for (ExpressionNode bLangExpression : array.getExpressions()) {
-                scopeSet.add(getStringValue((BLangExpression) bLangExpression));
-            }
-            return scopeSet;
-        }
+        return true;
     }
 
     /**
@@ -339,16 +259,6 @@ public class KubernetesUtils {
         return Boolean.parseBoolean(getStringValue(expr));
     }
 
-    /**
-     * Get the long value from a ballerina expression.
-     *
-     * @param expr Ballerina integer value.
-     * @return Parsed long value.
-     * @throws KubernetesPluginException When the expression cannot be parsed.
-     */
-    public static long getLongValue(BLangExpression expr) throws KubernetesPluginException {
-        return Long.parseLong(getStringValue(expr));
-    }
 
     /**
      * Get the integer value from a ballerina expression.
@@ -377,12 +287,12 @@ public class KubernetesUtils {
                     // Parse compile time constant
                     BFiniteType compileConst = (BFiniteType) constantSymbol.type;
                     if (compileConst.getValueSpace().size() > 0) {
-                        return resolveValue(compileConst.getValueSpace().iterator().next().toString());
+                        return compileConst.getValueSpace().iterator().next().toString();
                     }
                 }
             }
         } else if (expr instanceof BLangLiteral) {
-            return resolveValue(expr.toString());
+            return expr.toString();
         }
         throw new KubernetesPluginException("unable to parse value: " + expr.toString());
     }
@@ -395,143 +305,6 @@ public class KubernetesUtils {
      */
     public static String getValidName(String name) {
         return name.toLowerCase(Locale.getDefault()).replace("_", "-").replace(".", "-");
-    }
-
-
-    /**
-     * Convert environment variable values into a map for deployment model.
-     *
-     * @param envVarValues Value of env field of Deployment annotation.
-     * @return A map of env var models.
-     */
-    public static Map<String, EnvVarValueModel> getEnvVarMap(BLangExpression envVarValues)
-            throws KubernetesPluginException {
-        Map<String, EnvVarValueModel> envVarMap = new LinkedHashMap<>();
-        if (envVarValues.getKind() == NodeKind.RECORD_LITERAL_EXPR) {
-            for (BLangRecordLiteral.BLangRecordKeyValueField envVar :
-                    convertRecordFields(((BLangRecordLiteral) envVarValues).getFields())) {
-                String envVarName = envVar.getKey().toString();
-                EnvVarValueModel envVarValue = null;
-                if (envVar.getValue().getKind() == NodeKind.LITERAL) {
-                    // Value is a string
-                    envVarValue = new EnvVarValueModel(getStringValue(envVar.getValue()));
-                } else if (envVar.getValue().getKind() == NodeKind.RECORD_LITERAL_EXPR) {
-                    BLangRecordLiteral valueFrom = (BLangRecordLiteral) envVar.getValue();
-                    BLangRecordLiteral.BLangRecordKeyValueField bRefType =
-                            (BLangRecordLiteral.BLangRecordKeyValueField) valueFrom.getFields().get(0);
-                    BLangSimpleVarRef refType = (BLangSimpleVarRef) bRefType.getKey();
-                    switch (refType.variableName.toString()) {
-                        case "fieldRef":
-                            BLangRecordLiteral.BLangRecordKeyValueField fieldRefValue =
-                                    convertRecordFields(((BLangRecordLiteral) bRefType.getValue()).getFields()).get(0);
-                            EnvVarValueModel.FieldRef fieldRefModel = new EnvVarValueModel.FieldRef();
-                            fieldRefModel.setFieldPath(getStringValue(fieldRefValue.getValue()));
-                            envVarValue = new EnvVarValueModel(fieldRefModel);
-                            break;
-                        case "secretKeyRef":
-                            EnvVarValueModel.SecretKeyRef secretKeyRefModel = new EnvVarValueModel.SecretKeyRef();
-                            for (BLangRecordLiteral.BLangRecordKeyValueField secretKeyRefFields :
-                                    convertRecordFields(((BLangRecordLiteral) bRefType.getValue()).getFields())) {
-                                if (secretKeyRefFields.getKey().toString().equals("key")) {
-                                    secretKeyRefModel.setKey(getStringValue(secretKeyRefFields.getValue()));
-                                } else if (secretKeyRefFields.getKey().toString().equals("name")) {
-                                    secretKeyRefModel.setName(getStringValue(secretKeyRefFields.getValue()));
-                                }
-                            }
-                            envVarValue = new EnvVarValueModel(secretKeyRefModel);
-                            break;
-                        case "resourceFieldRef":
-                            EnvVarValueModel.ResourceFieldRef resourceFieldRefModel =
-                                    new EnvVarValueModel.ResourceFieldRef();
-                            for (BLangRecordLiteral.BLangRecordKeyValueField resourceFieldRefFields :
-                                    convertRecordFields(((BLangRecordLiteral) bRefType.getValue()).getFields())) {
-                                if (resourceFieldRefFields.getKey().toString().equals("containerName")) {
-                                    resourceFieldRefModel.setContainerName(
-                                            getStringValue(resourceFieldRefFields.getValue()));
-                                } else if (resourceFieldRefFields.getKey().toString().equals("resource")) {
-                                    resourceFieldRefModel.setResource(
-                                            getStringValue(resourceFieldRefFields.getValue()));
-                                }
-                            }
-                            envVarValue = new EnvVarValueModel(resourceFieldRefModel);
-                            break;
-                        case "configMapKeyRef":
-                            EnvVarValueModel.ConfigMapKeyValue configMapKeyRefModel =
-                                    new EnvVarValueModel.ConfigMapKeyValue();
-                            for (BLangRecordLiteral.BLangRecordKeyValueField configMapKeyRefFields :
-                                    convertRecordFields(((BLangRecordLiteral) bRefType.getValue()).getFields())) {
-                                if (configMapKeyRefFields.getKey().toString().equals("key")) {
-                                    configMapKeyRefModel.setKey(getStringValue(configMapKeyRefFields.getValue()));
-                                } else if (configMapKeyRefFields.getKey().toString().equals("name")) {
-                                    configMapKeyRefModel.setName(getStringValue(configMapKeyRefFields.getValue()));
-                                }
-                            }
-                            envVarValue = new EnvVarValueModel(configMapKeyRefModel);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                envVarMap.put(envVarName, envVarValue);
-            }
-        }
-        return envVarMap;
-    }
-
-    /**
-     * Get Image pull secrets.
-     *
-     * @param keyValue Value of imagePullSecret field of Job annotation.
-     * @return A set of image pull secrets.
-     */
-    public static Set<String> getImagePullSecrets(BLangRecordLiteral.BLangRecordKeyValueField keyValue) throws
-            KubernetesPluginException {
-        Set<String> imagePullSecrets = new HashSet<>();
-        List<BLangExpression> configAnnotation = ((BLangListConstructorExpr) keyValue.valueExpr).exprs;
-        for (BLangExpression bLangExpression : configAnnotation) {
-            imagePullSecrets.add(getStringValue(bLangExpression));
-        }
-        return imagePullSecrets;
-    }
-
-
-    /**
-     * Get the set of external files to copy to docker image.
-     *
-     * @param keyValue Value of copyFiles field of Job annotation.
-     * @return A set of external files
-     * @throws KubernetesPluginException if an error occur while getting the paths
-     */
-    public static Set<CopyFileModel> getExternalFileMap(BLangRecordLiteral.BLangRecordKeyValueField keyValue) throws
-            KubernetesPluginException {
-        Set<CopyFileModel> externalFiles = new HashSet<>();
-        List<BLangExpression> configAnnotation = ((BLangListConstructorExpr) keyValue.valueExpr).exprs;
-        for (BLangExpression bLangExpression : configAnnotation) {
-            List<BLangRecordLiteral.BLangRecordKeyValueField> annotationValues =
-                    convertRecordFields(((BLangRecordLiteral) bLangExpression).getFields());
-            CopyFileModel externalFileModel = new CopyFileModel();
-            for (BLangRecordLiteral.BLangRecordKeyValueField annotation : annotationValues) {
-                switch (annotation.getKey().toString()) {
-                    case "sourceFile":
-                        externalFileModel.setSource(getStringValue(annotation.getValue()));
-                        break;
-                    case "target":
-                        externalFileModel.setTarget(getStringValue(annotation.getValue()));
-                        break;
-                    default:
-                        break;
-                }
-            }
-            if (isBlank(externalFileModel.getSource())) {
-                throw new KubernetesPluginException("@kubernetes:Deployment copyFiles source cannot be empty.");
-            }
-            if (isBlank(externalFileModel.getTarget())) {
-                throw new KubernetesPluginException("@kubernetes:Deployment copyFiles target cannot be empty.");
-            }
-            externalFiles.add(externalFileModel);
-        }
-        return externalFiles;
     }
 
     /**

@@ -131,7 +131,7 @@ public class JobHandler extends AbstractArtifactHandler {
     @Override
     public void createArtifacts() throws KubernetesPluginException {
         try {
-            String balxFileName = extractJarName(dataHolder.getUberJarPath());
+            String balxFileName = extractJarName(dataHolder.getJarPath());
             JobModel jobModel = dataHolder.getJobModel();
             if (isBlank(jobModel.getName())) {
                 jobModel.setName(getValidName(balxFileName) + JOB_POSTFIX);
@@ -164,7 +164,7 @@ public class JobHandler extends AbstractArtifactHandler {
         dockerModel.setPassword(jobModel.getPassword());
         dockerModel.setPush(jobModel.isPush());
         dockerModel.setCmd(jobModel.getCmd());
-        dockerModel.setJarFileName(extractJarName(this.dataHolder.getUberJarPath()) + EXECUTABLE_JAR);
+        dockerModel.setJarFileName(extractJarName(this.dataHolder.getJarPath()) + EXECUTABLE_JAR);
         dockerModel.setService(false);
         dockerModel.setDockerHost(jobModel.getDockerHost());
         dockerModel.setDockerCertPath(jobModel.getDockerCertPath());

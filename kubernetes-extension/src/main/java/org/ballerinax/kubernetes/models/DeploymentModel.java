@@ -17,6 +17,7 @@
  */
 package org.ballerinax.kubernetes.models;
 
+import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
@@ -59,7 +60,7 @@ public class DeploymentModel extends KubernetesModel {
     private String cmd;
     private String dockerHost;
     private String dockerCertPath;
-    private Set<Integer> ports;
+    private List<ContainerPort> ports;
     private PodAutoscalerModel podAutoscalerModel;
     private Set<SecretModel> secretModels;
     private Set<ConfigMapModel> configMapModels;
@@ -91,9 +92,7 @@ public class DeploymentModel extends KubernetesModel {
         this.env = new LinkedHashMap<>();
         this.imagePullPolicy = KubernetesConstants.ImagePullPolicy.IfNotPresent.name();
         this.dependsOn = new HashSet<>();
-
-        // Configure Docker Host based on operating system.
-        this.ports = new HashSet<>();
+        this.ports = new ArrayList<>();
         this.secretModels = new HashSet<>();
         this.configMapModels = new HashSet<>();
         this.volumeClaimModels = new HashSet<>();
@@ -129,7 +128,7 @@ public class DeploymentModel extends KubernetesModel {
         this.readinessProbe = readinessProbe;
     }
 
-    public void addPort(int port) {
+    public void addPort(ContainerPort port) {
         this.ports.add(port);
     }
 

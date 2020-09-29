@@ -44,7 +44,7 @@ public class KubernetesDataHolder {
     private Set<ConfigMapModel> configMapModelSet;
     private Set<PersistentVolumeClaimModel> volumeClaimModelSet;
     private JobModel jobModel;
-    private Path uberJarPath;
+    private Path jarPath;
     private Path k8sArtifactOutputPath;
     private Path dockerArtifactOutputPath;
     private String namespace;

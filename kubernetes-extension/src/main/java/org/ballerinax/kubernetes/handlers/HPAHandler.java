@@ -103,7 +103,7 @@ public class HPAHandler extends AbstractArtifactHandler {
         if (podAutoscalerModel == null) {
             return;
         }
-        String balxFileName = extractJarName(dataHolder.getUberJarPath());
+        String balxFileName = extractJarName(dataHolder.getJarPath());
         podAutoscalerModel.addLabel(KubernetesConstants.KUBERNETES_SELECTOR_KEY, balxFileName);
         podAutoscalerModel.setDeployment(deploymentModel.getName());
         if (podAutoscalerModel.getMaxReplicas() == 0) {

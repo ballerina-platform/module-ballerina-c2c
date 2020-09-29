@@ -24,7 +24,7 @@ plugins {
     id "net.researchgate.release" version "2.6.0"
 }
 
-ext.ballerinaLangVersion = project.version
+ext.ballerinaLangVersion = project.ballerinaLangVersion
 ext.ballerinaSourceDirectory = "$buildDir/../src/main/ballerina"
 ext.dockerJavaVersion = "3.1.5"
 ext.fabric8KubernetesClientVersion = "4.9.0"
@@ -169,6 +169,27 @@ allprojects {
                 password System.getenv("packagePAT")
             }
         }
+        maven {
+            url = 'https://maven.pkg.github.com/ballerina-platform/module-ballerina-jwt'
+            credentials {
+                username System.getenv("packageUser")
+                password System.getenv("packagePAT")
+            }
+        }
+        maven {
+            url = 'https://maven.pkg.github.com/ballerina-platform/module-ballerina-grpc'
+            credentials {
+                username System.getenv("packageUser")
+                password System.getenv("packagePAT")
+            }
+        }
+        maven {
+            url = 'https://maven.pkg.github.com/ballerina-platform/module-ballerina-encoding'
+            credentials {
+                username System.getenv("packageUser")
+                password System.getenv("packagePAT")
+            }
+        }
     }
 }
 
@@ -198,6 +219,9 @@ subprojects {
         ballerinaStdLibs "org.ballerinalang:mime-ballerina:${stdlibMimeVersion}"
         ballerinaStdLibs "org.ballerinalang:system-ballerina:${stdlibSystemVersion}"
         ballerinaStdLibs "org.ballerinalang:task-ballerina:${stdlibTaskVersion}"
+        ballerinaStdLibs "org.ballerinalang:jwt-ballerina:${stdlibJwtVersion}"
+        ballerinaStdLibs "org.ballerinalang:grpc-ballerina:${stdlibGrpcVersion}"
+        ballerinaStdLibs "org.ballerinalang:encoding-ballerina:${stdlibEncodingVersion}"
 
         // mimepull JAR
         thirdPartyJars "org.jvnet.mimepull:mimepull:1.9.11"

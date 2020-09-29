@@ -33,7 +33,7 @@ public class DockerHandler extends AbstractArtifactHandler {
             // Generate docker artifacts
             DockerArtifactHandler dockerArtifactHandler = new DockerArtifactHandler(dataHolder.getDockerModel());
             OUT.println();
-            dockerArtifactHandler.createArtifacts(OUT, "\t@kubernetes:Docker \t\t\t", dataHolder.getUberJarPath(),
+            dockerArtifactHandler.createArtifacts(OUT, "\t@kubernetes:Docker \t\t\t", dataHolder.getJarPath(),
                     dataHolder.getDockerArtifactOutputPath());
         } catch (DockerGenException e) {
             throw new KubernetesPluginException(e.getMessage(), e);

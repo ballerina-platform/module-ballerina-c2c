@@ -108,16 +108,16 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                     .addDependencyJarPaths(dependencyJarPaths);
         }
         // Get the imports with alias _
-        List<BLangImportPackage> kubernetesImports = bPackage.getImports().stream()
+        List<BLangImportPackage> c2cImports = bPackage.getImports().stream()
                 .filter(i -> i.symbol.toString().startsWith("ballerina/c2c") &&
                         i.getAlias().toString().equals("_"))
                 .collect(Collectors.toList());
 
-        if (kubernetesImports.size() > 0) {
-            for (BLangImportPackage kubernetesImport : kubernetesImports) {
+        if (c2cImports.size() > 0) {
+            for (BLangImportPackage c2cImport : c2cImports) {
                 // Get the units of the file which has kubernetes import as _
                 List<TopLevelNode> topLevelNodes = bPackage.getCompilationUnits().stream()
-                        .filter(cu -> cu.getName().equals(kubernetesImport.compUnit.getValue()))
+                        .filter(cu -> cu.getName().equals(c2cImport.compUnit.getValue()))
                         .flatMap(cu -> cu.getTopLevelNodes().stream())
                         .collect(Collectors.toList());
 
@@ -142,7 +142,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                 serviceTypeKey.type = new BType(TypeTags.STRING, null);
 
                 BLangLiteral serviceTypeValue = new BLangLiteral();
-                serviceTypeValue.value = KubernetesConstants.ServiceType.NodePort.name();
+                serviceTypeValue.value = KubernetesConstants.ServiceType.ClusterIP.name();
                 serviceTypeValue.type = new BType(TypeTags.STRING, null);
 
                 BLangRecordLiteral.BLangRecordKeyValueField serviceTypeRecordField =
@@ -268,7 +268,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                             KubernetesContext.getInstance().getCompilerContext().get(JAR_RESOLVER_KEY);
                     executableJarFile = jarResolver.moduleJar(moduleID);
                 }
-                dataHolder.setUberJarPath(executableJarFile);
+                dataHolder.setJarPath(executableJarFile);
                 dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
                 dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
                 ArtifactManager artifactManager = new ArtifactManager();

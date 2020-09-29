@@ -28,21 +28,17 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Kubernetes Utils Test Class.
  */
 public class KubernetesUtilsTest {
-    
+
     private Path tempDirectory;
-    
+
     @BeforeClass
     public void setUp() throws IOException {
         tempDirectory = Files.createTempDirectory("ballerinax-docker-plugin-");
@@ -67,26 +63,6 @@ public class KubernetesUtilsTest {
     }
 
     @Test
-    public void resolveValueTest() throws Exception {
-        Map<String, String> env = new HashMap<>();
-        env.put("DOCKER_USERNAME", "anuruddhal");
-        setEnv(env);
-        try {
-            Assert.assertEquals(KubernetesUtils.resolveValue("$env{DOCKER_USERNAME}"), "anuruddhal");
-        } catch (KubernetesPluginException e) {
-            Assert.fail("Unable to resolve environment variable");
-        }
-        try {
-            KubernetesUtils.resolveValue("$env{DOCKER_PASSWORD}");
-            Assert.fail("Env value should be resolved");
-        } catch (KubernetesPluginException e) {
-            Assert.assertEquals(e.getMessage(), "error resolving value: DOCKER_PASSWORD is not set in the " +
-                    "environment.");
-        }
-        Assert.assertEquals(KubernetesUtils.resolveValue("demo"), "demo");
-    }
-    
-    @Test
     public void deleteDirectoryTest() throws IOException, KubernetesPluginException {
         File file = tempDirectory.resolve("myfile.txt").toFile();
         Assert.assertTrue(file.createNewFile());
@@ -101,7 +77,7 @@ public class KubernetesUtilsTest {
         String testString = "HELLO_WORLD.DEMO";
         Assert.assertEquals("hello-world-demo", KubernetesUtils.getValidName(testString));
     }
-    
+
     @Test
     public void copyFileTest() throws IOException, KubernetesPluginException {
         File testFile = tempDirectory.resolve("copy.txt").toFile();
@@ -109,15 +85,15 @@ public class KubernetesUtilsTest {
         Path tempDirectory = Files.createTempDirectory("copy-test-");
         Path destinationFile = tempDirectory.resolve("copy.txt");
         KubernetesUtils.copyFileOrDirectory(testFile.getAbsolutePath(), destinationFile.toString());
-        
+
         // assert
         Assert.assertTrue(Files.exists(destinationFile));
-        
+
         // clean up
         FileUtils.deleteQuietly(testFile);
         FileUtils.deleteQuietly(tempDirectory.toFile());
     }
-    
+
     @Test
     public void copyDirectoryTest() throws IOException, KubernetesPluginException {
         File testFolder = tempDirectory.resolve("copyDir").toFile();
@@ -126,63 +102,35 @@ public class KubernetesUtilsTest {
         Path copy2File = testFolder.toPath().resolve("copy2.txt");
         Files.createFile(copy1File);
         Files.createFile(copy2File);
-        
+
         Path destinationDir = Files.createTempDirectory("copy-test-");
         KubernetesUtils.copyFileOrDirectory(testFolder.getAbsolutePath(), destinationDir.toString());
-        
+
         // assert
         Assert.assertTrue(Files.exists(destinationDir));
         Assert.assertTrue(Files.exists(destinationDir.resolve("copy1.txt")));
         Assert.assertTrue(Files.exists(destinationDir.resolve("copy2.txt")));
-        
+
         // clean up
         FileUtils.deleteQuietly(testFolder);
         FileUtils.deleteQuietly(destinationDir.toFile());
     }
-    
+
     @Test
     public void copyFileToDirectoryTest() throws IOException, KubernetesPluginException {
         File testFile = tempDirectory.resolve("copy.txt").toFile();
         Assert.assertTrue(testFile.createNewFile());
         Path destinationDir = Files.createTempDirectory("copy-test-");
         KubernetesUtils.copyFileOrDirectory(testFile.getAbsolutePath(), destinationDir.toString());
-    
+
         // assert
         Assert.assertTrue(Files.exists(destinationDir.resolve("copy.txt")));
-    
+
         // clean up
         FileUtils.deleteQuietly(testFile);
         FileUtils.deleteQuietly(destinationDir.toFile());
     }
-    
-    private void setEnv(Map<String, String> newenv) throws Exception {
-        try {
-            Class<?> processEnvironmentClass = Class.forName("java.lang.ProcessEnvironment");
-            Field theEnvironmentField = processEnvironmentClass.getDeclaredField("theEnvironment");
-            theEnvironmentField.setAccessible(true);
-            Map<String, String> env = (Map<String, String>) theEnvironmentField.get(null);
-            env.putAll(newenv);
-            Field theCaseInsensitiveEnvironmentField = processEnvironmentClass.getDeclaredField
-                    ("theCaseInsensitiveEnvironment");
-            theCaseInsensitiveEnvironmentField.setAccessible(true);
-            Map<String, String> cienv = (Map<String, String>) theCaseInsensitiveEnvironmentField.get(null);
-            cienv.putAll(newenv);
-        } catch (NoSuchFieldException e) {
-            Class[] classes = Collections.class.getDeclaredClasses();
-            Map<String, String> env = System.getenv();
-            for (Class cl : classes) {
-                if ("java.util.Collections$UnmodifiableMap".equals(cl.getName())) {
-                    Field field = cl.getDeclaredField("m");
-                    field.setAccessible(true);
-                    Object obj = field.get(env);
-                    Map<String, String> map = (Map<String, String>) obj;
-                    map.clear();
-                    map.putAll(newenv);
-                }
-            }
-        }
-    }
-    
+
     @AfterClass
     public void cleanUp() {
         FileUtils.deleteQuietly(tempDirectory.toFile());

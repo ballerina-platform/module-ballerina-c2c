@@ -18,6 +18,8 @@
 
 package org.ballerinax.kubernetes.handlers;
 
+import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
@@ -92,11 +94,16 @@ public class ServiceHandler extends AbstractArtifactHandler {
         for (ServiceModel serviceModel : serviceModels.values()) {
             count++;
             String balxFileName = extractJarName(KubernetesContext.getInstance().getDataHolder()
-                    .getUberJarPath());
+                    .getJarPath());
             serviceModel.addLabel(KubernetesConstants.KUBERNETES_SELECTOR_KEY, balxFileName);
             serviceModel.setSelector(balxFileName);
             generate(serviceModel);
-            deploymentModel.addPort(serviceModel.getTargetPort());
+            ContainerPort containerPort = new ContainerPortBuilder()
+                    .withName(serviceModel.getPortName())
+                    .withContainerPort(serviceModel.getTargetPort())
+                    .withProtocol(KubernetesConstants.KUBERNETES_SVC_PROTOCOL)
+                    .build();
+            deploymentModel.addPort(containerPort);
             OUT.println();
             OUT.print("\t@kubernetes:Service \t\t\t - complete " + count + "/" + serviceModels.size() + "\r");
         }

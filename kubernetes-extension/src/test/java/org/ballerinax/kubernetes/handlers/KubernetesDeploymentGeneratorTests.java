@@ -19,6 +19,7 @@
 package org.ballerinax.kubernetes.handlers;
 
 import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import org.ballerinax.kubernetes.KubernetesConstants;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
@@ -50,9 +51,9 @@ public class KubernetesDeploymentGeneratorTests extends HandlerTestSuite {
         deploymentModel.setName(deploymentName);
         Map<String, String> labels = new HashMap<>();
         labels.put(KubernetesConstants.KUBERNETES_SELECTOR_KEY, selector);
-        deploymentModel.addPort(9090);
-        deploymentModel.addPort(9091);
-        deploymentModel.addPort(9092);
+        deploymentModel.addPort(new ContainerPortBuilder().withContainerPort(9090).build());
+        deploymentModel.addPort(new ContainerPortBuilder().withContainerPort(9091).build());
+        deploymentModel.addPort(new ContainerPortBuilder().withContainerPort(9092).build());
         deploymentModel.setLabels(labels);
         deploymentModel.setImage(imageName);
         deploymentModel.setImagePullPolicy(imagePullPolicy);
