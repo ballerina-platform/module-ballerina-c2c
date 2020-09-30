@@ -37,12 +37,6 @@ public class AnnotationProcessorFactory {
                 return new HPAAnnotationProcessor();
             case Deployment:
                 return new DeploymentAnnotationProcessor();
-            case Secret:
-                return new SecretAnnotationProcessor();
-            case ConfigMap:
-                return new ConfigMapAnnotationProcessor();
-            case PersistentVolumeClaim:
-                return new VolumeClaimAnnotationProcessor();
             case Task:
             case Job:
                 return new JobAnnotationProcessor();
@@ -56,9 +50,6 @@ public class AnnotationProcessorFactory {
         Service,
         HPA,
         Deployment,
-        Secret,
-        ConfigMap,
-        PersistentVolumeClaim,
         Task,
         Job
     }

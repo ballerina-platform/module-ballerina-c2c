@@ -23,6 +23,8 @@ import com.moandjiezana.toml.Toml;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HTTPGetAction;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Lifecycle;
@@ -32,8 +34,6 @@ import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.api.model.Toleration;
-import io.fabric8.kubernetes.api.model.TolerationBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
@@ -41,46 +41,29 @@ import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.utils.Serialization;
-import org.ballerinax.docker.generator.exceptions.DockerGenException;
 import org.ballerinax.docker.generator.models.DockerModel;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
 import org.ballerinax.kubernetes.models.ConfigMapModel;
 import org.ballerinax.kubernetes.models.DeploymentModel;
-import org.ballerinax.kubernetes.models.EnvVarValueModel;
 import org.ballerinax.kubernetes.models.KubernetesContext;
 import org.ballerinax.kubernetes.models.KubernetesDataHolder;
 import org.ballerinax.kubernetes.models.PersistentVolumeClaimModel;
-import org.ballerinax.kubernetes.models.PodTolerationModel;
 import org.ballerinax.kubernetes.models.SecretModel;
-import org.ballerinax.kubernetes.models.ServiceAccountTokenModel;
 import org.ballerinax.kubernetes.utils.KubernetesUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.ballerinax.docker.generator.DockerGenConstants.REGISTRY_SEPARATOR;
 import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
-import static org.ballerinax.kubernetes.KubernetesConstants.BALLERINA_CONF_FILE_NAME;
-import static org.ballerinax.kubernetes.KubernetesConstants.BALLERINA_CONF_MOUNT_PATH;
-import static org.ballerinax.kubernetes.KubernetesConstants.BALLERINA_HOME;
-import static org.ballerinax.kubernetes.KubernetesConstants.BALLERINA_RUNTIME;
-import static org.ballerinax.kubernetes.KubernetesConstants.CONFIG_MAP_POSTFIX;
 import static org.ballerinax.kubernetes.KubernetesConstants.DEPLOYMENT_FILE_POSTFIX;
 import static org.ballerinax.kubernetes.KubernetesConstants.DEPLOYMENT_POSTFIX;
 import static org.ballerinax.kubernetes.KubernetesConstants.EXECUTABLE_JAR;
 import static org.ballerinax.kubernetes.KubernetesConstants.YAML;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.getValidName;
-import static org.ballerinax.kubernetes.utils.KubernetesUtils.populateEnvVar;
 
 /**
  * Generates kubernetes deployment from annotations.
@@ -109,13 +92,6 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 volumeMounts.add(volumeMount);
             }
         }
-        for (ServiceAccountTokenModel volumeClaimModel : deploymentModel.getServiceAccountTokenModel()) {
-            VolumeMount volumeMount = new VolumeMountBuilder()
-                    .withMountPath(volumeClaimModel.getMountPath())
-                    .withName(volumeClaimModel.getName() + "-volume")
-                    .build();
-            volumeMounts.add(volumeMount);
-        }
         for (PersistentVolumeClaimModel volumeClaimModel : deploymentModel.getVolumeClaimModels()) {
             VolumeMount volumeMount = new VolumeMountBuilder()
                     .withMountPath(volumeClaimModel.getMountPath())
@@ -127,22 +103,6 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         return volumeMounts;
     }
 
-    private List<Container> generateInitContainer(DeploymentModel deploymentModel) throws KubernetesPluginException {
-        List<Container> initContainers = new ArrayList<>();
-        for (String dependsOn : deploymentModel.getDependsOn()) {
-            String serviceName = KubernetesContext.getInstance().getServiceName(dependsOn);
-            List<String> commands = new ArrayList<>();
-            commands.add("sh");
-            commands.add("-c");
-            commands.add("until nslookup " + serviceName + "; do echo waiting for " + serviceName + "; sleep 2; done;");
-            initContainers.add(new ContainerBuilder()
-                    .withName("wait-for-" + serviceName)
-                    .withImage("busybox")
-                    .withCommand(commands)
-                    .build());
-        }
-        return initContainers;
-    }
 
     private Container generateContainer(DeploymentModel deploymentModel, List<ContainerPort> containerPorts) {
         String dockerRegistry = deploymentModel.getRegistry();
@@ -163,7 +123,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 .withImage(deploymentImageName)
                 .withImagePullPolicy(deploymentModel.getImagePullPolicy())
                 .withPorts(containerPorts)
-                .withEnv(populateEnvVar(deploymentModel.getEnv()))
+                .withEnv(deploymentModel.getEnvVars())
                 .withVolumeMounts(populateVolumeMounts(deploymentModel))
                 .withLivenessProbe(deploymentModel.getLivenessProbe())
                 .withReadinessProbe(deploymentModel.getReadinessProbe())
@@ -209,46 +169,9 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                     .build();
             volumes.add(volume);
         }
-
-        for (ServiceAccountTokenModel volumeClaimModel : deploymentModel.getServiceAccountTokenModel()) {
-            Volume volume = new VolumeBuilder()
-                    .withName(volumeClaimModel.getName() + "-volume")
-                    .withNewProjected()
-                    .withSources()
-                    .addNewSource()
-                    .withNewServiceAccountToken()
-                    .withAudience(volumeClaimModel.getAudience())
-                    .withPath(volumeClaimModel.getName() + "-volume")
-                    .withExpirationSeconds((long) volumeClaimModel.getExpirationSeconds())
-                    .endServiceAccountToken()
-                    .endSource()
-                    .endProjected()
-                    .build();
-            volumes.add(volume);
-        }
         return volumes;
     }
 
-    private List<Toleration> populatePodTolerations(List<PodTolerationModel> podTolerationModels) {
-        List<Toleration> tolerations = null;
-
-        if (null != podTolerationModels && podTolerationModels.size() > 0) {
-            tolerations = new LinkedList<>();
-            for (PodTolerationModel podTolerationModel : podTolerationModels) {
-                Toleration toleration = new TolerationBuilder()
-                        .withKey(podTolerationModel.getKey())
-                        .withOperator(podTolerationModel.getOperator())
-                        .withValue(podTolerationModel.getValue())
-                        .withEffect(podTolerationModel.getEffect())
-                        .withTolerationSeconds((long) podTolerationModel.getTolerationSeconds())
-                        .build();
-
-                tolerations.add(toleration);
-            }
-        }
-
-        return tolerations;
-    }
 
     private List<LocalObjectReference> getImagePullSecrets(DeploymentModel deploymentModel) {
         List<LocalObjectReference> imagePullSecrets = new ArrayList<>();
@@ -273,32 +196,22 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             if (probeToml != null) {
                 deploymentModel.setLivenessProbe(resolveProbeToml(probeToml));
             }
-            Toml configToml = ballerinaCloud.getTable("cloud.config");
+            List<HashMap<String, String>> configToml = ballerinaCloud.getList("cloud.config.envs");
             if (configToml != null) {
-                Map<String, String> data = new HashMap<>();
-                String configMapName =
-                        deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, CONFIG_MAP_POSTFIX);
-                // Env vars
-                for (Map.Entry<String, Object> e : configToml.entrySet().stream()
-                        .filter(entry -> !"files".equals(entry.getKey()))
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).entrySet()) {
-                    String k = e.getKey();
-                    data.put(k, e.getValue().toString());
-                    EnvVarValueModel.ConfigMapKeyValue configMapKeyRefModel =
-                            new EnvVarValueModel.ConfigMapKeyValue();
-                    configMapKeyRefModel.setKey(k);
-                    configMapKeyRefModel.setName(configMapName);
-                    Map<String, EnvVarValueModel> envVarMap = new LinkedHashMap<>();
-                    EnvVarValueModel envVarValue = new EnvVarValueModel(configMapKeyRefModel);
-                    envVarMap.put(k, envVarValue);
-                    deploymentModel.setEnv(envVarMap);
-                }
-                ConfigMapModel configMapModel = new ConfigMapModel();
-                configMapModel.setData(data);
-                configMapModel.setName(configMapName);
-                dataHolder.addConfigMaps(Collections.singleton(configMapModel));
+                configToml.forEach(env -> {
+                    EnvVar envVar = new EnvVarBuilder()
+                            .withName(env.get("name"))
+                            .withNewValueFrom()
+                            .withNewConfigMapKeyRef()
+                            .withKey(env.get("key"))
+                            .withName(env.get("config_name"))
+                            .endConfigMapKeyRef()
+                            .endValueFrom()
+                            .build();
+                    deploymentModel.addEnv(envVar);
+                });
                 // Config files
-                resolveConfigMap(deploymentModel, configToml);
+//                resolveConfigMap(deploymentModel, configToml);
             }
         }
 
@@ -325,84 +238,84 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         }
     }
 
-    private void resolveConfigMap(DeploymentModel deploymentModel, Toml envVars) throws KubernetesPluginException {
-        Toml configFiles = envVars.getTable("files");
-        if (configFiles != null) {
-            final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
-            Toml ballerinaConf = configFiles.getTable("ballerina.conf");
-            if (ballerinaConf != null) {
-                // Resolve ballerina.conf
-                ConfigMapModel configMapModel = getBallerinaConfConfigMap(ballerinaConf.getString("file"),
-                        deploymentName);
-                dataHolder.addConfigMaps(Collections.singleton(configMapModel));
-            }
+//    private void resolveConfigMap(DeploymentModel deploymentModel, Toml envVars) throws KubernetesPluginException {
+//        Toml configFiles = envVars.getTable("files");
+//        if (configFiles != null) {
+//            final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
+//            Toml ballerinaConf = configFiles.getTable("ballerina.conf");
+//            if (ballerinaConf != null) {
+//                // Resolve ballerina.conf
+//                ConfigMapModel configMapModel = getBallerinaConfConfigMap(ballerinaConf.getString("file"),
+//                        deploymentName);
+//                dataHolder.addConfigMaps(Collections.singleton(configMapModel));
+//            }
+//
+//            for (Map.Entry<String, Object> e : configFiles.entrySet().stream()
+//                    .filter(entry -> !"ballerina".equals(entry.getKey()))
+//                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).entrySet()) {
+//                String k = e.getKey();
+//                String path = configFiles.getTable(k).getString("file");
+//                // validate mount path is not set to ballerina home or ballerina runtime
+//                final Path mountPath = Paths.get(configFiles.getTable(k).getString("mount_path"));
+//                final Path homePath = Paths.get(BALLERINA_HOME);
+//                final Path runtimePath = Paths.get(BALLERINA_RUNTIME);
+//                final Path confPath = Paths.get(BALLERINA_CONF_MOUNT_PATH);
+//                if (mountPath.equals(homePath)) {
+//                    throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
+//                            "cannot be ballerina home: " +
+//                            BALLERINA_HOME);
+//                }
+//                if (mountPath.equals(runtimePath)) {
+//                    throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
+//                            "cannot be ballerina runtime: " +
+//                            BALLERINA_RUNTIME);
+//                }
+//                if (mountPath.equals(confPath)) {
+//                    throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
+//                            "cannot be ballerina conf file mount " +
+//                            "path: " + BALLERINA_CONF_MOUNT_PATH);
+//                }
+//                ConfigMapModel configMapModel = new ConfigMapModel();
+//                configMapModel.setName(deploymentName + "-" + getValidName(k));
+//                configMapModel.setData(getDataForConfigMap(path));
+//                configMapModel.setMountPath(mountPath.toString());
+//                dataHolder.addConfigMaps(Collections.singleton(configMapModel));
+//            }
+//            new ConfigMapHandler().createArtifacts();
+//        }
+//    }
 
-            for (Map.Entry<String, Object> e : configFiles.entrySet().stream()
-                    .filter(entry -> !"ballerina".equals(entry.getKey()))
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).entrySet()) {
-                String k = e.getKey();
-                String path = configFiles.getTable(k).getString("file");
-                // validate mount path is not set to ballerina home or ballerina runtime
-                final Path mountPath = Paths.get(configFiles.getTable(k).getString("mount_path"));
-                final Path homePath = Paths.get(BALLERINA_HOME);
-                final Path runtimePath = Paths.get(BALLERINA_RUNTIME);
-                final Path confPath = Paths.get(BALLERINA_CONF_MOUNT_PATH);
-                if (mountPath.equals(homePath)) {
-                    throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
-                            "cannot be ballerina home: " +
-                            BALLERINA_HOME);
-                }
-                if (mountPath.equals(runtimePath)) {
-                    throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
-                            "cannot be ballerina runtime: " +
-                            BALLERINA_RUNTIME);
-                }
-                if (mountPath.equals(confPath)) {
-                    throw new KubernetesPluginException("@kubernetes:ConfigMap{} mount path " +
-                            "cannot be ballerina conf file mount " +
-                            "path: " + BALLERINA_CONF_MOUNT_PATH);
-                }
-                ConfigMapModel configMapModel = new ConfigMapModel();
-                configMapModel.setName(deploymentName + "-" + getValidName(k));
-                configMapModel.setData(getDataForConfigMap(path));
-                configMapModel.setMountPath(mountPath.toString());
-                dataHolder.addConfigMaps(Collections.singleton(configMapModel));
-            }
-            new ConfigMapHandler().createArtifacts();
-        }
-    }
-
-    private Map<String, String> getDataForConfigMap(String path) throws KubernetesPluginException {
-        Map<String, String> dataMap = new HashMap<>();
-        Path dataFilePath = Paths.get(path);
-        if (!dataFilePath.isAbsolute()) {
-            dataFilePath = KubernetesContext.getInstance().getDataHolder().getSourceRoot().resolve(dataFilePath);
-        }
-        String key = String.valueOf(dataFilePath.getFileName());
-        String content = new String(KubernetesUtils.readFileContent(dataFilePath), StandardCharsets.UTF_8);
-        dataMap.put(key, content);
-        return dataMap;
-    }
-
-    private ConfigMapModel getBallerinaConfConfigMap(String configFilePath, String serviceName) throws
-            KubernetesPluginException {
-        //create a new config map model with ballerina conf
-        ConfigMapModel configMapModel = new ConfigMapModel();
-        configMapModel.setName(getValidName(serviceName) + "-ballerina-conf" + CONFIG_MAP_POSTFIX);
-        configMapModel.setMountPath(BALLERINA_CONF_MOUNT_PATH);
-        Path dataFilePath = Paths.get(configFilePath);
-        if (!dataFilePath.isAbsolute()) {
-            dataFilePath = KubernetesContext.getInstance().getDataHolder().getSourceRoot().resolve(dataFilePath)
-                    .normalize();
-        }
-        String content = new String(KubernetesUtils.readFileContent(dataFilePath), StandardCharsets.UTF_8);
-        Map<String, String> dataMap = new HashMap<>();
-        dataMap.put(BALLERINA_CONF_FILE_NAME, content);
-        configMapModel.setData(dataMap);
-        configMapModel.setBallerinaConf(configFilePath);
-        configMapModel.setReadOnly(false);
-        return configMapModel;
-    }
+//    private Map<String, String> getDataForConfigMap(String path) throws KubernetesPluginException {
+//        Map<String, String> dataMap = new HashMap<>();
+//        Path dataFilePath = Paths.get(path);
+//        if (!dataFilePath.isAbsolute()) {
+//            dataFilePath = KubernetesContext.getInstance().getDataHolder().getSourceRoot().resolve(dataFilePath);
+//        }
+//        String key = String.valueOf(dataFilePath.getFileName());
+//        String content = new String(KubernetesUtils.readFileContent(dataFilePath), StandardCharsets.UTF_8);
+//        dataMap.put(key, content);
+//        return dataMap;
+//    }
+//
+//    private ConfigMapModel getBallerinaConfConfigMap(String configFilePath, String serviceName) throws
+//            KubernetesPluginException {
+//        //create a new config map model with ballerina conf
+//        ConfigMapModel configMapModel = new ConfigMapModel();
+//        configMapModel.setName(getValidName(serviceName) + "-ballerina-conf" + CONFIG_MAP_POSTFIX);
+//        configMapModel.setMountPath(BALLERINA_CONF_MOUNT_PATH);
+//        Path dataFilePath = Paths.get(configFilePath);
+//        if (!dataFilePath.isAbsolute()) {
+//            dataFilePath = KubernetesContext.getInstance().getDataHolder().getSourceRoot().resolve(dataFilePath)
+//                    .normalize();
+//        }
+//        String content = new String(KubernetesUtils.readFileContent(dataFilePath), StandardCharsets.UTF_8);
+//        Map<String, String> dataMap = new HashMap<>();
+//        dataMap.put(BALLERINA_CONF_FILE_NAME, content);
+//        configMapModel.setData(dataMap);
+//        configMapModel.setBallerinaConf(configFilePath);
+//        configMapModel.setReadOnly(false);
+//        return configMapModel;
+//    }
 
     private Probe resolveProbeToml(Toml probeToml) {
         //Resolve Probe.
@@ -452,12 +365,9 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 .addToAnnotations(deploymentModel.getPodAnnotations())
                 .endMetadata()
                 .withNewSpec()
-                .withServiceAccountName(deploymentModel.getServiceAccountName())
                 .withContainers(container)
                 .withImagePullSecrets(getImagePullSecrets(deploymentModel))
-                .withInitContainers(generateInitContainer(deploymentModel))
                 .withVolumes(populateVolume(deploymentModel))
-                .withTolerations(populatePodTolerations(deploymentModel.getPodTolerations()))
                 .withNodeSelector(deploymentModel.getNodeSelector())
                 .endSpec()
                 .endTemplate()
@@ -490,41 +400,37 @@ public class DeploymentHandler extends AbstractArtifactHandler {
 
     @Override
     public void createArtifacts() throws KubernetesPluginException {
-        try {
-            DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
-            deploymentModel.setPodAutoscalerModel(dataHolder.getPodAutoscalerModel());
-            deploymentModel.setSecretModels(dataHolder.getSecretModelSet());
-            deploymentModel.setConfigMapModels(dataHolder.getConfigMapModelSet());
-            deploymentModel.setVolumeClaimModels(dataHolder.getVolumeClaimModelSet());
-            if (null != deploymentModel.getLivenessProbe() &&
-                    deploymentModel.getLivenessProbe().getHttpGet().getPort().getIntVal() == 0) {
-                //set first port as liveness port
-                if (deploymentModel.getPorts().size() == 0) {
-                    throw new KubernetesPluginException("unable to detect port for liveness probe." +
-                            "missing @kubernetes:Service annotation on listener.");
-                }
-                deploymentModel.getLivenessProbe().getHttpGet().setPort(new
-                        IntOrString(deploymentModel.getPorts().iterator().next().getContainerPort()));
+        DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
+        deploymentModel.setPodAutoscalerModel(dataHolder.getPodAutoscalerModel());
+        deploymentModel.setSecretModels(dataHolder.getSecretModelSet());
+        deploymentModel.setConfigMapModels(dataHolder.getConfigMapModelSet());
+        deploymentModel.setVolumeClaimModels(dataHolder.getVolumeClaimModelSet());
+        if (null != deploymentModel.getLivenessProbe() &&
+                deploymentModel.getLivenessProbe().getHttpGet().getPort().getIntVal() == 0) {
+            //set first port as liveness port
+            if (deploymentModel.getPorts().size() == 0) {
+                throw new KubernetesPluginException("unable to detect port for liveness probe." +
+                        "missing @kubernetes:Service annotation on listener.");
             }
-
-            if (null != deploymentModel.getReadinessProbe() &&
-                    deploymentModel.getReadinessProbe().getHttpGet().getPort().getIntVal() == 0) {
-                //set first port as readiness port
-                if (deploymentModel.getPorts().size() == 0) {
-                    throw new KubernetesPluginException("unable to detect port for readiness probe. " +
-                            "missing @kubernetes:Service annotation on listener.");
-                }
-                deploymentModel.getReadinessProbe().getHttpGet().setPort(new
-                        IntOrString(deploymentModel.getPorts().iterator().next().getContainerPort()));
-            }
-            resolveDockerToml(deploymentModel);
-            generate(deploymentModel);
-            OUT.println();
-            OUT.print("\t@kubernetes:Deployment \t\t\t - complete 1/1");
-            dataHolder.setDockerModel(getDockerModel(deploymentModel));
-        } catch (DockerGenException e) {
-            throw new KubernetesPluginException("error occurred creating docker image.", e);
+            deploymentModel.getLivenessProbe().getHttpGet().setPort(new
+                    IntOrString(deploymentModel.getPorts().iterator().next().getContainerPort()));
         }
+
+        if (null != deploymentModel.getReadinessProbe() &&
+                deploymentModel.getReadinessProbe().getHttpGet().getPort().getIntVal() == 0) {
+            //set first port as readiness port
+            if (deploymentModel.getPorts().size() == 0) {
+                throw new KubernetesPluginException("unable to detect port for readiness probe. " +
+                        "missing @kubernetes:Service annotation on listener.");
+            }
+            deploymentModel.getReadinessProbe().getHttpGet().setPort(new
+                    IntOrString(deploymentModel.getPorts().iterator().next().getContainerPort()));
+        }
+        resolveDockerToml(deploymentModel);
+        generate(deploymentModel);
+        OUT.println();
+        OUT.print("\t@kubernetes:Deployment \t\t\t - complete 1/1");
+        dataHolder.setDockerModel(getDockerModel(deploymentModel));
     }
 
 
@@ -533,7 +439,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
      *
      * @param deploymentModel Deployment model
      */
-    private DockerModel getDockerModel(DeploymentModel deploymentModel) throws DockerGenException {
+    private DockerModel getDockerModel(DeploymentModel deploymentModel) {
         final KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         DockerModel dockerModel = dataHolder.getDockerModel();
         String dockerImage = deploymentModel.getImage();
@@ -563,7 +469,6 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         dockerModel.setDockerCertPath(deploymentModel.getDockerCertPath());
         dockerModel.setBuildImage(deploymentModel.isBuildImage());
         dockerModel.addCommandArg(deploymentModel.getCommandArgs());
-        dockerModel.setCopyFiles(deploymentModel.getCopyFiles());
         return dockerModel;
     }
 }

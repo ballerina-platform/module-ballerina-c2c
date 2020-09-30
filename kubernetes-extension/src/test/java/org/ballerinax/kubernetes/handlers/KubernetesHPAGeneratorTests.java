@@ -23,7 +23,6 @@ import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import org.ballerinax.kubernetes.KubernetesConstants;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
 import org.ballerinax.kubernetes.models.DeploymentModel;
-import org.ballerinax.kubernetes.models.EnvVarValueModel;
 import org.ballerinax.kubernetes.models.PodAutoscalerModel;
 import org.ballerinax.kubernetes.utils.Utils;
 import org.testng.Assert;
@@ -58,10 +57,6 @@ public class KubernetesHPAGeneratorTests extends HandlerTestSuite {
         deploymentModel.addPort(new ContainerPortBuilder().withContainerPort(9092).build());
         deploymentModel.setLabels(labels);
         deploymentModel.setSingleYAML(false);
-        Map<String, EnvVarValueModel> env = new HashMap<>();
-        EnvVarValueModel testEnvVar = new EnvVarValueModel("ENV");
-        env.put("ENV_VAR", testEnvVar);
-        deploymentModel.setEnv(env);
 
         PodAutoscalerModel podAutoscalerModel = new PodAutoscalerModel();
         podAutoscalerModel.setName(hpaName);

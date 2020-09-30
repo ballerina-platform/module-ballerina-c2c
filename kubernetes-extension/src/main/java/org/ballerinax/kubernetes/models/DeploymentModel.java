@@ -18,6 +18,7 @@
 package org.ballerinax.kubernetes.models;
 
 import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
@@ -25,7 +26,6 @@ import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStrategy;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.ballerinax.docker.generator.models.CopyFileModel;
 import org.ballerinax.kubernetes.KubernetesConstants;
 
 import java.util.ArrayList;
@@ -53,7 +53,7 @@ public class DeploymentModel extends KubernetesModel {
     private String image;
     private boolean buildImage;
     private String baseImage;
-    private Map<String, EnvVarValueModel> env;
+    private List<EnvVar> envVars;
     private String username;
     private String password;
     private boolean push;
@@ -65,18 +65,12 @@ public class DeploymentModel extends KubernetesModel {
     private Set<SecretModel> secretModels;
     private Set<ConfigMapModel> configMapModels;
     private Set<PersistentVolumeClaimModel> volumeClaimModels;
-    private Set<CopyFileModel> copyFiles;
-    private Set<String> dependsOn;
     private Set<String> imagePullSecrets;
     private String commandArgs;
     private boolean singleYAML;
     private String registry;
-    private DeploymentBuildExtension buildExtension;
-    private List<PodTolerationModel> podTolerations;
     private DeploymentStrategy strategy;
     private Map<String, String> nodeSelector;
-    private String serviceAccountName;
-    private List<ServiceAccountTokenModel> serviceAccountTokenModel;
     private boolean uberJar;
     private String dockerConfigPath;
     private ResourceRequirements resourceRequirements;
@@ -84,24 +78,21 @@ public class DeploymentModel extends KubernetesModel {
     public DeploymentModel() {
         // Initialize with default values.
         this.replicas = 1;
+        this.envVars = new ArrayList<>();
         this.buildImage = true;
         this.baseImage = OPENJDK_8_JRE_ALPINE_BASE_IMAGE;
         this.push = false;
         this.labels = new LinkedHashMap<>();
         this.nodeSelector = new LinkedHashMap<>();
-        this.env = new LinkedHashMap<>();
         this.imagePullPolicy = KubernetesConstants.ImagePullPolicy.IfNotPresent.name();
-        this.dependsOn = new HashSet<>();
         this.ports = new ArrayList<>();
         this.secretModels = new HashSet<>();
         this.configMapModels = new HashSet<>();
         this.volumeClaimModels = new HashSet<>();
-        this.copyFiles = new HashSet<>();
         this.imagePullSecrets = new HashSet<>();
         this.singleYAML = true;
         this.commandArgs = "";
         this.registry = "";
-        this.serviceAccountTokenModel = new ArrayList<>();
         this.uberJar = false;
         Map<String, Quantity> limit = new HashMap<>();
         limit.put("cpu", new Quantity("500m"));
@@ -136,8 +127,8 @@ public class DeploymentModel extends KubernetesModel {
         this.labels.put(key, value);
     }
 
-    public void addEnv(String key, EnvVarValueModel value) {
-        env.put(key, value);
+    public void addEnv(EnvVar envVar) {
+        envVars.add(envVar);
     }
 
     @Override
@@ -151,7 +142,7 @@ public class DeploymentModel extends KubernetesModel {
                 ", image='" + image +
                 ", buildImage=" + buildImage +
                 ", baseImage='" + baseImage +
-                ", env=" + env +
+                ", env=" + envVars +
                 ", username='" + username +
                 ", push=" + push +
                 ", cmd=" + cmd +
@@ -162,15 +153,10 @@ public class DeploymentModel extends KubernetesModel {
                 ", secretModels=" + secretModels +
                 ", configMapModels=" + configMapModels +
                 ", volumeClaimModels=" + volumeClaimModels +
-                ", copyFiles=" + copyFiles +
-                ", dependsOn=" + dependsOn +
                 ", imagePullSecrets=" + imagePullSecrets +
                 ", commandArgs='" + commandArgs +
                 ", singleYAML=" + singleYAML +
                 ", registry='" + registry +
-                ", buildExtension=" + buildExtension +
-                ", podTolerations=" + podTolerations +
-                ", serviceAccountTokenModel=" + serviceAccountTokenModel +
                 '}';
     }
 }

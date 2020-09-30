@@ -24,13 +24,11 @@ import io.fabric8.kubernetes.client.internal.SerializationUtils;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
 import org.ballerinax.kubernetes.models.ConfigMapModel;
 import org.ballerinax.kubernetes.models.DeploymentModel;
-import org.ballerinax.kubernetes.models.EnvVarValueModel;
 import org.ballerinax.kubernetes.utils.KubernetesUtils;
 
 import java.io.IOException;
 import java.util.Collection;
 
-import static org.ballerinax.kubernetes.KubernetesConstants.BALLERINA_CONF_FILE_NAME;
 import static org.ballerinax.kubernetes.KubernetesConstants.CONFIG_MAP_FILE_POSTFIX;
 import static org.ballerinax.kubernetes.KubernetesConstants.YAML;
 import static org.ballerinax.kubernetes.utils.KubernetesUtils.isBlank;
@@ -73,9 +71,9 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
                 }
                 DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
                 deploymentModel.setCommandArgs(" --b7a.config.file=${CONFIG_FILE}");
-                EnvVarValueModel envVarValueModel = new EnvVarValueModel(configMapModel.getMountPath() +
-                        BALLERINA_CONF_FILE_NAME);
-                deploymentModel.addEnv("CONFIG_FILE", envVarValueModel);
+//                EnvVarValueModel envVarValueModel = new EnvVarValueModel(configMapModel.getMountPath() +
+//                        BALLERINA_CONF_FILE_NAME);
+//                deploymentModel.addEnv("CONFIG_FILE", envVarValueModel);
                 dataHolder.setDeploymentModel(deploymentModel);
             }
             generate(configMapModel);

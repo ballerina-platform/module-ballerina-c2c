@@ -20,11 +20,12 @@ package org.ballerinax.kubernetes.handlers;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import org.ballerinax.kubernetes.KubernetesConstants;
 import org.ballerinax.kubernetes.exceptions.KubernetesPluginException;
 import org.ballerinax.kubernetes.models.DeploymentModel;
-import org.ballerinax.kubernetes.models.EnvVarValueModel;
 import org.ballerinax.kubernetes.utils.Utils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -58,10 +59,11 @@ public class KubernetesDeploymentGeneratorTests extends HandlerTestSuite {
         deploymentModel.setImage(imageName);
         deploymentModel.setImagePullPolicy(imagePullPolicy);
         deploymentModel.setSingleYAML(false);
-        Map<String, EnvVarValueModel> env = new HashMap<>();
-        EnvVarValueModel testEnvVar = new EnvVarValueModel("ENV");
-        env.put("ENV_VAR", testEnvVar);
-        deploymentModel.setEnv(env);
+        EnvVar envVar = new EnvVarBuilder()
+                .withName("ENV_VAR")
+                .withValue("ENV")
+                .build();
+        deploymentModel.addEnv(envVar);
         deploymentModel.setReplicas(replicas);
         dataHolder.setDeploymentModel(deploymentModel);
         try {

@@ -27,7 +27,7 @@ configurations {
 }
 
 dependencies{
-    balTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}"){
+    balTools ("org.ballerinalang:jballerina-tools:${version}"){
         transitive = false
     }
 }
@@ -42,7 +42,7 @@ clean {
     delete "$project.projectDir/Ballerina.lock"
 }
 
-def bDistribution = file("$project.buildDir/extracted-distribution/jballerina-tools-${ballerinaLangVersion}")
+def bDistribution = file("$project.buildDir/extracted-distribution/jballerina-tools-${version}")
 
 task unzip {
     doLast {
@@ -112,7 +112,7 @@ task ballerinaBuild {
     inputs.dir file("$project.projectDir/src")
     inputs.file file("$project.projectDir/Ballerina.toml")
     doLast {
-        def distributionBinPath = project.projectDir.absolutePath + "/build/extracted-distribution/jballerina-tools-${ballerinaLangVersion}/bin"
+        def distributionBinPath = project.projectDir.absolutePath + "/build/extracted-distribution/jballerina-tools-${version}/bin"
         exec {
             workingDir project.projectDir
             environment "JAVA_OPTS", "-DBALLERINA_DEV_COMPILE_BALLERINA_ORG=true"
