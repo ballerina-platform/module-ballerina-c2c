@@ -228,14 +228,16 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             requests.put("cpu", new Quantity(minCPU));
         }
         Map<String, Quantity> limits = deploymentModel.getResourceRequirements().getLimits();
-        String maxMemory = deploymentToml.getString("max_memory");
-        String maxCPU = deploymentToml.getString("max_cpu");
+        String maxMemory = deploymentToml.getString(CLOUD_DEPLOYMENT + "max_memory");
+        String maxCPU = deploymentToml.getString(CLOUD_DEPLOYMENT + "max_cpu");
         if (maxMemory != null) {
             limits.put("memory", new Quantity(maxMemory));
         }
         if (maxCPU != null) {
             limits.put("cpu", new Quantity(maxCPU));
         }
+        deploymentModel.getResourceRequirements().setLimits(limits);
+        deploymentModel.getResourceRequirements().setRequests(requests);
     }
 
 //    private void resolveConfigMap(DeploymentModel deploymentModel, Toml envVars) throws KubernetesPluginException {

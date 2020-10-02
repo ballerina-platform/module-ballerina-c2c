@@ -37,6 +37,7 @@ import java.util.Map;
 import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
 import static org.ballerinax.kubernetes.KubernetesConstants.SVC_FILE_POSTFIX;
 import static org.ballerinax.kubernetes.KubernetesConstants.YAML;
+import static org.ballerinax.kubernetes.utils.KubernetesUtils.getValidName;
 
 
 /**
@@ -51,7 +52,7 @@ public class ServiceHandler extends AbstractArtifactHandler {
      */
     private void generate(ServiceModel serviceModel) throws KubernetesPluginException {
         if (null == serviceModel.getPortName()) {
-            serviceModel.setPortName(serviceModel.getProtocol() + "-" + serviceModel.getName());
+            serviceModel.setPortName(getValidName(serviceModel.getProtocol() + "-" + serviceModel.getName()));
         }
         ServicePortBuilder servicePortBuilder = new ServicePortBuilder()
                 .withName(serviceModel.getPortName())
