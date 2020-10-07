@@ -22,7 +22,7 @@ Code2cloud extension implementation for ballerina.
 2. Install Docker
 3. Get a clone or download the source from this repository (https://github.com/ballerinax/kubernetes)
 4. Run the Gradle command ``gradle build`` from within the ``module-ballerina-c2c`` directory.
-5. Copy ``build/kubernetes-extension-***.jar`` file to ``<BALLERINA_HOME>/bre/lib`` directory.
+5. Copy ``build/c2c-extension-***.jar`` file to ``<BALLERINA_HOME>/bre/lib`` directory.
 
 ### Enabling debug logs
 - Use the "BAL_DOCKER_DEBUG=true" environment variable to enable docker related debug logs when building the ballerina

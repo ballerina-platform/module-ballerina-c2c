@@ -21,7 +21,7 @@ plugins {
 
 rootProject.name = 'code2cloud-extension-parent'
 include(':build-config:checkstyle')
-include(':kubernetes-extension')
+include(':c2c-extension')
 include(':kubernetes-extension-annotations')
 include(':kubernetes-extension-test')
 include(':kubernetes-extension-examples')

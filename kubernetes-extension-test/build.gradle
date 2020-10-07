@@ -25,7 +25,7 @@ configurations {
 }
 
 dependencies {
-    implementation project(":kubernetes-extension")
+    implementation project(":c2c-extension")
 
     testImplementation "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
     testImplementation "com.github.docker-java:docker-java:${dockerJavaVersion}"
@@ -35,7 +35,7 @@ dependencies {
     testImplementation "org.slf4j:slf4j-log4j12:${slf4jVersion}"
     testImplementation "org.testng:testng:${testngVersion}"
 
-    extensionPlugin project(path: ":kubernetes-extension", configuration: "shadow")
+    extensionPlugin project(path: ":c2c-extension", configuration: "shadow")
     bDistributionDir project(path: ":kubernetes-extension-annotations", configuration: "bDistributionDir")
     birDir project(path: ":kubernetes-extension-annotations", configuration: "birDir")
     bJars project(path: ":kubernetes-extension-annotations", configuration: "kubernetesJar")
