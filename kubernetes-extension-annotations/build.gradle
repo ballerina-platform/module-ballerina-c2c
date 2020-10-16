@@ -113,15 +113,15 @@ task ballerinaBuild {
     inputs.file file("$project.projectDir/Ballerina.toml")
     doLast {
         def distributionBinPath = project.projectDir.absolutePath + "/build/extracted-distribution/jballerina-tools-${version}/bin"
-//        exec {
-//            workingDir project.projectDir
-//            environment "JAVA_OPTS", "-DBALLERINA_DEV_COMPILE_BALLERINA_ORG=true"
-//            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-//                commandLine 'cmd', '/c', "$distributionBinPath/ballerina.bat doc -a"
-//            } else {
-//                commandLine 'sh', '-c', "$distributionBinPath/ballerina doc -a"
-//            }
-//        }
+        exec {
+            workingDir project.projectDir
+            environment "JAVA_OPTS", "-DBALLERINA_DEV_COMPILE_BALLERINA_ORG=true"
+            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                commandLine 'cmd', '/c', "$distributionBinPath/ballerina.bat doc -a"
+            } else {
+                commandLine 'sh', '-c', "$distributionBinPath/ballerina doc -a"
+            }
+        }
         copy {
             from file("$project.projectDir/target/apidocs/c2c")
             into file("$project.buildDir/apidocs/docs/c2c")

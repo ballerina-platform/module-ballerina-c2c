@@ -53,15 +53,15 @@ public class Sample1Test extends SampleTest {
     private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample1");
     private static final Path DOCKER_TARGET_PATH = SOURCE_DIR_PATH.resolve(DOCKER);
     private static final Path KUBERNETES_TARGET_PATH = SOURCE_DIR_PATH.resolve(KUBERNETES);
-    private static final String DOCKER_IMAGE = "hello_world_k8s:latest";
+    private static final String DOCKER_IMAGE = "hello_world:latest";
     private Deployment deployment;
     private Service service;
     private HorizontalPodAutoscaler podAutoscaler;
 
     @BeforeClass
     public void compileSample() throws IOException, InterruptedException {
-        Assert.assertEquals(KubernetesTestUtils.compileBallerinaFile(SOURCE_DIR_PATH, "hello_world_k8s.bal"), 0);
-        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello_world_k8s.yaml").toFile();
+        Assert.assertEquals(KubernetesTestUtils.compileBallerinaFile(SOURCE_DIR_PATH, "hello_world.bal"), 0);
+        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello_world.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
         KubernetesClient client = new DefaultKubernetesClient();
         List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
@@ -86,10 +86,10 @@ public class Sample1Test extends SampleTest {
     @Test
     public void validateDeployment() {
         Assert.assertNotNull(deployment);
-        Assert.assertEquals(deployment.getMetadata().getName(), "hello-world-k8s-deployment");
+        Assert.assertEquals(deployment.getMetadata().getName(), "hello-world-deployment");
         Assert.assertEquals(deployment.getSpec().getReplicas().intValue(), 1);
         Assert.assertEquals(deployment.getMetadata().getLabels().get(KubernetesConstants
-                .KUBERNETES_SELECTOR_KEY), "hello_world_k8s");
+                .KUBERNETES_SELECTOR_KEY), "hello_world");
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().size(), 1);
         Container container = deployment.getSpec().getTemplate().getSpec().getContainers().get(0);
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE);
@@ -103,7 +103,7 @@ public class Sample1Test extends SampleTest {
         Assert.assertNotNull(service);
         Assert.assertEquals(service.getMetadata().getName(), "helloworld-svc");
         Assert.assertEquals(service.getMetadata().getLabels().get(KubernetesConstants
-                .KUBERNETES_SELECTOR_KEY), "hello_world_k8s");
+                .KUBERNETES_SELECTOR_KEY), "hello_world");
         Assert.assertEquals(service.getSpec().getType(), KubernetesConstants.ServiceType.ClusterIP.name());
         Assert.assertEquals(service.getSpec().getPorts().size(), 1);
         Assert.assertEquals(service.getSpec().getPorts().get(0).getPort().intValue(), 9090);
@@ -113,7 +113,7 @@ public class Sample1Test extends SampleTest {
     public void validateDockerfile() throws IOException {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
-        Assert.assertTrue(dockerFileContent.contains("CMD java -Xdiag -cp \"hello_world_k8s.jar:jars/*\" '$_init'"));
+        Assert.assertTrue(dockerFileContent.contains("CMD java -Xdiag -cp \"hello_world.jar:jars/*\" '$_init'"));
         Assert.assertTrue(dockerFileContent.contains("USER ballerina"));
         Assert.assertTrue(dockerFile.exists());
     }

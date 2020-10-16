@@ -11,14 +11,14 @@ Code2cloud extension implementation for ballerina.
 - Kubernetes readiness probe support
 - Kubernetes horizontal pod autoscaler support.
 - Docker image generation. 
-- Kubernetes secret support.
+- Dockerfile generation. 
 - Kubernetes config map support.
 
 **Refer [samples](samples) for more info.**
 
 ## How to build
 
-1. Download and install JDK 8 or later
+1. Download and install JDK 11
 2. Install Docker
 3. Get a clone or download the source from this repository (https://github.com/ballerinax/kubernetes)
 4. Run the Gradle command ``gradle build`` from within the ``module-ballerina-c2c`` directory.
@@ -29,13 +29,6 @@ Code2cloud extension implementation for ballerina.
 source(s).
 - Use the "BAL_KUBERNETES_DEBUG=true" environment variable to enable kubernetes related debug logs when building the 
 ballerina source(s).
-
-## Deploy ballerina service directly using `kubectl` command.
-This repository also provides a kubectl plugin which allows to build ballerina programs and deploy their kubernetes 
-artifacts directly to a kuberetes cluster. The plugin is located at `kubernetes-extension/src/main/resources/kubectl-extension/kubectl-ballerina-deploy`.
-Follow the steps mentioned in "[Extend kubectl with plugins](https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/)"
-. Check if the plugin is available using the command `kubectl plugin list`.
-
 
 ### Usage Sample:
 

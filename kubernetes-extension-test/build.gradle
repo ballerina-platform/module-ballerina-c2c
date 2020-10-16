@@ -86,11 +86,11 @@ test {
             suites 'src/test/resources/testng.xml'
         }
         systemProperties = [
-            sampleDir: System.getProperty('sampleDir', project.projectDir.absolutePath + "/../samples"),
-            ballerinaPack: System.getProperty('ballerinaPack', "$configurations.bDistributionDir.singleFile.absolutePath"),
-            jacocoAgentLine: "-javaagent:${configurations.jacocoRuntime.asPath}=destfile=${test.jacoco.destinationFile.absolutePath},append=true,inclnolocationclasses=true"
+                sampleDir      : System.getProperty('sampleDir', project.projectDir.absolutePath + "/../samples"),
+                ballerinaPack  : System.getProperty('ballerinaPack', "$configurations.bDistributionDir.singleFile.absolutePath"),
+                jacocoAgentLine: "-javaagent:${configurations.jacocoRuntime.asPath}=destfile=${test.jacoco.destinationFile.absolutePath},append=true,inclnolocationclasses=true,exclclassloader=jdk.internal.reflect.DelegatingClassLoader"
         ]
-	}
+    }
 }
 
 // Disable publishing artifacts
