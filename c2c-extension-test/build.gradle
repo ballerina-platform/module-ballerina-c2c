@@ -36,9 +36,9 @@ dependencies {
     testImplementation "org.testng:testng:${testngVersion}"
 
     extensionPlugin project(path: ":c2c-extension", configuration: "shadow")
-    bDistributionDir project(path: ":kubernetes-extension-annotations", configuration: "bDistributionDir")
-    birDir project(path: ":kubernetes-extension-annotations", configuration: "birDir")
-    bJars project(path: ":kubernetes-extension-annotations", configuration: "kubernetesJar")
+    bDistributionDir project(path: ":c2c-extension-annotations", configuration: "bDistributionDir")
+    birDir project(path: ":c2c-extension-annotations", configuration: "birDir")
+    bJars project(path: ":c2c-extension-annotations", configuration: "kubernetesJar")
 }
 
 description = 'Ballerinax - Kubernetes Extension Tests'

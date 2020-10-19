@@ -1,6 +1,6 @@
 ## Sample10: Ballerina module with kubernetes annotations
 
-- This sample runs [foodstore](../sample3) as a module.   
+- This sample runs [foodstore](../sample2) as a module.   
 ### How to run:
 
 

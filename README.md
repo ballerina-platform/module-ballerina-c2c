@@ -56,12 +56,12 @@ service helloWorld on helloEP {
 
 The kubernetes artifacts will be created in following structure.
 ```bash
-$> tree kubernetes
+$> tree
 ```
 ```
-kubernetes/
+
 ├── docker
 │   └── Dockerfile
-└── hello-world.yaml
-    	
+|-kubernetes
+    └── hello-world.yaml    	
 ```

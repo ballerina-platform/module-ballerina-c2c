@@ -22,9 +22,8 @@ plugins {
 rootProject.name = 'code2cloud-extension-parent'
 include(':build-config:checkstyle')
 include(':c2c-extension')
-include(':kubernetes-extension-annotations')
-include(':kubernetes-extension-test')
-include(':kubernetes-extension-examples')
+include(':c2c-extension-annotations')
+include(':c2c-extension-test')
 
 gradleEnterprise {
     buildScan {

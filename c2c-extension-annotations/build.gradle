@@ -17,7 +17,7 @@
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
-description = 'Ballerinax - Code2Cloud Extension Plugin'
+description = 'Ballerinax - Code2Cloud Extension Annotations'
 
 configurations {
     bDistributionDir
