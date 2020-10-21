@@ -113,6 +113,7 @@ def artifactDocs = file("$project.buildDir/apidocs/docs/")
 
 task ballerinaBuild {
     dependsOn unzip
+    dependsOn configurations.extensionPlugin
     inputs.dir file("$project.projectDir/src")
     inputs.file file("$project.projectDir/Ballerina.toml")
     doLast {
