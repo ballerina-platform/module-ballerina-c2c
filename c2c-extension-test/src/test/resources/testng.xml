@@ -25,13 +25,13 @@
             </run>
         </groups>
         <classes>
-            <class name="org.ballerina.c2c.test.samples.Sample1Test"/>
+            <class name="io.ballerina.c2c.test.samples.Sample1Test"/>
         </classes>
     </test>
 
     <test name="ballerina-kubernetes-tests" parallel="false">
         <classes>
-            <class name="org.ballerina.c2c.test.JobTest"/>
+            <class name="io.ballerina.c2c.test.JobTest"/>
         </classes>
     </test>
 
