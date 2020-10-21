@@ -82,14 +82,6 @@ jar {
     })
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifact shadowJar
-        }
-    }
-}
-
 test {
     useTestNG() {
         suites 'src/test/resources/testng.xml'
