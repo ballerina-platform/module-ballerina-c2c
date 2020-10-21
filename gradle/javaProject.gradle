@@ -94,16 +94,6 @@ checkstyle {
     configProperties = ["suppressionFile" : rootProject.file("build-config/checkstyle/build/suppressions.xml")]
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId project.group
-            artifactId project.name
-            version = project.version
-            from components.java
-        }
-    }
-}
 
 spotbugsMain.finalizedBy validateSpotbugs
 checkstyleMain.dependsOn(":build-config:checkstyle:downloadMultipleFiles")
