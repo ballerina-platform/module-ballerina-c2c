@@ -23,13 +23,13 @@
 
     <test name="ballerinax-kubernetes-unit-tests" parallel="false">
         <classes>
-            <class name="org.ballerina.c2c.handlers.HandlerTestSuite"/>
-            <class name="org.ballerina.c2c.handlers.KubernetesConfigMapGeneratorTests"/>
-            <class name="org.ballerina.c2c.handlers.KubernetesDeploymentGeneratorTests"/>
-            <class name="org.ballerina.c2c.handlers.KubernetesHPAGeneratorTests"/>
-            <class name="org.ballerina.c2c.handlers.KubernetesServiceGeneratorTests"/>
-            <class name="org.ballerina.c2c.handlers.KubernetesVolumeClaimGeneratorTests"/>
-            <class name="org.ballerina.c2c.handlers.KubernetesJobGeneratorTests"/>
+            <class name="io.ballerina.c2c.handlers.HandlerTestSuite"/>
+            <class name="io.ballerina.c2c.handlers.KubernetesConfigMapGeneratorTests"/>
+            <class name="io.ballerina.c2c.handlers.KubernetesDeploymentGeneratorTests"/>
+            <class name="io.ballerina.c2c.handlers.KubernetesHPAGeneratorTests"/>
+            <class name="io.ballerina.c2c.handlers.KubernetesServiceGeneratorTests"/>
+            <class name="io.ballerina.c2c.handlers.KubernetesVolumeClaimGeneratorTests"/>
+            <class name="io.ballerina.c2c.handlers.KubernetesJobGeneratorTests"/>
         </classes>
     </test>
 

@@ -14,11 +14,11 @@
 -->
 <FindBugsFilter>
     <Match>
-        <Class name="org.ballerina.c2c.handlers.DeploymentHandler"/>
+        <Class name="io.ballerina.c2c.handlers.DeploymentHandler"/>
         <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME"/>
     </Match>
     <Match>
-        <Class name="org.ballerinax.kubernetes.processors.SecretAnnotationProcessor"/>
+        <Class name="io.ballerina.kubernetes.processors.SecretAnnotationProcessor"/>
         <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME"/>
     </Match>
     <Match>
@@ -28,15 +28,15 @@
         <Bug pattern="DM_DEFAULT_ENCODING"/>
     </Match>
     <Match>
-        <Class name="org.ballerina.c2c.KubernetesPlugin"/>
+        <Class name="io.ballerina.c2c.KubernetesPlugin"/>
         <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
     </Match>
     <Match>
-        <Class name="org.ballerina.c2c.utils.KubernetesUtils"/>
+        <Class name="io.ballerina.c2c.utils.KubernetesUtils"/>
         <Bug pattern="BC_UNCONFIRMED_CAST"/>
     </Match>
     <Match>
-        <Class name="org.ballerina.c2c.handlers.DockerHandler"/>
+        <Class name="io.ballerina.c2c.handlers.DockerHandler"/>
         <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
     </Match>
 </FindBugsFilter>
