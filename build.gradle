@@ -190,6 +190,10 @@ allprojects {
                 password System.getenv("packagePAT")
             }
         }
+
+        maven { 
+            url "https://maven.wso2.org/nexus/content/repositories/orgballerinaxdocker-1290/" 
+        }
     }
 }
 
