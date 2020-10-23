@@ -28,7 +28,7 @@ configurations {
 }
 
 dependencies{
-    balTools ("org.ballerinalang:jballerina-tools:${version}"){
+    balTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}"){
         transitive = false
     }
     extensionPlugin project(path: ":c2c-extension", configuration: "shadow")
