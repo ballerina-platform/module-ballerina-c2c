@@ -36,7 +36,7 @@ Generating artifacts...
 	kubectl expose deployment hello-hello-0-0-deployment --type=NodePort --name=hello-hello-0-0-svc-local
 ```
 
-2. burger.jar, pizza.jar, Dockerfile, docker image and kubernetes artifacts will be generated: 
+2. hello.jar, Dockerfile, docker image and kubernetes artifacts will be generated: 
 ```bash
 $> tree target
 .
@@ -101,7 +101,7 @@ Hello, World from service helloWorld !
 
 8. Undeploy sample:
 ```bash
-$> kubectl delete -f ./target/kubernetes
+$> kubectl delete -f ./target/kubernetes/hello
 $> kubectl delete svc hello-hello-0-0-svc-local
 $> docker rmi anuruddhal/hello-api:sample2
 ```

@@ -64,6 +64,10 @@ public class KubernetesDataHolder {
         this.ballerinaCloud = null;
     }
 
+    public void addListenerSecret(String listenerName, Set<SecretModel> secretModel) {
+        this.bListenerToSecretMap.put(listenerName, secretModel);
+    }
+
     public void addSecrets(Set<SecretModel> secrets) {
         this.secretModelSet.addAll(secrets);
     }
