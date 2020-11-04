@@ -54,6 +54,10 @@ public class KubernetesContext {
         this.packageIDtoDataHolderMap.put(packageID, new KubernetesDataHolder(sourcePath));
     }
 
+    public PackageID getCurrentPackage() {
+        return this.currentPackage;
+    }
+
     public void setCurrentPackage(PackageID packageID) {
         this.currentPackage = packageID;
     }

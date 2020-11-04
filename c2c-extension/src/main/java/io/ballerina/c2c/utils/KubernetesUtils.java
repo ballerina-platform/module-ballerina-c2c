@@ -107,8 +107,8 @@ public class KubernetesUtils {
             artifactFileName = outputDir.resolve(extractJarName(dataHolder.getJarPath()) + YAML);
         } else if (jobModel == null && deploymentModel != null && deploymentModel.isSingleYAML()) {
             artifactFileName = outputDir.resolve(extractJarName(dataHolder.getJarPath()) + YAML);
-
         }
+
         File newFile = artifactFileName.toFile();
         // append if file exists
         if (newFile.exists()) {

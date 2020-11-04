@@ -59,6 +59,7 @@ dependencies {
     implementation "com.moandjiezana.toml:toml4j:${toml4jVersion}"
 
     compileOnly "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
+    compileOnly "org.ballerinalang:ballerina-tools-api:${ballerinaLangVersion}"
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
 
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
