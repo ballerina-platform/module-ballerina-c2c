@@ -25,6 +25,7 @@ import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.processors.AnnotationProcessorFactory;
 import io.ballerina.c2c.processors.ServiceAnnotationProcessor;
 import io.ballerina.c2c.utils.KubernetesUtils;
+import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 import org.ballerinalang.compiler.JarResolver;
 import org.ballerinalang.compiler.plugins.AbstractCompilerPlugin;
 import org.ballerinalang.compiler.plugins.SupportedAnnotationPackages;
@@ -38,7 +39,6 @@ import org.ballerinalang.model.tree.ServiceNode;
 import org.ballerinalang.model.tree.SimpleVariableNode;
 import org.ballerinalang.model.tree.TopLevelNode;
 import org.ballerinalang.model.tree.expressions.ExpressionNode;
-import org.ballerinalang.util.diagnostic.Diagnostic;
 import org.ballerinalang.util.diagnostic.DiagnosticLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,7 +197,8 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                 AnnotationProcessorFactory.getAnnotationProcessorInstance(annotationKey).processAnnotation
                         (serviceNode, attachmentNode);
             } catch (KubernetesPluginException e) {
-                dlog.logDiagnostic(Diagnostic.Kind.ERROR, serviceNode.getPosition(), e.getMessage());
+                dlog.logDiagnostic(DiagnosticSeverity.ERROR, KubernetesContext.getInstance().getCurrentPackage()
+                        , serviceNode.getPosition(), e.getMessage());
             }
         }
     }
@@ -205,8 +206,8 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
     @Override
     public void process(SimpleVariableNode variableNode, List<AnnotationAttachmentNode> annotations) {
         if (!variableNode.getFlags().contains(Flag.LISTENER)) {
-            dlog.logDiagnostic(Diagnostic.Kind.ERROR, variableNode.getPosition(), "@kubernetes annotations are only " +
-                    "supported with listeners.");
+            dlog.logDiagnostic(DiagnosticSeverity.ERROR, KubernetesContext.getInstance().getCurrentPackage(),
+                    variableNode.getPosition(), "@kubernetes annotations are only supported with listeners.");
             return;
         }
         for (AnnotationAttachmentNode attachmentNode : annotations) {
@@ -215,7 +216,8 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                 AnnotationProcessorFactory.getAnnotationProcessorInstance(annotationKey).processAnnotation
                         (variableNode, attachmentNode);
             } catch (KubernetesPluginException e) {
-                dlog.logDiagnostic(Diagnostic.Kind.ERROR, variableNode.getPosition(), e.getMessage());
+                dlog.logDiagnostic(DiagnosticSeverity.ERROR, KubernetesContext.getInstance().getCurrentPackage(),
+                        variableNode.getPosition(), e.getMessage());
             }
         }
 
@@ -229,7 +231,8 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                 AnnotationProcessorFactory.getAnnotationProcessorInstance(annotationKey).processAnnotation
                         (functionNode, attachmentNode);
             } catch (KubernetesPluginException e) {
-                dlog.logDiagnostic(Diagnostic.Kind.ERROR, functionNode.getPosition(), e.getMessage());
+                dlog.logDiagnostic(DiagnosticSeverity.ERROR, KubernetesContext.getInstance().getCurrentPackage(),
+                        functionNode.getPosition(), e.getMessage());
             }
         }
     }

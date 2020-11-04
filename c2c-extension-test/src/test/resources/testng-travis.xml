@@ -21,6 +21,7 @@
     <test name="ballerina-kubernetes-sample-tests" parallel="false">
         <classes>
             <class name="io.ballerina.c2c.test.samples.Sample1Test"/>
+            <class name="io.ballerina.c2c.test.samples.Sample5Test"/>
         </classes>
     </test>
 

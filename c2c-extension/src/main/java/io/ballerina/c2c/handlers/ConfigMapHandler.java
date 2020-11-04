@@ -25,10 +25,14 @@ import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.client.internal.SerializationUtils;
 
 import java.io.IOException;
 import java.util.Collection;
+
+import static io.ballerina.c2c.KubernetesConstants.BALLERINA_CONF_FILE_NAME;
 
 /**
  * Generates kubernetes Config Map.
@@ -69,9 +73,11 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
                 }
                 DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
                 deploymentModel.setCommandArgs(" --b7a.config.file=${CONFIG_FILE}");
-//                EnvVarValueModel envVarValueModel = new EnvVarValueModel(configMapModel.getMountPath() +
-//                        BALLERINA_CONF_FILE_NAME);
-//                deploymentModel.addEnv("CONFIG_FILE", envVarValueModel);
+                EnvVar ballerinaConfEnv = new EnvVarBuilder()
+                        .withName("CONFIG_FILE")
+                        .withValue(configMapModel.getMountPath() + BALLERINA_CONF_FILE_NAME)
+                        .build();
+                deploymentModel.addEnv(ballerinaConfEnv);
                 dataHolder.setDeploymentModel(deploymentModel);
             }
             generate(configMapModel);

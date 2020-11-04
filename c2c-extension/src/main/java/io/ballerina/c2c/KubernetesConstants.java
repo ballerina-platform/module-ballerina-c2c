@@ -50,7 +50,12 @@ public class KubernetesConstants {
     public static final String BALLERINA_CONF_MOUNT_PATH = "/home/ballerina/conf/";
     public static final String BALLERINA_CONF_FILE_NAME = "ballerina.conf";
     public static final String DOCKER_HOST = "DOCKER_HOST";
+    public static final String LISTENER_PATH_VARIABLE = "path";
     public static final String DOCKER_CERT_PATH = "DOCKER_CERT_PATH";
+    public static final String KEY_REF = "key_ref";
+    public static final String MIN_MEMORY = "min_memory";
+    public static final String MEMORY = "memory";
+    public static final String CPU = "cpu";
 
     /**
      * Restart policy enum.
