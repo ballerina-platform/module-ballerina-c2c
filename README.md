@@ -21,10 +21,19 @@ Code2cloud extension implementation for ballerina.
 ## How to build
 
 1. Download and install JDK 11
-2. Install Docker
-3. Get a clone or download the source from this repository (https://github.com/ballerinax/kubernetes)
-4. Run the Gradle command ``gradle build`` from within the ``module-ballerina-c2c`` directory.
-5. Copy ``build/c2c-ballerina-***.jar`` file to ``<BALLERINA_HOME>/bre/lib`` directory.
+1. Export github personal access token & user name as environment variables.
+   ```bash
+       export packagePAT=<Token>
+       export packageUser=<username>
+   ```
+1. (optional) Specify the Java home path for JDK 11 ie;
+    ```bash
+        export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home/
+    ```
+1. Install Docker
+1. Get a clone or download the source from this repository (https://github.com/ballerina-platform/module-ballerina-c2c)
+1. Run the Gradle command ``gradle build`` from within the ``module-ballerina-c2c`` directory.
+1. Copy ``build/c2c-ballerina-***.jar`` file to ``<BALLERINA_HOME>/bre/lib`` directory.
 
 ### Enabling debug logs
 - Use the "BAL_DOCKER_DEBUG=true" environment variable to enable docker related debug logs when building the ballerina
