@@ -18,12 +18,13 @@
 
 package io.ballerina.c2c.handlers;
 
-import com.moandjiezana.toml.Toml;
 import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.PodAutoscalerModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
+import io.ballerina.c2c.utils.TomlHelper;
+import io.ballerina.toml.api.Toml;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerBuilder;
 import io.fabric8.kubernetes.api.model.MetricSpec;
@@ -84,12 +85,12 @@ public class HPAHandler extends AbstractArtifactHandler {
         Toml ballerinaCloud = dataHolder.getBallerinaCloud();
         if (ballerinaCloud != null) {
             final String autoscaling = "cloud.deployment.autoscaling.";
-            hpa.setMaxReplicas(Math.toIntExact(ballerinaCloud.getLong(autoscaling + "max_replicas",
+            hpa.setMaxReplicas(Math.toIntExact(TomlHelper.getLong(ballerinaCloud, autoscaling + "max_replicas",
                     (long) hpa.getMaxReplicas())));
-            hpa.setMinReplicas(Math.toIntExact(ballerinaCloud.getLong(autoscaling + "min_replicas",
+            hpa.setMinReplicas(Math.toIntExact(TomlHelper.getLong(ballerinaCloud, autoscaling + "min_replicas",
                     (long) hpa.getMinReplicas())));
-            hpa.setCpuPercentage(Math.toIntExact((ballerinaCloud.getLong(autoscaling + "cpu",
-                    (long) hpa.getCpuPercentage()))));
+            hpa.setCpuPercentage(Math.toIntExact(TomlHelper.getLong(ballerinaCloud, autoscaling + "cpu",
+                    (long) hpa.getCpuPercentage())));
         }
     }
 

@@ -18,8 +18,6 @@
 
 package io.ballerina.c2c.handlers;
 
-
-import com.moandjiezana.toml.Toml;
 import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.ConfigMapModel;
@@ -29,6 +27,8 @@ import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.PersistentVolumeClaimModel;
 import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
+import io.ballerina.c2c.utils.TomlHelper;
+import io.ballerina.toml.api.Toml;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -116,7 +116,6 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         return volumeMounts;
     }
 
-
     private Container generateContainer(DeploymentModel deploymentModel, List<ContainerPort> containerPorts) {
         String dockerRegistry = deploymentModel.getRegistry();
         String deploymentImageName = deploymentModel.getImage();
@@ -185,7 +184,6 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         return volumes;
     }
 
-
     private List<LocalObjectReference> getImagePullSecrets(DeploymentModel deploymentModel) {
         List<LocalObjectReference> imagePullSecrets = new ArrayList<>();
         for (String imagePullSecret : deploymentModel.getImagePullSecrets()) {
@@ -218,62 +216,62 @@ public class DeploymentHandler extends AbstractArtifactHandler {
     }
 
     private void resolveDeploymentToml(DeploymentModel deploymentModel, Toml ballerinaCloud) {
-        deploymentModel.setReplicas(Math.toIntExact(ballerinaCloud.getLong(CLOUD_DEPLOYMENT + "replicas",
+        deploymentModel.setReplicas(Math.toIntExact(TomlHelper.getLong(ballerinaCloud, CLOUD_DEPLOYMENT + "replicas",
                 (long) deploymentModel.getReplicas())));
-        Toml probeToml = ballerinaCloud.getTable(CLOUD_DEPLOYMENT + "probes.readiness");
+        Toml probeToml = TomlHelper.getTable(ballerinaCloud, CLOUD_DEPLOYMENT + "probes.readiness");
         if (probeToml != null) {
             deploymentModel.setReadinessProbe(resolveProbeToml(probeToml));
         }
-        probeToml = ballerinaCloud.getTable(CLOUD_DEPLOYMENT + "probes.liveness");
+        probeToml = TomlHelper.getTable(ballerinaCloud, CLOUD_DEPLOYMENT + "probes.liveness");
         if (probeToml != null) {
             deploymentModel.setLivenessProbe(resolveProbeToml(probeToml));
         }
     }
 
     private void resolveEnvToml(DeploymentModel deploymentModel, Toml ballerinaCloud) {
-        List<HashMap<String, String>> configToml = ballerinaCloud.getList("cloud.config.envs");
-        if (configToml != null) {
-            configToml.forEach(env -> {
+        List<Toml> envs = TomlHelper.getTables(ballerinaCloud, "cloud.config.envs");
+        if (envs != null) {
+            for (Toml env : envs) {
                 EnvVar envVar = new EnvVarBuilder()
-                        .withName(env.get("name"))
+                        .withName(TomlHelper.getString(env, "name"))
                         .withNewValueFrom()
                         .withNewConfigMapKeyRef()
-                        .withKey(env.get(KubernetesConstants.KEY_REF))
-                        .withName(env.get("config_name"))
+                        .withName(TomlHelper.getString(env, KubernetesConstants.KEY_REF))
+                        .withName(TomlHelper.getString(env, "config_name"))
                         .endConfigMapKeyRef()
                         .endValueFrom()
                         .build();
                 if (isBlank(envVar.getName())) {
-                    envVar.setName(env.get(KubernetesConstants.KEY_REF));
+                    envVar.setName(TomlHelper.getString(env, KubernetesConstants.KEY_REF));
                 }
                 deploymentModel.addEnv(envVar);
-            });
+            }
         }
 
-        List<HashMap<String, String>> secretToml = ballerinaCloud.getList("cloud.secrets.envs");
-        if (secretToml != null) {
-            secretToml.forEach(env -> {
+        List<Toml> secrets = TomlHelper.getTables(ballerinaCloud, "cloud.secrets.envs");
+        if (envs != null) {
+            for (Toml secret : secrets) {
                 EnvVar envVar = new EnvVarBuilder()
-                        .withName(env.get("name"))
+                        .withName(TomlHelper.getString(secret, "name"))
                         .withNewValueFrom()
                         .withNewSecretKeyRef()
-                        .withKey(env.get(KubernetesConstants.KEY_REF))
-                        .withName(env.get("secret_name"))
+                        .withName(TomlHelper.getString(secret, KubernetesConstants.KEY_REF))
+                        .withName(TomlHelper.getString(secret, "secret"))
                         .endSecretKeyRef()
                         .endValueFrom()
                         .build();
                 if (isBlank(envVar.getName())) {
-                    envVar.setName(env.get(KubernetesConstants.KEY_REF));
+                    envVar.setName(TomlHelper.getString(secret, KubernetesConstants.KEY_REF));
                 }
                 deploymentModel.addEnv(envVar);
-            });
+            }
         }
     }
 
     private void resolveResourcesToml(DeploymentModel deploymentModel, Toml deploymentToml) {
         Map<String, Quantity> requests = deploymentModel.getResourceRequirements().getRequests();
-        String minMemory = deploymentToml.getString(CLOUD_DEPLOYMENT + KubernetesConstants.MIN_MEMORY);
-        String minCPU = deploymentToml.getString(CLOUD_DEPLOYMENT + "min_cpu");
+        String minMemory = TomlHelper.getString(deploymentToml, CLOUD_DEPLOYMENT + KubernetesConstants.MIN_MEMORY);
+        String minCPU = TomlHelper.getString(deploymentToml, CLOUD_DEPLOYMENT + "min_cpu");
         if (minMemory != null) {
             requests.put(KubernetesConstants.MEMORY, new Quantity(minMemory));
         }
@@ -281,8 +279,8 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             requests.put(KubernetesConstants.CPU, new Quantity(minCPU));
         }
         Map<String, Quantity> limits = deploymentModel.getResourceRequirements().getLimits();
-        String maxMemory = deploymentToml.getString(CLOUD_DEPLOYMENT + "max_memory");
-        String maxCPU = deploymentToml.getString(CLOUD_DEPLOYMENT + "max_cpu");
+        String maxMemory = TomlHelper.getString(deploymentToml, CLOUD_DEPLOYMENT + "max_memory");
+        String maxCPU = TomlHelper.getString(deploymentToml, CLOUD_DEPLOYMENT + "max_cpu");
         if (maxMemory != null) {
             limits.put(KubernetesConstants.MEMORY, new Quantity(maxMemory));
         }
@@ -294,19 +292,19 @@ public class DeploymentHandler extends AbstractArtifactHandler {
     }
 
     private void resolveConfigMapToml(DeploymentModel deploymentModel, Toml toml) throws KubernetesPluginException {
-        List<Toml> configFiles = toml.getTables("cloud.config.files");
+        List<Toml> configFiles = TomlHelper.getTables(toml, "cloud.config.files");
         if (configFiles != null) {
             final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
 
             for (Toml configFile : configFiles) {
-                Path path = Paths.get(configFile.getString("file"));
+                Path path = Paths.get(TomlHelper.getString(configFile, "file"));
                 if (path.endsWith(BALLERINA_CONF_FILE_NAME)) {
                     // Resolve ballerina.conf
                     ConfigMapModel configMapModel = getBallerinaConfConfigMap(path.toString(), deploymentName);
                     dataHolder.addConfigMaps(Collections.singleton(configMapModel));
                     continue;
                 }
-                Path mountPath = Paths.get(configFile.getString("mount_path"));
+                Path mountPath = Paths.get(TomlHelper.getString(configFile, "mount_path"));
                 final Path fileName = validatePaths(path, mountPath);
                 ConfigMapModel configMapModel = new ConfigMapModel();
                 configMapModel.setName(deploymentName + "-" + getValidName(fileName.toString()));
@@ -319,13 +317,13 @@ public class DeploymentHandler extends AbstractArtifactHandler {
     }
 
     private void resolveSecretToml(DeploymentModel deploymentModel, Toml toml) throws KubernetesPluginException {
-        List<Toml> secrets = toml.getTables("cloud.secret.files");
+        List<Toml> secrets = TomlHelper.getTables(toml, "cloud.secret.files");
         if (secrets != null) {
             final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
 
             for (Toml secret : secrets) {
-                Path path = Paths.get(secret.getString("file"));
-                Boolean sealed = secret.getBoolean("sealed", false);
+                Path path = Paths.get(TomlHelper.getString(secret, "file"));
+                boolean sealed = TomlHelper.getBoolean(secret, "sealed", false);
                 if (path.endsWith(BALLERINA_CONF_FILE_NAME)) {
                     // Resolve ballerina.conf
                     SecretModel secretModel = getBallerinaConfSecret(path.toString(), deploymentName);
@@ -333,7 +331,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                     dataHolder.addSecrets(Collections.singleton(secretModel));
                     continue;
                 }
-                Path mountPath = Paths.get(secret.getString("mount_path"));
+                Path mountPath = Paths.get(TomlHelper.getString(secret, "mount_path"));
                 final Path fileName = validatePaths(path, mountPath);
                 SecretModel secretModel = new SecretModel();
                 secretModel.setSealed(sealed);
@@ -443,11 +441,11 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         HTTPGetAction httpGet = new HTTPGetAction();
         int defaultPort = dataHolder.getDeploymentModel().getPorts().iterator().next().getContainerPort();
         httpGet.setPort(new IntOrString(defaultPort));
-        final Long port = probeToml.getLong("port");
+        final Long port = TomlHelper.getLong(probeToml, "port");
         if (port != null) {
             httpGet.setPort(new IntOrString(Math.toIntExact(port)));
         }
-        httpGet.setPath(probeToml.getString("path"));
+        httpGet.setPath(TomlHelper.getString(probeToml, "path"));
         probe.setInitialDelaySeconds(30);
         probe.setHttpGet(httpGet);
         return probe;
@@ -508,11 +506,12 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         Toml toml = dataHolder.getBallerinaCloud();
         if (toml != null) {
             DockerModel dockerModel = dataHolder.getDockerModel();
-            dockerModel.setName(toml.getString(containerImage + ".name",
+            dockerModel.setName(TomlHelper.getString(toml, containerImage + ".name",
                     deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "")));
-            dockerModel.setRegistry(toml.getString(containerImage + ".repository", dockerModel.getRegistry()));
-            dockerModel.setTag(toml.getString(containerImage + ".tag", dockerModel.getTag()));
-            dockerModel.setBaseImage(toml.getString(containerImage + ".base", dockerModel.getBaseImage()));
+            dockerModel
+                    .setRegistry(TomlHelper.getString(toml, containerImage + ".repository", dockerModel.getRegistry()));
+            dockerModel.setTag(TomlHelper.getString(toml, containerImage + ".tag", dockerModel.getTag()));
+            dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", dockerModel.getBaseImage()));
             dataHolder.getDeploymentModel().setImage
                     (dockerModel.getRegistry() + "/" + dockerModel.getName() + ":" + dockerModel.getTag());
         }
@@ -552,7 +551,6 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         OUT.print("\t@kubernetes:Deployment \t\t\t - complete 1/1");
         dataHolder.setDockerModel(getDockerModel(deploymentModel));
     }
-
 
     /**
      * Create docker artifacts.
