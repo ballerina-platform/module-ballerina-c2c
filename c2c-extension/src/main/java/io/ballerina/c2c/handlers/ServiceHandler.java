@@ -20,7 +20,6 @@ package io.ballerina.c2c.handlers;
 
 import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
-import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.ServiceModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
@@ -28,10 +27,13 @@ import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.client.internal.SerializationUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
@@ -42,43 +44,56 @@ import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarNam
  */
 public class ServiceHandler extends AbstractArtifactHandler {
 
-    /**
-     * Generate kubernetes service definition from annotation.
-     *
-     * @throws KubernetesPluginException If an error occurs while generating artifact.
-     */
-    private void generate(ServiceModel serviceModel) throws KubernetesPluginException {
-        if (null == serviceModel.getPortName()) {
-            serviceModel.setPortName(KubernetesUtils.getValidName(serviceModel.getProtocol()
-                    + "-" + serviceModel.getName()));
+    private void generate(Map<String, ServiceModel> serviceModels) throws KubernetesPluginException {
+        int count = 0;
+        ServiceModel commonService = new ServiceModel();
+        String balxFileName = extractJarName(KubernetesContext.getInstance().getDataHolder()
+                .getJarPath());
+        commonService.addLabel(KubernetesConstants.KUBERNETES_SELECTOR_KEY, balxFileName);
+        commonService.setSelector(balxFileName);
+        commonService.setName(KubernetesUtils.getValidName(dataHolder.getDeploymentModel().getName()
+                .replace(KubernetesConstants.DEPLOYMENT_POSTFIX, "") + KubernetesConstants.SVC_POSTFIX));
+        List<ServicePort> servicePorts = new ArrayList<>();
+        for (ServiceModel serviceModel : serviceModels.values()) {
+            count++;
+            if (null == serviceModel.getPortName()) {
+                serviceModel.setPortName(KubernetesUtils.getValidName(serviceModel.getName() + "-"
+                        + count + "-" + serviceModel.getProtocol()));
+            }
+            ServicePortBuilder servicePortBuilder = new ServicePortBuilder()
+                    .withName(serviceModel.getPortName())
+                    .withProtocol(KubernetesConstants.KUBERNETES_SVC_PROTOCOL)
+                    .withPort(serviceModel.getPort())
+                    .withNewTargetPort(serviceModel.getTargetPort());
+            servicePorts.add(servicePortBuilder.build());
+            ContainerPort containerPort = new ContainerPortBuilder()
+                    .withName(serviceModel.getPortName())
+                    .withContainerPort(serviceModel.getTargetPort())
+                    .withProtocol(KubernetesConstants.KUBERNETES_SVC_PROTOCOL)
+                    .build();
+            dataHolder.getDeploymentModel().addPort(containerPort);
+            OUT.println();
+            OUT.print("\t@kubernetes:Service \t\t\t - complete " + count + "/" + serviceModels.size() + "\r");
         }
-        ServicePortBuilder servicePortBuilder = new ServicePortBuilder()
-                .withName(serviceModel.getPortName())
-                .withProtocol(KubernetesConstants.KUBERNETES_SVC_PROTOCOL)
-                .withPort(serviceModel.getPort())
-                .withNewTargetPort(serviceModel.getTargetPort());
 
-        if (serviceModel.getNodePort() > 0) {
-            servicePortBuilder.withNodePort(serviceModel.getNodePort());
-        }
         Service service = new ServiceBuilder()
                 .withNewMetadata()
-                .withName(serviceModel.getName())
+                .withName(commonService.getName())
                 .withNamespace(dataHolder.getNamespace())
-                .addToLabels(serviceModel.getLabels())
+                .addToLabels(commonService.getLabels())
                 .endMetadata()
                 .withNewSpec()
-                .withPorts(servicePortBuilder.build())
-                .addToSelector(KubernetesConstants.KUBERNETES_SELECTOR_KEY, serviceModel.getSelector())
-                .withSessionAffinity(serviceModel.getSessionAffinity())
-                .withType(serviceModel.getServiceType())
+                .withPorts(servicePorts)
+                .addToSelector(KubernetesConstants.KUBERNETES_SELECTOR_KEY, commonService.getSelector())
+                .withSessionAffinity(commonService.getSessionAffinity())
+                .withType(commonService.getServiceType())
                 .endSpec()
                 .build();
         try {
             String serviceYAML = SerializationUtils.dumpWithoutRuntimeStateAsYaml(service);
             KubernetesUtils.writeToFile(serviceYAML, KubernetesConstants.SVC_FILE_POSTFIX + KubernetesConstants.YAML);
         } catch (IOException e) {
-            String errorMessage = "error while generating yaml file for service: " + serviceModel.getName();
+            String errorMessage = "error while generating yaml file for service: " + commonService.getName();
             throw new KubernetesPluginException(errorMessage, e);
         }
 
@@ -87,25 +102,7 @@ public class ServiceHandler extends AbstractArtifactHandler {
     @Override
     public void createArtifacts() throws KubernetesPluginException {
         // Service
-        DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
-        Map<String, ServiceModel> serviceModels = dataHolder.getBListenerToK8sServiceMap();
-        int count = 0;
-        for (ServiceModel serviceModel : serviceModels.values()) {
-            count++;
-            String balxFileName = extractJarName(KubernetesContext.getInstance().getDataHolder()
-                    .getJarPath());
-            serviceModel.addLabel(KubernetesConstants.KUBERNETES_SELECTOR_KEY, balxFileName);
-            serviceModel.setSelector(balxFileName);
-            generate(serviceModel);
-            ContainerPort containerPort = new ContainerPortBuilder()
-                    .withName(serviceModel.getPortName())
-                    .withContainerPort(serviceModel.getTargetPort())
-                    .withProtocol(KubernetesConstants.KUBERNETES_SVC_PROTOCOL)
-                    .build();
-            deploymentModel.addPort(containerPort);
-            OUT.println();
-            OUT.print("\t@kubernetes:Service \t\t\t - complete " + count + "/" + serviceModels.size() + "\r");
-        }
+        generate(dataHolder.getBListenerToK8sServiceMap());
     }
 
 }
