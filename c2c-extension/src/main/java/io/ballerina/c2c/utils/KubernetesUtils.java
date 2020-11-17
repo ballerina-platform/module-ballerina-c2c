@@ -305,7 +305,11 @@ public class KubernetesUtils {
      */
     public static String getValidName(String name) {
         name = name.toLowerCase(Locale.getDefault()).replace("_", "-").replace(".", "-");
-        return name.substring(0, Math.min(name.length(), 15));
+        name = name.substring(0, Math.min(name.length(), 15));
+        if (name.endsWith("-")) {
+            return name.substring(0, name.length() - 1);
+        }
+        return name;
     }
 
     /**

@@ -69,11 +69,10 @@ public class KubernetesServiceGeneratorTests extends HandlerTestSuite {
 
     private void assertGeneratedYAML(File yamlFile) throws IOException {
         Service service = Utils.loadYaml(yamlFile);
-        Assert.assertEquals(serviceName, service.getMetadata().getName());
+        Assert.assertEquals("mydeployment-sv", service.getMetadata().getName());
         Assert.assertEquals(selector, service.getMetadata().getLabels().get(KubernetesConstants
                 .KUBERNETES_SELECTOR_KEY));
-        Assert.assertEquals(serviceType, service.getSpec().getType());
-        Assert.assertEquals(sessionAffinity, service.getSpec().getSessionAffinity());
+        Assert.assertEquals("ClusterIP", service.getSpec().getType());
         Assert.assertEquals(1, service.getSpec().getPorts().size());
         Assert.assertEquals(port, service.getSpec().getPorts().get(0).getPort().intValue());
 

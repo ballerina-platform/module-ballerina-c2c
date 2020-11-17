@@ -101,7 +101,7 @@ public class Sample1Test extends SampleTest {
     @Test
     public void validateK8SService() {
         Assert.assertNotNull(service);
-        Assert.assertEquals(service.getMetadata().getName(), "helloworld-svc");
+        Assert.assertEquals(service.getMetadata().getName(), "hello-world-svc");
         Assert.assertEquals(service.getMetadata().getLabels().get(KubernetesConstants
                 .KUBERNETES_SELECTOR_KEY), "hello_world");
         Assert.assertEquals(service.getSpec().getType(), KubernetesConstants.ServiceType.ClusterIP.name());
