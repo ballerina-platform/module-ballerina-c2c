@@ -75,10 +75,10 @@ public class Sample5Test extends SampleTest {
                     break;
                 case "ConfigMap":
                     switch (data.getMetadata().getName()) {
-                        case "hello-hello-0-0-ballerina-conf-config-map":
+                        case "hello-ballerina-conf-config-map":
                             ballerinaConf = (ConfigMap) data;
                             break;
-                        case "hello-hello-0-0-data-txt":
+                        case "hello-data-txt":
                             dataMap = (ConfigMap) data;
                             break;
                         default:
@@ -99,11 +99,11 @@ public class Sample5Test extends SampleTest {
     @Test
     public void validateDeployment() {
         Assert.assertNotNull(deployment);
-        Assert.assertEquals(deployment.getMetadata().getName(), "hello-hello-0-0-deployment");
+        Assert.assertEquals(deployment.getMetadata().getName(), "hello-deployment");
         Assert.assertEquals(deployment.getSpec().getReplicas().intValue(), 1);
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getVolumes().size(), 3);
         Assert.assertEquals(deployment.getMetadata().getLabels().get(KubernetesConstants
-                .KUBERNETES_SELECTOR_KEY), "hello-hello-0.0.1");
+                .KUBERNETES_SELECTOR_KEY), "hello");
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         // Assert Containers
@@ -143,7 +143,7 @@ public class Sample5Test extends SampleTest {
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
         Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(),
-                "[/bin/sh, -c, java -Xdiag -cp \"hello-hello-0.0.1.jar:jars/*\" 'hello/hello/0_0_1/$_init' " +
+                "[/bin/sh, -c, java -Xdiag -cp \"hello.jar:jars/*\" 'hello/hello/0_0_1/$_init' " +
                         "--b7a.config" +
                         ".file=${CONFIG_FILE}]");
     }
