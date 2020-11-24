@@ -25,6 +25,11 @@ import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.processors.AnnotationProcessorFactory;
 import io.ballerina.c2c.processors.ServiceAnnotationProcessor;
 import io.ballerina.c2c.utils.KubernetesUtils;
+import io.ballerina.projects.JBallerinaBackend;
+import io.ballerina.projects.JdkVersion;
+import io.ballerina.projects.PackageCompilation;
+import io.ballerina.projects.Project;
+import io.ballerina.projects.internal.model.Target;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 import org.ballerinalang.compiler.JarResolver;
 import org.ballerinalang.compiler.plugins.AbstractCompilerPlugin;
@@ -53,6 +58,7 @@ import org.wso2.ballerinalang.compiler.tree.expressions.BLangTypeInit;
 import org.wso2.ballerinalang.compiler.util.CompilerContext;
 import org.wso2.ballerinalang.compiler.util.TypeTags;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -65,6 +71,7 @@ import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
+import static io.ballerina.c2c.utils.KubernetesUtils.printError;
 import static org.ballerinalang.compiler.JarResolver.JAR_RESOLVER_KEY;
 import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
 
@@ -112,6 +119,9 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                 .collect(Collectors.toList());
 
         if (c2cImports.size() > 0) {
+            KubernetesContext.getInstance().setCurrentPackage(bPackage.packageID);
+            KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
+            dataHolder.setPackageID(bPackage.packageID);
             for (BLangImportPackage c2cImport : c2cImports) {
                 // Get the units of the file which has kubernetes import as _
                 List<TopLevelNode> topLevelNodes = bPackage.getCompilationUnits().stream()
@@ -237,8 +247,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         }
     }
 
-    @Override
-    public void codeGenerated(PackageID moduleID, Path executableJarFile) {
+    public void codeGeneratedInternal(PackageID moduleID, Path executableJarFile) {
         KubernetesContext.getInstance().setCurrentPackage(moduleID);
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         dataHolder.setPackageID(moduleID);
@@ -281,7 +290,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                     artifactManager.createArtifacts();
                 } catch (KubernetesPluginException e) {
                     String errorMessage = "module [" + moduleID + "] " + e.getMessage();
-                    KubernetesUtils.printError(errorMessage);
+                    printError(errorMessage);
                     pluginLog.error(errorMessage, e);
                     try {
                         KubernetesUtils.deleteDirectory(kubernetesOutputPath);
@@ -290,9 +299,25 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                     }
                 }
             } else {
-                KubernetesUtils.printError("error in resolving docker generation location.");
+                printError("error in resolving docker generation location.");
                 pluginLog.error("error in resolving docker generation location.");
             }
+        }
+    }
+
+    public void codeGenerated(Project project, Target target) {
+        PackageCompilation packageCompilation = project.currentPackage().getCompilation();
+        JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(packageCompilation, JdkVersion.JAVA_11);
+        io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
+        KubernetesContext.getInstance().getDataHolder().getDockerModel()
+                .addDependencyJarPaths(new HashSet<>(jarResolver.getJarFilePathsRequiredForExecution()));
+        try {
+            codeGeneratedInternal(KubernetesContext.getInstance().getCurrentPackage(),
+                    target.getExecutablePath(project.currentPackage()));
+        } catch (IOException e) {
+            String errorMessage = "error while accessing executable path " + e.getMessage();
+            printError(errorMessage);
+            pluginLog.error(errorMessage, e);
         }
     }
 

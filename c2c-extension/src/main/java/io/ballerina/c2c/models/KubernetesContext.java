@@ -70,18 +70,6 @@ public class KubernetesContext {
         return this.packageIDtoDataHolderMap.get(packageID);
     }
 
-    public String getServiceName(String dependsOn) throws KubernetesPluginException {
-        String packageName = dependsOn.substring(0, dependsOn.indexOf(Names.VERSION_SEPARATOR.value));
-        String listener = dependsOn.substring(dependsOn.indexOf(Names.VERSION_SEPARATOR.value) + 1);
-        for (PackageID packageID : packageIDtoDataHolderMap.keySet()) {
-            if (packageName.equals(packageID.name.value)) {
-                return getDataHolder(packageID).getBListenerToK8sServiceMap().get(listener).getName();
-            }
-        }
-        throw new KubernetesPluginException("dependent listener " + dependsOn + " is not annotated with " +
-                "@kubernetes:Service{}");
-    }
-
     public CompilerContext getCompilerContext() {
         return compilerContext;
     }
