@@ -17,18 +17,17 @@
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
-description = 'Ballerinax - Code2Cloud Extension Annotations'
+description = 'Ballerina - Code2Cloud Extension Annotations'
 
 configurations {
     bDistributionDir
     balTools
-    birDir
-    kubernetesJar
+    zipPartent
     extensionPlugin
 }
 
-dependencies{
-    balTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}"){
+dependencies {
+    balTools("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
         transitive = false
     }
     extensionPlugin project(path: ":c2c-extension", configuration: "shadow")
@@ -75,24 +74,11 @@ task copyStdlibs(type: Copy) {
     /* Standard Libraries */
     configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
         def artifactExtractedPath = "${buildDir}/extracted-distribution/" + artifact.name + "-zip"
-        into("bir-cache/") {
-            from "${artifactExtractedPath}/caches/bir"
+        into("repo/balo") {
+            from "${artifactExtractedPath}/balo/"
         }
-        into("bre/lib/") {
-            from "${artifactExtractedPath}/libs"
-        }
-        into("docs/") {
-            from "${artifactExtractedPath}/docs"
-        }
-        // pack to new cache
-        into("cache/bir/") {
-            from "${artifactExtractedPath}/caches/bir"
-        }
-        into("cache/balo/") {
-            from "${artifactExtractedPath}/caches/balo"
-        }
-        into("cache/jar/") {
-            from "${artifactExtractedPath}/caches/jar"
+        into("repo/cache") {
+            from "${artifactExtractedPath}/cache"
         }
     }
 }
@@ -106,15 +92,16 @@ def ballerinaToml = file("$project.projectDir/Ballerina.toml")
 def semverMatcher = ballerinaToml.getText("UTF-8") =~ /(([0-9]+)\.([0-9]+)\.([0-9]+))/
 def tomlSemver = semverMatcher[0][1]
 
-def artifactBirDir = file("$project.projectDir/target/caches/bir_cache/ballerina")
-def artifactKubernetesJar = file("$project.projectDir/target/caches/jar_cache/ballerina/c2c/${tomlSemver}/ballerina-c2c-${tomlSemver}.jar")
+
 def artifactParent = file("$project.projectDir/build/target/c2c-ballerina-zip/")
 def artifactDocs = file("$project.buildDir/apidocs/docs/")
+def artifactBalo = file("$project.projectDir/target/balo")
+def artifactCache = file("$project.projectDir/target/cache/")
 
 task ballerinaBuild {
     dependsOn unzip
     dependsOn configurations.extensionPlugin
-    inputs.dir file("$project.projectDir/src")
+    inputs.dir file("$project.projectDir")
     inputs.file file("$project.projectDir/Ballerina.toml")
     doLast {
         def distributionBinPath = project.projectDir.absolutePath + "/build/extracted-distribution/jballerina-tools-${ballerinaLangVersion}/bin"
@@ -122,9 +109,9 @@ task ballerinaBuild {
             workingDir project.projectDir
             environment "JAVA_OPTS", "-DBALLERINA_DEV_COMPILE_BALLERINA_ORG=true"
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                commandLine 'cmd', '/c', "$distributionBinPath/ballerina.bat doc -a"
+                commandLine 'cmd', '/c', "$distributionBinPath/ballerina.bat doc"
             } else {
-                commandLine 'sh', '-c', "$distributionBinPath/ballerina doc -a"
+                commandLine 'sh', '-c', "$distributionBinPath/ballerina doc"
             }
         }
         copy {
@@ -135,33 +122,26 @@ task ballerinaBuild {
             workingDir project.projectDir
             environment "JAVA_OPTS", "-DBALLERINA_DEV_COMPILE_BALLERINA_ORG=true"
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                commandLine 'cmd', '/c', "$distributionBinPath/ballerina.bat build -c -a --skip-tests"
+                commandLine 'cmd', '/c', "$distributionBinPath/ballerina.bat build -c --skip-tests"
             } else {
-                commandLine 'sh', '-c', "$distributionBinPath/ballerina build -c -a --skip-tests"
-            }
-        }
-        // Copy the TOML to the same folder as the BIRs
-        ["${artifactBirDir}/c2c/${tomlSemver}"].each { birDir ->
-            copy {
-                from file("$project.projectDir/Ballerina.toml")
-                into birDir
+                commandLine 'sh', '-c', "$distributionBinPath/ballerina build -c --skip-tests"
             }
         }
         copy {
-            from file("$artifactBirDir")
-            into file("$artifactParent/caches/bir/ballerina")
+            from file("$artifactBalo")
+            into file("$artifactParent/balo/ballerina/c2c/$tomlSemver")
         }
         copy {
             from file("$artifactDocs")
             into file("$artifactParent/docs")
         }
         copy {
-            from file("$artifactKubernetesJar")
-            into file("$artifactParent/libs")
-        }
-        copy {
             from configurations.extensionPlugin
             into file("${artifactParent}/libs")
+        }
+        copy {
+            from file("$artifactCache")
+            into file("$artifactParent/cache")
         }
 
     }
@@ -170,8 +150,7 @@ task ballerinaBuild {
 
 artifacts {
     bDistributionDir file: bDistribution, builtBy: unzip
-    birDir file: artifactBirDir, builtBy: ballerinaBuild
-    kubernetesJar file: artifactKubernetesJar, builtBy: ballerinaBuild
+    zipPartent file: artifactParent, builtBy: ballerinaBuild
 }
 
 task createArtifactZip(type: Zip) {
