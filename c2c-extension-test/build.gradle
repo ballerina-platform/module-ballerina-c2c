@@ -65,12 +65,7 @@ task copyBallerinaArtifacts {
             from file("$zipDirLocation/cache/ballerina")
             into file("${distributionLocation}/repo/cache/ballerina")
         }
-//        configurations.bJars.each { jar ->
-//            copy {
-//                from jar
-//                into file("${distributionLocation}/bre/lib/")
-//            }
-//        }
+
     }
 }
 
