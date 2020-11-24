@@ -1,4 +1,4 @@
-[project]
-org-name = "c2c-sample"
+[package]
+org = "c2c-sample"
+name = "scaling"
 version = "0.0.5"
-
