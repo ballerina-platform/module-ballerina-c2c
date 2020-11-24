@@ -52,8 +52,7 @@ public class KubernetesDataHolder {
     private PackageID packageID;
     private Toml ballerinaCloud;
 
-    KubernetesDataHolder(Path sourceRoot) {
-        this.sourceRoot = sourceRoot;
+    KubernetesDataHolder() {
         this.bListenerToK8sServiceMap = new HashMap<>();
         this.bListenerToSecretMap = new HashMap<>();
         this.secretModelSet = new HashSet<>();

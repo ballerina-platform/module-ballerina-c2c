@@ -45,7 +45,6 @@ public class HandlerTestSuite {
     @BeforeSuite
     public void setUp() {
         KubernetesContext context = KubernetesContext.getInstance();
-        context.addDataHolder(module, Paths.get("build"));
         dataHolder = context.getDataHolder();
         Path buildDir = Paths.get(System.getProperty("buildDir"));
         dataHolder.setK8sArtifactOutputPath(buildDir.resolve(KUBERNETES).resolve(module.name.toString()));

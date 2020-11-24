@@ -31,7 +31,6 @@ import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.internal.model.Target;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
-import org.ballerinalang.compiler.JarResolver;
 import org.ballerinalang.compiler.plugins.AbstractCompilerPlugin;
 import org.ballerinalang.compiler.plugins.SupportedAnnotationPackages;
 import org.ballerinalang.model.TreeBuilder;
@@ -66,13 +65,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
 import static io.ballerina.c2c.utils.KubernetesUtils.printError;
-import static org.ballerinalang.compiler.JarResolver.JAR_RESOLVER_KEY;
 import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
 
 /**
@@ -88,11 +85,6 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
 
     @Override
     public void setCompilerContext(CompilerContext context) {
-        this.sourceDirectory = context.get(SourceDirectory.class);
-        if (this.sourceDirectory == null) {
-            throw new IllegalArgumentException("source directory has not been initialized");
-        }
-        KubernetesContext.getInstance().setCompilerContext(context);
     }
 
     @Override
@@ -103,15 +95,6 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
     @Override
     public void process(PackageNode packageNode) {
         BLangPackage bPackage = (BLangPackage) packageNode;
-        KubernetesContext.getInstance().addDataHolder(bPackage.packageID, sourceDirectory.getPath());
-
-        //Get dependency jar paths
-        JarResolver jarResolver = KubernetesContext.getInstance().getCompilerContext().get(JAR_RESOLVER_KEY);
-        if (jarResolver != null) {
-            Set<Path> dependencyJarPaths = new HashSet<>(jarResolver.allDependencies(bPackage));
-            KubernetesContext.getInstance().getDataHolder(bPackage.packageID).getDockerModel()
-                    .addDependencyJarPaths(dependencyJarPaths);
-        }
         // Get the imports with alias _
         List<BLangImportPackage> c2cImports = bPackage.getImports().stream()
                 .filter(i -> i.symbol.toString().startsWith("ballerina/c2c") &&
@@ -275,11 +258,6 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                         }
                     }
                 }
-                if (!dataHolder.getDockerModel().isUberJar()) {
-                    JarResolver jarResolver =
-                            KubernetesContext.getInstance().getCompilerContext().get(JAR_RESOLVER_KEY);
-                    executableJarFile = jarResolver.moduleJar(moduleID);
-                }
                 dataHolder.setJarPath(executableJarFile);
                 dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
                 dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
@@ -312,8 +290,11 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         KubernetesContext.getInstance().getDataHolder().getDockerModel()
                 .addDependencyJarPaths(new HashSet<>(jarResolver.getJarFilePathsRequiredForExecution()));
         try {
+            final Path executablePath = target.getExecutablePath(project.currentPackage());
+            KubernetesContext.getInstance().getDataHolder().setSourceRoot(executablePath.getParent()
+                    .getParent().getParent());
             codeGeneratedInternal(KubernetesContext.getInstance().getCurrentPackage(),
-                    target.getExecutablePath(project.currentPackage()));
+                    executablePath);
         } catch (IOException e) {
             String errorMessage = "error while accessing executable path " + e.getMessage();
             printError(errorMessage);

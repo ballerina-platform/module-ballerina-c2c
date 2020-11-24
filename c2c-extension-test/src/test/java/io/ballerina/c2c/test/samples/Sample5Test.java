@@ -64,7 +64,7 @@ public class Sample5Test extends SampleTest {
     public void compileSample() throws IOException, InterruptedException {
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH)
                 , 0);
-        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello-hello-0.0.1.yaml").toFile();
+        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
         KubernetesClient client = new DefaultKubernetesClient();
         List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
