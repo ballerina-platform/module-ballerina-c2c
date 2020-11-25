@@ -65,6 +65,17 @@ publishing {
          artifact source: zipExamples, extension: 'zip'
       }
    }
+
+   repositories {
+      maven {
+         name = "GitHubPackages"
+         url = uri("https://maven.pkg.github.com/ballerina-platform/module-ballerina-c2c")
+         credentials {
+            username = System.getenv("packageUser")
+            password = System.getenv("packagePAT")
+         }
+      }
+   }
 }
 
 //zipExamples.dependsOn buildExamples
