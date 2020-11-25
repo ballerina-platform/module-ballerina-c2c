@@ -1,0 +1,5 @@
+//Ballerina supports generating docker and Kubernetes artifacts from code without any additional configuration.
+//This simplifies the developer experience of developing and deploying ballerina code in the cloud
+//Code to cloud builds containers and required artifacts by deriving required values from the code
+//If you want to override the default values taken from the compiler, you can use Ballerina.cloud file. <br/><br/>
+//For more information, see the [Code to Cloud Deployment Guide](https://ballerina.io/swan-lake/learn/deployment/code-to-cloud).
