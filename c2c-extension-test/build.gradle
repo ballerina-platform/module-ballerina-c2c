@@ -20,8 +20,7 @@ apply from: "$rootDir/gradle/javaProject.gradle"
 configurations {
     bDistributionDir
     extensionPlugin
-    birDir
-    bJars
+    zipPartent
 }
 
 dependencies {
@@ -37,13 +36,13 @@ dependencies {
 
     extensionPlugin project(path: ":c2c-extension", configuration: "shadow")
     bDistributionDir project(path: ":c2c-ballerina", configuration: "bDistributionDir")
-    birDir project(path: ":c2c-ballerina", configuration: "birDir")
-    bJars project(path: ":c2c-ballerina", configuration: "kubernetesJar")
+    zipPartent project(path: ":c2c-ballerina", configuration: "zipPartent")
 }
 
-description = 'Ballerinax - Kubernetes Extension Tests'
+description = 'Ballerina - C2C Extension Tests'
 
 def distributionLocation = configurations.bDistributionDir.singleFile
+def zipDirLocation = configurations.zipPartent.singleFile
 
 task copyExtensionPlugin {
     dependsOn configurations.extensionPlugin
@@ -56,19 +55,17 @@ task copyExtensionPlugin {
 }
 
 task copyBallerinaArtifacts {
-    dependsOn configurations.birDir
-    dependsOn configurations.bJars
+    dependsOn configurations.zipPartent
     doLast {
         copy {
-            from configurations.birDir
-            into file("${distributionLocation}/bir-cache/ballerina")
+            from file("$zipDirLocation/balo/ballerina")
+            into file("${distributionLocation}/repo/balo/ballerina")
         }
-        configurations.bJars.each { jar ->
-            copy {
-                from jar
-                into file("${distributionLocation}/bre/lib/")
-            }
+        copy {
+            from file("$zipDirLocation/cache/ballerina")
+            into file("${distributionLocation}/repo/cache/ballerina")
         }
+
     }
 }
 

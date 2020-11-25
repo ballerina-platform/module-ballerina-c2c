@@ -18,26 +18,18 @@
 
 package io.ballerina.c2c.models;
 
-import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import org.ballerinalang.model.elements.PackageID;
-import org.wso2.ballerinalang.compiler.util.CompilerContext;
-import org.wso2.ballerinalang.compiler.util.Names;
-
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Class to hold Kubernetes data holder against package id.
  */
 public class KubernetesContext {
     private static KubernetesContext instance;
-    private final Map<PackageID, KubernetesDataHolder> packageIDtoDataHolderMap;
+    private KubernetesDataHolder kubernetesDataHolder;
     private PackageID currentPackage;
-    private CompilerContext compilerContext;
 
     private KubernetesContext() {
-        packageIDtoDataHolderMap = new HashMap<>();
+        kubernetesDataHolder = new KubernetesDataHolder();
     }
 
     public static KubernetesContext getInstance() {
@@ -49,11 +41,6 @@ public class KubernetesContext {
         return instance;
     }
 
-    public void addDataHolder(PackageID packageID, Path sourcePath) {
-        this.currentPackage = packageID;
-        this.packageIDtoDataHolderMap.put(packageID, new KubernetesDataHolder(sourcePath));
-    }
-
     public PackageID getCurrentPackage() {
         return this.currentPackage;
     }
@@ -63,30 +50,7 @@ public class KubernetesContext {
     }
 
     public KubernetesDataHolder getDataHolder() {
-        return this.packageIDtoDataHolderMap.get(this.currentPackage);
+        return this.kubernetesDataHolder;
     }
 
-    public KubernetesDataHolder getDataHolder(PackageID packageID) {
-        return this.packageIDtoDataHolderMap.get(packageID);
-    }
-
-    public String getServiceName(String dependsOn) throws KubernetesPluginException {
-        String packageName = dependsOn.substring(0, dependsOn.indexOf(Names.VERSION_SEPARATOR.value));
-        String listener = dependsOn.substring(dependsOn.indexOf(Names.VERSION_SEPARATOR.value) + 1);
-        for (PackageID packageID : packageIDtoDataHolderMap.keySet()) {
-            if (packageName.equals(packageID.name.value)) {
-                return getDataHolder(packageID).getBListenerToK8sServiceMap().get(listener).getName();
-            }
-        }
-        throw new KubernetesPluginException("dependent listener " + dependsOn + " is not annotated with " +
-                "@kubernetes:Service{}");
-    }
-
-    public CompilerContext getCompilerContext() {
-        return compilerContext;
-    }
-
-    public void setCompilerContext(CompilerContext compilerContext) {
-        this.compilerContext = compilerContext;
-    }
 }

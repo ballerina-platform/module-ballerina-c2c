@@ -342,8 +342,8 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 secretModel.setMountPath(mountPath.toString());
                 dataHolder.addSecrets(Collections.singleton(secretModel));
             }
-            new SecretHandler().createArtifacts();
         }
+        new SecretHandler().createArtifacts();
     }
 
     private Path validatePaths(Path path, Path mountPath) throws KubernetesPluginException {
