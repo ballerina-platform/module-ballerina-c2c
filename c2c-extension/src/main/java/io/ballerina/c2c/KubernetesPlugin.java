@@ -24,17 +24,16 @@ import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.processors.AnnotationProcessorFactory;
 import io.ballerina.c2c.processors.ServiceAnnotationProcessor;
 import io.ballerina.c2c.utils.KubernetesUtils;
-import io.ballerina.toml.api.Toml;
-import io.ballerina.toml.validator.Schema;
-import io.ballerina.toml.validator.TomlValidator;
-import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.projects.JBallerinaBackend;
 import io.ballerina.projects.JdkVersion;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.internal.model.Target;
+import io.ballerina.toml.api.Toml;
+import io.ballerina.toml.validator.TomlValidator;
+import io.ballerina.toml.validator.schema.Schema;
+import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
-import org.apache.commons.io.IOUtils;
 import org.ballerinalang.compiler.plugins.AbstractCompilerPlugin;
 import org.ballerinalang.compiler.plugins.SupportedAnnotationPackages;
 import org.ballerinalang.model.TreeBuilder;
@@ -62,18 +61,14 @@ import org.wso2.ballerinalang.compiler.util.CompilerContext;
 import org.wso2.ballerinalang.compiler.util.TypeTags;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.MissingResourceException;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
@@ -265,10 +260,11 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                         if (Files.exists(ballerinaCloudPath)) {
                             try {
                                 Toml read = Toml.read(ballerinaCloudPath);
-                                TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
+                                Path schemaPath = Paths.get("src", "main", "resources", "c2c-schema.json");
+                                TomlValidator validator = new TomlValidator(Schema.from(schemaPath));
                                 validator.validate(read);
                                 dataHolder.setBallerinaCloud(read);
-                                Set<Diagnostic> diagnostics = read.getDiagnostics();
+                                List<Diagnostic> diagnostics = read.diagnostics();
                                 for (Diagnostic diagnostic : diagnostics) {
                                     dlog.logDiagnostic(diagnostic.diagnosticInfo().severity(),
                                             KubernetesContext.getInstance().getCurrentPackage(), diagnostic.location()
@@ -323,20 +319,4 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
             pluginLog.error(errorMessage, e);
         }
     }
-
-    private String getValidationSchema() {
-        try {
-            InputStream inputStream =
-                    getClass().getClassLoader().getResourceAsStream("c2c-schema.json");
-            if (inputStream == null) {
-                throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
-            }
-            StringWriter writer = new StringWriter();
-            IOUtils.copy(inputStream, writer, StandardCharsets.UTF_8.name());
-            return writer.toString();
-        } catch (IOException e) {
-            throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
-        }
-    }
-
 }

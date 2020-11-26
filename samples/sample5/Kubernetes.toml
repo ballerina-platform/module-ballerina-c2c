@@ -1,7 +1,7 @@
 [container.image]
 repository="anuruddhal"
 name="hello-api"
-tag"sample5"
+tag="sample5"
 
 [[cloud.config.files]]
     file="./conf/data.txt"
