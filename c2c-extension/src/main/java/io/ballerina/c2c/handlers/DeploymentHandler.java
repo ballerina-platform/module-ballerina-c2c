@@ -351,23 +351,23 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         final Path runtimePath = Paths.get(BALLERINA_RUNTIME);
         final Path confPath = Paths.get(BALLERINA_CONF_MOUNT_PATH);
         if (mountPath.equals(homePath)) {
-            throw new KubernetesPluginException("Ballerina.cloud error mount_path " +
+            throw new KubernetesPluginException("Kubernetes.toml error mount_path " +
                     "cannot be ballerina home: " +
                     BALLERINA_HOME);
         }
         if (mountPath.equals(runtimePath)) {
-            throw new KubernetesPluginException("Ballerina.cloud error mount_path " +
+            throw new KubernetesPluginException("Kubernetes.toml error mount_path " +
                     "cannot be ballerina runtime: " +
                     BALLERINA_RUNTIME);
         }
         if (mountPath.equals(confPath)) {
-            throw new KubernetesPluginException("Ballerina.cloud error mount path " +
+            throw new KubernetesPluginException("Kubernetes.toml error mount path " +
                     "cannot be ballerina conf file mount " +
                     "path: " + BALLERINA_CONF_MOUNT_PATH);
         }
         final Path fileName = path.getFileName();
         if (fileName == null) {
-            throw new KubernetesPluginException("Ballerina.cloud error invalid path without file name " +
+            throw new KubernetesPluginException("Kubernetes.toml error invalid path without file name " +
                     BALLERINA_CONF_MOUNT_PATH);
         }
         return fileName;

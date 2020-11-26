@@ -252,7 +252,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                                 .resolve(DOCKER)
                                 .resolve(extractJarName(executableJarFile));
                         //Read and parse ballerina cloud
-                        Path ballerinaCloudPath = projectRoot.resolve("Ballerina.cloud");
+                        Path ballerinaCloudPath = projectRoot.resolve("Kubernetes.toml");
                         if (Files.exists(ballerinaCloudPath)) {
                             dataHolder.setBallerinaCloud(new Toml().read(ballerinaCloudPath.toFile()));
                         }

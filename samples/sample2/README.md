@@ -1,4 +1,4 @@
-## Sample2: Ballerina module Ballerina.cloud file.
+## Sample2: Ballerina module Kubernetes.toml file.
 
 - This sample runs hello world service as a module.   
 
@@ -40,7 +40,7 @@ Generating artifacts...
 ```bash
 $> tree target
 .
-├── Ballerina.cloud
+├── Kubernetes.toml
 ├── Ballerina.lock
 ├── Ballerina.toml
 ├── README.md
