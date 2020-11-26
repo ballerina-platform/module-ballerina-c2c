@@ -1,3 +1,14 @@
+# Before you build the project, we are going to override some of the default values taken by the compiler, In order to
+do this you need to create a filed named `Kubernetes.toml` in project directory and paste the following content into it.
+All the supported key value properties can be found in the Code to cloud deployment guide.
+
+[container.image]
+repository="wso2inc"
+name="hello"
+tag="v0.1.0"
+
+# Now let's build the ballerina project.
+
 # Note that the `ballerina build` command should be executed from the project directory. Code to cloud generates only one container per project.
 $ ballerina build -a
 
