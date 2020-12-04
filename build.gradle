@@ -191,8 +191,9 @@ allprojects {
             }
         }
 
-        maven { 
-            url "https://maven.wso2.org/nexus/content/repositories/orgballerinaxdocker-1290/" 
+        // Docker staging repository
+        maven {
+            url "https://maven.wso2.org/nexus/content/repositories/orgballerinaxdocker-1293/"
         }
     }
 }
