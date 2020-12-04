@@ -44,6 +44,7 @@ allprojects {
     apply plugin: 'jacoco'
     repositories {
         mavenLocal()
+        mavenCentral()
         maven {
             url = 'https://maven.wso2.org/nexus/content/repositories/releases/'
         }
@@ -190,7 +191,6 @@ allprojects {
                 password System.getenv("packagePAT")
             }
         }
-
         // Docker staging repository
         maven {
             url "https://maven.wso2.org/nexus/content/repositories/orgballerinaxdocker-1293/"
