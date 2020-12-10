@@ -17,34 +17,24 @@ listener http:Listener helloWorldEP = new(9090, {
     }
 });
 
-@http:ServiceConfig {
-    basePath: "/helloWorld"
-}
-service helloWorld on helloWorldEP {
-    @http:ResourceConfig {
-        methods: ["GET"],
-        path: "/config/{user}"
-    }
-    resource function getConfig(http:Caller outboundEP, http:Request request, string user) {
+service /helloWorld on helloWorldEP {
+    resource function get config/[string user](http:Caller caller, http:Request request) returns @tainted error? {
         http:Response response = new;
         string userId = getConfigValue(user, "userid");
         string groups = getConfigValue(user, "groups");
         string payload = "{userId: " + userId + ", groups: " + groups + "}";
         response.setTextPayload(payload + "\n");
-        var responseResult = outboundEP->respond(response);
+        var responseResult = caller->ok(response);
         if (responseResult is error) {
             log:printError("error responding back to client.", responseResult);
         }
     }
-    @http:ResourceConfig {
-        methods: ["GET"],
-        path: "/data"
-    }
-    resource function getData(http:Caller outboundEP, http:Request request) {
+
+    resource function get data(http:Caller caller, http:Request request) {
         http:Response response = new;
         string payload = <@untainted> readFile("./data/data.txt");
         response.setTextPayload("Data: " + <@untainted> payload + "\n");
-        var responseResult = outboundEP->respond(response);
+        var responseResult = caller->ok(response);
         if (responseResult is error) {
             log:printError("error responding back to client.", responseResult);
         }
