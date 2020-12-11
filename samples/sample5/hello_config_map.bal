@@ -26,7 +26,7 @@ service /helloWorld on helloWorldEP {
         response.setTextPayload(payload + "\n");
         var responseResult = caller->ok(response);
         if (responseResult is error) {
-            log:printError("error responding back to client.", responseResult);
+            log:printError("error responding back to client.", err = responseResult);
         }
     }
 
