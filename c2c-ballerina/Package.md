@@ -11,14 +11,9 @@ import ballerina/c2c as _;
 
 listener http:Listener helloEP = new(9090);
 
-@http:ServiceConfig {
-    basePath: "/helloWorld"
-}
-service helloWorld on helloEP {
-    resource function sayHello(http:Caller caller, http:Request request) {
-        http:Response response = new;
-        response.setTextPayload("Hello, World from service helloWorld ! ");
-        var responseResult = caller->respond(response);
+service /helloWorld on helloEP {
+    resource function get sayHello(http:Caller caller, http:Request request) {
+        var responseResult = caller->ok("Hello, World from service helloWorld ! ");
         if (responseResult is error) {
             log:printError("error responding back to client.", err = responseResult);
         }

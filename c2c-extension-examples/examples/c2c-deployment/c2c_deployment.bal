@@ -8,11 +8,9 @@ listener http:Listener helloEP = new(9090);
 @http:ServiceConfig {
     basePath: "/helloWorld"
 }
-service helloWorld on helloEP {
-    resource function sayHello(http:Caller caller, http:Request request) {
-        http:Response response = new;
-        response.setTextPayload("Hello, World from service helloWorld ! ");
-        var responseResult = caller->respond(response);
+service http:Service /helloWorld on helloWorldEP {
+    resource function get sayHello(http:Caller caller) {
+        var responseResult = caller->ok("Hello, World from service helloWorld ! \n");
         if (responseResult is error) {
             log:printError("error responding back to client.", err = responseResult);
         }
