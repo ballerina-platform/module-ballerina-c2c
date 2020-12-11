@@ -18,7 +18,7 @@
 
 package io.ballerina.c2c.models;
 
-import com.moandjiezana.toml.Toml;
+import io.ballerina.toml.api.Toml;
 import lombok.Data;
 import org.ballerinalang.model.elements.PackageID;
 import org.ballerinax.docker.generator.models.DockerModel;

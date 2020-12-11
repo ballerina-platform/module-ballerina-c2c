@@ -56,7 +56,8 @@ dependencies {
     implementation "io.fabric8:knative-client:${fabric8KnativeClientVersion}"
     implementation "javax.validation:validation-api:${javaxValidationAPIVersion}"
     implementation "org.yaml:snakeyaml:${snakeYamlVersion}"
-    implementation "com.moandjiezana.toml:toml4j:${toml4jVersion}"
+
+    implementation "org.ballerinalang:toml-parser:${ballerinaLangVersion}"
 
     compileOnly "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
     compileOnly "org.ballerinalang:ballerina-tools-api:${ballerinaLangVersion}"

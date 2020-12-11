@@ -18,7 +18,6 @@
 
 package io.ballerina.c2c;
 
-import com.moandjiezana.toml.Toml;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
@@ -30,7 +29,13 @@ import io.ballerina.projects.JdkVersion;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.internal.model.Target;
+import io.ballerina.toml.api.Toml;
+import io.ballerina.toml.validator.TomlValidator;
+import io.ballerina.toml.validator.schema.Schema;
+import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
+import org.apache.commons.io.IOUtils;
+import org.ballerinalang.compiler.CompilerOptionName;
 import org.ballerinalang.compiler.plugins.AbstractCompilerPlugin;
 import org.ballerinalang.compiler.plugins.SupportedAnnotationPackages;
 import org.ballerinalang.model.TreeBuilder;
@@ -46,7 +51,6 @@ import org.ballerinalang.model.tree.expressions.ExpressionNode;
 import org.ballerinalang.util.diagnostic.DiagnosticLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.ballerinalang.compiler.SourceDirectory;
 import org.wso2.ballerinalang.compiler.semantics.model.types.BType;
 import org.wso2.ballerinalang.compiler.tree.BLangImportPackage;
 import org.wso2.ballerinalang.compiler.tree.BLangPackage;
@@ -55,15 +59,21 @@ import org.wso2.ballerinalang.compiler.tree.expressions.BLangRecordLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangSimpleVarRef;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangTypeInit;
 import org.wso2.ballerinalang.compiler.util.CompilerContext;
+import org.wso2.ballerinalang.compiler.util.CompilerOptions;
 import org.wso2.ballerinalang.compiler.util.TypeTags;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.MissingResourceException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -79,17 +89,38 @@ import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarNam
         value = {"ballerina/c2c"}
 )
 public class KubernetesPlugin extends AbstractCompilerPlugin {
+
     private static final Logger pluginLog = LoggerFactory.getLogger(KubernetesPlugin.class);
     private DiagnosticLog dlog;
-    private SourceDirectory sourceDirectory;
+    private CompilerContext context;
+    private Toml toml = null;
 
     @Override
     public void setCompilerContext(CompilerContext context) {
+        this.context = context;
     }
 
     @Override
     public void init(DiagnosticLog diagnosticLog) {
         this.dlog = diagnosticLog;
+        String projectDir = CompilerOptions.getInstance(context).get(CompilerOptionName.PROJECT_DIR);
+        Path tomlPath = Paths.get(projectDir).resolve("Kubernetes.toml");
+        if (Files.exists(tomlPath)) {
+            try {
+                Toml toml = Toml.read(tomlPath);
+                TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
+                validator.validate(toml);
+                List<Diagnostic> diagnostics = toml.diagnostics();
+                for (Diagnostic diagnostic : diagnostics) {
+                    dlog.logDiagnostic(diagnostic.diagnosticInfo().severity(),
+                            KubernetesContext.getInstance().getCurrentPackage(), diagnostic.location()
+                            , diagnostic.message());
+                }
+                this.toml = toml;
+            } catch (IOException e) {
+                //Ignored
+            }
+        }
     }
 
     @Override
@@ -252,9 +283,13 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                                 .resolve(DOCKER)
                                 .resolve(extractJarName(executableJarFile));
                         //Read and parse ballerina cloud
-                        Path ballerinaCloudPath = projectRoot.resolve("Kubernetes.toml");
-                        if (Files.exists(ballerinaCloudPath)) {
-                            dataHolder.setBallerinaCloud(new Toml().read(ballerinaCloudPath.toFile()));
+                        dataHolder.setBallerinaCloud(this.toml);
+                        Path k8stomlPath = projectRoot.resolve("Kubernetes.toml");
+                        try {
+                            Toml read = Toml.read(k8stomlPath);
+                            dataHolder.setBallerinaCloud(read);
+                        } catch (IOException e) {
+                            //Ignored as the compiler takes the default values
                         }
                     }
                 }
@@ -283,6 +318,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         }
     }
 
+    @Override
     public void codeGenerated(Project project, Target target) {
         PackageCompilation packageCompilation = project.currentPackage().getCompilation();
         JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(packageCompilation, JdkVersion.JAVA_11);
@@ -302,4 +338,18 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         }
     }
 
+    private String getValidationSchema() {
+        try {
+            InputStream inputStream =
+                    getClass().getClassLoader().getResourceAsStream("c2c-schema.json");
+            if (inputStream == null) {
+                throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
+            }
+            StringWriter writer = new StringWriter();
+            IOUtils.copy(inputStream, writer, StandardCharsets.UTF_8.name());
+            return writer.toString();
+        } catch (IOException e) {
+            throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
+        }
+    }
 }

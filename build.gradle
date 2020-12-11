@@ -38,7 +38,6 @@ ext.puppycrawlCheckstyleVersion = "8.18"
 ext.slf4jVersion = "1.7.26"
 ext.testngVersion = "6.14.3"
 ext.lombokVersion = "1.18.10"
-ext.toml4jVersion = "0.7.2"
 
 allprojects {
     apply plugin: 'jacoco'

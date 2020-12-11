@@ -8,3 +8,4 @@ tag="sample5"
     mount_path="/home/ballerina/data"
 [[cloud.config.files]]
     file="./conf/ballerina.conf"
+    
