@@ -17,7 +17,7 @@
 import ballerina/http;
 import ballerina/c2c as _;
 
-service http:Service /helloWorld on helloWorldEP {
+service http:Service /helloWorld on new http:Listener(9090) {
     resource function get sayHello(http:Caller caller) {
         var responseResult = caller->ok("Hello, World from service helloWorld ! \n");
     }
