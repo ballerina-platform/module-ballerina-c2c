@@ -89,6 +89,7 @@ import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarNam
         value = {"ballerina/c2c"}
 )
 public class KubernetesPlugin extends AbstractCompilerPlugin {
+
     private static final Logger pluginLog = LoggerFactory.getLogger(KubernetesPlugin.class);
     private DiagnosticLog dlog;
     private CompilerContext context;
@@ -283,14 +284,12 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                                 .resolve(extractJarName(executableJarFile));
                         //Read and parse ballerina cloud
                         dataHolder.setBallerinaCloud(this.toml);
-                        Path ballerinaCloudPath = projectRoot.resolve("Kubernetes.toml");
-                        if (Files.exists(ballerinaCloudPath)) {
-                            try {
-                                Toml read = Toml.read(ballerinaCloudPath);
-                                dataHolder.setBallerinaCloud(read);
-                            } catch (IOException e) {
-                                //Ignored
-                            }
+                        Path k8stomlPath = projectRoot.resolve("Kubernetes.toml");
+                        try {
+                            Toml read = Toml.read(k8stomlPath);
+                            dataHolder.setBallerinaCloud(read);
+                        } catch (IOException e) {
+                            //Ignored as the compiler takes the default values
                         }
                     }
                 }
@@ -339,18 +338,18 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         }
     }
 
-      private String getValidationSchema() {
-          try {
-              InputStream inputStream =
-                      getClass().getClassLoader().getResourceAsStream("c2c-schema.json");
-              if (inputStream == null) {
-                  throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
-              }
-              StringWriter writer = new StringWriter();
-              IOUtils.copy(inputStream, writer, StandardCharsets.UTF_8.name());
-              return writer.toString();
-          } catch (IOException e) {
-              throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
-          }
-      }
+    private String getValidationSchema() {
+        try {
+            InputStream inputStream =
+                    getClass().getClassLoader().getResourceAsStream("c2c-schema.json");
+            if (inputStream == null) {
+                throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
+            }
+            StringWriter writer = new StringWriter();
+            IOUtils.copy(inputStream, writer, StandardCharsets.UTF_8.name());
+            return writer.toString();
+        } catch (IOException e) {
+            throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
+        }
     }
+}
