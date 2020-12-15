@@ -5,10 +5,7 @@ import ballerina/c2c as _;
 // Note that the code below is completely focused on the business logic and it does not specify anything related to operations.
 listener http:Listener helloEP = new(9090);
 
-@http:ServiceConfig {
-    basePath: "/helloWorld"
-}
-service http:Service /helloWorld on helloWorldEP {
+service http:Service /helloWorld on helloEP {
     resource function get sayHello(http:Caller caller) {
         var responseResult = caller->ok("Hello, World from service helloWorld ! \n");
         if (responseResult is error) {
