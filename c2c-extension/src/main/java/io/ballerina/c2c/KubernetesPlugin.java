@@ -104,21 +104,23 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
     public void init(DiagnosticLog diagnosticLog) {
         this.dlog = diagnosticLog;
         String projectDir = CompilerOptions.getInstance(context).get(CompilerOptionName.PROJECT_DIR);
-        Path tomlPath = Paths.get(projectDir).resolve("Kubernetes.toml");
-        if (Files.exists(tomlPath)) {
-            try {
-                Toml toml = Toml.read(tomlPath);
-                TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
-                validator.validate(toml);
-                List<Diagnostic> diagnostics = toml.diagnostics();
-                for (Diagnostic diagnostic : diagnostics) {
-                    dlog.logDiagnostic(diagnostic.diagnosticInfo().severity(),
-                            KubernetesContext.getInstance().getCurrentPackage(), diagnostic.location()
-                            , diagnostic.message());
+        if (projectDir != null) {
+            Path tomlPath = Paths.get(projectDir).resolve("Kubernetes.toml");
+            if (Files.exists(tomlPath)) {
+                try {
+                    Toml toml = Toml.read(tomlPath);
+                    TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
+                    validator.validate(toml);
+                    List<Diagnostic> diagnostics = toml.diagnostics();
+                    for (Diagnostic diagnostic : diagnostics) {
+                        dlog.logDiagnostic(diagnostic.diagnosticInfo().severity(),
+                                KubernetesContext.getInstance().getCurrentPackage(), diagnostic.location()
+                                , diagnostic.message());
+                    }
+                    this.toml = toml;
+                } catch (IOException e) {
+                    //Ignored
                 }
-                this.toml = toml;
-            } catch (IOException e) {
-                //Ignored
             }
         }
     }
