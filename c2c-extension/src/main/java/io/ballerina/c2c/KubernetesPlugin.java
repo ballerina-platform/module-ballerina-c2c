@@ -25,7 +25,7 @@ import io.ballerina.c2c.processors.AnnotationProcessorFactory;
 import io.ballerina.c2c.processors.ServiceAnnotationProcessor;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.projects.JBallerinaBackend;
-import io.ballerina.projects.JdkVersion;
+import io.ballerina.projects.JvmTarget;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.internal.model.Target;
@@ -104,21 +104,23 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
     public void init(DiagnosticLog diagnosticLog) {
         this.dlog = diagnosticLog;
         String projectDir = CompilerOptions.getInstance(context).get(CompilerOptionName.PROJECT_DIR);
-        Path tomlPath = Paths.get(projectDir).resolve("Kubernetes.toml");
-        if (Files.exists(tomlPath)) {
-            try {
-                Toml toml = Toml.read(tomlPath);
-                TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
-                validator.validate(toml);
-                List<Diagnostic> diagnostics = toml.diagnostics();
-                for (Diagnostic diagnostic : diagnostics) {
-                    dlog.logDiagnostic(diagnostic.diagnosticInfo().severity(),
-                            KubernetesContext.getInstance().getCurrentPackage(), diagnostic.location()
-                            , diagnostic.message());
+        if (projectDir != null) {
+            Path tomlPath = Paths.get(projectDir).resolve("Kubernetes.toml");
+            if (Files.exists(tomlPath)) {
+                try {
+                    Toml toml = Toml.read(tomlPath);
+                    TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
+                    validator.validate(toml);
+                    List<Diagnostic> diagnostics = toml.diagnostics();
+                    for (Diagnostic diagnostic : diagnostics) {
+                        dlog.logDiagnostic(diagnostic.diagnosticInfo().severity(),
+                                KubernetesContext.getInstance().getCurrentPackage(), diagnostic.location()
+                                , diagnostic.message());
+                    }
+                    this.toml = toml;
+                } catch (IOException e) {
+                    //Ignored
                 }
-                this.toml = toml;
-            } catch (IOException e) {
-                //Ignored
             }
         }
     }
@@ -321,7 +323,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
     @Override
     public void codeGenerated(Project project, Target target) {
         PackageCompilation packageCompilation = project.currentPackage().getCompilation();
-        JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(packageCompilation, JdkVersion.JAVA_11);
+        JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(packageCompilation, JvmTarget.JAVA_11);
         io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
         KubernetesContext.getInstance().getDataHolder().getDockerModel()
                 .addDependencyJarPaths(new HashSet<>(jarResolver.getJarFilePathsRequiredForExecution()));
