@@ -249,7 +249,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         }
 
         List<Toml> secrets = TomlHelper.getTables(ballerinaCloud, "cloud.secrets.envs");
-        if (envs != null) {
+        if (secrets != null) {
             for (Toml secret : secrets) {
                 EnvVar envVar = new EnvVarBuilder()
                         .withName(TomlHelper.getString(secret, "name"))
