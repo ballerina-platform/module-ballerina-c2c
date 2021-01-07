@@ -217,7 +217,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
 
     private void resolveDeploymentToml(DeploymentModel deploymentModel, Toml ballerinaCloud) {
         deploymentModel.setReplicas(Math.toIntExact(TomlHelper.getLong(ballerinaCloud, CLOUD_DEPLOYMENT + "replicas",
-                (long) deploymentModel.getReplicas())));
+                deploymentModel.getReplicas())));
         Toml probeToml = TomlHelper.getTable(ballerinaCloud, CLOUD_DEPLOYMENT + "probes.readiness");
         if (probeToml != null) {
             deploymentModel.setReadinessProbe(resolveProbeToml(probeToml));
@@ -236,7 +236,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                         .withName(TomlHelper.getString(env, "name"))
                         .withNewValueFrom()
                         .withNewConfigMapKeyRef()
-                        .withName(TomlHelper.getString(env, KubernetesConstants.KEY_REF))
+                        .withKey(TomlHelper.getString(env, KubernetesConstants.KEY_REF))
                         .withName(TomlHelper.getString(env, "config_name"))
                         .endConfigMapKeyRef()
                         .endValueFrom()
@@ -249,13 +249,13 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         }
 
         List<Toml> secrets = TomlHelper.getTables(ballerinaCloud, "cloud.secrets.envs");
-        if (envs != null) {
+        if (secrets != null) {
             for (Toml secret : secrets) {
                 EnvVar envVar = new EnvVarBuilder()
                         .withName(TomlHelper.getString(secret, "name"))
                         .withNewValueFrom()
                         .withNewSecretKeyRef()
-                        .withName(TomlHelper.getString(secret, KubernetesConstants.KEY_REF))
+                        .withKey(TomlHelper.getString(secret, KubernetesConstants.KEY_REF))
                         .withName(TomlHelper.getString(secret, "secret"))
                         .endSecretKeyRef()
                         .endValueFrom()
@@ -509,11 +509,12 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             dockerModel.setName(TomlHelper.getString(toml, containerImage + ".name",
                     deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "")));
             dockerModel
-                    .setRegistry(TomlHelper.getString(toml, containerImage + ".repository", dockerModel.getRegistry()));
+                    .setRegistry(TomlHelper.getString(toml, containerImage + ".repository", null));
             dockerModel.setTag(TomlHelper.getString(toml, containerImage + ".tag", dockerModel.getTag()));
             dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", dockerModel.getBaseImage()));
-            dataHolder.getDeploymentModel().setImage
-                    (dockerModel.getRegistry() + "/" + dockerModel.getName() + ":" + dockerModel.getTag());
+            String imageName = isBlank(dockerModel.getRegistry()) ? dockerModel.getName() + ":" + dockerModel.getTag() :
+                    dockerModel.getRegistry() + "/" + dockerModel.getName() + ":" + dockerModel.getTag();
+            deploymentModel.setImage(imageName);
         }
     }
 

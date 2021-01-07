@@ -28,6 +28,7 @@
     <test name="ballerina-kubernetes-tests" parallel="false">
         <classes>
             <class name="io.ballerina.c2c.test.JobTest"/>
+            <class name="io.ballerina.c2c.test.EnvTest"/>
         </classes>
     </test>
 
