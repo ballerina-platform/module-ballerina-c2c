@@ -255,7 +255,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                         .withName(TomlHelper.getString(secret, "name"))
                         .withNewValueFrom()
                         .withNewSecretKeyRef()
-                        .withName(TomlHelper.getString(secret, KubernetesConstants.KEY_REF))
+                        .withKey(TomlHelper.getString(secret, KubernetesConstants.KEY_REF))
                         .withName(TomlHelper.getString(secret, "secret"))
                         .endSecretKeyRef()
                         .endValueFrom()
