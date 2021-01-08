@@ -75,7 +75,7 @@ $> kubectl apply -f /Users/anuruddha/workspace/ballerinax/module-ballerina-c2c/s
    horizontalpodautoscaler.autoscaling/hello-hello-0-0-hpa created
 ```
 
-5. Verify kubernetes deployment,service,secrets and ingress is deployed:
+5. Verify kubernetes deployment,service, hpa is deployed:
 ```bash
 $> kubectl get pods
 NAME                                        READY   STATUS    RESTARTS   AGE
