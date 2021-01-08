@@ -19,3 +19,5 @@
 1. [Sample2: Hello World with module](sample2/)
 1. [Sample3: Scaling Sample](sample3/)
 1. [Sample4: Sample with CronJob](sample4/)
+1. [Sample5: Mount config map volumes to deployment](sample5/)
+1. [Sample6: Readiness and Liveness Probes](sample6/)

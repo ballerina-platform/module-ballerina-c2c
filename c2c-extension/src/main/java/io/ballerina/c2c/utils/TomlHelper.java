@@ -77,7 +77,6 @@ public class TomlHelper {
 
     public static Toml getTable(Toml toml, String dottedKey) {
         String[] split = dottedKey.split("\\.");
-        split = Arrays.copyOf(split, split.length - 1);
         Toml parent = toml;
         for (String key : split) {
             parent = parent.getTable(key);
