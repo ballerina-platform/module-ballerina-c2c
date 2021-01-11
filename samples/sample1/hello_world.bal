@@ -15,7 +15,7 @@
 // under the License.
 
 import ballerina/http;
-import ballerina/c2c as _;
+import ballerina/cloud as _;
 
 service http:Service /helloWorld on new http:Listener(9090) {
     resource function get sayHello(http:Caller caller) {

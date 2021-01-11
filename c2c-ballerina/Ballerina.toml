@@ -2,5 +2,5 @@ dependency = []
 
 [package]
 org = "ballerina"
-name = "c2c"
+name = "cloud"
 version = "1.0.0"

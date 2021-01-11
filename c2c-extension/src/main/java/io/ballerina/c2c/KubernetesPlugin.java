@@ -86,7 +86,7 @@ import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarNam
  * Compiler plugin to generate kubernetes artifacts.
  */
 @SupportedAnnotationPackages(
-        value = {"ballerina/c2c"}
+        value = {"ballerina/cloud"}
 )
 public class KubernetesPlugin extends AbstractCompilerPlugin {
 
@@ -130,7 +130,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         BLangPackage bPackage = (BLangPackage) packageNode;
         // Get the imports with alias _
         List<BLangImportPackage> c2cImports = bPackage.getImports().stream()
-                .filter(i -> i.symbol.toString().startsWith("ballerina/c2c") &&
+                .filter(i -> i.symbol.toString().startsWith("ballerina/cloud") &&
                         i.getAlias().toString().equals("_"))
                 .collect(Collectors.toList());
 

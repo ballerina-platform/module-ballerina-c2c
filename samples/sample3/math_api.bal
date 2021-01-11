@@ -1,4 +1,4 @@
-import ballerina/c2c as _;
+import ballerina/cloud as _;
 import ballerina/math;
 import ballerina/http;
 import ballerina/io;

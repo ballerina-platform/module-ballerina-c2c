@@ -62,6 +62,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.KubernetesConstants.BALLERINA_CONF_FILE_NAME;
@@ -297,14 +298,14 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
 
             for (Toml configFile : configFiles) {
-                Path path = Paths.get(TomlHelper.getString(configFile, "file"));
+                Path path = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "file")));
                 if (path.endsWith(BALLERINA_CONF_FILE_NAME)) {
                     // Resolve ballerina.conf
                     ConfigMapModel configMapModel = getBallerinaConfConfigMap(path.toString(), deploymentName);
                     dataHolder.addConfigMaps(Collections.singleton(configMapModel));
                     continue;
                 }
-                Path mountPath = Paths.get(TomlHelper.getString(configFile, "mount_path"));
+                Path mountPath = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "mount_path")));
                 final Path fileName = validatePaths(path, mountPath);
                 ConfigMapModel configMapModel = new ConfigMapModel();
                 configMapModel.setName(deploymentName + "-" + getValidName(fileName.toString()));
