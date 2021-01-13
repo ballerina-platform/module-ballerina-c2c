@@ -129,7 +129,7 @@ task ballerinaBuild {
         }
         copy {
             from file("$artifactBalo")
-            into file("$artifactParent/balo/ballerina/c2c/$tomlSemver")
+            into file("$artifactParent/balo/ballerina/cloud/$tomlSemver")
         }
         copy {
             from file("$artifactDocs")
