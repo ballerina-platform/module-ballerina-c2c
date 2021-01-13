@@ -8,7 +8,7 @@
 
 1. Compile the ballerina module. Command to deploy kubernetes artifacts will be printed on build success.
 ```bash
-$> ballerina build -a 
+$> ballerina build 
 Compiling source
 	hello/hello:0.0.1
 

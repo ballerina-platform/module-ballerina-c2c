@@ -21,7 +21,6 @@ import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.utils.KubernetesUtils;
-import org.ballerinalang.model.tree.AnnotationAttachmentNode;
 import org.ballerinalang.model.tree.FunctionNode;
 import org.ballerinalang.model.tree.ServiceNode;
 import org.ballerinalang.model.tree.SimpleVariableNode;
@@ -33,26 +32,25 @@ import static io.ballerina.c2c.KubernetesConstants.MAIN_FUNCTION_NAME;
 /**
  * Deployment Annotation processor.
  */
-public class DeploymentAnnotationProcessor extends AbstractAnnotationProcessor {
+public class DeploymentNodeProcessor extends AbstractNodeProcessor {
 
     @Override
-    public void processAnnotation(ServiceNode entityName, AnnotationAttachmentNode attachmentNode) {
+    public void processNode(ServiceNode entityName) {
         processDeployment();
     }
 
     @Override
-    public void processAnnotation(SimpleVariableNode variableNode, AnnotationAttachmentNode attachmentNode) {
+    public void processNode(SimpleVariableNode variableNode) {
         processDeployment();
     }
 
     @Override
-    public void processAnnotation(FunctionNode functionNode, AnnotationAttachmentNode attachmentNode) throws
+    public void processNode(FunctionNode functionNode) throws
             KubernetesPluginException {
         if (!MAIN_FUNCTION_NAME.equals(functionNode.getName().getValue())) {
             throw new KubernetesPluginException("@kubernetes:Deployment{} annotation cannot be attached to a non " +
                     "main function.");
         }
-
         processDeployment();
     }
 

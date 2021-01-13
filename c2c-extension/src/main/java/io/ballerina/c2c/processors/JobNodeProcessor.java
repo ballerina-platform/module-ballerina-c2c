@@ -35,9 +35,9 @@ import static io.ballerina.c2c.utils.KubernetesUtils.convertRecordFields;
 /**
  * Job Annotation processor.
  */
-public class JobAnnotationProcessor extends AbstractAnnotationProcessor {
+public class JobNodeProcessor extends AbstractNodeProcessor {
 
-    public void processAnnotation(FunctionNode functionNode, AnnotationAttachmentNode attachmentNode) throws
+    public void processNode(FunctionNode functionNode, AnnotationAttachmentNode attachmentNode) throws
             KubernetesPluginException {
         JobModel jobModel = new JobModel();
         List<BLangRecordLiteral.BLangRecordKeyValueField> keyValues =

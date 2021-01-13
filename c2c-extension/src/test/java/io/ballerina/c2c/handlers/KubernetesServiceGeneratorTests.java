@@ -53,7 +53,7 @@ public class KubernetesServiceGeneratorTests extends HandlerTestSuite {
         Map<String, String> labels = new HashMap<>();
         labels.put(KubernetesConstants.KUBERNETES_SELECTOR_KEY, selector);
         serviceModel.setLabels(labels);
-        dataHolder.addBListenerToK8sServiceMap("HelloWorldService", serviceModel);
+        dataHolder.addServiceModel(serviceModel);
         try {
             new ServiceHandler().createArtifacts();
             File tempFile = dataHolder.getK8sArtifactOutputPath().resolve("hello_svc.yaml").toFile();

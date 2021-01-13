@@ -27,27 +27,31 @@ import org.ballerinalang.model.tree.SimpleVariableNode;
 /**
  * Annotation processor interface.
  */
-public interface AnnotationProcessor {
+public interface NodeProcessor {
     /**
-     * Process annotations and create model object.
+     * Process nodes and create model object.
      *
-     * @param serviceNode    Ballerina service node.
-     * @param attachmentNode annotation attachment node.
+     * @param serviceNode Ballerina service node.
      * @throws KubernetesPluginException if an error occurs while processing annotation.
      */
-    void processAnnotation(ServiceNode serviceNode, AnnotationAttachmentNode attachmentNode)
-            throws KubernetesPluginException;
-    
+    void processNode(ServiceNode serviceNode) throws KubernetesPluginException;
+
     /**
-     * Process annotations and create model object.
+     * Process nodes and create model object.
      *
      * @param variableNode Ballerina listener variable.
-     * @param annotations  annotation attachment node.
      * @throws KubernetesPluginException if an error occurs while processing annotation.
      */
-    void processAnnotation(SimpleVariableNode variableNode, AnnotationAttachmentNode annotations)
-            throws KubernetesPluginException;
+    void processNode(SimpleVariableNode variableNode) throws KubernetesPluginException;
 
+
+    /**
+     * Process annotations and create model object.
+     *
+     * @param functionNode Ballerina function node.
+     * @throws KubernetesPluginException if an error occurs while processing annotation.
+     */
+    void processNode(FunctionNode functionNode) throws KubernetesPluginException;
 
     /**
      * Process annotations and create model object.
@@ -56,7 +60,7 @@ public interface AnnotationProcessor {
      * @param attachmentNode annotation attachment node.
      * @throws KubernetesPluginException if an error occurs while processing annotation.
      */
-    void processAnnotation(FunctionNode functionNode, AnnotationAttachmentNode attachmentNode) throws
-            KubernetesPluginException;
+    void processNode(FunctionNode functionNode, AnnotationAttachmentNode attachmentNode)
+            throws KubernetesPluginException;
 
 }
