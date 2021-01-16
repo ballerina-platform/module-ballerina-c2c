@@ -23,6 +23,7 @@
 
     <test name="ballerinax-kubernetes-unit-tests" parallel="false">
         <classes>
+            <class name="io.ballerina.c2c.diagnostics.SingleFile"/>
             <class name="io.ballerina.c2c.handlers.HandlerTestSuite"/>
             <class name="io.ballerina.c2c.handlers.KubernetesConfigMapGeneratorTests"/>
             <class name="io.ballerina.c2c.handlers.KubernetesDeploymentGeneratorTests"/>

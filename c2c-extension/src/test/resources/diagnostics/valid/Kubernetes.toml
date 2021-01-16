@@ -1,0 +1,14 @@
+[container.image]
+repository = "wso2" #simple docker img name conv
+name = "hello"
+base=""
+
+[container.image.user]
+run_as=""
+[cloud.deployment]
+min_cpu=""
+max_cpu=""
+
+[cloud.deployment.probes.liveness]
+port = 9090
+path = "/helloWorld/readyz"

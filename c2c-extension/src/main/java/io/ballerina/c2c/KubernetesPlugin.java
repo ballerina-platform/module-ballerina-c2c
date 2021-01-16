@@ -18,6 +18,8 @@
 
 package io.ballerina.c2c;
 
+import io.ballerina.c2c.diagnostics.DiagnosticInfo;
+import io.ballerina.c2c.diagnostics.TomlDiagnosticChecker;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
@@ -138,6 +140,14 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
             KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
             dataHolder.setPackageID(bPackage.packageID);
 
+            Path projectPath = Paths.get(CompilerOptions.getInstance(context).get(CompilerOptionName.PROJECT_DIR));
+            TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker();
+            List<DiagnosticInfo> diagnosticInfoList = tomlDiagnosticChecker.validateTomlWithSource(toml, projectPath);
+
+            for (DiagnosticInfo diagnosticInfo : diagnosticInfoList) {
+                dlog.logDiagnostic(diagnosticInfo.getSeverity(), diagnosticInfo.getPackageID(),
+                        diagnosticInfo.getLocation(), diagnosticInfo.getMessage());
+            }
             // Get the units of the file which has kubernetes import as _
             List<TopLevelNode> topLevelNodes = bPackage.getCompilationUnits().stream()
                     .flatMap(cu -> cu.getTopLevelNodes().stream())

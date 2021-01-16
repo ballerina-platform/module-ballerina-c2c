@@ -49,6 +49,7 @@ configurations {
 }
 
 dependencies {
+
     implementation "org.ballerinax.docker:docker-generator:${ballerinaLangVersion}"
     implementation "com.github.docker-java:docker-java:${dockerJavaVersion}"
     implementation "io.fabric8:kubernetes-client:${fabric8KubernetesClientVersion}"
@@ -56,6 +57,7 @@ dependencies {
     implementation "org.yaml:snakeyaml:${snakeYamlVersion}"
 
     implementation "org.ballerinalang:toml-parser:${ballerinaLangVersion}"
+    implementation "org.ballerinalang:ballerina-parser:${ballerinaLangVersion}"
 
     compileOnly "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
     compileOnly "org.ballerinalang:ballerina-tools-api:${ballerinaLangVersion}"
