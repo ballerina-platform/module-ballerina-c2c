@@ -21,8 +21,8 @@ package io.ballerina.c2c;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
-import io.ballerina.c2c.processors.AnnotationProcessorFactory;
-import io.ballerina.c2c.processors.ServiceAnnotationProcessor;
+import io.ballerina.c2c.processors.NodeProcessorFactory;
+import io.ballerina.c2c.processors.ServiceNodeProcessor;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.projects.JBallerinaBackend;
 import io.ballerina.projects.JvmTarget;
@@ -164,7 +164,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                 serviceAnnotation.setExpression(svcRecordLiteral);
 
                 BLangLiteral serviceTypeKey = (BLangLiteral) TreeBuilder.createLiteralExpression();
-                serviceTypeKey.value = ServiceAnnotationProcessor.ServiceConfiguration.serviceType.name();
+                serviceTypeKey.value = ServiceNodeProcessor.ServiceConfiguration.serviceType.name();
                 serviceTypeKey.type = new BType(TypeTags.STRING, null);
 
                 BLangLiteral serviceTypeValue = new BLangLiteral();
@@ -220,8 +220,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         for (AnnotationAttachmentNode attachmentNode : annotations) {
             String annotationKey = attachmentNode.getAnnotationName().getValue();
             try {
-                AnnotationProcessorFactory.getAnnotationProcessorInstance(annotationKey).processAnnotation
-                        (serviceNode, attachmentNode);
+                NodeProcessorFactory.getNodeProcessorInstance(annotationKey).processNode(serviceNode);
             } catch (KubernetesPluginException e) {
                 dlog.logDiagnostic(DiagnosticSeverity.ERROR, KubernetesContext.getInstance().getCurrentPackage()
                         , serviceNode.getPosition(), e.getMessage());
@@ -239,8 +238,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         for (AnnotationAttachmentNode attachmentNode : annotations) {
             String annotationKey = attachmentNode.getAnnotationName().getValue();
             try {
-                AnnotationProcessorFactory.getAnnotationProcessorInstance(annotationKey).processAnnotation
-                        (variableNode, attachmentNode);
+                NodeProcessorFactory.getNodeProcessorInstance(annotationKey).processNode(variableNode);
             } catch (KubernetesPluginException e) {
                 dlog.logDiagnostic(DiagnosticSeverity.ERROR, KubernetesContext.getInstance().getCurrentPackage(),
                         variableNode.getPosition(), e.getMessage());
@@ -254,8 +252,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         for (AnnotationAttachmentNode attachmentNode : annotations) {
             String annotationKey = attachmentNode.getAnnotationName().getValue();
             try {
-                AnnotationProcessorFactory.getAnnotationProcessorInstance(annotationKey).processAnnotation
-                        (functionNode, attachmentNode);
+                NodeProcessorFactory.getNodeProcessorInstance(annotationKey).processNode(functionNode, attachmentNode);
             } catch (KubernetesPluginException e) {
                 dlog.logDiagnostic(DiagnosticSeverity.ERROR, KubernetesContext.getInstance().getCurrentPackage(),
                         functionNode.getPosition(), e.getMessage());

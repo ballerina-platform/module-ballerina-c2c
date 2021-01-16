@@ -24,16 +24,13 @@ import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.models.ServiceModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import org.apache.commons.codec.binary.Base64;
-import org.ballerinalang.model.tree.AnnotationAttachmentNode;
 import org.ballerinalang.model.tree.ServiceNode;
 import org.ballerinalang.model.tree.SimpleVariableNode;
 import org.wso2.ballerinalang.compiler.tree.BLangIdentifier;
 import org.wso2.ballerinalang.compiler.tree.BLangService;
 import org.wso2.ballerinalang.compiler.tree.BLangSimpleVariable;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangNamedArgsExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangRecordLiteral;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangSimpleVarRef;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangTypeInit;
 import org.wso2.ballerinalang.compiler.tree.types.BLangUserDefinedType;
 
@@ -55,19 +52,12 @@ import static io.ballerina.c2c.utils.KubernetesUtils.getValidName;
 /**
  * Service annotation processor.
  */
-public class ServiceAnnotationProcessor extends AbstractAnnotationProcessor {
+public class ServiceNodeProcessor extends AbstractNodeProcessor {
 
     @Override
-    public void processAnnotation(ServiceNode serviceNode, AnnotationAttachmentNode attachmentNode) throws
+    public void processNode(ServiceNode serviceNode) throws
             KubernetesPluginException {
         BLangService bService = (BLangService) serviceNode;
-        for (BLangExpression attachedExpr : bService.getAttachedExprs()) {
-            // If not anonymous endpoint throw error.
-            if (attachedExpr instanceof BLangSimpleVarRef) {
-                throw new KubernetesPluginException("adding @kubernetes:Service{} annotation to a service is only " +
-                        "supported when the service has an anonymous listener");
-            }
-        }
         ServiceModel serviceModel = new ServiceModel();
         if (KubernetesUtils.isBlank(serviceModel.getName())) {
             serviceModel.setName(getValidName(serviceNode.getName().getValue()) + SVC_POSTFIX);
@@ -76,14 +66,13 @@ public class ServiceAnnotationProcessor extends AbstractAnnotationProcessor {
         BLangTypeInit bListener = (BLangTypeInit) bService.getAttachedExprs().get(0);
         validatePorts(serviceModel, bListener);
 
-        KubernetesContext.getInstance().getDataHolder().addBListenerToK8sServiceMap(serviceNode.getName().getValue(),
-                serviceModel);
+        KubernetesContext.getInstance().getDataHolder().addServiceModel(serviceModel);
     }
 
     private void validatePorts(ServiceModel serviceModel, BLangTypeInit bListener) throws KubernetesPluginException {
-        // If service annotation port is not empty, then listener port is used for the k8s svc target port while
+        // If port is not empty, then listener port is used for the k8s svc target port while
         // service annotation port is used for k8s port.
-        // If service annotation port is empty, then listener port is used for both port and target port of the k8s
+        // If port is empty, then listener port is used for both port and target port of the k8s
         // svc.
         if (serviceModel.getPort() == -1) {
             serviceModel.setPort(extractPort(bListener));
@@ -103,7 +92,7 @@ public class ServiceAnnotationProcessor extends AbstractAnnotationProcessor {
     }
 
     @Override
-    public void processAnnotation(SimpleVariableNode variableNode, AnnotationAttachmentNode attachmentNode)
+    public void processNode(SimpleVariableNode variableNode)
             throws KubernetesPluginException {
         ServiceModel serviceModel = new ServiceModel();
         if (KubernetesUtils.isBlank(serviceModel.getName())) {
@@ -127,8 +116,7 @@ public class ServiceAnnotationProcessor extends AbstractAnnotationProcessor {
             }
         }
         validatePorts(serviceModel, bListener);
-        KubernetesContext.getInstance().getDataHolder().addBListenerToK8sServiceMap(variableNode.getName().getValue()
-                , serviceModel);
+        KubernetesContext.getInstance().getDataHolder().addServiceModel(serviceModel);
     }
 
     private void processListener(String listenerName, List<BLangRecordLiteral.BLangRecordKeyValueField> listenerConfig)

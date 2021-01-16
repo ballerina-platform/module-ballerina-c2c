@@ -21,7 +21,6 @@ package io.ballerina.c2c.processors;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.PodAutoscalerModel;
-import org.ballerinalang.model.tree.AnnotationAttachmentNode;
 import org.ballerinalang.model.tree.FunctionNode;
 import org.ballerinalang.model.tree.ServiceNode;
 
@@ -30,16 +29,16 @@ import static io.ballerina.c2c.KubernetesConstants.MAIN_FUNCTION_NAME;
 /**
  * HPA annotation processor.
  */
-public class HPAAnnotationProcessor extends AbstractAnnotationProcessor {
+public class HPANodeProcessor extends AbstractNodeProcessor {
 
     @Override
-    public void processAnnotation(ServiceNode serviceNode, AnnotationAttachmentNode attachmentNode) throws
+    public void processNode(ServiceNode serviceNode) throws
             KubernetesPluginException {
         processHPA();
     }
 
     @Override
-    public void processAnnotation(FunctionNode functionNode, AnnotationAttachmentNode attachmentNode) throws
+    public void processNode(FunctionNode functionNode) throws
             KubernetesPluginException {
         if (!MAIN_FUNCTION_NAME.equals(functionNode.getName().getValue())) {
             throw new KubernetesPluginException("@kubernetes:HPA{} annotation cannot be attached to a non main " +

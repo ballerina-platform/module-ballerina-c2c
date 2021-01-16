@@ -24,25 +24,27 @@ import org.ballerinalang.model.tree.ServiceNode;
 import org.ballerinalang.model.tree.SimpleVariableNode;
 
 /**
- * Abstract Annotation processor class.
+ * Abstract Node processor class.
  */
-public abstract class AbstractAnnotationProcessor implements AnnotationProcessor {
+public abstract class AbstractNodeProcessor implements NodeProcessor {
 
     @Override
-    public void processAnnotation(ServiceNode serviceNode, AnnotationAttachmentNode attachmentNode) throws
-            KubernetesPluginException {
+    public void processNode(ServiceNode serviceNode) throws KubernetesPluginException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void processAnnotation(SimpleVariableNode variableNode, AnnotationAttachmentNode attachmentNode) throws
-            KubernetesPluginException {
+    public void processNode(SimpleVariableNode variableNode) throws KubernetesPluginException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void processAnnotation(FunctionNode functionNode, AnnotationAttachmentNode attachmentNode) throws
-            KubernetesPluginException {
+    public void processNode(FunctionNode functionNode) throws KubernetesPluginException {
+        throw new UnsupportedOperationException();
+    }
+
+    public void processNode(FunctionNode functionNode, AnnotationAttachmentNode attachmentNode)
+            throws KubernetesPluginException {
         throw new UnsupportedOperationException();
     }
 }

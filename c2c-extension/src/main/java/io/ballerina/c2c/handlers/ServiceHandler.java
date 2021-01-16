@@ -34,7 +34,6 @@ import io.fabric8.kubernetes.client.internal.SerializationUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
 
@@ -44,7 +43,7 @@ import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarNam
  */
 public class ServiceHandler extends AbstractArtifactHandler {
 
-    private void generate(Map<String, ServiceModel> serviceModels) throws KubernetesPluginException {
+    private void generate(List<ServiceModel> serviceModels) throws KubernetesPluginException {
         int count = 0;
         ServiceModel commonService = new ServiceModel();
         String balxFileName = extractJarName(KubernetesContext.getInstance().getDataHolder()
@@ -54,11 +53,10 @@ public class ServiceHandler extends AbstractArtifactHandler {
         commonService.setName(KubernetesUtils.getValidName(dataHolder.getDeploymentModel().getName()
                 .replace(KubernetesConstants.DEPLOYMENT_POSTFIX, "") + KubernetesConstants.SVC_POSTFIX));
         List<ServicePort> servicePorts = new ArrayList<>();
-        for (ServiceModel serviceModel : serviceModels.values()) {
+        for (ServiceModel serviceModel : serviceModels) {
             count++;
             if (null == serviceModel.getPortName()) {
-                serviceModel.setPortName(KubernetesUtils.getValidName(serviceModel.getName() + "-"
-                        + count + "-" + serviceModel.getProtocol()));
+                serviceModel.setPortName(KubernetesUtils.getValidName("svc-" + count + "-" + serviceModel.getName()));
             }
             ServicePortBuilder servicePortBuilder = new ServicePortBuilder()
                     .withName(serviceModel.getPortName())
@@ -102,7 +100,7 @@ public class ServiceHandler extends AbstractArtifactHandler {
     @Override
     public void createArtifacts() throws KubernetesPluginException {
         // Service
-        generate(dataHolder.getBListenerToK8sServiceMap());
+        generate(dataHolder.getServiceModelList());
     }
 
 }

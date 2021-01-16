@@ -63,6 +63,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.KubernetesConstants.BALLERINA_CONF_FILE_NAME;
@@ -97,12 +98,21 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             volumeMounts.add(volumeMount);
         }
         for (ConfigMapModel configMapModel : deploymentModel.getConfigMapModels()) {
-            if (configMapModel.getMountPath() != null) {
+            final String mountPath = configMapModel.getMountPath();
+            if (mountPath != null) {
                 VolumeMount volumeMount = new VolumeMountBuilder()
-                        .withMountPath(configMapModel.getMountPath())
+                        .withMountPath(mountPath)
                         .withName(configMapModel.getName() + "-volume")
                         .withReadOnly(configMapModel.isReadOnly())
                         .build();
+
+                if (getExtension(mountPath).isPresent()) {
+                    // Add file mount as sub paths.
+                    final Path fileName = Paths.get(mountPath).getFileName();
+                    if (null != fileName) {
+                        volumeMount.setSubPath(fileName.toString());
+                    }
+                }
                 volumeMounts.add(volumeMount);
             }
         }
@@ -115,6 +125,12 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             volumeMounts.add(volumeMount);
         }
         return volumeMounts;
+    }
+
+    private Optional<String> getExtension(String filename) {
+        return Optional.ofNullable(filename)
+                .filter(f -> f.contains("."))
+                .map(f -> f.substring(filename.lastIndexOf(".") + 1));
     }
 
     private Container generateContainer(DeploymentModel deploymentModel, List<ContainerPort> containerPorts) {

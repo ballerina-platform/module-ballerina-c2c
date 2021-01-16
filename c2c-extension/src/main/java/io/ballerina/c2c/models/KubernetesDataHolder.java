@@ -24,8 +24,10 @@ import org.ballerinalang.model.elements.PackageID;
 import org.ballerinax.docker.generator.models.DockerModel;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,7 +40,7 @@ public class KubernetesDataHolder {
     private DeploymentModel deploymentModel;
     private DockerModel dockerModel;
     private PodAutoscalerModel podAutoscalerModel;
-    private Map<String, ServiceModel> bListenerToK8sServiceMap;
+    private List<ServiceModel> serviceModelList;
     private Map<String, Set<SecretModel>> bListenerToSecretMap;
     private Set<SecretModel> secretModelSet;
     private Set<ConfigMapModel> configMapModelSet;
@@ -53,7 +55,7 @@ public class KubernetesDataHolder {
     private Toml ballerinaCloud;
 
     KubernetesDataHolder() {
-        this.bListenerToK8sServiceMap = new HashMap<>();
+        this.serviceModelList = new ArrayList<>();
         this.bListenerToSecretMap = new HashMap<>();
         this.secretModelSet = new HashSet<>();
         this.configMapModelSet = new HashSet<>();
@@ -79,8 +81,8 @@ public class KubernetesDataHolder {
         this.volumeClaimModelSet.addAll(persistentVolumeClaims);
     }
 
-    public void addBListenerToK8sServiceMap(String listenerName, ServiceModel serviceModel) {
-        this.bListenerToK8sServiceMap.put(listenerName, serviceModel);
+    public void addServiceModel(ServiceModel serviceModel) {
+        this.serviceModelList.add(serviceModel);
     }
 
 }

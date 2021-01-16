@@ -15,7 +15,7 @@ path="/helloWorld/healthz"
 
 1. Compile the project. Command to deploy kubernetes artifacts will be printed on build success.
 ```bash
-$> ballerina build -a
+$> ballerina build
 Compiling source
 	hello/hello:0.0.1
 

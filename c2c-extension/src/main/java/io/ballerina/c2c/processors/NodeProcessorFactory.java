@@ -24,22 +24,22 @@ import io.ballerina.c2c.models.KubernetesContext;
 /**
  * Annotation processor factory.
  */
-public class AnnotationProcessorFactory {
+public class NodeProcessorFactory {
 
-    public static AnnotationProcessor getAnnotationProcessorInstance(String type) throws KubernetesPluginException {
+    public static NodeProcessor getNodeProcessorInstance(String type) throws KubernetesPluginException {
         // set can process to true so that this value can be accessed from code generated method.
         KubernetesContext.getInstance().getDataHolder().setCanProcess(true);
         KubernetesAnnotation kubernetesAnnotation = KubernetesAnnotation.valueOf(type);
         switch (kubernetesAnnotation) {
             case Service:
-                return new ServiceAnnotationProcessor();
+                return new ServiceNodeProcessor();
             case HPA:
-                return new HPAAnnotationProcessor();
+                return new HPANodeProcessor();
             case Deployment:
-                return new DeploymentAnnotationProcessor();
+                return new DeploymentNodeProcessor();
             case Task:
             case Job:
-                return new JobAnnotationProcessor();
+                return new JobNodeProcessor();
             default:
                 KubernetesContext.getInstance().getDataHolder().setCanProcess(false);
                 throw new KubernetesPluginException("error while getting annotation processor for type: " + type);
