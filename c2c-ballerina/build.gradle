@@ -109,9 +109,9 @@ task ballerinaBuild {
             workingDir project.projectDir
             environment "JAVA_OPTS", "-DBALLERINA_DEV_COMPILE_BALLERINA_ORG=true"
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                commandLine 'cmd', '/c', "$distributionBinPath/ballerina.bat doc"
+                commandLine 'cmd', '/c', "$distributionBinPath/bal.bat doc"
             } else {
-                commandLine 'sh', '-c', "$distributionBinPath/ballerina doc"
+                commandLine 'sh', '-c', "$distributionBinPath/bal doc"
             }
         }
         copy {
@@ -122,9 +122,9 @@ task ballerinaBuild {
             workingDir project.projectDir
             environment "JAVA_OPTS", "-DBALLERINA_DEV_COMPILE_BALLERINA_ORG=true"
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                commandLine 'cmd', '/c', "$distributionBinPath/ballerina.bat build -c --skip-tests"
+                commandLine 'cmd', '/c', "$distributionBinPath/bal.bat build -c --skip-tests"
             } else {
-                commandLine 'sh', '-c', "$distributionBinPath/ballerina build -c --skip-tests"
+                commandLine 'sh', '-c', "$distributionBinPath/bal build -c --skip-tests"
             }
         }
         copy {
