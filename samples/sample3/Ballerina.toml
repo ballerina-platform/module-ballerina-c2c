@@ -1,4 +1,4 @@
 [package]
-org = "c2c-sample"
+org = "c2c"
 name = "scaling"
 version = "0.0.5"

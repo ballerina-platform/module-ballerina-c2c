@@ -9,9 +9,9 @@ tag="v0.1.0"
 
 # Now let's build the ballerina package.
 
-# Note that the `ballerina build` command should be executed on the package. Code to cloud generates only one container
+# Note that the `bal build` command should be executed on the package. Code to cloud generates only one container
 per package.
-$ ballerina build
+$ bal build
 
 Compiling source
         wso2/hello:0.1.0

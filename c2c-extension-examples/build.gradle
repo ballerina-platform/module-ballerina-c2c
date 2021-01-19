@@ -39,7 +39,7 @@ task buildExamples {
          def distributionLocation = configurations.bDistributionDir.singleFile
          exec {
             workingDir file("${project.projectDir}/examples/c2c-deployment")
-            commandLine 'sh', '-c', "$distributionLocation/bin/ballerina build c2c_deployment.bal"
+            commandLine 'sh', '-c', "$distributionLocation/bin/bal build c2c_deployment.bal"
          }
          exec {
             commandLine 'sh', '-c', "docker rmi c2c_deployment:latest"
