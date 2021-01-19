@@ -7,7 +7,7 @@
 
 1. Compile the project. Command to deploy kubernetes artifacts will be printed on build success.
 ```bash
-$> ballerina build
+$> bal build
 Compiling source
 	fusion/cafe:1.0.0
 
