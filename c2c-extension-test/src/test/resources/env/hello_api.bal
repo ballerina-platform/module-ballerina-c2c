@@ -14,7 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/cloud as _;
 import ballerina/http;
 
 service http:Service /helloWorld on new http:Listener(9090) {

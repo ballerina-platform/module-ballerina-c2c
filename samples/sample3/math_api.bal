@@ -1,4 +1,3 @@
-import ballerina/cloud as _;
 import ballerina/http;
 import ballerina/io;
 import ballerina/lang.'float as floats;

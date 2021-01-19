@@ -1,5 +1,4 @@
 import ballerina/config;
-import ballerina/cloud as _;
 import ballerina/io;
 import ballerina/http;
 import ballerina/log;

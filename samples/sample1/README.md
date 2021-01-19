@@ -1,11 +1,13 @@
-## Sample10: Ballerina module with kubernetes annotations
+## Sample1: Ballerina single file
 
-- This sample runs [foodstore](../sample2) as a module.   
+- This sample runs a simple ballerina file with a service.   
+
 ### How to run:
-
 
 1. Compile the project. Command to deploy kubernetes artifacts will be printed on build success.
 ```bash
+$> bal build --cloud=k8s hello_world.bal 
+
 Compiling source
 	hello_world.bal
 

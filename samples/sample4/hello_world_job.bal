@@ -1,7 +1,7 @@
 import ballerina/io;
-import ballerina/c2c;
+import ballerina/cloud;
 
-@c2c:Task {
+@cloud:Task {
   schedule: {
         minutes: "*/2",
         hours: "*",
