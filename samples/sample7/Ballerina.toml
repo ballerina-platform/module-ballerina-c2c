@@ -2,3 +2,6 @@
 org = "fusion"
 name = "cafe"
 version = "1.0.0"
+
+[build-options]
+cloud = "k8s"

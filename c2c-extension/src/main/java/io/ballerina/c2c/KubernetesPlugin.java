@@ -52,7 +52,6 @@ import org.ballerinalang.util.diagnostic.DiagnosticLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.ballerinalang.compiler.semantics.model.types.BType;
-import org.wso2.ballerinalang.compiler.tree.BLangImportPackage;
 import org.wso2.ballerinalang.compiler.tree.BLangPackage;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangRecordLiteral;
@@ -93,11 +92,16 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
     private static final Logger pluginLog = LoggerFactory.getLogger(KubernetesPlugin.class);
     private DiagnosticLog dlog;
     private CompilerContext context;
+    private boolean enabled;
     private Toml toml = null;
 
     @Override
     public void setCompilerContext(CompilerContext context) {
         this.context = context;
+        String cloudProvider = CompilerOptions.getInstance(context).get(CompilerOptionName.CLOUD);
+        if ("k8s".equals(cloudProvider)) {
+            enabled = true;
+        }
     }
 
     @Override
@@ -128,90 +132,84 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
     @Override
     public void process(PackageNode packageNode) {
         BLangPackage bPackage = (BLangPackage) packageNode;
-        // Get the imports with alias _
-        List<BLangImportPackage> c2cImports = bPackage.getImports().stream()
-                .filter(i -> i.symbol.toString().startsWith("ballerina/cloud") &&
-                        i.getAlias().toString().equals("_"))
-                .collect(Collectors.toList());
 
-        if (c2cImports.size() > 0) {
+        if (enabled) {
             KubernetesContext.getInstance().setCurrentPackage(bPackage.packageID);
             KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
             dataHolder.setPackageID(bPackage.packageID);
-            for (BLangImportPackage c2cImport : c2cImports) {
-                // Get the units of the file which has kubernetes import as _
-                List<TopLevelNode> topLevelNodes = bPackage.getCompilationUnits().stream()
-                        .filter(cu -> cu.getName().equals(c2cImport.compUnit.getValue()))
-                        .flatMap(cu -> cu.getTopLevelNodes().stream())
-                        .collect(Collectors.toList());
 
-                // Filter out the services
-                List<ServiceNode> serviceNodes = topLevelNodes.stream()
-                        .filter(tln -> tln instanceof ServiceNode)
-                        .map(tln -> (ServiceNode) tln)
-                        .collect(Collectors.toList());
+            // Get the units of the file which has kubernetes import as _
+            List<TopLevelNode> topLevelNodes = bPackage.getCompilationUnits().stream()
+                    .flatMap(cu -> cu.getTopLevelNodes().stream())
+                    .collect(Collectors.toList());
 
-                // Generate artifacts for services for all services
-                serviceNodes.forEach(sn -> process(sn, Collections.singletonList(KubernetesUtils.createAnnotation(
-                        "Deployment"))));
+            // Filter out the services
+            List<ServiceNode> serviceNodes = topLevelNodes.stream()
+                    .filter(tln -> tln instanceof ServiceNode)
+                    .map(tln -> (ServiceNode) tln)
+                    .collect(Collectors.toList());
 
-                serviceNodes.forEach(sn -> process(sn, Collections.singletonList(KubernetesUtils.createAnnotation(
-                        "HPA"))));
+            // Generate artifacts for services for all services
+            serviceNodes.forEach(sn -> process(sn, Collections.singletonList(KubernetesUtils.createAnnotation(
+                    "Deployment"))));
 
-                // Create Service annotation with NodePort service type
-                AnnotationAttachmentNode serviceAnnotation = KubernetesUtils.createAnnotation("Service");
-                BLangRecordLiteral svcRecordLiteral = (BLangRecordLiteral) TreeBuilder.createRecordLiteralNode();
-                serviceAnnotation.setExpression(svcRecordLiteral);
+            serviceNodes.forEach(sn -> process(sn, Collections.singletonList(KubernetesUtils.createAnnotation(
+                    "HPA"))));
 
-                BLangLiteral serviceTypeKey = (BLangLiteral) TreeBuilder.createLiteralExpression();
-                serviceTypeKey.value = ServiceNodeProcessor.ServiceConfiguration.serviceType.name();
-                serviceTypeKey.type = new BType(TypeTags.STRING, null);
+            // Create Service annotation with NodePort service type
+            AnnotationAttachmentNode serviceAnnotation = KubernetesUtils.createAnnotation("Service");
+            BLangRecordLiteral svcRecordLiteral = (BLangRecordLiteral) TreeBuilder.createRecordLiteralNode();
+            serviceAnnotation.setExpression(svcRecordLiteral);
 
-                BLangLiteral serviceTypeValue = new BLangLiteral();
-                serviceTypeValue.value = KubernetesConstants.ServiceType.ClusterIP.name();
-                serviceTypeValue.type = new BType(TypeTags.STRING, null);
+            BLangLiteral serviceTypeKey = (BLangLiteral) TreeBuilder.createLiteralExpression();
+            serviceTypeKey.value = ServiceNodeProcessor.ServiceConfiguration.serviceType.name();
+            serviceTypeKey.type = new BType(TypeTags.STRING, null);
 
-                BLangRecordLiteral.BLangRecordKeyValueField serviceTypeRecordField =
-                        new BLangRecordLiteral.BLangRecordKeyValueField();
-                serviceTypeRecordField.key = new BLangRecordLiteral.BLangRecordKey(serviceTypeKey);
-                serviceTypeRecordField.valueExpr = serviceTypeValue;
+            BLangLiteral serviceTypeValue = new BLangLiteral();
+            serviceTypeValue.value = KubernetesConstants.ServiceType.ClusterIP.name();
+            serviceTypeValue.type = new BType(TypeTags.STRING, null);
 
-                svcRecordLiteral.fields.add(serviceTypeRecordField);
+            BLangRecordLiteral.BLangRecordKeyValueField serviceTypeRecordField =
+                    new BLangRecordLiteral.BLangRecordKeyValueField();
+            serviceTypeRecordField.key = new BLangRecordLiteral.BLangRecordKey(serviceTypeKey);
+            serviceTypeRecordField.valueExpr = serviceTypeValue;
 
-                // Filter services with 'new Listener()' and generate services
-                for (ServiceNode serviceNode : serviceNodes) {
-                    Optional<? extends ExpressionNode> initListener = serviceNode.getAttachedExprs().stream()
-                            .filter(aex -> aex instanceof BLangTypeInit)
-                            .findAny();
+            svcRecordLiteral.fields.add(serviceTypeRecordField);
 
-                    if (initListener.isPresent()) {
-                        serviceNodes.forEach(sn -> process(sn, Collections.singletonList(serviceAnnotation)));
-                    }
+            // Filter services with 'new Listener()' and generate services
+            for (ServiceNode serviceNode : serviceNodes) {
+                Optional<? extends ExpressionNode> initListener = serviceNode.getAttachedExprs().stream()
+                        .filter(aex -> aex instanceof BLangTypeInit)
+                        .findAny();
+
+                if (initListener.isPresent()) {
+                    serviceNodes.forEach(sn -> process(sn, Collections.singletonList(serviceAnnotation)));
                 }
-
-                // Get the variable names of the listeners attached to services
-                List<String> listenerNamesToExpose = serviceNodes.stream()
-                        .map(ServiceNode::getAttachedExprs)
-                        .flatMap(Collection::stream)
-                        .filter(aex -> aex instanceof BLangSimpleVarRef)
-                        .map(aex -> (BLangSimpleVarRef) aex)
-                        .map(BLangSimpleVarRef::toString)
-                        .collect(Collectors.toList());
-
-                // Generate artifacts for listeners attached to services
-                topLevelNodes.stream()
-                        .filter(tln -> tln instanceof SimpleVariableNode)
-                        .map(tln -> (SimpleVariableNode) tln)
-                        .filter(listener -> listenerNamesToExpose.contains(listener.getName().getValue()))
-                        .forEach(listener -> process(listener, Collections.singletonList(serviceAnnotation)));
-
-                // Generate artifacts for main functions
-                topLevelNodes.stream()
-                        .filter(tln -> tln instanceof FunctionNode)
-                        .map(tln -> (FunctionNode) tln)
-                        .filter(fn -> "main".equals(fn.getName().getValue()))
-                        .forEach(fn -> process(fn, Collections.singletonList(KubernetesUtils.createAnnotation("Job"))));
             }
+
+            // Get the variable names of the listeners attached to services
+            List<String> listenerNamesToExpose = serviceNodes.stream()
+                    .map(ServiceNode::getAttachedExprs)
+                    .flatMap(Collection::stream)
+                    .filter(aex -> aex instanceof BLangSimpleVarRef)
+                    .map(aex -> (BLangSimpleVarRef) aex)
+                    .map(BLangSimpleVarRef::toString)
+                    .collect(Collectors.toList());
+
+            // Generate artifacts for listeners attached to services
+            topLevelNodes.stream()
+                    .filter(tln -> tln instanceof SimpleVariableNode)
+                    .map(tln -> (SimpleVariableNode) tln)
+                    .filter(listener -> listenerNamesToExpose.contains(listener.getName().getValue()))
+                    .forEach(listener -> process(listener, Collections.singletonList(serviceAnnotation)));
+
+            // Generate artifacts for main functions
+            topLevelNodes.stream()
+                    .filter(tln -> tln instanceof FunctionNode)
+                    .map(tln -> (FunctionNode) tln)
+                    .filter(fn -> "main".equals(fn.getName().getValue()))
+                    .forEach(fn -> process(fn, Collections.singletonList(KubernetesUtils.createAnnotation("Job"))));
+
         }
     }
 

@@ -4,7 +4,19 @@
 
 ### How to run:
 
-1. Compile the project. Command to deploy kubernetes artifacts will be printed on build success.
+1. Compile the project. Command to deploy kubernetes artifacts will be printed on build success. 
+**Note that the build options are provided in the `Ballerina.toml` file.**
+
+```toml
+[package]
+org = "hello"
+name = "hello"
+version = "0.0.1"
+
+[build-options]
+cloud="k8s"
+```
+
 ```bash
 $> bal build
 Compiling source

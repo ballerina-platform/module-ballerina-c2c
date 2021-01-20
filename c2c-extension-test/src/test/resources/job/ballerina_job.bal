@@ -15,7 +15,6 @@
 // under the License.
 
 import ballerina/io;
-import ballerina/cloud as _;
 
 public function main(string... args) {
     io:println("hello world");

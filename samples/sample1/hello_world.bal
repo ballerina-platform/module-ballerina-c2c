@@ -15,10 +15,9 @@
 // under the License.
 
 import ballerina/http;
-import ballerina/cloud as _;
 
 service http:Service /helloWorld on new http:Listener(9090) {
     resource function get sayHello(http:Caller caller) {
-        var responseResult = caller->ok("Hello, World from service helloWorld ! \n");
+        var responseResult = caller->respond("Hello, World from service helloWorld ! \n");
     }
 }
