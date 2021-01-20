@@ -1,0 +1,24 @@
+{
+    "line": 7,
+    "character": 23,
+    "expected": [
+        {
+            "title": "Add Resource to Service",
+            "edits": [
+                {
+                    "range": {
+                        "start": {
+                            "line": 15,
+                            "character": 0
+                        },
+                        "end": {
+                            "line": 15,
+                            "character": 0
+                        }
+                    },
+                    "newText": "    resource function get readyz (http:Caller caller) returns error? {\n        check caller-\u003erespond(\"Resource is Ready\");\n    }\n"
+                }
+            ]
+        }
+    ]
+}

@@ -72,7 +72,6 @@ public class SingleFile {
             List<DiagnosticInfo> diagnosticInfos = tomlDiagnosticChecker.validateTomlWithSource(toml, projectPath);
             Assert.assertEquals(diagnosticInfos.size(), 1);
             Assert.assertEquals(diagnosticInfos.get(0).getMessage(), "Invalid Liveness Probe Service Path");
-            //TODO replace startsWith and parse better.
         } catch (IOException e) {
             Assert.fail("Toml File Not Found");
         }
@@ -89,7 +88,6 @@ public class SingleFile {
             List<DiagnosticInfo> diagnosticInfos = tomlDiagnosticChecker.validateTomlWithSource(toml, projectPath);
             Assert.assertEquals(diagnosticInfos.size(), 1);
             Assert.assertEquals(diagnosticInfos.get(0).getMessage(), "Invalid Liveness Probe Resource Path");
-            //TODO replace startsWith and parse better.
         } catch (IOException e) {
             Assert.fail("Toml File Not Found");
         }

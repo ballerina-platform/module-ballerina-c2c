@@ -124,16 +124,20 @@
                             "type": "boolean"
                         },
                         "min_memory": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(?:[EPTGMK]i?b?)?$"
                         },
                         "max_memory": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(?:[EPTGMK]i?b?)?$"
                         },
                         "min_cpu": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$"
                         },
                         "max_cpu": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$"
                         },
                         "autoscaling": {
                             "type": "object",

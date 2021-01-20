@@ -1,0 +1,49 @@
+[
+    {
+        "right": {
+            "title": "Add Resource to Service",
+            "kind": "quickfix",
+            "diagnostics": [
+                {
+                    "range": {
+                        "start": {
+                            "line": 7,
+                            "character": 7
+                        },
+                        "end": {
+                            "line": 7,
+                            "character": 27
+                        }
+                    },
+                    "severity": "Error",
+                    "message": "Invalid Readiness Probe Resource Path"
+                }
+            ],
+            "edit": {
+                "documentChanges": [
+                    {
+                        "textDocument": {
+                            "version": null,
+                            "uri": "file:///home/anjana/repos/module-ballerina-c2c/c2c-extension-test/build/resources/test/codeaction/fix-invalid-resource/source/main.bal"
+                        },
+                        "edits": [
+                            {
+                                "range": {
+                                    "start": {
+                                        "line": 15,
+                                        "character": 0
+                                    },
+                                    "end": {
+                                        "line": 15,
+                                        "character": 0
+                                    }
+                                },
+                                "newText": "    resource function get readyz (http:Caller caller) returns error? {\n        check caller-\u003erespond(\"Resource is Ready\");\n    }\n"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+]

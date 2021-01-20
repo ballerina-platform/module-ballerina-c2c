@@ -30,8 +30,16 @@ dependencies {
     testImplementation "com.github.docker-java:docker-java:${dockerJavaVersion}"
     testImplementation "io.fabric8:kubernetes-client:${fabric8KubernetesClientVersion}"
     testImplementation "org.slf4j:slf4j-api:${slf4jVersion}"
-    testImplementation "org.slf4j:slf4j-log4j12:${slf4jVersion}"
     testImplementation "org.testng:testng:${testngVersion}"
+    testImplementation "org.ballerinalang:language-server-core:${ballerinaLangVersion}"
+    testImplementation "org.ballerinalang:language-server-commons:${ballerinaLangVersion}"
+    testImplementation "org.ballerinalang:language-server-cli:${ballerinaLangVersion}"
+    testImplementation "org.ballerinalang:ballerina-cli:${ballerinaLangVersion}"
+
+
+
+    testImplementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.10.0'
+    testImplementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.10.0'
 
     extensionPlugin project(path: ":c2c-extension", configuration: "shadow")
     bDistributionDir project(path: ":c2c-ballerina", configuration: "bDistributionDir")
@@ -82,6 +90,9 @@ test {
             suites 'src/test/resources/testng.xml'
         }
         systemProperties = [
+                "ballerina.home" : "${distributionLocation.absolutePath}/",
+                "ballerina.version" : "2.0.0-Preview9-SNAPSHOT",
+                "experimental" : "true",
                 sampleDir      : System.getProperty('sampleDir', project.projectDir.absolutePath + "/../samples"),
                 ballerinaPack  : System.getProperty('ballerinaPack', "$configurations.bDistributionDir.singleFile.absolutePath"),
                 jacocoAgentLine: "-javaagent:${configurations.jacocoRuntime.asPath}=destfile=${test.jacoco.destinationFile.absolutePath},append=true,inclnolocationclasses=true,exclclassloader=jdk.internal.reflect.DelegatingClassLoader"

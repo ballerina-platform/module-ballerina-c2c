@@ -1,13 +1,13 @@
 [container.image]
-repository = "wso2" #simple docker img name conv
+repository = "wso2"
 name = "hello"
-base=""
+base="ballerina/jre11:v1"
 
 [container.image.user]
-run_as=""
+run_as="ballerina"
 [cloud.deployment]
-min_cpu=""
-max_cpu=""
+min_cpu="0.5m"
+max_cpu="0.75m"
 
 [cloud.deployment.probes.liveness]
 port = 9091
