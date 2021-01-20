@@ -12,7 +12,7 @@ listener http:Listener helloEP = new(9090);
 
 service /helloWorld on helloEP {
     resource function get sayHello(http:Caller caller, http:Request request) {
-        var responseResult = caller->ok("Hello, World from service helloWorld ! ");
+        var responseResult = caller->respond("Hello, World from service helloWorld ! ");
         if (responseResult is error) {
             log:printError("error responding back to client.", err = responseResult);
         }

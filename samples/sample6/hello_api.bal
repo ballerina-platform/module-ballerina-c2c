@@ -17,14 +17,14 @@ import ballerina/http;
 
 service http:Service /helloWorld on new http:Listener(9090) {
     resource function get sayHello(http:Caller caller) {
-        var responseResult = caller->ok("Hello, World from service helloWorld ! \n");
+        var responseResult = caller->respond("Hello, World from service helloWorld ! \n");
     }
 
     resource function get readyz(http:Caller caller) returns error? {
-        check caller->ok("ready \n");
+        check caller->respond("ready \n");
     }
 
     resource function get healthz(http:Caller caller) returns error? {
-        check caller->ok("live \n");
+        check caller->respond("live \n");
     }
 }

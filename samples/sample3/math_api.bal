@@ -4,7 +4,7 @@ import ballerina/lang.'float as floats;
 
 service /Math on new http:Listener(9090) {
     resource function get getSqrt(http:Caller caller, http:Request req) returns error? {
-        check caller->ok(sumSqrt());
+        check caller->respond(sumSqrt());
     }
 }
 

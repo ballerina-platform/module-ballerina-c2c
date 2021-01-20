@@ -23,7 +23,7 @@ service /helloWorld on helloWorldEP {
         string groups = getConfigValue(user, "groups");
         string payload = "{userId: " + userId + ", groups: " + groups + "}";
         response.setTextPayload(payload + "\n");
-        var responseResult = caller->ok(response);
+        var responseResult = caller->respond(response);
         if (responseResult is error) {
             log:printError("error responding back to client.", err = responseResult);
         }
@@ -33,7 +33,7 @@ service /helloWorld on helloWorldEP {
         http:Response response = new;
         string payload = <@untainted> readFile("./data/data.txt");
         response.setTextPayload("Data: " + <@untainted> payload + "\n");
-        var responseResult = caller->ok(response);
+        var responseResult = caller->respond(response);
         if (responseResult is error) {
             log:printError("error responding back to client.", err = responseResult);
         }
