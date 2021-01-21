@@ -31,9 +31,10 @@
         <classes>
             <class name="io.ballerina.c2c.test.JobTest"/>
             <class name="io.ballerina.c2c.test.EnvTest"/>
-            <class name="io.ballerina.c2c.test.codeactions.InvalidServicePath"/>
-            <class name="io.ballerina.c2c.test.codeactions.InvalidResourcePath"/>
-            <class name="io.ballerina.c2c.test.codeactions.InvalidPort"/>
+            <class name="io.ballerina.c2c.test.CustomDiagnosticsTest"/>
+<!--            <class name="io.ballerina.c2c.test.codeactions.InvalidServicePath"/>-->
+<!--            <class name="io.ballerina.c2c.test.codeactions.InvalidResourcePath"/>-->
+<!--            <class name="io.ballerina.c2c.test.codeactions.InvalidPort"/>-->
         </classes>
     </test>
 

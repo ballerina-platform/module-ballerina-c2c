@@ -1,14 +1,15 @@
 package io.ballerina.c2c.diagnostics;
 
-import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.utils.TomlHelper;
-import io.ballerina.projects.directory.BuildProject;
+import io.ballerina.projects.Project;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.semantic.ast.TomlLongValueNode;
 import io.ballerina.toml.semantic.ast.TomlStringValueNode;
+import io.ballerina.toml.semantic.diagnostics.TomlDiagnostic;
+import io.ballerina.toml.semantic.diagnostics.TomlNodeLocation;
+import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,13 +25,13 @@ public class TomlDiagnosticChecker {
     public TomlDiagnosticChecker() {
     }
 
-    public List<DiagnosticInfo> validateTomlWithSource(Toml toml, Path projectPath) {
-        List<DiagnosticInfo> diagnosticInfoList = new ArrayList<>();
+    public List<Diagnostic> validateTomlWithSource(Toml toml, Project project) {
+        List<Diagnostic> diagnosticInfoList = new ArrayList<>();
         if (toml == null) {
             return Collections.emptyList();
         }
 
-        ProjectServiceInfo projectServiceInfo = testBuildProjectAPI(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
         Toml ready = TomlHelper.getTable(toml, "cloud.deployment.probes.readiness");
         if (ready != null) {
             diagnosticInfoList.addAll(validateProbe(projectServiceInfo, ready, ProbeType.READINESS));
@@ -43,19 +44,17 @@ public class TomlDiagnosticChecker {
         return diagnosticInfoList;
     }
 
-    private List<DiagnosticInfo> validateProbe(ProjectServiceInfo projectServiceInfo, Toml probe, ProbeType type) {
-        List<DiagnosticInfo> diagnosticInfos = new ArrayList<>();
+    private List<Diagnostic> validateProbe(ProjectServiceInfo projectServiceInfo, Toml probe, ProbeType type) {
+        List<Diagnostic> diagnosticInfos = new ArrayList<>();
         long port = ((TomlLongValueNode) probe.get("port")).getValue();
         String path = ((TomlStringValueNode) probe.get("path")).getValue();
 
         Map<String, List<ListenerInfo>> listenerMap = projectServiceInfo.getListenerMap();
         if (!isListenerPortValid(port, listenerMap)) {
-            DiagnosticInfo portDiag = new DiagnosticInfo(DiagnosticSeverity.ERROR,
-                    KubernetesContext.getInstance().getCurrentPackage(), probe.get("port").location(),
-                    "Invalid " + type.getValue() + " Port");
-            DiagnosticInfo pathDiag = new DiagnosticInfo(DiagnosticSeverity.ERROR,
-                    KubernetesContext.getInstance().getCurrentPackage(), probe.get("path").location(),
-                    "Invalid " + type.getValue() + " Path");
+            Diagnostic portDiag = getTomlDiagnostic(probe.get("port").location(), "C2C001", "error.invalid.port",
+                    DiagnosticSeverity.ERROR, "Invalid " + type.getValue() + " Port");
+            Diagnostic pathDiag = getTomlDiagnostic(probe.get("path").location(), "C2C002", "error.invalid.path",
+                    DiagnosticSeverity.ERROR, "Invalid " + type.getValue() + " Path");
             diagnosticInfos.add(portDiag);
             diagnosticInfos.add(pathDiag);
             return diagnosticInfos;
@@ -69,10 +68,10 @@ public class TomlDiagnosticChecker {
                 if (serviceListenerPort == port) {
                     String serviceName = serviceInfo.getServiceName().trim();
                     if (!path.startsWith(serviceName)) {
-                        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(DiagnosticSeverity.ERROR,
-                                KubernetesContext.getInstance().getCurrentPackage(), probe.get("path").location(),
-                                "Invalid " + type.getValue() + " Service Path");
-                        diagnosticInfos.add(diagnosticInfo);
+                        Diagnostic diag = getTomlDiagnostic(probe.get("path").location(), "C2C003", "error.invalid" +
+                                ".service.path", DiagnosticSeverity.ERROR, "Invalid " + type.getValue() + " " +
+                                "Service Path");
+                        diagnosticInfos.add(diag);
                         return diagnosticInfos;
                     }
 
@@ -87,10 +86,10 @@ public class TomlDiagnosticChecker {
                         }
                     }
                     if (!resourceFound) {
-                        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(DiagnosticSeverity.ERROR,
-                                KubernetesContext.getInstance().getCurrentPackage(), probe.get("path").location(),
+                        Diagnostic diag = getTomlDiagnostic(probe.get("path").location(), "C2C004", "error.invalid" +
+                                        ".resource.path", DiagnosticSeverity.ERROR,
                                 "Invalid " + type.getValue() + " Resource Path");
-                        diagnosticInfos.add(diagnosticInfo);
+                        diagnosticInfos.add(diag);
                     }
                 }
             }
@@ -122,13 +121,11 @@ public class TomlDiagnosticChecker {
         return resourcePath;
     }
 
-    public ProjectServiceInfo testBuildProjectAPI(Path projectPath) {
-        System.setProperty("ballerina.home", "/home/anjana/repos/module-ballerina-c2c/c2c-ballerina/build/" +
-                "extracted-distribution/jballerina-tools-2.0.0-Preview9-SNAPSHOT");
-
-        BuildProject project = BuildProject.load(projectPath);
-
-        return new ProjectServiceInfo(project);
+    private TomlDiagnostic getTomlDiagnostic(TomlNodeLocation location, String code, String template,
+                                             DiagnosticSeverity severity, String message) {
+        io.ballerina.tools.diagnostics.DiagnosticInfo
+                diagnosticInfo = new io.ballerina.tools.diagnostics.DiagnosticInfo(code, template, severity);
+        return new TomlDiagnostic(location, diagnosticInfo, message);
     }
 
     enum ProbeType {

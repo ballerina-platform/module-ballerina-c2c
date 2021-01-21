@@ -26,6 +26,7 @@ import io.ballerina.c2c.test.utils.TestUtil;
 import org.ballerinalang.langserver.codeaction.CodeActionUtil;
 import org.ballerinalang.langserver.common.utils.CommonUtil;
 import org.ballerinalang.langserver.commons.LanguageServerContext;
+import org.ballerinalang.langserver.commons.workspace.WorkspaceDocumentException;
 import org.ballerinalang.langserver.commons.workspace.WorkspaceManager;
 import org.ballerinalang.langserver.contexts.LanguageServerContextImpl;
 import org.ballerinalang.langserver.workspace.BallerinaWorkspaceManager;
@@ -71,7 +72,7 @@ public abstract class CodeActionTest {
     }
 
     @Test(dataProvider = "codeaction-data-provider")
-    public void test(String config, String source) throws IOException {
+    public void test(String config, String source) throws IOException, WorkspaceDocumentException {
         String configJsonPath =
                 "codeaction" + File.separator + getResourceDir() + File.separator + "config" + File.separator + config;
         Path sourcePath = sourcesPath.resolve(getResourceDir()).resolve("source").resolve(source);

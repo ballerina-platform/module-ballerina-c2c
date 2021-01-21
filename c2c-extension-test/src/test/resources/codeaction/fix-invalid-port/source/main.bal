@@ -1,6 +1,5 @@
 import ballerina/http;
 import ballerina/log;
-import ballerina/cloud as _;
 
 listener http:Listener helloEP = new(9090);
 

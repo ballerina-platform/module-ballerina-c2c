@@ -1,6 +1,6 @@
 [package]
 org = "anjana"
-name = "myproject"
+name = "slp8"
 version = "0.1.0"
 
 [build-options]

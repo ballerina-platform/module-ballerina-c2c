@@ -91,7 +91,7 @@ test {
         }
         systemProperties = [
                 "ballerina.home" : "${distributionLocation.absolutePath}/",
-                "ballerina.version" : "2.0.0-Preview9-SNAPSHOT",
+                "ballerina.version" : "${version}",
                 "experimental" : "true",
                 sampleDir      : System.getProperty('sampleDir', project.projectDir.absolutePath + "/../samples"),
                 ballerinaPack  : System.getProperty('ballerinaPack', "$configurations.bDistributionDir.singleFile.absolutePath"),
