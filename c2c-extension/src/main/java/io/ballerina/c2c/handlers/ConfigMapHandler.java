@@ -72,9 +72,8 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
                     throw new KubernetesPluginException("there can be only 1 ballerina config file");
                 }
                 DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
-                deploymentModel.setCommandArgs(" --b7a.config.file=${CONFIG_FILE}");
                 EnvVar ballerinaConfEnv = new EnvVarBuilder()
-                        .withName("CONFIG_FILE")
+                        .withName("BALCONFIGFILE")
                         .withValue(configMapModel.getMountPath() + BALLERINA_CONF_FILE_NAME)
                         .build();
                 deploymentModel.addEnv(ballerinaConfEnv);

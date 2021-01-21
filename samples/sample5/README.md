@@ -111,10 +111,9 @@ helloworldep-svc             ClusterIP   10.99.134.22     <none>        9090/TCP
 
 9. Access the service using NodePort (Replace the NodePort(31812) with the output of the above command):
 ```bash
-$> curl https://127.0.0.1:<31812>/helloWorld/config/john -k
-{userId: john@ballerina.com, groups: apim,esb}
-$> curl https://127.0.0.1:<31812>/helloWorld/config/jane -k
-{userId: jane3@ballerina.com, groups: esb}
+$> curl https://127.0.0.1:<31812>/helloWorld/config -k
+Configuration: john@ballerina.com,jane@ballerian.com apim,esb
+
 $> curl https://127.0.0.1:<31812>/helloWorld/data -k
 Data: Lorem ipsum dolor sit amet.
 ```

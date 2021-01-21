@@ -316,7 +316,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             for (Toml configFile : configFiles) {
                 Path path = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "file")));
                 if (path.endsWith(BALLERINA_CONF_FILE_NAME)) {
-                    // Resolve ballerina.conf
+                    // Resolve Config.toml
                     ConfigMapModel configMapModel = getBallerinaConfConfigMap(path.toString(), deploymentName);
                     dataHolder.addConfigMaps(Collections.singleton(configMapModel));
                     continue;

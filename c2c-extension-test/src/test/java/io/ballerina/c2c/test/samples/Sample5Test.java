@@ -115,8 +115,8 @@ public class Sample5Test extends SampleTest {
         Assert.assertEquals(container.getEnv().size(), 1);
 
         // Validate config file
-        Assert.assertEquals(container.getEnv().get(0).getName(), "CONFIG_FILE");
-        Assert.assertEquals(container.getEnv().get(0).getValue(), "/home/ballerina/conf/ballerina.conf");
+        Assert.assertEquals(container.getEnv().get(0).getName(), "BALCONFIGFILE");
+        Assert.assertEquals(container.getEnv().get(0).getValue(), "/home/ballerina/conf/Config.toml");
     }
 
     @Test
@@ -143,9 +143,7 @@ public class Sample5Test extends SampleTest {
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
         Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(),
-                "[/bin/sh, -c, java -Xdiag -cp \"hello.jar:jars/*\" 'hello/hello/0_0_1/$_init' " +
-                        "--b7a.config" +
-                        ".file=${CONFIG_FILE}]");
+                "[/bin/sh, -c, java -Xdiag -cp \"hello.jar:jars/*\" 'hello/hello/0_0_1/$_init']");
     }
 
     @Test(groups = {"integration"})
