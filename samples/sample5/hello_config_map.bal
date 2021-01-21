@@ -1,4 +1,3 @@
-import ballerina/config;
 import ballerina/io;
 import ballerina/http;
 import ballerina/log;
@@ -16,12 +15,13 @@ listener http:Listener helloWorldEP = new(9090, {
     }
 });
 
+configurable string users = "Not found";
+configurable string groups = "Not found";
+
 service /helloWorld on helloWorldEP {
-    resource function get config/[string user](http:Caller caller, http:Request request) returns @tainted error? {
+    resource function get config(http:Caller caller, http:Request request) returns @tainted error? {
         http:Response response = new;
-        string userId = getConfigValue(user, "userid");
-        string groups = getConfigValue(user, "groups");
-        string payload = "{userId: " + userId + ", groups: " + groups + "}";
+        string payload = "Configuration: " + users + " " + groups;
         response.setTextPayload(payload + "\n");
         var responseResult = caller->respond(response);
         if (responseResult is error) {
@@ -38,11 +38,6 @@ service /helloWorld on helloWorldEP {
             log:printError("error responding back to client.", err = responseResult);
         }
     }
-}
-
-function getConfigValue(string instanceId, string property) returns (string) {
-    string key = <@untainted> instanceId + "." + <@untainted> property;
-    return config:getAsString(key, "Invalid User");
 }
 
 function readFile(string filePath) returns @tainted string {

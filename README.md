@@ -63,7 +63,7 @@ service /helloWorld on helloEP {
 }
 ```
 
-Build the above program with `--cloud=k8s` build option.
+Build the program with `--cloud=k8s` build option.
 
 ```bash
 $ bal build --cloud=k8s <source_file>.bal 

@@ -7,4 +7,4 @@ tag="sample5"
     file="./conf/data.txt"
     mount_path="/home/ballerina/data"
 [[cloud.config.files]]
-    file="./conf/ballerina.conf"
+    file="./conf/Config.toml"
