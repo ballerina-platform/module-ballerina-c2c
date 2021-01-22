@@ -95,8 +95,11 @@ public class TomlDiagnosticChecker {
                     boolean resourceFound = false;
                     List<ResourceInfo> resourceInfoList = serviceInfo.getResourceInfo();
                     for (ResourceInfo resourceInfo : resourceInfoList) {
-                        String resourcePath = trimResourcePath(serviceName) + "/" +
-                                trimResourcePath(resourceInfo.getPath());
+                        String balResourceName = trimResourcePath(resourceInfo.getPath());
+                        String resourcePath = trimResourcePath(serviceName) + "/" + balResourceName;
+                        if (balResourceName.equals(".")) {
+                            resourcePath = trimResourcePath(serviceName);
+                        }
                         if (resourcePath.equals(trimResourcePath(path))) {
                             resourceFound = true;
                             break;
