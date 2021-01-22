@@ -18,14 +18,17 @@
 
 package io.ballerina.c2c;
 
+import io.ballerina.c2c.diagnostics.TomlDiagnosticChecker;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.processors.NodeProcessorFactory;
 import io.ballerina.c2c.processors.ServiceNodeProcessor;
 import io.ballerina.c2c.utils.KubernetesUtils;
+import io.ballerina.c2c.utils.TomlHelper;
 import io.ballerina.projects.JBallerinaBackend;
 import io.ballerina.projects.JvmTarget;
+import io.ballerina.projects.KubernetesToml;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.internal.model.Target;
@@ -67,7 +70,6 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -91,13 +93,10 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
 
     private static final Logger pluginLog = LoggerFactory.getLogger(KubernetesPlugin.class);
     private DiagnosticLog dlog;
-    private CompilerContext context;
     private boolean enabled;
-    private Toml toml = null;
 
     @Override
     public void setCompilerContext(CompilerContext context) {
-        this.context = context;
         String cloudProvider = CompilerOptions.getInstance(context).get(CompilerOptionName.CLOUD);
         if ("k8s".equals(cloudProvider)) {
             enabled = true;
@@ -107,26 +106,21 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
     @Override
     public void init(DiagnosticLog diagnosticLog) {
         this.dlog = diagnosticLog;
-        String projectDir = CompilerOptions.getInstance(context).get(CompilerOptionName.PROJECT_DIR);
-        if (projectDir != null) {
-            Path tomlPath = Paths.get(projectDir).resolve("Kubernetes.toml");
-            if (Files.exists(tomlPath)) {
-                try {
-                    Toml toml = Toml.read(tomlPath);
-                    TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
-                    validator.validate(toml);
-                    List<Diagnostic> diagnostics = toml.diagnostics();
-                    for (Diagnostic diagnostic : diagnostics) {
-                        dlog.logDiagnostic(diagnostic.diagnosticInfo().severity(),
-                                KubernetesContext.getInstance().getCurrentPackage(), diagnostic.location()
-                                , diagnostic.message());
-                    }
-                    this.toml = toml;
-                } catch (IOException e) {
-                    //Ignored
-                }
-            }
+    }
+
+    @Override
+    public List<Diagnostic> codeAnalyze(Project project) {
+        Optional<KubernetesToml> kubernetesToml = project.currentPackage().kubernetesToml();
+        if (kubernetesToml.isPresent()) {
+            Toml toml = TomlHelper.createK8sTomlFromProject(kubernetesToml.get().tomlDocument());
+            TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
+            validator.validate(toml);
+            List<Diagnostic> diagnostics = toml.diagnostics();
+            TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker();
+            diagnostics.addAll(tomlDiagnosticChecker.validateTomlWithSource(toml, project));
+            return diagnostics;
         }
+        return Collections.emptyList();
     }
 
     @Override
@@ -258,7 +252,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         }
     }
 
-    public void codeGeneratedInternal(PackageID moduleID, Path executableJarFile) {
+    public void codeGeneratedInternal(PackageID moduleID, Path executableJarFile, Optional<KubernetesToml> k8sToml) {
         KubernetesContext.getInstance().setCurrentPackage(moduleID);
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         dataHolder.setPackageID(moduleID);
@@ -280,13 +274,8 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                                 .resolve(DOCKER)
                                 .resolve(extractJarName(executableJarFile));
                         //Read and parse ballerina cloud
-                        dataHolder.setBallerinaCloud(this.toml);
-                        Path k8stomlPath = projectRoot.resolve("Kubernetes.toml");
-                        try {
-                            Toml read = Toml.read(k8stomlPath);
-                            dataHolder.setBallerinaCloud(read);
-                        } catch (IOException e) {
-                            //Ignored as the compiler takes the default values
+                        if (k8sToml.isPresent()) {
+                            dataHolder.setBallerinaCloud(new Toml(k8sToml.get().tomlAstNode()));
                         }
                     }
                 }
@@ -327,7 +316,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
             KubernetesContext.getInstance().getDataHolder().setSourceRoot(executablePath.getParent()
                     .getParent().getParent());
             codeGeneratedInternal(KubernetesContext.getInstance().getCurrentPackage(),
-                    executablePath);
+                    executablePath, project.currentPackage().kubernetesToml());
         } catch (IOException e) {
             String errorMessage = "error while accessing executable path " + e.getMessage();
             printError(errorMessage);
@@ -349,4 +338,6 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
             throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
         }
     }
+
+
 }

@@ -18,20 +18,24 @@
                             "pattern": "[a-zA-Z0-9][a-zA-Z0-9_.-]+"
                         },
                         "repository": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^(?!\\s*$).+"
                         },
                         "tag": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^[\\w][\\w.-]{0,127}$"
                         },
                         "base": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^(?!\\s*$).+"
                         },
                         "user": {
                             "type": "object",
                             "additionalProperties": false,
                             "properties": {
                                 "run_as": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "pattern": "^(?!\\s*$).+"
                                 }
                             }
                         }
@@ -54,13 +58,16 @@
                                 "additionalProperties": false,
                                 "properties": {
                                     "key_ref": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "pattern": "^(?!\\s*$).+"
                                     },
                                     "name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "pattern": "^(?!\\s*$).+"
                                     },
                                     "config_name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "pattern": "^(?!\\s*$).+"
                                     }
                                 }
                             }
@@ -72,13 +79,16 @@
                                 "additionalProperties": false,
                                 "properties": {
                                     "key_ref": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "pattern": "^(?!\\s*$).+"
                                     },
                                     "name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "pattern": "^(?!\\s*$).+"
                                     },
                                     "secret_name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "pattern": "^(?!\\s*$).+"
                                     }
                                 }
                             }
@@ -90,10 +100,12 @@
                                 "additionalProperties": false,
                                 "properties": {
                                     "file": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "pattern": "^(?!\\s*$).+"
                                     },
                                     "mount_path": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "pattern": "^(?!\\s*$).+"
                                     }
                                 }
                             }
@@ -105,22 +117,27 @@
                     "additionalProperties": false,
                     "properties": {
                         "internal_domain_name": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^(?!\\s*$).+"
                         },
                         "external_accessible": {
                             "type": "boolean"
                         },
                         "min_memory": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(?:[EPTGMK]i?b?)?$"
                         },
                         "max_memory": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(?:[EPTGMK]i?b?)?$"
                         },
                         "min_cpu": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$"
                         },
                         "max_cpu": {
-                            "type": "string"
+                            "type": "string",
+                            "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$"
                         },
                         "autoscaling": {
                             "type": "object",
@@ -162,7 +179,8 @@
                                             "minimum": 0
                                         },
                                         "path": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "pattern": "^(?!\\s*$).+"
                                         }
                                     }
                                 },
@@ -175,7 +193,8 @@
                                             "minimum": 0
                                         },
                                         "path": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "pattern": "^(?!\\s*$).+"
                                         }
                                     }
                                 }
@@ -190,13 +209,16 @@
                                     "additionalProperties": false,
                                     "properties": {
                                         "name": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "pattern": "^(?!\\s*$).+"
                                         },
                                         "local_path": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "pattern": "^(?!\\s*$).+"
                                         },
                                         "size": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "pattern": "^(?!\\s*$).+"
                                         }
                                     }
                                 }
