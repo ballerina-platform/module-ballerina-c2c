@@ -18,15 +18,24 @@
 
 package io.ballerina.c2c.utils;
 
+import io.ballerina.projects.TomlDocument;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.semantic.ast.TomlBooleanValueNode;
 import io.ballerina.toml.semantic.ast.TomlDoubleValueNodeNode;
 import io.ballerina.toml.semantic.ast.TomlLongValueNode;
 import io.ballerina.toml.semantic.ast.TomlStringValueNode;
+import io.ballerina.toml.semantic.ast.TomlTableNode;
 import io.ballerina.toml.semantic.ast.TomlValueNode;
+import io.ballerina.toml.semantic.diagnostics.DiagnosticComparator;
+import io.ballerina.toml.semantic.diagnostics.TomlDiagnostic;
+import io.ballerina.toml.semantic.diagnostics.TomlNodeLocation;
+import io.ballerina.toml.syntax.tree.SyntaxTree;
+import io.ballerina.tools.diagnostics.Diagnostic;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Wrapper defined to provide default value support and dotted key support.
@@ -113,5 +122,23 @@ public class TomlHelper {
             }
         }
         return parent.get(lastKey);
+    }
+
+    public static Toml createK8sTomlFromProject(TomlDocument tomlDocument) {
+        TomlTableNode astNode = tomlDocument.tomlAstNode();
+        astNode.addSyntaxDiagnostics(reportSyntaxDiagnostics(tomlDocument.syntaxTree()));
+        return new Toml(astNode);
+    }
+
+    public static Set<Diagnostic> reportSyntaxDiagnostics(SyntaxTree tree) {
+        Set<Diagnostic> diagnostics = new TreeSet<>(new DiagnosticComparator());
+        for (Diagnostic syntaxDiagnostic : tree.diagnostics()) {
+            TomlNodeLocation tomlNodeLocation = new TomlNodeLocation(syntaxDiagnostic.location().lineRange(),
+                    syntaxDiagnostic.location().textRange());
+            TomlDiagnostic tomlDiagnostic =
+                    new TomlDiagnostic(tomlNodeLocation, syntaxDiagnostic.diagnosticInfo(), syntaxDiagnostic.message());
+            diagnostics.add(tomlDiagnostic);
+        }
+        return diagnostics;
     }
 }

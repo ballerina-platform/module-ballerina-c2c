@@ -1,0 +1,14 @@
+[container.image]
+repository = "wso2"
+name = "hello"
+base="ballerina/jre11:v1"
+
+[container.image.user]
+run_as="ballerina"
+[cloud.deployment]
+min_cpu="0.5m"
+max_cpu="0.75m"
+
+[cloud.deployment.probes.liveness]
+port = 9091
+path = "/helloWorld/readyz"
