@@ -20,6 +20,7 @@ package io.ballerina.c2c.processors;
 
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.KubernetesContext;
+import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.models.ServiceModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
@@ -54,19 +55,21 @@ import static io.ballerina.c2c.utils.KubernetesUtils.getValidName;
  */
 public class ServiceNodeProcessor extends AbstractNodeProcessor {
 
+    final KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
+
     @Override
-    public void processNode(ServiceNode serviceNode) throws
-            KubernetesPluginException {
+    public void processNode(ServiceNode serviceNode) throws KubernetesPluginException {
         BLangService bService = (BLangService) serviceNode;
         ServiceModel serviceModel = new ServiceModel();
         if (KubernetesUtils.isBlank(serviceModel.getName())) {
             serviceModel.setName(getValidName(serviceNode.getName().getValue()) + SVC_POSTFIX);
         }
 
-        BLangTypeInit bListener = (BLangTypeInit) bService.getAttachedExprs().get(0);
-        validatePorts(serviceModel, bListener);
-
-        KubernetesContext.getInstance().getDataHolder().addServiceModel(serviceModel);
+        if (bService.getAttachedExprs().get(0) instanceof BLangTypeInit) {
+            BLangTypeInit bListener = (BLangTypeInit) bService.getAttachedExprs().get(0);
+            validatePorts(serviceModel, bListener);
+            dataHolder.addServiceModel(serviceModel);
+        }
     }
 
     private void validatePorts(ServiceModel serviceModel, BLangTypeInit bListener) throws KubernetesPluginException {
@@ -82,18 +85,10 @@ public class ServiceNodeProcessor extends AbstractNodeProcessor {
             serviceModel.setTargetPort(extractPort(bListener));
         }
         setServiceProtocol(serviceModel, bListener);
-
-        // Validate service type is set to NodePort when a NodePort is defined.
-        if (serviceModel.getNodePort() != -1 && !"NodePort".equals(serviceModel.getServiceType())) {
-            throw new KubernetesPluginException("NodePort [" + serviceModel.getNodePort() +
-                    "] defined without setting the service type to NodePort. " +
-                    "Found [" + serviceModel.getServiceType() + "]");
-        }
     }
 
     @Override
-    public void processNode(SimpleVariableNode variableNode)
-            throws KubernetesPluginException {
+    public void processNode(SimpleVariableNode variableNode) throws KubernetesPluginException {
         ServiceModel serviceModel = new ServiceModel();
         if (KubernetesUtils.isBlank(serviceModel.getName())) {
             serviceModel.setName(getValidName(variableNode.getName().getValue()) + SVC_POSTFIX);
@@ -116,7 +111,7 @@ public class ServiceNodeProcessor extends AbstractNodeProcessor {
             }
         }
         validatePorts(serviceModel, bListener);
-        KubernetesContext.getInstance().getDataHolder().addServiceModel(serviceModel);
+        dataHolder.addServiceModel(serviceModel);
     }
 
     private void processListener(String listenerName, List<BLangRecordLiteral.BLangRecordKeyValueField> listenerConfig)
