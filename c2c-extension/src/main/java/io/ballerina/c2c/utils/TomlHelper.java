@@ -126,6 +126,7 @@ public class TomlHelper {
 
     public static Toml createK8sTomlFromProject(TomlDocument tomlDocument) {
         TomlTableNode astNode = tomlDocument.tomlAstNode();
+        astNode.clearDiagnostics();
         astNode.addSyntaxDiagnostics(reportSyntaxDiagnostics(tomlDocument.syntaxTree()));
         return new Toml(astNode);
     }
