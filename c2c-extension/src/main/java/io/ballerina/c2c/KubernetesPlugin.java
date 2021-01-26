@@ -126,9 +126,8 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
     @Override
     public void process(PackageNode packageNode) {
         BLangPackage bPackage = (BLangPackage) packageNode;
-
+        KubernetesContext.getInstance().setCurrentPackage(bPackage.packageID);
         if (enabled) {
-            KubernetesContext.getInstance().setCurrentPackage(bPackage.packageID);
             KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
             dataHolder.setPackageID(bPackage.packageID);
 
