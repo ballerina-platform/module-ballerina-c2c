@@ -24,6 +24,8 @@ import io.ballerina.c2c.models.EnvVarValueModel;
 import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
+import io.ballerina.projects.Package;
+import io.ballerina.projects.Project;
 import io.fabric8.kubernetes.api.model.ConfigMapKeySelector;
 import io.fabric8.kubernetes.api.model.ConfigMapKeySelectorBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -37,6 +39,7 @@ import io.fabric8.kubernetes.api.model.ResourceFieldSelectorBuilder;
 import io.fabric8.kubernetes.api.model.SecretKeySelector;
 import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import org.apache.commons.io.FileUtils;
+import org.ballerinalang.model.elements.PackageID;
 import org.ballerinalang.model.tree.AnnotationAttachmentNode;
 import org.ballerinalang.model.tree.IdentifierNode;
 import org.ballerinalang.model.tree.NodeKind;
@@ -48,6 +51,7 @@ import org.wso2.ballerinalang.compiler.tree.expressions.BLangExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangRecordLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangSimpleVarRef;
+import org.wso2.ballerinalang.compiler.util.Name;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,7 +76,6 @@ import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarNam
  * Util methods used for artifact generation.
  */
 public class KubernetesUtils {
-
 
     private static final PrintStream ERR = System.err;
     private static final PrintStream OUT = System.out;
@@ -170,7 +173,6 @@ public class KubernetesUtils {
         }
     }
 
-
     /**
      * Prints an Error message.
      *
@@ -259,7 +261,6 @@ public class KubernetesUtils {
         return Boolean.parseBoolean(getStringValue(expr));
     }
 
-
     /**
      * Get the integer value from a ballerina expression.
      *
@@ -304,7 +305,11 @@ public class KubernetesUtils {
      * @return valid name
      */
     public static String getValidName(String name) {
-        name = name.toLowerCase(Locale.getDefault()).replaceAll("[_.]", "-").replaceAll("[$]", "");
+        if (name.startsWith("/")) {
+            name = name.substring(1);
+        }
+        name = name.toLowerCase(Locale.getDefault()).replaceAll("[_.]", "-")
+                .replaceAll("[$]", "").replaceAll("/", "-");
         name = name.substring(0, Math.min(name.length(), 15));
         if (name.endsWith("-")) {
             return name.substring(0, name.length() - 1);
@@ -390,5 +395,12 @@ public class KubernetesUtils {
         configAnnotation.setAnnotationName(configIdentifier);
         configAnnotation.setExpression(new BLangRecordLiteral());
         return configAnnotation;
+    }
+
+    public static PackageID getProjectID(Project project) {
+        Package currentPackage = project.currentPackage();
+        return new PackageID(new Name(currentPackage.packageOrg().value()),
+                new Name(currentPackage.packageName().value()),
+                new Name(currentPackage.packageVersion().value().toString()));
     }
 }

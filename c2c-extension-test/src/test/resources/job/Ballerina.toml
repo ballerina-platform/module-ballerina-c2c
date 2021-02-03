@@ -1,6 +1,6 @@
 [package]
-org = "hello"
-name = "hello"
+org = "job"
+name = "job"
 version = "0.0.1"
 
 [build-options]

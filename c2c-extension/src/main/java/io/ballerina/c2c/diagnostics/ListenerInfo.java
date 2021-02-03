@@ -17,6 +17,8 @@
  */
 package io.ballerina.c2c.diagnostics;
 
+import java.util.Optional;
+
 /**
  * Represents Listener information of a ballerina document.
  *
@@ -25,6 +27,8 @@ package io.ballerina.c2c.diagnostics;
 public class ListenerInfo {
     private String name;
     private int port;
+    private Store keyStore;
+    private Store trustStore;
 
     public ListenerInfo(String name, int port) {
         this.name = name;
@@ -47,11 +51,29 @@ public class ListenerInfo {
         this.port = port;
     }
 
+    public void setKeyStore(Store keyStore) {
+        this.keyStore = keyStore;
+    }
+
+    public void setTrustStore(Store trustStore) {
+        this.trustStore = trustStore;
+    }
+
+    public Optional<Store> getKeyStore() {
+        return Optional.ofNullable(keyStore);
+    }
+
+    public Optional<Store> getTrustStore() {
+        return Optional.ofNullable (trustStore);
+    }
+
     @Override
     public String toString() {
         return "ListenerInfo{" +
                 "name='" + name + '\'' +
                 ", port=" + port +
+                ", keyStore=" + keyStore +
+                ", trustStore=" + trustStore +
                 '}';
     }
 }

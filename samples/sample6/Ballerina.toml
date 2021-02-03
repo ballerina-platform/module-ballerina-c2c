@@ -4,4 +4,5 @@ name = "hello"
 version = "0.0.1"
 
 [build-options]
+observabilityIncluded = true
 cloud = "k8s"
