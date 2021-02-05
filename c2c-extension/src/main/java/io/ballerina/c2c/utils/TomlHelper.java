@@ -20,6 +20,7 @@ package io.ballerina.c2c.utils;
 
 import io.ballerina.projects.TomlDocument;
 import io.ballerina.toml.api.Toml;
+import io.ballerina.toml.semantic.TomlType;
 import io.ballerina.toml.semantic.ast.TomlBooleanValueNode;
 import io.ballerina.toml.semantic.ast.TomlDoubleValueNodeNode;
 import io.ballerina.toml.semantic.ast.TomlLongValueNode;
@@ -32,8 +33,7 @@ import io.ballerina.toml.semantic.diagnostics.TomlNodeLocation;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
 import io.ballerina.tools.diagnostics.Diagnostic;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -45,87 +45,92 @@ import java.util.TreeSet;
 public class TomlHelper {
 
     public static String getString(Toml toml, String key) {
-        TomlStringValueNode value = getFromDottedString(toml, key);
-        return value != null ? value.getValue() : null;
+        Optional<TomlValueNode> valueNode = toml.get(key);
+        if (valueNode.isEmpty()) {
+            return null;
+        }
+        TomlValueNode tomlValueNode = valueNode.get();
+        if (tomlValueNode.kind() == TomlType.STRING) {
+            return ((TomlStringValueNode) tomlValueNode).getValue();
+        }
+        return null;
     }
 
     public static String getString(Toml toml, String key, String defaultValue) {
-        TomlStringValueNode value = getFromDottedString(toml, key);
-        return value == null ? defaultValue : value.getValue();
+        Optional<TomlValueNode> valueNode = toml.get(key);
+        if (valueNode.isEmpty()) {
+            return defaultValue;
+        }
+        TomlValueNode tomlValueNode = valueNode.get();
+        if (tomlValueNode.kind() == TomlType.STRING) {
+            return ((TomlStringValueNode) tomlValueNode).getValue();
+        }
+        return defaultValue;
     }
 
     public static Long getLong(Toml toml, String key) {
-        TomlLongValueNode value = getFromDottedString(toml, key);
-        return value != null ? value.getValue() : null;
+        Optional<TomlValueNode> valueNode = toml.get(key);
+        if (valueNode.isEmpty()) {
+            return null;
+        }
+        TomlValueNode tomlValueNode = valueNode.get();
+        if (tomlValueNode.kind() == TomlType.INTEGER) {
+            return ((TomlLongValueNode) tomlValueNode).getValue();
+        }
+        return null;
     }
 
     public static long getLong(Toml toml, String key, long defaultValue) {
-        TomlLongValueNode value = getFromDottedString(toml, key);
-        return value == null ? defaultValue : value.getValue();
-    }
-
-    public static Boolean getBoolean(Toml toml, String key) {
-        TomlBooleanValueNode value = getFromDottedString(toml, key);
-        return value != null ? value.getValue() : false;
+        Optional<TomlValueNode> valueNode = toml.get(key);
+        if (valueNode.isEmpty()) {
+            return defaultValue;
+        }
+        TomlValueNode tomlValueNode = valueNode.get();
+        if (tomlValueNode.kind() == TomlType.INTEGER) {
+            return ((TomlLongValueNode) tomlValueNode).getValue();
+        }
+        return defaultValue;
     }
 
     public static boolean getBoolean(Toml toml, String key, boolean defaultValue) {
-        TomlBooleanValueNode value = getFromDottedString(toml, key);
-        return value == null ? defaultValue : value.getValue();
+        Optional<TomlValueNode> valueNode = toml.get(key);
+        if (valueNode.isEmpty()) {
+            return defaultValue;
+        }
+        TomlValueNode tomlValueNode = valueNode.get();
+        if (tomlValueNode.kind() == TomlType.BOOLEAN) {
+            return ((TomlBooleanValueNode) tomlValueNode).getValue();
+        }
+        return defaultValue;
     }
 
     public static Double getDouble(Toml toml, String key) {
-        TomlDoubleValueNodeNode value = getFromDottedString(toml, key);
-        return value != null ? value.getValue() : null;
+        Optional<TomlValueNode> valueNode = toml.get(key);
+        if (valueNode.isEmpty()) {
+            return null;
+        }
+        TomlValueNode tomlValueNode = valueNode.get();
+        if (tomlValueNode.kind() == TomlType.DOUBLE) {
+            return ((TomlDoubleValueNodeNode) tomlValueNode).getValue();
+        }
+        return null;
     }
 
     public static double getDouble(Toml toml, String key, double defaultValue) {
-        TomlDoubleValueNodeNode value = getFromDottedString(toml, key);
-        return value == null ? defaultValue : value.getValue();
-    }
-
-    public static Toml getTable(Toml toml, String dottedKey) {
-        String[] split = dottedKey.split("\\.");
-        Toml parent = toml;
-        for (String key : split) {
-            parent = parent.getTable(key);
-            if (parent == null) {
-                return null;
-            }
+        Optional<TomlValueNode> valueNode = toml.get(key);
+        if (valueNode.isEmpty()) {
+            return defaultValue;
         }
-        return parent;
-    }
-
-    public static List<Toml> getTables(Toml toml, String dottedKey) {
-        String[] split = dottedKey.split("\\.");
-        String lastKey = split[split.length - 1];
-        split = Arrays.copyOf(split, split.length - 1);
-        Toml parent = toml;
-        for (String key : split) {
-            parent = parent.getTable(key);
-            if (parent == null) {
-                return null;
-            }
+        TomlValueNode tomlValueNode = valueNode.get();
+        if (tomlValueNode.kind() == TomlType.DOUBLE) {
+            return ((TomlDoubleValueNodeNode) tomlValueNode).getValue();
         }
-        return parent.getTables(lastKey);
-    }
-
-    public static <T extends TomlValueNode> T getFromDottedString(Toml rootTable, String dottedKey) {
-        String[] split = dottedKey.split("\\.");
-        String lastKey = split[split.length - 1];
-        split = Arrays.copyOf(split, split.length - 1);
-        Toml parent = rootTable;
-        for (String key : split) {
-            parent = parent.getTable(key);
-            if (parent == null) {
-                return null;
-            }
-        }
-        return parent.get(lastKey);
+        return defaultValue;
     }
 
     public static Toml createK8sTomlFromProject(TomlDocument tomlDocument) {
         TomlTableNode astNode = tomlDocument.tomlAstNode();
+        astNode.clearDiagnostics();
         astNode.addSyntaxDiagnostics(reportSyntaxDiagnostics(tomlDocument.syntaxTree()));
         return new Toml(astNode);
     }

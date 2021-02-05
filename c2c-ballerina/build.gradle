@@ -115,8 +115,8 @@ task ballerinaBuild {
             }
         }
         copy {
-            from file("$project.projectDir/target/apidocs/c2c")
-            into file("$project.buildDir/apidocs/docs/c2c")
+            from file("$project.projectDir/target/apidocs/cloud")
+            into file("$project.buildDir/apidocs/docs/cloud")
         }
         exec {
             workingDir project.projectDir

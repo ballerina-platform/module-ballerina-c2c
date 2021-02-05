@@ -235,19 +235,18 @@ public class DeploymentHandler extends AbstractArtifactHandler {
     private void resolveDeploymentToml(DeploymentModel deploymentModel, Toml ballerinaCloud) {
         deploymentModel.setReplicas(Math.toIntExact(TomlHelper.getLong(ballerinaCloud, CLOUD_DEPLOYMENT + "replicas",
                 deploymentModel.getReplicas())));
-        Toml probeToml = TomlHelper.getTable(ballerinaCloud, CLOUD_DEPLOYMENT + "probes.readiness");
-        if (probeToml != null) {
-            deploymentModel.setReadinessProbe(resolveProbeToml(probeToml));
+        Optional<Toml> probeToml = ballerinaCloud.getTable(CLOUD_DEPLOYMENT + "probes.readiness");
+        if (probeToml.isPresent()) {
+            deploymentModel.setReadinessProbe(resolveProbeToml(probeToml.get()));
         }
-        probeToml = TomlHelper.getTable(ballerinaCloud, CLOUD_DEPLOYMENT + "probes.liveness");
-        if (probeToml != null) {
-            deploymentModel.setLivenessProbe(resolveProbeToml(probeToml));
+        probeToml = ballerinaCloud.getTable(CLOUD_DEPLOYMENT + "probes.liveness");
+        if (probeToml.isPresent()) {
+            deploymentModel.setLivenessProbe(resolveProbeToml(probeToml.get()));
         }
     }
 
     private void resolveEnvToml(DeploymentModel deploymentModel, Toml ballerinaCloud) {
-        List<Toml> envs = TomlHelper.getTables(ballerinaCloud, "cloud.config.envs");
-        if (envs != null) {
+        List<Toml> envs = ballerinaCloud.getTables("cloud.config.envs");
             for (Toml env : envs) {
                 EnvVar envVar = new EnvVarBuilder()
                         .withName(TomlHelper.getString(env, "name"))
@@ -263,10 +262,8 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 }
                 deploymentModel.addEnv(envVar);
             }
-        }
 
-        List<Toml> secrets = TomlHelper.getTables(ballerinaCloud, "cloud.secrets.envs");
-        if (secrets != null) {
+        List<Toml> secrets = ballerinaCloud.getTables("cloud.secrets.envs");
             for (Toml secret : secrets) {
                 EnvVar envVar = new EnvVarBuilder()
                         .withName(TomlHelper.getString(secret, "name"))
@@ -282,7 +279,6 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 }
                 deploymentModel.addEnv(envVar);
             }
-        }
     }
 
     private void resolveResourcesToml(DeploymentModel deploymentModel, Toml deploymentToml) {
@@ -309,8 +305,8 @@ public class DeploymentHandler extends AbstractArtifactHandler {
     }
 
     private void resolveConfigMapToml(DeploymentModel deploymentModel, Toml toml) throws KubernetesPluginException {
-        List<Toml> configFiles = TomlHelper.getTables(toml, "cloud.config.files");
-        if (configFiles != null) {
+        List<Toml> configFiles = toml.getTables("cloud.config.files");
+        if (configFiles.size() != 0) {
             final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
 
             for (Toml configFile : configFiles) {
@@ -334,8 +330,8 @@ public class DeploymentHandler extends AbstractArtifactHandler {
     }
 
     private void resolveSecretToml(DeploymentModel deploymentModel, Toml toml) throws KubernetesPluginException {
-        List<Toml> secrets = TomlHelper.getTables(toml, "cloud.secret.files");
-        if (secrets != null) {
+        List<Toml> secrets = toml.getTables("cloud.secret.files");
+        if (secrets.size() != 0) {
             final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
 
             for (Toml secret : secrets) {
