@@ -17,11 +17,11 @@
  */
 package io.ballerina.c2c.diagnostics;
 
-import io.ballerina.c2c.utils.TomlHelper;
 import io.ballerina.projects.Project;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.semantic.ast.TomlLongValueNode;
 import io.ballerina.toml.semantic.ast.TomlStringValueNode;
+import io.ballerina.toml.semantic.ast.TomlValueNode;
 import io.ballerina.toml.semantic.diagnostics.TomlDiagnostic;
 import io.ballerina.toml.semantic.diagnostics.TomlNodeLocation;
 import io.ballerina.tools.diagnostics.Diagnostic;
@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Responsible for validation against ballerina documents.
@@ -48,29 +49,30 @@ public class TomlDiagnosticChecker {
             return Collections.emptyList();
         }
 
-        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
-        Toml ready = TomlHelper.getTable(toml, "cloud.deployment.probes.readiness");
-        if (ready != null) {
-            diagnosticInfoList.addAll(validateProbe(projectServiceInfo, ready, ProbeType.READINESS));
-        }
-        Toml live = TomlHelper.getTable(toml, "cloud.deployment.probes.liveness");
-        if (live != null) {
-            diagnosticInfoList.addAll(validateProbe(projectServiceInfo, live, ProbeType.LIVENESS));
-        }
+        ProjectServiceInfo projectService = new ProjectServiceInfo(project);
+        Optional<Toml> ready = toml.getTable("cloud.deployment.probes.readiness");
+        ready.ifPresent(value -> diagnosticInfoList.addAll(validateProbe(projectService, value, ProbeType.READINESS)));
+        Optional<Toml> live = toml.getTable("cloud.deployment.probes.liveness");
+        live.ifPresent(value -> diagnosticInfoList.addAll(validateProbe(projectService, value, ProbeType.LIVENESS)));
 
         return diagnosticInfoList;
     }
 
     private List<Diagnostic> validateProbe(ProjectServiceInfo projectServiceInfo, Toml probe, ProbeType type) {
         List<Diagnostic> diagnosticInfos = new ArrayList<>();
-        long port = ((TomlLongValueNode) probe.get("port")).getValue();
-        String path = ((TomlStringValueNode) probe.get("path")).getValue();
+        if (probe.get("port").isEmpty() || probe.get("path").isEmpty()) {
+            return Collections.emptyList();
+        }
+        TomlValueNode portNode = probe.get("port").get();
+        TomlValueNode pathNode = probe.get("path").get();
+        long port = ((TomlLongValueNode) portNode).getValue();
+        String path = ((TomlStringValueNode) pathNode).getValue();
 
         Map<String, List<ListenerInfo>> listenerMap = projectServiceInfo.getListenerMap();
         if (!isListenerPortValid(port, listenerMap)) {
-            Diagnostic portDiag = getTomlDiagnostic(probe.get("port").location(), "C2C001", "error.invalid.port",
+            Diagnostic portDiag = getTomlDiagnostic(portNode.location(), "C2C001", "error.invalid.port",
                     DiagnosticSeverity.ERROR, "Invalid " + type.getValue() + " Port");
-            Diagnostic pathDiag = getTomlDiagnostic(probe.get("path").location(), "C2C002", "error.invalid.path",
+            Diagnostic pathDiag = getTomlDiagnostic(pathNode.location(), "C2C002", "error.invalid.path",
                     DiagnosticSeverity.ERROR, "Invalid " + type.getValue() + " Path");
             diagnosticInfos.add(portDiag);
             diagnosticInfos.add(pathDiag);
@@ -85,7 +87,7 @@ public class TomlDiagnosticChecker {
                 if (serviceListenerPort == port) {
                     String serviceName = serviceInfo.getServiceName().trim();
                     if (!path.startsWith(serviceName)) {
-                        Diagnostic diag = getTomlDiagnostic(probe.get("path").location(), "C2C003", "error.invalid" +
+                        Diagnostic diag = getTomlDiagnostic(pathNode.location(), "C2C003", "error.invalid" +
                                 ".service.path", DiagnosticSeverity.ERROR, "Invalid " + type.getValue() + " " +
                                 "Service Path");
                         diagnosticInfos.add(diag);
@@ -106,7 +108,7 @@ public class TomlDiagnosticChecker {
                         }
                     }
                     if (!resourceFound) {
-                        Diagnostic diag = getTomlDiagnostic(probe.get("path").location(), "C2C004", "error.invalid" +
+                        Diagnostic diag = getTomlDiagnostic(pathNode.location(), "C2C004", "error.invalid" +
                                         ".resource.path", DiagnosticSeverity.ERROR,
                                 "Invalid " + type.getValue() + " Resource Path");
                         diagnosticInfos.add(diag);
