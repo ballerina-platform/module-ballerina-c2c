@@ -115,7 +115,7 @@ public class ServiceExtractionTest {
         Assert.assertTrue(isExpectedService(helloService.getServicePath().trim()));
         ListenerInfo helloListener = helloService.getListener();
         Assert.assertEquals(helloListener.getPort(), 9090);
-        String keystore = helloListener.getKeyStore().get().getPath();
+        String keystore = helloListener.getConfig().get().getKeyStore().get().getPath();
         Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
     }
 
@@ -148,7 +148,24 @@ public class ServiceExtractionTest {
         ListenerInfo helloListener = helloService.getListener();
         Assert.assertEquals(helloListener.getPort(), 9091);
 
-        String keystore = helloListener.getKeyStore().get().getPath();
+        String keystore = helloListener.getConfig().get().getKeyStore().get().getPath();
+        Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
+    }
+
+    @Test
+    public void testSSLSeperateListenerConfig() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "ssl-seperate-listener-config");
+
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+
+        Assert.assertEquals(serviceList.size(), 1);
+        ServiceInfo helloService = serviceList.get(0);
+        Assert.assertEquals(helloService.getServicePath().trim(), "/hello");
+        ListenerInfo helloListener = helloService.getListener();
+        Assert.assertEquals(helloListener.getPort(), 9095);
+        String keystore = helloListener.getConfig().get().getKeyStore().get().getPath();
         Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
     }
 }

@@ -17,6 +17,7 @@
  */
 package io.ballerina.c2c;
 
+import io.ballerina.c2c.diagnostics.Config;
 import io.ballerina.c2c.diagnostics.ListenerInfo;
 import io.ballerina.c2c.diagnostics.ProjectServiceInfo;
 import io.ballerina.c2c.diagnostics.ServiceInfo;
@@ -37,6 +38,7 @@ import org.apache.commons.codec.binary.Base64;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -115,7 +117,7 @@ public class KubernetesDataExtractor {
 
             serviceModel.setProtocol("http");
 
-            if (listener.getKeyStore().isPresent()) {
+            if (listener.getConfig().isPresent() && listener.getConfig().get().getKeyStore().isPresent()) {
                 Set<SecretModel> secretModels = processSecureSocketAnnotation(listener);
                 KubernetesContext.getInstance().getDataHolder().addListenerSecret(listener.getName(), secretModels);
                 KubernetesContext.getInstance().getDataHolder().addSecrets(secretModels);
@@ -159,8 +161,13 @@ public class KubernetesDataExtractor {
             throws KubernetesPluginException {
         Set<SecretModel> secrets = new HashSet<>();
 
-        Optional<Store> keyStore = listenerInfo.getKeyStore();
-        Optional<Store> trustStore = listenerInfo.getTrustStore();
+        Optional<Config> config = listenerInfo.getConfig();
+        if (config.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        Optional<Store> keyStore = config.get().getKeyStore();
+        Optional<Store> trustStore = config.get().getTrustStore();
 
         if (keyStore.isPresent() && trustStore.isPresent()) {
             String keyStoreFile = keyStore.get().getPath();
