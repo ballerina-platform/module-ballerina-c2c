@@ -92,12 +92,6 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         String cloud = project.buildOptions().cloud();
         if (cloud.equals("k8s")) {
             TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker(project);
-            try {
-                tomlDiagnosticChecker.packageAnalysis();
-            } catch (KubernetesPluginException e) {
-                printError(e.getMessage());
-                //TODO ask about diagnostic handling. possibility of moving to codegen
-            }
             Optional<KubernetesToml> kubernetesToml = project.currentPackage().kubernetesToml();
             if (kubernetesToml.isPresent()) {
                 Toml toml = TomlHelper.createK8sTomlFromProject(kubernetesToml.get().tomlDocument());
@@ -134,9 +128,8 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                                 .resolve(DOCKER)
                                 .resolve(extractJarName(executableJarFile));
                         //Read and parse ballerina cloud
-                        if (k8sToml.isPresent()) {
-                            dataHolder.setBallerinaCloud(new Toml(k8sToml.get().tomlAstNode()));
-                        }
+                        k8sToml.ifPresent(
+                                kubernetesToml -> dataHolder.setBallerinaCloud(new Toml(kubernetesToml.tomlAstNode())));
                     }
                 }
                 dataHolder.setJarPath(executableJarFile);
@@ -169,6 +162,15 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         PackageCompilation packageCompilation = project.currentPackage().getCompilation();
         JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(packageCompilation, JvmTarget.JAVA_11);
         io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
+
+        KubernetesDataExtractor dataExtractor = new KubernetesDataExtractor(project);
+        try {
+            dataExtractor.packageAnalysis();
+        } catch (KubernetesPluginException e) {
+            printError(e.getMessage());
+            return;
+        }
+
         KubernetesContext.getInstance().getDataHolder().getDockerModel()
                 .addDependencyJarPaths(new HashSet<>(jarResolver.getJarFilePathsRequiredForExecution()));
         try {
@@ -183,8 +185,6 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
             pluginLog.error(errorMessage, e);
         }
     }
-
-
 
     private String getValidationSchema() {
         try {
