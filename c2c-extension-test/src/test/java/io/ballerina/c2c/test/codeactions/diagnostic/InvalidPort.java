@@ -15,27 +15,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.ballerina.c2c.test.codeactions;
+package io.ballerina.c2c.test.codeactions.diagnostic;
 
 import org.testng.annotations.DataProvider;
 
 /**
- * Test case for code action related to correcting the resource path.
+ * Test case for code action related to correcting the probe ports.
  *
  * @since 2.0.0
  */
-public class InvalidResourcePath extends CodeActionTest {
+public class InvalidPort extends CodeActionTest {
 
     @DataProvider(name = "codeaction-data-provider")
     @Override
     public Object[][] dataProvider() {
         return new Object[][]{
-                { "fix-res-path.json", "Cloud.toml" }
+                { "fix-port.json", "Cloud.toml" }
         };
     }
 
     @Override
     public String getResourceDir() {
-        return "fix-invalid-resource";
+        return "fix-invalid-port";
     }
 }

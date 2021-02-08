@@ -1,0 +1,2 @@
+io.ballerina.c2c.tooling.completion.CloudCompletionExtension
+io.ballerina.c2c.tooling.codeaction.CloudCodeActionExtension

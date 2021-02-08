@@ -1,0 +1,2 @@
+io.ballerina.c2c.tooling.codeaction.providers.AddResourceToK8sCodeAction
+io.ballerina.c2c.tooling.codeaction.providers.AddConfigsToK8sCodeAction
