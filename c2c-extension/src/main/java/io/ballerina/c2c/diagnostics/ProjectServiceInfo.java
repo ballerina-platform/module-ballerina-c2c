@@ -22,10 +22,10 @@ import io.ballerina.projects.Module;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 /**
  * Represents service related data of a Project after parsed from Syntax trees.
@@ -33,55 +33,53 @@ import java.util.Map;
  * @since 2.0.0
  */
 public class ProjectServiceInfo {
-    private final Map<String, List<ServiceInfo>> serviceMap;
-    private final Map<String, List<ListenerInfo>> listenerMap;
+
+    private List<ServiceInfo> serviceList;
+    private List<ListenerInfo> listenerList;
+    private Task task = null;
 
     public ProjectServiceInfo(Project project) {
+        this.serviceList = new ArrayList<>();
+        this.listenerList = new ArrayList<>();
         Package currentPackage = project.currentPackage();
-
         Iterable<Module> modules = currentPackage.modules();
-        Map<String, List<ServiceInfo>> serviceMap = new HashMap<>();
-        Map<String, List<ListenerInfo>> listenerMap = new HashMap<>();
         for (Module module : modules) {
             Collection<DocumentId> documentIds = module.documentIds();
             for (DocumentId doc : documentIds) {
                 Document document = module.document(doc);
-                String name = document.name();
                 Node node = document.syntaxTree().rootNode();
 
                 C2CVisitor visitor = new C2CVisitor();
                 node.accept(visitor);
-                serviceMap.put(name, visitor.getServices());
-                listenerMap.put(name, visitor.getListeners());
+                serviceList.addAll(visitor.getServices());
+                listenerList.addAll(visitor.getListeners());
+                this.task = visitor.getTask();
             }
         }
 
         //When service use a listener in another bal file
-        for (Map.Entry<String, List<ServiceInfo>> entry : serviceMap.entrySet()) {
-            String fileName = entry.getKey();
-            List<ServiceInfo> value = entry.getValue();
-            for (ServiceInfo serviceInfo : value) {
-                ListenerInfo listener = serviceInfo.getListener();
-                if (listener.getPort() == 0) {
-                    String name = listener.getName();
-                    List<ListenerInfo> listenerInfos = listenerMap.get(fileName);
-                    for (ListenerInfo listenerInfo : listenerInfos) {
-                        if (name.equals(listenerInfo.getName())) {
-                            listener.setPort(listenerInfo.getPort());
-                        }
+        for (ServiceInfo serviceInfo : serviceList) {
+            ListenerInfo listener = serviceInfo.getListener();
+            if (listener.getPort() == 0) {
+                String name = listener.getName();
+                for (ListenerInfo listenerInfo : listenerList) {
+                    if (name.equals(listenerInfo.getName())) {
+                        listener.setPort(listenerInfo.getPort());
                     }
                 }
             }
         }
-        this.serviceMap = serviceMap;
-        this.listenerMap = listenerMap;
     }
 
-    public Map<String, List<ServiceInfo>> getServiceMap() {
-        return serviceMap;
+    public List<ServiceInfo> getServiceList() {
+        return serviceList;
     }
 
-    public Map<String, List<ListenerInfo>> getListenerMap() {
-        return listenerMap;
+    public List<ListenerInfo> getListenerList() {
+        return listenerList;
+    }
+
+    public Optional<Task> getTask() {
+        return Optional.ofNullable(task);
     }
 }

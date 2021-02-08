@@ -22,8 +22,6 @@ import io.ballerina.c2c.diagnostics.TomlDiagnosticChecker;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
-import io.ballerina.c2c.processors.NodeProcessorFactory;
-import io.ballerina.c2c.processors.ServiceNodeProcessor;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.c2c.utils.TomlHelper;
 import io.ballerina.projects.JBallerinaBackend;
@@ -36,33 +34,13 @@ import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.validator.TomlValidator;
 import io.ballerina.toml.validator.schema.Schema;
 import io.ballerina.tools.diagnostics.Diagnostic;
-import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 import org.apache.commons.io.IOUtils;
-import org.ballerinalang.compiler.CompilerOptionName;
 import org.ballerinalang.compiler.plugins.AbstractCompilerPlugin;
 import org.ballerinalang.compiler.plugins.SupportedAnnotationPackages;
-import org.ballerinalang.model.TreeBuilder;
-import org.ballerinalang.model.elements.Flag;
 import org.ballerinalang.model.elements.PackageID;
-import org.ballerinalang.model.tree.AnnotationAttachmentNode;
-import org.ballerinalang.model.tree.FunctionNode;
-import org.ballerinalang.model.tree.PackageNode;
-import org.ballerinalang.model.tree.ServiceNode;
-import org.ballerinalang.model.tree.SimpleVariableNode;
-import org.ballerinalang.model.tree.TopLevelNode;
-import org.ballerinalang.model.tree.expressions.ExpressionNode;
 import org.ballerinalang.util.diagnostic.DiagnosticLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.ballerinalang.compiler.semantics.model.types.BType;
-import org.wso2.ballerinalang.compiler.tree.BLangPackage;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangLiteral;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangRecordLiteral;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangSimpleVarRef;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangTypeInit;
-import org.wso2.ballerinalang.compiler.util.CompilerContext;
-import org.wso2.ballerinalang.compiler.util.CompilerOptions;
-import org.wso2.ballerinalang.compiler.util.TypeTags;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,13 +48,11 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.MissingResourceException;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
@@ -87,21 +63,12 @@ import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarNam
  * Compiler plugin to generate kubernetes artifacts.
  */
 @SupportedAnnotationPackages(
-        value = {"ballerina/cloud"}
+        value = { "ballerina/cloud" }
 )
 public class KubernetesPlugin extends AbstractCompilerPlugin {
 
     private static final Logger pluginLog = LoggerFactory.getLogger(KubernetesPlugin.class);
     private DiagnosticLog dlog;
-    private boolean enabled;
-
-    @Override
-    public void setCompilerContext(CompilerContext context) {
-        String cloudProvider = CompilerOptions.getInstance(context).get(CompilerOptionName.CLOUD);
-        if ("k8s".equals(cloudProvider)) {
-            enabled = true;
-        }
-    }
 
     @Override
     public void init(DiagnosticLog diagnosticLog) {
@@ -110,204 +77,90 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
 
     @Override
     public List<Diagnostic> codeAnalyze(Project project) {
+        String cloud = project.buildOptions().cloud();
+        if (cloud == null || !cloud.equals("k8s")) {
+            return Collections.emptyList();
+        }
+        TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker(project);
         Optional<KubernetesToml> kubernetesToml = project.currentPackage().kubernetesToml();
-        if (kubernetesToml.isPresent()) {
-            Toml toml = TomlHelper.createK8sTomlFromProject(kubernetesToml.get().tomlDocument());
-            TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
-            validator.validate(toml);
-            List<Diagnostic> diagnostics = toml.diagnostics();
-            TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker();
-            diagnostics.addAll(tomlDiagnosticChecker.validateTomlWithSource(toml, project));
-            return diagnostics;
+        if (kubernetesToml.isEmpty()) {
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+        Toml toml = TomlHelper.createK8sTomlFromProject(kubernetesToml.get().tomlDocument());
+        TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
+        validator.validate(toml);
+        List<Diagnostic> diagnostics = toml.diagnostics();
+
+        diagnostics.addAll(tomlDiagnosticChecker.validateTomlWithSource(toml));
+        return diagnostics;
     }
 
-    @Override
-    public void process(PackageNode packageNode) {
-        BLangPackage bPackage = (BLangPackage) packageNode;
-        KubernetesContext.getInstance().setCurrentPackage(bPackage.packageID);
-        if (enabled) {
-            KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
-            dataHolder.setPackageID(bPackage.packageID);
-
-            // Get the units of the file which has kubernetes import as _
-            List<TopLevelNode> topLevelNodes = bPackage.getCompilationUnits().stream()
-                    .flatMap(cu -> cu.getTopLevelNodes().stream())
-                    .collect(Collectors.toList());
-
-            // Filter out the services
-            List<ServiceNode> serviceNodes = topLevelNodes.stream()
-                    .filter(tln -> tln instanceof ServiceNode)
-                    .map(tln -> (ServiceNode) tln)
-                    .collect(Collectors.toList());
-
-            // Generate artifacts for services for all services
-            serviceNodes.forEach(sn -> process(sn, Collections.singletonList(KubernetesUtils.createAnnotation(
-                    "Deployment"))));
-
-            serviceNodes.forEach(sn -> process(sn, Collections.singletonList(KubernetesUtils.createAnnotation(
-                    "HPA"))));
-
-            // Create Service annotation with NodePort service type
-            AnnotationAttachmentNode serviceAnnotation = KubernetesUtils.createAnnotation("Service");
-            BLangRecordLiteral svcRecordLiteral = (BLangRecordLiteral) TreeBuilder.createRecordLiteralNode();
-            serviceAnnotation.setExpression(svcRecordLiteral);
-
-            BLangLiteral serviceTypeKey = (BLangLiteral) TreeBuilder.createLiteralExpression();
-            serviceTypeKey.value = ServiceNodeProcessor.ServiceConfiguration.serviceType.name();
-            serviceTypeKey.type = new BType(TypeTags.STRING, null);
-
-            BLangLiteral serviceTypeValue = new BLangLiteral();
-            serviceTypeValue.value = KubernetesConstants.ServiceType.ClusterIP.name();
-            serviceTypeValue.type = new BType(TypeTags.STRING, null);
-
-            BLangRecordLiteral.BLangRecordKeyValueField serviceTypeRecordField =
-                    new BLangRecordLiteral.BLangRecordKeyValueField();
-            serviceTypeRecordField.key = new BLangRecordLiteral.BLangRecordKey(serviceTypeKey);
-            serviceTypeRecordField.valueExpr = serviceTypeValue;
-
-            svcRecordLiteral.fields.add(serviceTypeRecordField);
-
-            // Filter services with 'new Listener()' and generate services
-            for (ServiceNode serviceNode : serviceNodes) {
-                Optional<? extends ExpressionNode> initListener = serviceNode.getAttachedExprs().stream()
-                        .filter(aex -> aex instanceof BLangTypeInit)
-                        .findAny();
-
-                if (initListener.isPresent()) {
-                    serviceNodes.forEach(sn -> process(sn, Collections.singletonList(serviceAnnotation)));
-                }
-            }
-
-            // Get the variable names of the listeners attached to services
-            List<String> listenerNamesToExpose = serviceNodes.stream()
-                    .map(ServiceNode::getAttachedExprs)
-                    .flatMap(Collection::stream)
-                    .filter(aex -> aex instanceof BLangSimpleVarRef)
-                    .map(aex -> (BLangSimpleVarRef) aex)
-                    .map(BLangSimpleVarRef::toString)
-                    .collect(Collectors.toList());
-
-            // Generate artifacts for listeners attached to services
-            topLevelNodes.stream()
-                    .filter(tln -> tln instanceof SimpleVariableNode)
-                    .map(tln -> (SimpleVariableNode) tln)
-                    .filter(listener -> listenerNamesToExpose.contains(listener.getName().getValue()))
-                    .forEach(listener -> process(listener, Collections.singletonList(serviceAnnotation)));
-
-            // Generate artifacts for main functions
-            topLevelNodes.stream()
-                    .filter(tln -> tln instanceof FunctionNode)
-                    .map(tln -> (FunctionNode) tln)
-                    .filter(fn -> "main".equals(fn.getName().getValue()))
-                    .forEach(fn -> process(fn, Collections.singletonList(KubernetesUtils.createAnnotation("Job"))));
-
-        }
-    }
-
-    @Override
-    public void process(ServiceNode serviceNode, List<AnnotationAttachmentNode> annotations) {
-        for (AnnotationAttachmentNode attachmentNode : annotations) {
-            String annotationKey = attachmentNode.getAnnotationName().getValue();
-            try {
-                NodeProcessorFactory.getNodeProcessorInstance(annotationKey).processNode(serviceNode);
-            } catch (KubernetesPluginException e) {
-                dlog.logDiagnostic(DiagnosticSeverity.ERROR, KubernetesContext.getInstance().getCurrentPackage()
-                        , serviceNode.getPosition(), e.getMessage());
-            }
-        }
-    }
-
-    @Override
-    public void process(SimpleVariableNode variableNode, List<AnnotationAttachmentNode> annotations) {
-        if (!variableNode.getFlags().contains(Flag.LISTENER)) {
-            dlog.logDiagnostic(DiagnosticSeverity.ERROR, KubernetesContext.getInstance().getCurrentPackage(),
-                    variableNode.getPosition(), "@kubernetes annotations are only supported with listeners.");
-            return;
-        }
-        for (AnnotationAttachmentNode attachmentNode : annotations) {
-            String annotationKey = attachmentNode.getAnnotationName().getValue();
-            try {
-                NodeProcessorFactory.getNodeProcessorInstance(annotationKey).processNode(variableNode);
-            } catch (KubernetesPluginException e) {
-                dlog.logDiagnostic(DiagnosticSeverity.ERROR, KubernetesContext.getInstance().getCurrentPackage(),
-                        variableNode.getPosition(), e.getMessage());
-            }
-        }
-
-    }
-
-    @Override
-    public void process(FunctionNode functionNode, List<AnnotationAttachmentNode> annotations) {
-        for (AnnotationAttachmentNode attachmentNode : annotations) {
-            String annotationKey = attachmentNode.getAnnotationName().getValue();
-            try {
-                NodeProcessorFactory.getNodeProcessorInstance(annotationKey).processNode(functionNode, attachmentNode);
-            } catch (KubernetesPluginException e) {
-                dlog.logDiagnostic(DiagnosticSeverity.ERROR, KubernetesContext.getInstance().getCurrentPackage(),
-                        functionNode.getPosition(), e.getMessage());
-            }
-        }
-    }
-
-    public void codeGeneratedInternal(PackageID moduleID, Path executableJarFile, Optional<KubernetesToml> k8sToml) {
-        KubernetesContext.getInstance().setCurrentPackage(moduleID);
+    public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Optional<KubernetesToml> k8sToml) {
+        KubernetesContext.getInstance().setCurrentPackage(packageId);
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
-        dataHolder.setPackageID(moduleID);
-        if (dataHolder.isCanProcess()) {
-            executableJarFile = executableJarFile.toAbsolutePath();
-            if (null != executableJarFile.getParent() && Files.exists(executableJarFile.getParent())) {
-                // artifacts location for a single bal file.
-                Path kubernetesOutputPath = executableJarFile.getParent().resolve(KUBERNETES);
-                Path dockerOutputPath = executableJarFile.getParent().resolve(DOCKER);
-                if (null != executableJarFile.getParent().getParent().getParent() &&
-                        Files.exists(executableJarFile.getParent().getParent().getParent())) {
-                    // if executable came from a ballerina project
-                    Path projectRoot = executableJarFile.getParent().getParent().getParent();
-                    if (Files.exists(projectRoot.resolve("Ballerina.toml"))) {
-                        kubernetesOutputPath = projectRoot.resolve("target")
-                                .resolve(KUBERNETES)
-                                .resolve(extractJarName(executableJarFile));
-                        dockerOutputPath = projectRoot.resolve("target")
-                                .resolve(DOCKER)
-                                .resolve(extractJarName(executableJarFile));
-                        //Read and parse ballerina cloud
-                        if (k8sToml.isPresent()) {
-                            dataHolder.setBallerinaCloud(new Toml(k8sToml.get().tomlAstNode()));
-                        }
-                    }
+        dataHolder.setPackageID(packageId);
+        executableJarFile = executableJarFile.toAbsolutePath();
+        if (null != executableJarFile.getParent() && Files.exists(executableJarFile.getParent())) {
+            // artifacts location for a single bal file.
+            Path kubernetesOutputPath = executableJarFile.getParent().resolve(KUBERNETES);
+            Path dockerOutputPath = executableJarFile.getParent().resolve(DOCKER);
+            if (null != executableJarFile.getParent().getParent().getParent() &&
+                    Files.exists(executableJarFile.getParent().getParent().getParent())) {
+                // if executable came from a ballerina project
+                Path projectRoot = executableJarFile.getParent().getParent().getParent();
+                if (Files.exists(projectRoot.resolve("Ballerina.toml"))) {
+                    kubernetesOutputPath = projectRoot.resolve("target")
+                            .resolve(KUBERNETES)
+                            .resolve(extractJarName(executableJarFile));
+                    dockerOutputPath = projectRoot.resolve("target")
+                            .resolve(DOCKER)
+                            .resolve(extractJarName(executableJarFile));
+                    //Read and parse ballerina cloud
+                    k8sToml.ifPresent(
+                            kubernetesToml -> dataHolder.setBallerinaCloud(new Toml(kubernetesToml.tomlAstNode())));
                 }
-                dataHolder.setJarPath(executableJarFile);
-                dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
-                dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
-                ArtifactManager artifactManager = new ArtifactManager();
+            }
+            dataHolder.setJarPath(executableJarFile);
+            dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
+            dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
+            ArtifactManager artifactManager = new ArtifactManager();
+            try {
+                KubernetesUtils.deleteDirectory(kubernetesOutputPath);
+                artifactManager.populateDeploymentModel();
+                artifactManager.createArtifacts();
+            } catch (KubernetesPluginException e) {
+                String errorMessage = "module [" + packageId + "] " + e.getMessage();
+                printError(errorMessage);
+                pluginLog.error(errorMessage, e);
                 try {
                     KubernetesUtils.deleteDirectory(kubernetesOutputPath);
-                    artifactManager.populateDeploymentModel();
-                    artifactManager.createArtifacts();
-                } catch (KubernetesPluginException e) {
-                    String errorMessage = "module [" + moduleID + "] " + e.getMessage();
-                    printError(errorMessage);
-                    pluginLog.error(errorMessage, e);
-                    try {
-                        KubernetesUtils.deleteDirectory(kubernetesOutputPath);
-                    } catch (KubernetesPluginException ignored) {
-                        //ignored
-                    }
+                } catch (KubernetesPluginException ignored) {
+                    //ignored
                 }
-            } else {
-                printError("error in resolving docker generation location.");
-                pluginLog.error("error in resolving docker generation location.");
             }
+        } else {
+            printError("error in resolving docker generation location.");
+            pluginLog.error("error in resolving docker generation location.");
         }
     }
 
     @Override
     public void codeGenerated(Project project, Target target) {
+        if (project.buildOptions().cloud() == null  || !project.buildOptions().cloud().equals("k8s")) {
+            return;
+        }
         PackageCompilation packageCompilation = project.currentPackage().getCompilation();
         JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(packageCompilation, JvmTarget.JAVA_11);
         io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
+
+        KubernetesDataExtractor dataExtractor = new KubernetesDataExtractor(project);
+        try {
+            dataExtractor.packageAnalysis();
+        } catch (KubernetesPluginException e) {
+            printError(e.getMessage());
+            return;
+        }
+
         KubernetesContext.getInstance().getDataHolder().getDockerModel()
                 .addDependencyJarPaths(new HashSet<>(jarResolver.getJarFilePathsRequiredForExecution()));
         try {
@@ -337,6 +190,5 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
             throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
         }
     }
-
 
 }

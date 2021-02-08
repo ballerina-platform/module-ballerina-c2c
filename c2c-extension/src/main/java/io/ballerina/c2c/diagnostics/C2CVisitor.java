@@ -15,24 +15,41 @@
  */
 package io.ballerina.c2c.diagnostics;
 
+import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.BasicLiteralNode;
+import io.ballerina.compiler.syntax.tree.BindingPatternNode;
+import io.ballerina.compiler.syntax.tree.CaptureBindingPatternNode;
+import io.ballerina.compiler.syntax.tree.CheckExpressionNode;
 import io.ballerina.compiler.syntax.tree.ExplicitNewExpressionNode;
 import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.FunctionArgumentNode;
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
+import io.ballerina.compiler.syntax.tree.IdentifierToken;
 import io.ballerina.compiler.syntax.tree.ImplicitNewExpressionNode;
 import io.ballerina.compiler.syntax.tree.ListenerDeclarationNode;
+import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
+import io.ballerina.compiler.syntax.tree.MappingFieldNode;
+import io.ballerina.compiler.syntax.tree.MetadataNode;
+import io.ballerina.compiler.syntax.tree.ModuleVariableDeclarationNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeVisitor;
 import io.ballerina.compiler.syntax.tree.ParenthesizedArgList;
 import io.ballerina.compiler.syntax.tree.PositionalArgumentNode;
+import io.ballerina.compiler.syntax.tree.QualifiedNameReferenceNode;
+import io.ballerina.compiler.syntax.tree.SeparatedNodeList;
 import io.ballerina.compiler.syntax.tree.ServiceDeclarationNode;
 import io.ballerina.compiler.syntax.tree.SimpleNameReferenceNode;
+import io.ballerina.compiler.syntax.tree.SpecificFieldNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
+import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
+import io.ballerina.compiler.syntax.tree.TypedBindingPatternNode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Visitor for validation related to code to cloud.
@@ -43,39 +60,303 @@ public class C2CVisitor extends NodeVisitor {
 
     private List<ListenerInfo> listeners = new ArrayList<>();
     private List<ServiceInfo> services = new ArrayList<>();
+    private Map<String, Config> externalConfigs = new HashMap<>();
+    private Task task = null;
+
+    @Override
+    public void visit(ModuleVariableDeclarationNode moduleVariableDeclarationNode) {
+        TypedBindingPatternNode typedBindingPatternNode = moduleVariableDeclarationNode.typedBindingPattern();
+        TypeDescriptorNode typeDescriptorNode = typedBindingPatternNode.typeDescriptor();
+        if (typeDescriptorNode.kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
+            return;
+        }
+        QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typeDescriptorNode;
+        String moduleName = qualified.modulePrefix().text();
+        String identifier = qualified.identifier().text();
+        if (!(moduleName.equals("http"))) {
+            return;
+        }
+        BindingPatternNode variableNode = typedBindingPatternNode.bindingPattern();
+        if (variableNode.kind() != SyntaxKind.CAPTURE_BINDING_PATTERN) {
+            return;
+        }
+        CaptureBindingPatternNode captureVariableName = (CaptureBindingPatternNode) variableNode;
+        String variableName = captureVariableName.variableName().text();
+
+        if (moduleVariableDeclarationNode.initializer().isEmpty()) {
+            return;
+        }
+        if (identifier.equals("Listener")) {
+            extractHttpsListener(moduleVariableDeclarationNode, variableName);
+        }
+        if (identifier.equals("ListenerConfiguration")) {
+            Optional<ExpressionNode> initializer = moduleVariableDeclarationNode.initializer();
+            if (initializer.isPresent()) {
+                if (initializer.get().kind() != SyntaxKind.MAPPING_CONSTRUCTOR) {
+                    return;
+                }
+                Optional<Config> config =
+                        processFieldsInHttpConfig((MappingConstructorExpressionNode) initializer.get());
+                config.ifPresent(value -> externalConfigs.put(variableName, value));
+            }
+        }
+    }
+
+    private void extractHttpsListener(ModuleVariableDeclarationNode moduleVariableDeclarationNode, String varName) {
+        ExpressionNode initExpression = moduleVariableDeclarationNode.initializer().get();
+        if (initExpression.kind() == SyntaxKind.CHECK_EXPRESSION) {
+            CheckExpressionNode checkedInit = (CheckExpressionNode) initExpression;
+            ExpressionNode expression = checkedInit.expression();
+            extractListenerInitializer(varName, expression);
+        }
+    }
+
+    @Override
+    public void visit(FunctionDefinitionNode functionDefinitionNode) {
+        Optional<MetadataNode> metadata = functionDefinitionNode.metadata();
+        String funcName = functionDefinitionNode.functionName().text();
+        if (!funcName.equals("main")) {
+            return;
+        }
+        if (metadata.isEmpty()) {
+            return;
+        }
+        processFunctionAnnotation(metadata.get());
+    }
+
+    private void processFunctionAnnotation(MetadataNode metadataNode) {
+        NodeList<AnnotationNode> annotations = metadataNode.annotations();
+        for (AnnotationNode annotationNode : annotations) {
+            Node node = annotationNode.annotReference();
+            if (node.kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
+                continue;
+            }
+            QualifiedNameReferenceNode node1 = (QualifiedNameReferenceNode) node;
+            String modulePrefix = node1.modulePrefix().text();
+            String name = node1.identifier().text();
+            if (modulePrefix.equals("cloud") && name.equals("Task")) {
+                processTaskAnnotationValue(annotationNode);
+            }
+        }
+    }
+
+    private void processTaskAnnotationValue(AnnotationNode annotationNode) {
+        if (annotationNode.annotValue().isEmpty()) {
+            return;
+        }
+        MappingConstructorExpressionNode mappingConstructorExpressionNode = annotationNode.annotValue().get();
+        SeparatedNodeList<MappingFieldNode> fields = mappingConstructorExpressionNode.fields();
+        for (MappingFieldNode field : fields) {
+            if (field.kind() != SyntaxKind.SPECIFIC_FIELD) {
+                continue;
+            }
+            SpecificFieldNode specificField = (SpecificFieldNode) field;
+            if (getNameOfIdentifier(specificField.fieldName()).equals("schedule")) {
+                Optional<ExpressionNode> expressionNode = specificField.valueExpr();
+                expressionNode.ifPresent(this::processTaskScheduleBlock);
+            }
+        }
+    }
+
+    private void processTaskScheduleBlock(ExpressionNode expressionNode) {
+        if (expressionNode.kind() != SyntaxKind.MAPPING_CONSTRUCTOR) {
+            return;
+        }
+        MappingConstructorExpressionNode expressionNode1 = (MappingConstructorExpressionNode) expressionNode;
+        SeparatedNodeList<MappingFieldNode> scheduleFields = expressionNode1.fields();
+        String minutes = null, hours = null, dayOfMonth = null, monthOfYear = null, daysOfWeek = null;
+        for (MappingFieldNode timeField : scheduleFields) {
+            if (timeField.kind() == SyntaxKind.SPECIFIC_FIELD) {
+                SpecificFieldNode timeSpecificField = (SpecificFieldNode) timeField;
+                String identifier = getNameOfIdentifier(timeSpecificField.fieldName());
+                timeSpecificField.valueExpr();
+                switch (identifier) {
+                    case "minutes":
+                        minutes = extractString(timeSpecificField.valueExpr().get());
+                        break;
+                    case "hours":
+                        hours = extractString(timeSpecificField.valueExpr().get());
+                        break;
+                    case "dayOfMonth":
+                        dayOfMonth = extractString(timeSpecificField.valueExpr().get());
+                        break;
+                    case "monthOfYear":
+                        monthOfYear = extractString(timeSpecificField.valueExpr().get());
+                        break;
+                    case "daysOfWeek":
+                        daysOfWeek = extractString(timeSpecificField.valueExpr().get());
+                        break;
+                    default:
+                        continue;
+                }
+            }
+        }
+        this.task = new Task(minutes, hours, dayOfMonth, monthOfYear, daysOfWeek);
+    }
 
     @Override
     public void visit(ListenerDeclarationNode listenerDeclarationNode) {
         String listenerName = listenerDeclarationNode.variableName().text();
         Node initializer = listenerDeclarationNode.initializer();
-        if (initializer.kind() == SyntaxKind.IMPLICIT_NEW_EXPRESSION) {
-            ImplicitNewExpressionNode initializerNode = (ImplicitNewExpressionNode) initializer;
-            ParenthesizedArgList parenthesizedArgList = initializerNode.parenthesizedArgList().get();
-            FunctionArgumentNode functionArgumentNode = parenthesizedArgList.arguments().get(0);
-            ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
-            int port = Integer.parseInt(((BasicLiteralNode) expression).literalToken().text());
-            ListenerInfo listenerInfo = new ListenerInfo(listenerName, port);
-            listeners.add(listenerInfo);
+        extractListenerInitializer(listenerName, initializer);
+    }
+
+    private void extractListenerInitializer(String listenerName, Node initializer) {
+        if (initializer.kind() != SyntaxKind.IMPLICIT_NEW_EXPRESSION) {
+            return;
         }
+        ImplicitNewExpressionNode initializerNode = (ImplicitNewExpressionNode) initializer;
+        ParenthesizedArgList parenthesizedArgList = initializerNode.parenthesizedArgList().get();
+        if (parenthesizedArgList.arguments().size() == 0) {
+            return;
+        }
+        FunctionArgumentNode functionArgumentNode = parenthesizedArgList.arguments().get(0);
+        ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
+        int port = Integer.parseInt(((BasicLiteralNode) expression).literalToken().text());
+        ListenerInfo listenerInfo = new ListenerInfo(listenerName, port);
+        if (parenthesizedArgList.arguments().size() > 1) {
+            Optional<Config> config = extractKeyStores(parenthesizedArgList.arguments().get(1));
+            config.ifPresent(listenerInfo::setConfig);
+        }
+        listeners.add(listenerInfo);
+    }
+
+    private Optional<Config> extractKeyStores(FunctionArgumentNode functionArgumentNode1) {
+        if (functionArgumentNode1.kind() != SyntaxKind.POSITIONAL_ARG) {
+            return Optional.empty();
+        }
+        PositionalArgumentNode positionalArgumentNode = (PositionalArgumentNode) functionArgumentNode1;
+        if (positionalArgumentNode.expression().kind() == SyntaxKind.MAPPING_CONSTRUCTOR) {
+            return processFieldsInHttpConfig((MappingConstructorExpressionNode) positionalArgumentNode.expression());
+        } else if (positionalArgumentNode.expression().kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+            String varName = ((SimpleNameReferenceNode) positionalArgumentNode.expression()).name().text();
+            Config config = this.externalConfigs.get(varName);
+            return Optional.ofNullable(config);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Config> processFieldsInHttpConfig(MappingConstructorExpressionNode mapping) {
+        SeparatedNodeList<MappingFieldNode> fields = mapping.fields();
+        for (MappingFieldNode mappingFieldNode : fields) {
+            if (mappingFieldNode.kind() != SyntaxKind.SPECIFIC_FIELD) {
+                continue;
+            }
+            SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
+            Node node = specificFieldNode.fieldName();
+            if (node.kind() == SyntaxKind.IDENTIFIER_TOKEN && ((IdentifierToken) node).text().equals("secureSocket")) {
+                if (specificFieldNode.valueExpr().isPresent() &&
+                        specificFieldNode.valueExpr().get().kind() == SyntaxKind.MAPPING_CONSTRUCTOR) {
+                    MappingConstructorExpressionNode mappingConstructorExpressionNode =
+                            (MappingConstructorExpressionNode) specificFieldNode.valueExpr().get();
+                    return (processSecureSocketValue(mappingConstructorExpressionNode));
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<Config> processSecureSocketValue(MappingConstructorExpressionNode mappingConstructorNode) {
+        SeparatedNodeList<MappingFieldNode> socketChilds = mappingConstructorNode.fields();
+        Config config = new Config();
+        for (MappingFieldNode child : socketChilds) {
+            if (child.kind() != SyntaxKind.SPECIFIC_FIELD) {
+                continue;
+            }
+            SpecificFieldNode specificField = (SpecificFieldNode) child;
+            String fieldName = getNameOfIdentifier(specificField.fieldName());
+            if (fieldName.equals("keyStore")) {
+                Optional<Store> store = getStore(specificField.valueExpr().get());
+                store.ifPresent(config::setKeyStore);
+            } else if (fieldName.equals("trustStore")) {
+                Optional<Store> store = getStore(specificField.valueExpr().get());
+                store.ifPresent(config::setTrustStore);
+            }
+        }
+        return Optional.of(config);
+    }
+
+    private Optional<Store> getStore(ExpressionNode expressionNode) {
+        if (expressionNode.kind() != SyntaxKind.MAPPING_CONSTRUCTOR) {
+            return Optional.empty();
+        }
+        MappingConstructorExpressionNode expressionNode1 = (MappingConstructorExpressionNode) expressionNode;
+        SeparatedNodeList<MappingFieldNode> fields = expressionNode1.fields();
+        String path = null;
+        String password = null;
+        for (MappingFieldNode field : fields) {
+            if (field.kind() != SyntaxKind.SPECIFIC_FIELD) {
+                continue;
+            }
+            SpecificFieldNode specificFieldNode = (SpecificFieldNode) field;
+            String nameOfIdentifier = getNameOfIdentifier(specificFieldNode.fieldName());
+            if (nameOfIdentifier.equals("path")) {
+                path = extractString(specificFieldNode.valueExpr().get());
+            } else if (nameOfIdentifier.equals("password")) {
+                password = extractString(specificFieldNode.valueExpr().get());
+            }
+        }
+
+        if (path != null && password != null) {
+            return Optional.of(new Store(path, password));
+        }
+        return Optional.empty();
+    }
+
+    private String extractString(ExpressionNode expressionNode) {
+        if (expressionNode.kind() == SyntaxKind.STRING_LITERAL) {
+            String text = ((BasicLiteralNode) expressionNode).literalToken().text();
+            return text.substring(1, text.length() - 1);
+        }
+        return null;
+    }
+
+    private String getNameOfIdentifier(Node node) {
+        if (node.kind() == SyntaxKind.IDENTIFIER_TOKEN) {
+            return ((IdentifierToken) node).text();
+        }
+        return null;
     }
 
     @Override
     public void visit(ServiceDeclarationNode serviceDeclarationNode) {
-        ListenerInfo listenerInfo;
+        ListenerInfo listenerInfo = null;
         String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
         ExpressionNode expressionNode = serviceDeclarationNode.expressions().get(0);
         if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+            //External Listener
+            //on helloEP
             SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
             String listenerName = referenceNode.name().text();
             listenerInfo = this.getListener(listenerName);
         } else {
+            //Inline Listener
             ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
-            int port = Integer.parseInt(refNode.parenthesizedArgList().arguments().get(0).toString());
-            listenerInfo = new ListenerInfo(servicePath, port);
+            FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(0);
+            if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
+                ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
+                if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+                    //on new graphql:Listener(httpListener)
+                    SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expression;
+                    String listenerName = referenceNode.name().text();
+                    listenerInfo = this.getListener(listenerName);
+                } else {
+                    //on new http:Listener(9091)
+                    int port = Integer.parseInt(((BasicLiteralNode) expression).literalToken().text());
+                    listenerInfo = new ListenerInfo(servicePath, port);
+                }
+            }
+
+            //Inline Http config
+            if (refNode.parenthesizedArgList().arguments().size() > 1) {
+                FunctionArgumentNode secondParamExpression = refNode.parenthesizedArgList().arguments().get(1);
+                Optional<Config> config = extractKeyStores(secondParamExpression);
+                config.ifPresent(listenerInfo::setConfig);
+            }
             this.listeners.add(listenerInfo);
         }
-        ServiceInfo serviceInfo = new ServiceInfo(listenerInfo, serviceDeclarationNode,
-                servicePath);
+        ServiceInfo serviceInfo = new ServiceInfo(listenerInfo, serviceDeclarationNode, servicePath);
         NodeList<Node> function = serviceDeclarationNode.members();
         for (Node node : function) {
             if (node.kind() == SyntaxKind.RESOURCE_ACCESSOR_DEFINITION) {
@@ -91,7 +372,14 @@ public class C2CVisitor extends NodeVisitor {
     private String toAbsoluteServicePath(NodeList<Node> servicePathNodes) {
         StringBuilder absoluteServicePath = new StringBuilder();
         for (Node serviceNode : servicePathNodes) {
-            absoluteServicePath.append(serviceNode.toString());
+            if (serviceNode.kind() == SyntaxKind.SLASH_TOKEN) {
+                absoluteServicePath.append("/");
+            } else if (serviceNode.kind() == SyntaxKind.DOT_TOKEN) {
+                absoluteServicePath.append(".");
+            } else {
+                IdentifierToken token = (IdentifierToken) serviceNode;
+                absoluteServicePath.append(token.text());
+            }
         }
         return absoluteServicePath.toString();
     }
@@ -111,5 +399,9 @@ public class C2CVisitor extends NodeVisitor {
 
     public List<ServiceInfo> getServices() {
         return services;
+    }
+
+    public Task getTask() {
+        return task;
     }
 }

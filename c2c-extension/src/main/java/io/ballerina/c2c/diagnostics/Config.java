@@ -20,41 +20,27 @@ package io.ballerina.c2c.diagnostics;
 import java.util.Optional;
 
 /**
- * Represents Listener information of a ballerina document.
+ * Represents a Http config of a secure socket.
  *
  * @since 2.0.0
  */
-public class ListenerInfo {
-    private String name;
-    private int port;
-    private Config config;
+public class Config {
+    private Store keyStore;
+    private Store trustStore;
 
-    public ListenerInfo(String name, int port) {
-        this.name = name;
-        this.port = port;
+    public Optional<Store> getKeyStore() {
+        return Optional.ofNullable(keyStore);
     }
 
-    public int getPort() {
-        return port;
+    public Optional<Store> getTrustStore() {
+        return Optional.ofNullable(trustStore);
     }
 
-    public String getName() {
-        return name;
+    public void setKeyStore(Store keyStore) {
+        this.keyStore = keyStore;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public Optional<Config> getConfig() {
-        return Optional.ofNullable(config);
-    }
-
-    public void setConfig(Config config) {
-        this.config = config;
+    public void setTrustStore(Store trustStore) {
+        this.trustStore = trustStore;
     }
 }

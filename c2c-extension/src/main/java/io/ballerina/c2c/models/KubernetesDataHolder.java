@@ -36,7 +36,6 @@ import java.util.Set;
  */
 @Data
 public class KubernetesDataHolder {
-    private boolean canProcess;
     private DeploymentModel deploymentModel;
     private DockerModel dockerModel;
     private PodAutoscalerModel podAutoscalerModel;
