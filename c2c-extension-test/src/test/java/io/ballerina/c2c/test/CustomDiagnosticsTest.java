@@ -70,10 +70,10 @@ public class CustomDiagnosticsTest {
         TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker(project);
         diagnostics.addAll(tomlDiagnosticChecker.validateTomlWithSource(toml));
         Assert.assertEquals(diagnostics.size(), 2);
-        Assert.assertEquals(diagnostics.get(0).message(), "Key \"min_cpu\" value does not match the Regex provided in" +
-                " Schema ^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$");
-        Assert.assertEquals(diagnostics.get(1).message(), "Key \"max_cpu\" value does not match the Regex provided in" +
-                " Schema ^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$");
+        Assert.assertEquals(diagnostics.get(0).message(),
+                "value for key 'min_cpu' expected to match the regex: ^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$");
+        Assert.assertEquals(diagnostics.get(1).message(), "value for key 'max_cpu' expected to match the regex: ^" +
+                "(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$");
     }
 
     @Test

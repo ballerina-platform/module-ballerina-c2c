@@ -78,7 +78,6 @@ public class KubernetesDataExtractor {
         }
         addServices(serviceList);
         addJobs();
-        dataHolder.setCanProcess(true);
     }
 
     private void addJobs() {

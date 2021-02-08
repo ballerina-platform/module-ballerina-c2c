@@ -35,15 +35,12 @@ import io.ballerina.toml.validator.TomlValidator;
 import io.ballerina.toml.validator.schema.Schema;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import org.apache.commons.io.IOUtils;
-import org.ballerinalang.compiler.CompilerOptionName;
 import org.ballerinalang.compiler.plugins.AbstractCompilerPlugin;
 import org.ballerinalang.compiler.plugins.SupportedAnnotationPackages;
 import org.ballerinalang.model.elements.PackageID;
 import org.ballerinalang.util.diagnostic.DiagnosticLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.ballerinalang.compiler.util.CompilerContext;
-import org.wso2.ballerinalang.compiler.util.CompilerOptions;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,15 +69,6 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
 
     private static final Logger pluginLog = LoggerFactory.getLogger(KubernetesPlugin.class);
     private DiagnosticLog dlog;
-    private boolean enabled;
-
-    @Override
-    public void setCompilerContext(CompilerContext context) {
-        String cloudProvider = CompilerOptions.getInstance(context).get(CompilerOptionName.CLOUD);
-        if ("k8s".equals(cloudProvider)) {
-            enabled = true;
-        }
-    }
 
     @Override
     public void init(DiagnosticLog diagnosticLog) {
@@ -90,75 +78,77 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
     @Override
     public List<Diagnostic> codeAnalyze(Project project) {
         String cloud = project.buildOptions().cloud();
-        if (cloud.equals("k8s")) {
-            TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker(project);
-            Optional<KubernetesToml> kubernetesToml = project.currentPackage().kubernetesToml();
-            if (kubernetesToml.isPresent()) {
-                Toml toml = TomlHelper.createK8sTomlFromProject(kubernetesToml.get().tomlDocument());
-                TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
-                validator.validate(toml);
-                List<Diagnostic> diagnostics = toml.diagnostics();
-
-                diagnostics.addAll(tomlDiagnosticChecker.validateTomlWithSource(toml));
-                return diagnostics;
-            }
+        if (cloud == null || !cloud.equals("k8s")) {
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+        TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker(project);
+        Optional<KubernetesToml> kubernetesToml = project.currentPackage().kubernetesToml();
+        if (kubernetesToml.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Toml toml = TomlHelper.createK8sTomlFromProject(kubernetesToml.get().tomlDocument());
+        TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
+        validator.validate(toml);
+        List<Diagnostic> diagnostics = toml.diagnostics();
+
+        diagnostics.addAll(tomlDiagnosticChecker.validateTomlWithSource(toml));
+        return diagnostics;
     }
 
     public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Optional<KubernetesToml> k8sToml) {
         KubernetesContext.getInstance().setCurrentPackage(packageId);
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         dataHolder.setPackageID(packageId);
-        if (dataHolder.isCanProcess()) {
-            executableJarFile = executableJarFile.toAbsolutePath();
-            if (null != executableJarFile.getParent() && Files.exists(executableJarFile.getParent())) {
-                // artifacts location for a single bal file.
-                Path kubernetesOutputPath = executableJarFile.getParent().resolve(KUBERNETES);
-                Path dockerOutputPath = executableJarFile.getParent().resolve(DOCKER);
-                if (null != executableJarFile.getParent().getParent().getParent() &&
-                        Files.exists(executableJarFile.getParent().getParent().getParent())) {
-                    // if executable came from a ballerina project
-                    Path projectRoot = executableJarFile.getParent().getParent().getParent();
-                    if (Files.exists(projectRoot.resolve("Ballerina.toml"))) {
-                        kubernetesOutputPath = projectRoot.resolve("target")
-                                .resolve(KUBERNETES)
-                                .resolve(extractJarName(executableJarFile));
-                        dockerOutputPath = projectRoot.resolve("target")
-                                .resolve(DOCKER)
-                                .resolve(extractJarName(executableJarFile));
-                        //Read and parse ballerina cloud
-                        k8sToml.ifPresent(
-                                kubernetesToml -> dataHolder.setBallerinaCloud(new Toml(kubernetesToml.tomlAstNode())));
-                    }
+        executableJarFile = executableJarFile.toAbsolutePath();
+        if (null != executableJarFile.getParent() && Files.exists(executableJarFile.getParent())) {
+            // artifacts location for a single bal file.
+            Path kubernetesOutputPath = executableJarFile.getParent().resolve(KUBERNETES);
+            Path dockerOutputPath = executableJarFile.getParent().resolve(DOCKER);
+            if (null != executableJarFile.getParent().getParent().getParent() &&
+                    Files.exists(executableJarFile.getParent().getParent().getParent())) {
+                // if executable came from a ballerina project
+                Path projectRoot = executableJarFile.getParent().getParent().getParent();
+                if (Files.exists(projectRoot.resolve("Ballerina.toml"))) {
+                    kubernetesOutputPath = projectRoot.resolve("target")
+                            .resolve(KUBERNETES)
+                            .resolve(extractJarName(executableJarFile));
+                    dockerOutputPath = projectRoot.resolve("target")
+                            .resolve(DOCKER)
+                            .resolve(extractJarName(executableJarFile));
+                    //Read and parse ballerina cloud
+                    k8sToml.ifPresent(
+                            kubernetesToml -> dataHolder.setBallerinaCloud(new Toml(kubernetesToml.tomlAstNode())));
                 }
-                dataHolder.setJarPath(executableJarFile);
-                dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
-                dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
-                ArtifactManager artifactManager = new ArtifactManager();
+            }
+            dataHolder.setJarPath(executableJarFile);
+            dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
+            dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
+            ArtifactManager artifactManager = new ArtifactManager();
+            try {
+                KubernetesUtils.deleteDirectory(kubernetesOutputPath);
+                artifactManager.populateDeploymentModel();
+                artifactManager.createArtifacts();
+            } catch (KubernetesPluginException e) {
+                String errorMessage = "module [" + packageId + "] " + e.getMessage();
+                printError(errorMessage);
+                pluginLog.error(errorMessage, e);
                 try {
                     KubernetesUtils.deleteDirectory(kubernetesOutputPath);
-                    artifactManager.populateDeploymentModel();
-                    artifactManager.createArtifacts();
-                } catch (KubernetesPluginException e) {
-                    String errorMessage = "module [" + packageId + "] " + e.getMessage();
-                    printError(errorMessage);
-                    pluginLog.error(errorMessage, e);
-                    try {
-                        KubernetesUtils.deleteDirectory(kubernetesOutputPath);
-                    } catch (KubernetesPluginException ignored) {
-                        //ignored
-                    }
+                } catch (KubernetesPluginException ignored) {
+                    //ignored
                 }
-            } else {
-                printError("error in resolving docker generation location.");
-                pluginLog.error("error in resolving docker generation location.");
             }
+        } else {
+            printError("error in resolving docker generation location.");
+            pluginLog.error("error in resolving docker generation location.");
         }
     }
 
     @Override
     public void codeGenerated(Project project, Target target) {
+        if (project.buildOptions().cloud() == null  || !project.buildOptions().cloud().equals("k8s")) {
+            return;
+        }
         PackageCompilation packageCompilation = project.currentPackage().getCompilation();
         JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(packageCompilation, JvmTarget.JAVA_11);
         io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
