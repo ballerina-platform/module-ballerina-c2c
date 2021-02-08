@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -46,28 +46,29 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Abstract base for implementing CodeActions.
+ * Test Cases for CodeActions.
  *
  * @since 2.0.0
  */
-public abstract class CodeActionTest {
-
+public abstract class AbstractCodeActionTest {
     private Endpoint serviceEndpoint;
 
     private final JsonParser parser = new JsonParser();
 
     private final Path sourcesPath = new File(getClass().getClassLoader().getResource("codeaction").getFile()).toPath();
 
-    private static final WorkspaceManager workspaceManager =
-            BallerinaWorkspaceManager.getInstance(new LanguageServerContextImpl());
-
+    private static final WorkspaceManager workspaceManager
+            = BallerinaWorkspaceManager.getInstance(new LanguageServerContextImpl());
+    
     private static final LanguageServerContext serverContext = new LanguageServerContextImpl();
 
     @BeforeClass
-    public void init() {
+    public void init() throws Exception {
         this.serviceEndpoint = TestUtil.initializeLanguageSever();
     }
 
@@ -84,7 +85,7 @@ public abstract class CodeActionTest {
                 = TestUtil.compileAndGetDiagnostics(sourcePath, workspaceManager, serverContext);
         List<Diagnostic> diags = new ArrayList<>(CodeActionUtil.toDiagnostics(diagnostics));
         Position pos = new Position(configJsonObject.get("line").getAsInt(),
-                configJsonObject.get("character").getAsInt());
+                                    configJsonObject.get("character").getAsInt());
         diags = diags.stream().
                 filter(diag -> CommonUtil.isWithinRange(pos, diag.getRange()))
                 .collect(Collectors.toList());
@@ -101,48 +102,67 @@ public abstract class CodeActionTest {
             JsonObject responseJson = this.getResponseJson(res);
             for (JsonElement jsonElement : responseJson.getAsJsonArray("result")) {
                 JsonObject right = jsonElement.getAsJsonObject().get("right").getAsJsonObject();
-                if (right != null) {
-                    // Match title
-                    String actualTitle = right.get("title").getAsString();
-                    if (!expTitle.equals(actualTitle)) {
-                        continue;
-                    }
-                    // Match edits
-                    boolean invalid = false;
-                    if (expected.get("edits") != null) {
-                        JsonArray actualEditArray = right.get("edit").getAsJsonObject().get("documentChanges")
-                                .getAsJsonArray();
-                        for (JsonElement docChange : actualEditArray) {
-                            JsonElement edits = docChange.getAsJsonObject().get("edits");
-                            if (edits == null) {
-                                continue;
-                            }
-                            JsonArray actualEdit = edits.getAsJsonArray();
-                            JsonArray expEdit = expected.get("edits").getAsJsonArray();
-                            if (!expEdit.equals(actualEdit)) {
-                                invalid = true;
-                            }
-                        }
-                    }
-                    if (invalid) {
-                        continue;
-                    }
-                    // Match args
-                    if (expected.get("arguments") != null) {
-                        JsonArray actualArgs = expected.get("arguments").getAsJsonArray();
-                        JsonArray expArgs = expected.getAsJsonArray("arguments");
-                        if (!TestUtil.isArgumentsSubArray(actualArgs, expArgs)) {
-                            continue;
-                        }
-                    }
-                    // Code-action matched
-                    codeActionFound = true;
-                    break;
+                if (right == null) {
+                    continue;
                 }
+                
+                // Match title
+                String actualTitle = right.get("title").getAsString();
+                if (!expTitle.equals(actualTitle)) {
+                    continue;
+                }
+                // Match edits
+                if (expected.get("edits") != null) {
+                    JsonArray actualEdit = right.get("edit").getAsJsonObject().get("documentChanges")
+                            .getAsJsonArray().get(0).getAsJsonObject().get("edits").getAsJsonArray();
+                    JsonArray expEdit = expected.get("edits").getAsJsonArray();
+                    if (!expEdit.equals(actualEdit)) {
+                        continue;
+                    }
+                }
+                // Match args
+                if (expected.get("command") != null) {
+                    JsonObject expectedCommand = expected.get("command").getAsJsonObject();
+                    JsonObject actualCommand = right.get("command").getAsJsonObject();
+
+                    if (!Objects.equals(actualCommand.get("command"), expectedCommand.get("command"))) {
+                        continue;
+                    }
+
+                    if (!Objects.equals(actualCommand.get("title"), expectedCommand.get("title"))) {
+                        continue;
+                    }
+                    
+                    JsonArray actualArgs = actualCommand.getAsJsonArray("arguments");
+                    JsonArray expArgs = expectedCommand.getAsJsonArray("arguments");
+                    if (!TestUtil.isArgumentsSubArray(actualArgs, expArgs)) {
+                        continue;
+                    }
+
+                    boolean docUriFound = false;
+                    for (JsonElement actualArg : actualArgs) {
+                        JsonObject arg = actualArg.getAsJsonObject();
+                        if ("doc.uri".equals(arg.get("key").getAsString())) {
+                            Optional<Path> docPath = CommonUtil.getPathFromURI(arg.get("value").getAsString());
+                            if (docPath.isPresent()) {
+                                // We just check file names, since one refers to file in build/ while
+                                // the other refers to the file in test resources
+                                docUriFound = docPath.get().getFileName().equals(sourcePath.getFileName());
+                            }
+                        }
+                    }
+
+                    if (!docUriFound) {
+                        continue;
+                    }
+                }
+                // Code-action matched
+                codeActionFound = true;
+                break;
             }
             String cursorStr = range.getStart().getLine() + ":" + range.getEnd().getCharacter();
             Assert.assertTrue(codeActionFound,
-                    "Cannot find expected Code Action for: " + expTitle + ", cursor at " + cursorStr);
+                              "Cannot find expected Code Action for: " + expTitle + ", cursor at " + cursorStr);
         }
         TestUtil.closeDocument(this.serviceEndpoint, sourcePath);
     }
