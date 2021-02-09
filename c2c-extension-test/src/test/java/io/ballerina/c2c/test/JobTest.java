@@ -43,22 +43,22 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getDockerImage;
  */
 public class JobTest {
     private static final Path SOURCE_DIR_PATH = Paths.get("src", "test", "resources", "job");
-    private static final Path DOCKER_TARGET_PATH = SOURCE_DIR_PATH.resolve("target").resolve(DOCKER);
-    private static final Path KUBERNETES_TARGET_PATH = SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES);
-    private static final String DOCKER_IMAGE_JOB = "job:latest";
+    private static final Path DOCKER_TARGET_PATH = SOURCE_DIR_PATH.resolve(DOCKER);
+    private static final Path KUBERNETES_TARGET_PATH = SOURCE_DIR_PATH.resolve(KUBERNETES);
+    private static final String DOCKER_IMAGE_JOB = "ballerina_job:latest";
 
     @Test
     public void testKubernetesJobGeneration() throws IOException, InterruptedException {
-        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH), 0);
+        Assert.assertEquals(KubernetesTestUtils.compileBallerinaFile(SOURCE_DIR_PATH, "ballerina_job.bal"), 0);
 
-        File dockerFile = DOCKER_TARGET_PATH.resolve("job").resolve("Dockerfile").toFile();
+        File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         Assert.assertTrue(dockerFile.exists());
         InspectImageResponse imageInspect = getDockerImage(DOCKER_IMAGE_JOB);
         Assert.assertNotNull(imageInspect.getConfig());
 
-        File jobYAML = KUBERNETES_TARGET_PATH.resolve("job").resolve("job.yaml").toFile();
+        File jobYAML = KUBERNETES_TARGET_PATH.resolve("ballerina_job.yaml").toFile();
         CronJob job = KubernetesTestUtils.loadYaml(jobYAML);
-        Assert.assertEquals(job.getMetadata().getName(), "job-job");
+        Assert.assertEquals(job.getMetadata().getName(), "ballerina-job-job");
         Assert.assertEquals(job.getSpec().getJobTemplate().getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         Container container = job.getSpec().getJobTemplate().getSpec().getTemplate().getSpec().getContainers().get(0);
