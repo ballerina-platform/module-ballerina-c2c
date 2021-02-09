@@ -50,9 +50,11 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
 public class Sample6Test extends SampleTest {
 
     private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample6");
-    private static final Path DOCKER_TARGET_PATH = SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
+    private static final String VERSION = "0.0.1";
+    private static final Path DOCKER_TARGET_PATH =
+            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello-" + VERSION);
     private static final Path KUBERNETES_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello");
+            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello-" + VERSION);
     private static final String DOCKER_IMAGE = "hello-api:sample6";
     private Deployment deployment;
 
@@ -60,7 +62,7 @@ public class Sample6Test extends SampleTest {
     public void compileSample() throws IOException, InterruptedException {
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH)
                 , 0);
-        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello.yaml").toFile();
+        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello-" + VERSION + ".yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
         KubernetesClient client = new DefaultKubernetesClient();
         List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
@@ -82,10 +84,10 @@ public class Sample6Test extends SampleTest {
     @Test
     public void validateDeployment() {
         Assert.assertNotNull(deployment);
-        Assert.assertEquals(deployment.getMetadata().getName(), "hello-deployment");
+        Assert.assertEquals(deployment.getMetadata().getName(), "hello-0-0-1-deployment");
         Assert.assertEquals(deployment.getSpec().getReplicas().intValue(), 1);
         Assert.assertEquals(deployment.getMetadata().getLabels().get(KubernetesConstants
-                .KUBERNETES_SELECTOR_KEY), "hello");
+                .KUBERNETES_SELECTOR_KEY), "hello-" + VERSION);
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         // Assert Containers
@@ -98,7 +100,6 @@ public class Sample6Test extends SampleTest {
         Assert.assertEquals(container.getReadinessProbe().getHttpGet().getPort().getIntVal().intValue(), 9090);
         Assert.assertEquals(container.getReadinessProbe().getHttpGet().getPath(), "/helloWorld/readyz");
     }
-
 
     @Test
     public void validateDockerfile() {
@@ -113,7 +114,7 @@ public class Sample6Test extends SampleTest {
         Assert.assertEquals(ports.get(0), "9090/tcp");
     }
 
-    @Test(groups = {"integration"})
+    @Test(groups = { "integration" })
     public void deploySample() throws IOException, InterruptedException {
         Assert.assertEquals(0, loadImage(DOCKER_IMAGE));
         Assert.assertEquals(0, deployK8s(KUBERNETES_TARGET_PATH));
