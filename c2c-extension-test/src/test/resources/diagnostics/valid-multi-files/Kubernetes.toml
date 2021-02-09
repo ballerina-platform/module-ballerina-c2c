@@ -1,0 +1,11 @@
+[container.image]
+base  ="wewe"
+name="sdsd"
+
+[cloud.deployment.probes.liveness]
+port = 9095
+path = "/hello"
+
+[cloud.deployment.probes.readiness]
+port = 9096
+path = "/hello/world"
