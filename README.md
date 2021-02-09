@@ -34,7 +34,7 @@ Code2cloud extension implementation for ballerina.
 1. Get a clone or download the source from this repository (https://github.com/ballerina-platform/module-ballerina-c2c)
 1. Run the Gradle command ``gradle build`` from within the ``module-ballerina-c2c`` directory.
 1. Copy ``c2c-extension/build/c2c-extension-***.jar`` file to ``<BALLERINA_HOME>/bre/lib`` directory.
-1. Copy `c2c-ballerina/build/target/c2c-ballerina-zip/balo/ballerina/cloud` directory to `<BALLERINA_HOME>/repo/balo/ballerina` directory.
+1. Copy `c2c-ballerina/build/target/c2c-ballerina-zip/bala/ballerina/cloud` directory to `<BALLERINA_HOME>/repo/bala/ballerina` directory.
 1. Copy `c2c-ballerina/build/target/c2c-ballerina-zip/cache/ballerina/cloud` directory to `<BALLERINA_HOME>/repo/cache/ballerina` directory.
 
 ### Enabling debug logs

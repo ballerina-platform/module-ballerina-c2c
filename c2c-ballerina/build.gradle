@@ -74,8 +74,8 @@ task copyStdlibs(type: Copy) {
     /* Standard Libraries */
     configurations.ballerinaStdLibs.resolvedConfiguration.resolvedArtifacts.each { artifact ->
         def artifactExtractedPath = "${buildDir}/extracted-distribution/" + artifact.name + "-zip"
-        into("repo/balo") {
-            from "${artifactExtractedPath}/balo/"
+        into("repo/bala") {
+            from "${artifactExtractedPath}/bala/"
         }
         into("repo/cache") {
             from "${artifactExtractedPath}/cache"
@@ -95,7 +95,7 @@ def tomlSemver = semverMatcher[0][1]
 
 def artifactParent = file("$project.projectDir/build/target/c2c-ballerina-zip/")
 def artifactDocs = file("$project.buildDir/apidocs/docs/")
-def artifactBalo = file("$project.projectDir/target/balo")
+def artifactBala = file("$project.projectDir/target/bala")
 def artifactCache = file("$project.projectDir/target/cache/")
 
 task ballerinaBuild {
@@ -128,8 +128,8 @@ task ballerinaBuild {
             }
         }
         copy {
-            from file("$artifactBalo")
-            into file("$artifactParent/balo/ballerina/cloud/$tomlSemver")
+            from file("$artifactBala")
+            into file("$artifactParent/bala/ballerina/cloud/$tomlSemver")
         }
         copy {
             from file("$artifactDocs")
