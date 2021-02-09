@@ -58,6 +58,21 @@ public class CustomDiagnosticsTest {
     }
 
     @Test
+    public void testValidMultifileProject() {
+        Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "valid-multi-files");
+
+        BuildProject project = BuildProject.load(projectPath);
+        Toml toml = TomlHelper
+                .createK8sTomlFromProject(project.currentPackage().kubernetesToml().orElseThrow().tomlDocument());
+        TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
+        validator.validate(toml);
+        List<Diagnostic> diagnostics = toml.diagnostics();
+        TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker(project);
+        diagnostics.addAll(tomlDiagnosticChecker.validateTomlWithSource(toml));
+        Assert.assertEquals(diagnostics.size(), 0);
+    }
+
+    @Test
     public void testInvalidInput() {
         Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "invalid-input");
 

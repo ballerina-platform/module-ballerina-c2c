@@ -125,7 +125,6 @@ public class TomlDiagnosticChecker {
             if (givenPort == port) {
                 return true;
             }
-            break;
         }
         return false;
     }
