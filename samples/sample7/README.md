@@ -19,8 +19,8 @@ Running Tests
 	cafe
 	No tests found
 
-Creating balo
-	target/balo/fusion-cafe-any-1.0.0.balo
+Creating bala
+	target/bala/fusion-cafe-any-1.0.0.bala
 
 Generating executable
 

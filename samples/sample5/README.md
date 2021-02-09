@@ -12,8 +12,8 @@ $> bal build
 Compiling source
 	hello/hello:0.0.1
 
-Creating balos
-	target/balo/hello-2020r2-any-0.0.1.balo
+Creating balas
+	target/bala/hello-2020r2-any-0.0.1.bala
 
 Running Tests
 
@@ -44,8 +44,8 @@ Generating artifacts...
 ```bash
 $> tree target
 target
-├── balo
-│   └── hello-2020r2-any-0.0.1.balo
+├── bala
+│   └── hello-2020r2-any-0.0.1.bala
 ├── bin
 │   └── hello.jar
 ├── docker

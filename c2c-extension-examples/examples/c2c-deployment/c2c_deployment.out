@@ -16,8 +16,8 @@ $ bal build
 Compiling source
         wso2/hello:0.1.0
 
-Creating balos
-        target/balo/hello-2020r2-any-0.1.0.balo
+Creating balas
+        target/bala/hello-2020r2-any-0.1.0.bala
 
 Running Tests
 
