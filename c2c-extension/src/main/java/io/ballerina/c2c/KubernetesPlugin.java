@@ -78,7 +78,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
     @Override
     public List<Diagnostic> codeAnalyze(Project project) {
         String cloud = project.buildOptions().cloud();
-        if (cloud == null || !cloud.equals("k8s")) {
+        if (cloud == null || !isSupportedBuildOption(cloud)) {
             return Collections.emptyList();
         }
         TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker(project);
@@ -95,7 +95,8 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         return diagnostics;
     }
 
-    public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Optional<KubernetesToml> k8sToml) {
+    public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Optional<KubernetesToml> k8sToml,
+                                      String buildType) {
         KubernetesContext.getInstance().setCurrentPackage(packageId);
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         dataHolder.setPackageID(packageId);
@@ -127,7 +128,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
             try {
                 KubernetesUtils.deleteDirectory(kubernetesOutputPath);
                 artifactManager.populateDeploymentModel();
-                artifactManager.createArtifacts();
+                artifactManager.createArtifacts(buildType);
             } catch (KubernetesPluginException e) {
                 String errorMessage = "module [" + packageId + "] " + e.getMessage();
                 printError(errorMessage);
@@ -146,7 +147,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
 
     @Override
     public void codeGenerated(Project project, Target target) {
-        if (project.buildOptions().cloud() == null  || !project.buildOptions().cloud().equals("k8s")) {
+        if (project.buildOptions().cloud() == null || !isSupportedBuildOption(project.buildOptions().cloud())) {
             return;
         }
         PackageCompilation packageCompilation = project.currentPackage().getCompilation();
@@ -168,12 +169,21 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
             KubernetesContext.getInstance().getDataHolder().setSourceRoot(executablePath.getParent()
                     .getParent().getParent());
             codeGeneratedInternal(KubernetesContext.getInstance().getCurrentPackage(),
-                    executablePath, project.currentPackage().kubernetesToml());
+                    executablePath, project.currentPackage().kubernetesToml(), project.buildOptions().cloud());
         } catch (IOException e) {
             String errorMessage = "error while accessing executable path " + e.getMessage();
             printError(errorMessage);
             pluginLog.error(errorMessage, e);
         }
+    }
+
+    private boolean isSupportedBuildOption(String buildOption) {
+        switch (buildOption) {
+            case "k8s":
+            case "docker":
+                return true;
+        }
+        return false;
     }
 
     private String getValidationSchema() {

@@ -129,7 +129,7 @@ public class TomlHelper {
     }
 
     public static Toml createK8sTomlFromProject(TomlDocument tomlDocument) {
-        TomlTableNode astNode = tomlDocument.tomlAstNode();
+        TomlTableNode astNode = tomlDocument.toml().rootNode();
         astNode.clearDiagnostics();
         astNode.addSyntaxDiagnostics(reportSyntaxDiagnostics(tomlDocument.syntaxTree()));
         return new Toml(astNode);

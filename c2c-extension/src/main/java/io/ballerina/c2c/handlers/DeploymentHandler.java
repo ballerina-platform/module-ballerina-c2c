@@ -23,7 +23,6 @@ import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.ConfigMapModel;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.KubernetesContext;
-import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.PersistentVolumeClaimModel;
 import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
@@ -64,7 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.KubernetesConstants.BALLERINA_CONF_FILE_NAME;
 import static io.ballerina.c2c.KubernetesConstants.BALLERINA_CONF_MOUNT_PATH;
@@ -73,12 +71,10 @@ import static io.ballerina.c2c.KubernetesConstants.BALLERINA_RUNTIME;
 import static io.ballerina.c2c.KubernetesConstants.CONFIG_MAP_POSTFIX;
 import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_FILE_POSTFIX;
 import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_POSTFIX;
-import static io.ballerina.c2c.KubernetesConstants.EXECUTABLE_JAR;
 import static io.ballerina.c2c.KubernetesConstants.YAML;
 import static io.ballerina.c2c.utils.KubernetesUtils.getValidName;
 import static io.ballerina.c2c.utils.KubernetesUtils.isBlank;
 import static org.ballerinax.docker.generator.DockerGenConstants.REGISTRY_SEPARATOR;
-import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
 
 /**
  * Generates kubernetes deployment from annotations.
@@ -563,46 +559,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         generate(deploymentModel);
         OUT.println();
         OUT.print("\t@kubernetes:Deployment \t\t\t - complete 1/1");
-        dataHolder.setDockerModel(getDockerModel(deploymentModel));
-    }
-
-    /**
-     * Create docker artifacts.
-     *
-     * @param deploymentModel Deployment model
-     */
-    private DockerModel getDockerModel(DeploymentModel deploymentModel) {
-        final KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
-        DockerModel dockerModel = dataHolder.getDockerModel();
-        String dockerImage = deploymentModel.getImage();
-        String imageTag = "latest";
-        if (dockerImage.contains(":")) {
-            imageTag = dockerImage.substring(dockerImage.lastIndexOf(":") + 1);
-            dockerImage = dockerImage.substring(0, dockerImage.lastIndexOf(":"));
-        }
-
-        dockerModel.setPkgId(dataHolder.getPackageID());
-        dockerModel.setBaseImage(deploymentModel.getBaseImage());
-        dockerModel.setRegistry(deploymentModel.getRegistry());
-        dockerModel.setName(dockerImage);
-        dockerModel.setTag(imageTag);
-        dockerModel.setEnableDebug(false);
-        dockerModel.setUsername(deploymentModel.getUsername());
-        dockerModel.setPassword(deploymentModel.getPassword());
-        dockerModel.setPush(deploymentModel.isPush());
-        dockerModel.setDockerConfig(deploymentModel.getDockerConfigPath());
-        dockerModel.setCmd(deploymentModel.getCmd());
-        dockerModel.setJarFileName(extractJarName(this.dataHolder.getJarPath()) + EXECUTABLE_JAR);
-        dockerModel.setPorts(deploymentModel.getPorts().stream()
-                .map(ContainerPort::getContainerPort)
-                .collect(Collectors.toSet()));
-        dockerModel.setUberJar(deploymentModel.isUberJar());
-        dockerModel.setService(true);
-        dockerModel.setDockerHost(deploymentModel.getDockerHost());
-        dockerModel.setDockerCertPath(deploymentModel.getDockerCertPath());
-        dockerModel.setBuildImage(deploymentModel.isBuildImage());
-        dockerModel.addCommandArg(deploymentModel.getCommandArgs());
-        return dockerModel;
+        dataHolder.setDockerModel(KubernetesUtils.getDockerModel(deploymentModel));
     }
 }
 
