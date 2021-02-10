@@ -42,6 +42,7 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getDockerImage;
  * Test cases for job resources.
  */
 public class JobTest {
+
     private static final Path SOURCE_DIR_PATH = Paths.get("src", "test", "resources", "job");
     private static final Path DOCKER_TARGET_PATH = SOURCE_DIR_PATH.resolve(DOCKER);
     private static final Path KUBERNETES_TARGET_PATH = SOURCE_DIR_PATH.resolve(KUBERNETES);
@@ -49,7 +50,7 @@ public class JobTest {
 
     @Test
     public void testKubernetesJobGeneration() throws IOException, InterruptedException {
-        Assert.assertEquals(KubernetesTestUtils.compileBallerinaFile(SOURCE_DIR_PATH, "ballerina_job.bal"), 0);
+        Assert.assertEquals(KubernetesTestUtils.compileBallerinaFile(SOURCE_DIR_PATH, "ballerina_job.bal", "k8s"), 0);
 
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         Assert.assertTrue(dockerFile.exists());

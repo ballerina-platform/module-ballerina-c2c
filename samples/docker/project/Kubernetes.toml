@@ -1,0 +1,4 @@
+[container.image]
+name = "hello"
+repository = "xlight05"
+tag = "v1.0.0"
