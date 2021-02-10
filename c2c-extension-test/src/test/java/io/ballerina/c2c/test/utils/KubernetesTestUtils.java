@@ -72,6 +72,7 @@ import java.util.stream.Collectors;
  * Kubernetes test utils.
  */
 public class KubernetesTestUtils {
+
     private static final Logger log = LoggerFactory.getLogger(KubernetesTestUtils.class);
     private static final String JAVA_OPTS = "JAVA_OPTS";
     private static final Path DISTRIBUTION_PATH = Paths.get(FilenameUtils.separatorsToSystem(
@@ -157,7 +158,8 @@ public class KubernetesTestUtils {
      * @throws InterruptedException if an error occurs while compiling
      * @throws IOException          if an error occurs while writing file
      */
-    public static int compileBallerinaFile(Path sourceDirectory, String fileName, Map<String, String> envVar)
+    public static int compileBallerinaFile(Path sourceDirectory, String fileName, Map<String, String> envVar,
+                                           String buildOption)
             throws InterruptedException, IOException {
         Path ballerinaInternalLog = Paths.get(sourceDirectory.toAbsolutePath().toString(), "ballerina-internal.log");
         if (ballerinaInternalLog.toFile().exists()) {
@@ -165,7 +167,7 @@ public class KubernetesTestUtils {
             FileUtils.deleteQuietly(ballerinaInternalLog.toFile());
         }
 
-        ProcessBuilder pb = new ProcessBuilder(BALLERINA_COMMAND, BUILD, "--cloud=k8s", fileName);
+        ProcessBuilder pb = new ProcessBuilder(BALLERINA_COMMAND, BUILD, "--cloud=" + buildOption, fileName);
         log.info(COMPILING + sourceDirectory.resolve(fileName).normalize());
         log.debug(EXECUTING_COMMAND + pb.command());
         pb.directory(sourceDirectory.toFile());
@@ -252,7 +254,6 @@ public class KubernetesTestUtils {
         return exitCode;
     }
 
-
     /**
      * Send a request to URL and validate the message.
      *
@@ -273,7 +274,7 @@ public class KubernetesTestUtils {
                         host.equalsIgnoreCase("internal.pizzashack.com") ||
                         host.equalsIgnoreCase("burger.com")) {
                     // If host is matching return the IP address we want, not what is in DNS
-                    return new InetAddress[]{InetAddress.getByName("127.0.0.1")};
+                    return new InetAddress[]{ InetAddress.getByName("127.0.0.1") };
                 } else {
                     // Else, resolve from the DNS
                     return super.resolve(host);
@@ -349,9 +350,10 @@ public class KubernetesTestUtils {
      * @throws InterruptedException if an error occurs while compiling
      * @throws IOException          if an error occurs while writing file
      */
-    public static int compileBallerinaFile(Path sourceDirectory, String fileName) throws InterruptedException,
+    public static int compileBallerinaFile(Path sourceDirectory, String fileName, String buildOption)
+            throws InterruptedException,
             IOException {
-        return compileBallerinaFile(sourceDirectory, fileName, new HashMap<>());
+        return compileBallerinaFile(sourceDirectory, fileName, new HashMap<>(), buildOption);
     }
 
     /**

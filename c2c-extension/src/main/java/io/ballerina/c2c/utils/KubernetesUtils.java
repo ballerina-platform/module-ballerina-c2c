@@ -28,6 +28,7 @@ import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
 import io.fabric8.kubernetes.api.model.ConfigMapKeySelector;
 import io.fabric8.kubernetes.api.model.ConfigMapKeySelectorBuilder;
+import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.EnvVarSource;
@@ -43,6 +44,7 @@ import org.ballerinalang.model.elements.PackageID;
 import org.ballerinalang.model.tree.AnnotationAttachmentNode;
 import org.ballerinalang.model.tree.IdentifierNode;
 import org.ballerinalang.model.tree.NodeKind;
+import org.ballerinax.docker.generator.models.DockerModel;
 import org.wso2.ballerinalang.compiler.semantics.model.symbols.BConstantSymbol;
 import org.wso2.ballerinalang.compiler.semantics.model.types.BFiniteType;
 import org.wso2.ballerinalang.compiler.tree.BLangAnnotationAttachment;
@@ -69,6 +71,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static io.ballerina.c2c.KubernetesConstants.EXECUTABLE_JAR;
 import static io.ballerina.c2c.KubernetesConstants.YAML;
 import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
 
@@ -402,5 +405,44 @@ public class KubernetesUtils {
         return new PackageID(new Name(currentPackage.packageOrg().value()),
                 new Name(currentPackage.packageName().value()),
                 new Name(currentPackage.packageVersion().value().toString()));
+    }
+
+    /**
+     * Creates docker model from Deployment Model object.
+     *
+     * @param deploymentModel Deployment model
+     */
+    public static DockerModel getDockerModel(DeploymentModel deploymentModel) {
+        KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
+        DockerModel dockerModel = dataHolder.getDockerModel();
+        String dockerImage = deploymentModel.getImage();
+        String imageTag = "latest";
+        if (dockerImage.contains(":")) {
+            imageTag = dockerImage.substring(dockerImage.lastIndexOf(":") + 1);
+            dockerImage = dockerImage.substring(0, dockerImage.lastIndexOf(":"));
+        }
+
+        dockerModel.setPkgId(dataHolder.getPackageID());
+        dockerModel.setBaseImage(deploymentModel.getBaseImage());
+        dockerModel.setRegistry(deploymentModel.getRegistry());
+        dockerModel.setName(dockerImage);
+        dockerModel.setTag(imageTag);
+        dockerModel.setEnableDebug(false);
+        dockerModel.setUsername(deploymentModel.getUsername());
+        dockerModel.setPassword(deploymentModel.getPassword());
+        dockerModel.setPush(deploymentModel.isPush());
+        dockerModel.setDockerConfig(deploymentModel.getDockerConfigPath());
+        dockerModel.setCmd(deploymentModel.getCmd());
+        dockerModel.setJarFileName(extractJarName(dataHolder.getJarPath()) + EXECUTABLE_JAR);
+        dockerModel.setPorts(deploymentModel.getPorts().stream()
+                .map(ContainerPort::getContainerPort)
+                .collect(Collectors.toSet()));
+        dockerModel.setUberJar(deploymentModel.isUberJar());
+        dockerModel.setService(true);
+        dockerModel.setDockerHost(deploymentModel.getDockerHost());
+        dockerModel.setDockerCertPath(deploymentModel.getDockerCertPath());
+        dockerModel.setBuildImage(deploymentModel.isBuildImage());
+        dockerModel.addCommandArg(deploymentModel.getCommandArgs());
+        return dockerModel;
     }
 }
