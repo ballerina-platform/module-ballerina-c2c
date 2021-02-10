@@ -60,7 +60,7 @@ public class Sample1Test extends SampleTest {
 
     @BeforeClass
     public void compileSample() throws IOException, InterruptedException {
-        Assert.assertEquals(KubernetesTestUtils.compileBallerinaFile(SOURCE_DIR_PATH, "hello_world.bal"), 0);
+        Assert.assertEquals(KubernetesTestUtils.compileBallerinaFile(SOURCE_DIR_PATH, "hello_world.bal", "k8s"), 0);
         File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello_world.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
         KubernetesClient client = new DefaultKubernetesClient();
@@ -125,7 +125,7 @@ public class Sample1Test extends SampleTest {
         Assert.assertEquals(ports.get(0), "9090/tcp");
     }
 
-    @Test(groups = {"integration"})
+    @Test(groups = { "integration" })
     public void deploySample() throws IOException, InterruptedException {
         Assert.assertEquals(0, KubernetesTestUtils.loadImage(DOCKER_IMAGE));
         Assert.assertEquals(0, KubernetesTestUtils.deployK8s(KUBERNETES_TARGET_PATH));
