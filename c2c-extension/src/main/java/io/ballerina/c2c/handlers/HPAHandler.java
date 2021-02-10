@@ -98,7 +98,7 @@ public class HPAHandler extends AbstractArtifactHandler {
     public void createArtifacts() throws KubernetesPluginException {
         DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
         PodAutoscalerModel podAutoscalerModel = deploymentModel.getPodAutoscalerModel();
-        if (podAutoscalerModel == null) {
+        if (!isHPAEnabled(podAutoscalerModel)) {
             return;
         }
         String balxFileName = extractJarName(dataHolder.getJarPath());
@@ -117,5 +117,16 @@ public class HPAHandler extends AbstractArtifactHandler {
         generate(podAutoscalerModel);
         OUT.println();
         OUT.print("\t@kubernetes:HPA \t\t\t - complete 1/1");
+    }
+
+    private boolean isHPAEnabled(PodAutoscalerModel podAutoscalerModel) {
+        if (podAutoscalerModel == null) {
+            return false;
+        }
+        Toml ballerinaCloud = dataHolder.getBallerinaCloud();
+        if (ballerinaCloud == null) {
+            return true; //since the default is hpa enabled
+        }
+        return TomlHelper.getBoolean(ballerinaCloud, "cloud.deployment.autoscaling.enable", true);
     }
 }
