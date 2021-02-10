@@ -1,5 +1,5 @@
-# Before you build the package, we are going to override some of the default values taken by the compiler, In order to
-do this you need to create a filed named `Kubernetes.toml` in package directory and paste the following content into it.
+# Before you build the package, we are going to override some of the default values taken by the compiler,
+In order to do this you need to create a filed named `Kubernetes.toml` in package directory and paste the following content into it.
 All the supported key value properties can be found in the Code to cloud deployment guide.
 
 [container.image]
@@ -7,10 +7,12 @@ repository="wso2inc"
 name="hello"
 tag="v0.1.0"
 
+Additionally, if you are using minikube, you could execute the following command to reuse the Docker daemon from minikube.
+$ eval $(minikube docker-env)
+
 # Now let's build the ballerina package.
 
-# Note that the `bal build` command should be executed on the package. Code to cloud generates only one container
-per package.
+# Note that the `bal build` command should be executed on the package. Code to cloud generates only one container per package.
 $ bal build
 
 Compiling source
@@ -35,7 +37,7 @@ Generating artifacts...
         @kubernetes:Docker                       - complete 2/2
 
         Execute the below command to deploy the Kubernetes artifacts:
-        kubectl apply -f /home/wso2/test/c2c-slp6/target/kubernetes/hello
+        kubectl apply -f /home/wso2/project/target/kubernetes/hello-0.1.0
 
         Execute the below command to access service via NodePort:
         kubectl expose deployment wso2-hello-0--deployment --type=NodePort --name=wso2-hello-0--svc-local
@@ -59,7 +61,7 @@ $ curl http://localhost:9090/helloWorld/sayHello
 Hello, World from service helloWorld !
 
 # Lets try executing Kubernetes service now.
-$ kubectl apply -f /home/wso2/test/c2c-slp6/target/kubernetes/hello
+$ kubectl apply -f /home/wso2/project/target/kubernetes/hello-0.1.0
 service/helloep-svc created
 deployment.apps/wso2-hello-0--deployment created
 horizontalpodautoscaler.autoscaling/wso2-hello-0--hpa created
