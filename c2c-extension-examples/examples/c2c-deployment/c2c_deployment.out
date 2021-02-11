@@ -1,5 +1,5 @@
 # Before you build the package, we are going to override some of the default values taken by the compiler,
-In order to do this you need to create a filed named `Kubernetes.toml` in package directory and paste the following content into it.
+In order to do this you need to create a filed named `Cloud.toml` in package directory and paste the following content into it.
 All the supported key value properties can be found in the Code to cloud deployment guide.
 
 [container.image]

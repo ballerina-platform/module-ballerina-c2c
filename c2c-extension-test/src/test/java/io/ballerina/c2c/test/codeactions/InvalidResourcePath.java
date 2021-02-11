@@ -30,7 +30,7 @@ public class InvalidResourcePath extends CodeActionTest {
     @Override
     public Object[][] dataProvider() {
         return new Object[][]{
-                { "fix-res-path.json", "Kubernetes.toml" }
+                { "fix-res-path.json", "Cloud.toml" }
         };
     }
 

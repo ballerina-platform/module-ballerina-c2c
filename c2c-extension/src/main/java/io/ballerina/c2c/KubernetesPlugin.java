@@ -24,9 +24,9 @@ import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.c2c.utils.TomlHelper;
+import io.ballerina.projects.CloudToml;
 import io.ballerina.projects.JBallerinaBackend;
 import io.ballerina.projects.JvmTarget;
-import io.ballerina.projects.KubernetesToml;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.internal.model.Target;
@@ -63,7 +63,7 @@ import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarNam
  * Compiler plugin to generate kubernetes artifacts.
  */
 @SupportedAnnotationPackages(
-        value = { "ballerina/cloud" }
+        value = {"ballerina/cloud"}
 )
 public class KubernetesPlugin extends AbstractCompilerPlugin {
 
@@ -82,11 +82,11 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
             return Collections.emptyList();
         }
         TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker(project);
-        Optional<KubernetesToml> kubernetesToml = project.currentPackage().kubernetesToml();
-        if (kubernetesToml.isEmpty()) {
+        Optional<CloudToml> cloudToml = project.currentPackage().cloudToml();
+        if (cloudToml.isEmpty()) {
             return Collections.emptyList();
         }
-        Toml toml = TomlHelper.createK8sTomlFromProject(kubernetesToml.get().tomlDocument());
+        Toml toml = TomlHelper.createK8sTomlFromProject(cloudToml.get().tomlDocument());
         TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
         validator.validate(toml);
         List<Diagnostic> diagnostics = toml.diagnostics();
@@ -95,7 +95,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
         return diagnostics;
     }
 
-    public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Optional<KubernetesToml> k8sToml,
+    public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Optional<CloudToml> cloudToml,
                                       String buildType) {
         KubernetesContext.getInstance().setCurrentPackage(packageId);
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
@@ -117,7 +117,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
                             .resolve(DOCKER)
                             .resolve(extractJarName(executableJarFile));
                     //Read and parse ballerina cloud
-                    k8sToml.ifPresent(
+                    cloudToml.ifPresent(
                             kubernetesToml -> dataHolder.setBallerinaCloud(new Toml(kubernetesToml.tomlAstNode())));
                 }
             }
@@ -169,7 +169,7 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
             KubernetesContext.getInstance().getDataHolder().setSourceRoot(executablePath.getParent()
                     .getParent().getParent());
             codeGeneratedInternal(KubernetesContext.getInstance().getCurrentPackage(),
-                    executablePath, project.currentPackage().kubernetesToml(), project.buildOptions().cloud());
+                    executablePath, project.currentPackage().cloudToml(), project.buildOptions().cloud());
         } catch (IOException e) {
             String errorMessage = "error while accessing executable path " + e.getMessage();
             printError(errorMessage);

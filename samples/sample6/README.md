@@ -49,7 +49,7 @@ Generating artifacts...
 ```bash
 $> tree target
 .
-├── Kubernetes.toml
+├── Cloud.toml
 ├── Ballerina.lock
 ├── Ballerina.toml
 ├── README.md

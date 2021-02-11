@@ -30,7 +30,7 @@ public class InvalidServicePath extends CodeActionTest {
     @Override
     public Object[][] dataProvider() {
         return new Object[][]{
-                { "fix-service-path.json", "Kubernetes.toml" }
+                { "fix-service-path.json", "Cloud.toml" }
         };
     }
 
