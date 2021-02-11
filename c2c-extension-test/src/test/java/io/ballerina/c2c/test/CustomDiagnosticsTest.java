@@ -48,7 +48,7 @@ public class CustomDiagnosticsTest {
 
         BuildProject project = BuildProject.load(projectPath);
         Toml toml = TomlHelper
-                .createK8sTomlFromProject(project.currentPackage().kubernetesToml().orElseThrow().tomlDocument());
+                .createK8sTomlFromProject(project.currentPackage().cloudToml().orElseThrow().tomlDocument());
         TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
         validator.validate(toml);
         List<Diagnostic> diagnostics = toml.diagnostics();
@@ -63,7 +63,7 @@ public class CustomDiagnosticsTest {
 
         BuildProject project = BuildProject.load(projectPath);
         Toml toml = TomlHelper
-                .createK8sTomlFromProject(project.currentPackage().kubernetesToml().orElseThrow().tomlDocument());
+                .createK8sTomlFromProject(project.currentPackage().cloudToml().orElseThrow().tomlDocument());
         TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
         validator.validate(toml);
         List<Diagnostic> diagnostics = toml.diagnostics();
@@ -78,7 +78,7 @@ public class CustomDiagnosticsTest {
 
         BuildProject project = BuildProject.load(projectPath);
         Toml toml = TomlHelper
-                .createK8sTomlFromProject(project.currentPackage().kubernetesToml().orElseThrow().tomlDocument());
+                .createK8sTomlFromProject(project.currentPackage().cloudToml().orElseThrow().tomlDocument());
         TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
         validator.validate(toml);
         List<Diagnostic> diagnostics = toml.diagnostics();
@@ -97,7 +97,7 @@ public class CustomDiagnosticsTest {
 
         BuildProject project = BuildProject.load(projectPath);
         Toml toml = TomlHelper
-                .createK8sTomlFromProject(project.currentPackage().kubernetesToml().orElseThrow().tomlDocument());
+                .createK8sTomlFromProject(project.currentPackage().cloudToml().orElseThrow().tomlDocument());
         TomlValidator validator = new TomlValidator(Schema.from(getValidationSchema()));
         validator.validate(toml);
         List<Diagnostic> diagnostics = toml.diagnostics();
@@ -113,7 +113,7 @@ public class CustomDiagnosticsTest {
 
         BuildProject project = BuildProject.load(projectPath);
         Toml toml = TomlHelper
-                .createK8sTomlFromProject(project.currentPackage().kubernetesToml().orElseThrow().tomlDocument());
+                .createK8sTomlFromProject(project.currentPackage().cloudToml().orElseThrow().tomlDocument());
         List<Diagnostic> diagnostics = toml.diagnostics();
         TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker(project);
         diagnostics.addAll(tomlDiagnosticChecker.validateTomlWithSource(toml));
@@ -128,7 +128,7 @@ public class CustomDiagnosticsTest {
 
         BuildProject project = BuildProject.load(projectPath);
         Toml toml = TomlHelper
-                .createK8sTomlFromProject(project.currentPackage().kubernetesToml().orElseThrow().tomlDocument());
+                .createK8sTomlFromProject(project.currentPackage().cloudToml().orElseThrow().tomlDocument());
         List<Diagnostic> diagnostics = toml.diagnostics();
         TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker(project);
         diagnostics.addAll(tomlDiagnosticChecker.validateTomlWithSource(toml));
@@ -141,7 +141,7 @@ public class CustomDiagnosticsTest {
         Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "invalid-res-path");
         BuildProject project = BuildProject.load(projectPath);
         Toml toml = TomlHelper
-                .createK8sTomlFromProject(project.currentPackage().kubernetesToml().orElseThrow().tomlDocument());
+                .createK8sTomlFromProject(project.currentPackage().cloudToml().orElseThrow().tomlDocument());
         List<Diagnostic> diagnostics = toml.diagnostics();
         TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker(project);
         diagnostics.addAll(tomlDiagnosticChecker.validateTomlWithSource(toml));
