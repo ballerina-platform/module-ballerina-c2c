@@ -30,7 +30,7 @@ public class InvalidPort extends CodeActionTest {
     @Override
     public Object[][] dataProvider() {
         return new Object[][]{
-                { "fix-port.json", "Kubernetes.toml" }
+                { "fix-port.json", "Cloud.toml" }
         };
     }
 

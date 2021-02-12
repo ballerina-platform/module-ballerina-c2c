@@ -376,7 +376,7 @@ public class C2CVisitor extends NodeVisitor {
                 absoluteServicePath.append("/");
             } else if (serviceNode.kind() == SyntaxKind.DOT_TOKEN) {
                 absoluteServicePath.append(".");
-            } else {
+            } else if (serviceNode.kind() == SyntaxKind.IDENTIFIER_TOKEN) {
                 IdentifierToken token = (IdentifierToken) serviceNode;
                 absoluteServicePath.append(token.text());
             }
