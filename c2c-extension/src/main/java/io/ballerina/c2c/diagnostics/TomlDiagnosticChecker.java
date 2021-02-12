@@ -57,7 +57,6 @@ public class TomlDiagnosticChecker {
         Optional<Toml> live = toml.getTable("cloud.deployment.probes.liveness");
         live.ifPresent(value -> diagnosticInfoList.addAll(validateProbe(projectService, value, ProbeType.LIVENESS)));
 
-
         return diagnosticInfoList;
     }
 
@@ -87,7 +86,7 @@ public class TomlDiagnosticChecker {
             int serviceListenerPort = serviceInfo.getListener().getPort();
             if (serviceListenerPort == port) {
                 String serviceName = serviceInfo.getServicePath().trim();
-                if (!path.startsWith(serviceName)) {
+                if (!isValidServicePath(serviceName, path)) {
                     Diagnostic diag = getTomlDiagnostic(pathNode.location(), "C2C003", "error.invalid" +
                             ".service.path", DiagnosticSeverity.ERROR, "Invalid " + type.getValue() + " " +
                             "Service Path");
@@ -99,7 +98,7 @@ public class TomlDiagnosticChecker {
                 List<ResourceInfo> resourceInfoList = serviceInfo.getResourceInfo();
                 for (ResourceInfo resourceInfo : resourceInfoList) {
                     String balResourceName = trimResourcePath(resourceInfo.getPath());
-                    String resourcePath = trimResourcePath(serviceName) + "/" + balResourceName;
+                    String resourcePath = trimResourcePath(trimResourcePath(serviceName) + "/" + balResourceName);
                     if (balResourceName.equals(".")) {
                         resourcePath = trimResourcePath(serviceName);
                     }
@@ -117,6 +116,19 @@ public class TomlDiagnosticChecker {
             }
         }
         return diagnosticInfos;
+    }
+
+    private static boolean isValidServicePath(String servicePath, String tomlPath) {
+        if (servicePath.equals("/")) {
+            return true;
+        }
+        if (tomlPath.startsWith(servicePath)) {
+            if (tomlPath.length() == servicePath.length()) {
+                return true;
+            }
+            return tomlPath.charAt(servicePath.length()) == '/';
+        }
+        return false;
     }
 
     private boolean isListenerPortValid(long port, List<ListenerInfo> listenerList) {
