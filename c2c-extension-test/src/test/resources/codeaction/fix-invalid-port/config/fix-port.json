@@ -16,7 +16,7 @@
                             "character": 0
                         }
                     },
-                    "newText": "import ballerina/http;\n\nservice http:Service /helloWorld on new http:Listener(9091) {\n    resource function get readyz (http:Caller caller) returns error? {\n        check caller-\u003erespond(\"Resource is Ready\");\n    }\n}\n"
+                    "newText": "import ballerina/http;\n\nservice http:Service /helloWorld on new http:Listener(9091) {\n    resource function get readyz() returns boolean {\n        return true;\n    }\n}\n"
                 }
             ]
         }

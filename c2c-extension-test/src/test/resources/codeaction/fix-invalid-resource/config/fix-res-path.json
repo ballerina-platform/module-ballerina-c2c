@@ -16,7 +16,7 @@
                             "character": 0
                         }
                     },
-                    "newText": "    resource function get readyz (http:Caller caller) returns error? {\n        check caller-\u003erespond(\"Resource is Ready\");\n    }\n"
+                    "newText": "    resource function get readyz() returns boolean {\n        return true;\n    }\n"
                 }
             ]
         }
