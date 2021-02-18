@@ -3,3 +3,6 @@ repository= "anuruddhal" # optional default is local
 name="hello-api" # optional
 tag="sample2"  # default is latest
 
+[[container.copy.files]]
+sourceFile= "./conf/Config.toml"
+target= "/home/ballerina/conf/Config.toml"
