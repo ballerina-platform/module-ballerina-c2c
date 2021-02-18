@@ -38,6 +38,26 @@
                                     "pattern": "^(?!\\s*$).+"
                                 }
                             }
+                        },
+                        "copy": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "files": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "source": {
+                                            "type": "string",
+                                            "pattern": "^(?!\\s*$).+"
+                                        },
+                                        "target": {
+                                            "type": "string",
+                                            "pattern": "^(?!\\s*$).+"
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
