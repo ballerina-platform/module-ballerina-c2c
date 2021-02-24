@@ -26,6 +26,7 @@ import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
+import io.ballerina.toml.api.Toml;
 import io.fabric8.kubernetes.api.model.ConfigMapKeySelector;
 import io.fabric8.kubernetes.api.model.ConfigMapKeySelectorBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -44,6 +45,8 @@ import org.ballerinalang.model.elements.PackageID;
 import org.ballerinalang.model.tree.AnnotationAttachmentNode;
 import org.ballerinalang.model.tree.IdentifierNode;
 import org.ballerinalang.model.tree.NodeKind;
+import org.ballerinax.docker.generator.exceptions.DockerGenException;
+import org.ballerinax.docker.generator.models.CopyFileModel;
 import org.ballerinax.docker.generator.models.DockerModel;
 import org.wso2.ballerinalang.compiler.semantics.model.symbols.BConstantSymbol;
 import org.wso2.ballerinalang.compiler.semantics.model.types.BFiniteType;
@@ -65,12 +68,15 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_POSTFIX;
 import static io.ballerina.c2c.KubernetesConstants.EXECUTABLE_JAR;
 import static io.ballerina.c2c.KubernetesConstants.YAML;
 import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
@@ -405,6 +411,36 @@ public class KubernetesUtils {
         return new PackageID(new Name(currentPackage.packageOrg().value()),
                 new Name(currentPackage.packageName().value()),
                 new Name(currentPackage.packageVersion().value().toString()));
+    }
+
+    public static void resolveDockerToml(KubernetesDataHolder dataHolder, DeploymentModel deploymentModel)
+            throws KubernetesPluginException {
+        final String containerImage = "container.image";
+        Toml toml = dataHolder.getBallerinaCloud();
+        if (toml != null) {
+            DockerModel dockerModel = dataHolder.getDockerModel();
+            dockerModel.setName(TomlHelper.getString(toml, containerImage + ".name",
+                    deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "")));
+            dockerModel
+                    .setRegistry(TomlHelper.getString(toml, containerImage + ".repository", null));
+            dockerModel.setTag(TomlHelper.getString(toml, containerImage + ".tag", dockerModel.getTag()));
+            dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", dockerModel.getBaseImage()));
+            String imageName = isBlank(dockerModel.getRegistry()) ? dockerModel.getName() + ":" + dockerModel.getTag() :
+                    dockerModel.getRegistry() + "/" + dockerModel.getName() + ":" + dockerModel.getTag();
+            deploymentModel.setImage(imageName);
+            Set<CopyFileModel> copyFiles = new HashSet<>();
+            for (Toml entry : toml.getTables("container.copy.files")) {
+                CopyFileModel copyFileModel = new CopyFileModel();
+                copyFileModel.setSource(TomlHelper.getString(entry, "sourceFile"));
+                copyFileModel.setTarget(TomlHelper.getString(entry, "target"));
+                copyFiles.add(copyFileModel);
+            }
+            try {
+                dockerModel.setCopyFiles(copyFiles);
+            } catch (DockerGenException e) {
+                throw new KubernetesPluginException(e.getMessage());
+            }
+        }
     }
 
     /**

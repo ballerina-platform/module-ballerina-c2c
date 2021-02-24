@@ -50,7 +50,6 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import org.apache.commons.codec.binary.Base64;
-import org.ballerinax.docker.generator.models.DockerModel;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -74,6 +73,7 @@ import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_POSTFIX;
 import static io.ballerina.c2c.KubernetesConstants.YAML;
 import static io.ballerina.c2c.utils.KubernetesUtils.getValidName;
 import static io.ballerina.c2c.utils.KubernetesUtils.isBlank;
+import static io.ballerina.c2c.utils.KubernetesUtils.resolveDockerToml;
 import static org.ballerinax.docker.generator.DockerGenConstants.REGISTRY_SEPARATOR;
 
 /**
@@ -510,22 +510,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         }
     }
 
-    private void resolveDockerToml(DeploymentModel deploymentModel) {
-        final String containerImage = "container.image";
-        Toml toml = dataHolder.getBallerinaCloud();
-        if (toml != null) {
-            DockerModel dockerModel = dataHolder.getDockerModel();
-            dockerModel.setName(TomlHelper.getString(toml, containerImage + ".name",
-                    deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "")));
-            dockerModel
-                    .setRegistry(TomlHelper.getString(toml, containerImage + ".repository", null));
-            dockerModel.setTag(TomlHelper.getString(toml, containerImage + ".tag", dockerModel.getTag()));
-            dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", dockerModel.getBaseImage()));
-            String imageName = isBlank(dockerModel.getRegistry()) ? dockerModel.getName() + ":" + dockerModel.getTag() :
-                    dockerModel.getRegistry() + "/" + dockerModel.getName() + ":" + dockerModel.getTag();
-            deploymentModel.setImage(imageName);
-        }
-    }
+
 
     @Override
     public void createArtifacts() throws KubernetesPluginException {
@@ -555,7 +540,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             deploymentModel.getReadinessProbe().getHttpGet().setPort(new
                     IntOrString(deploymentModel.getPorts().iterator().next().getContainerPort()));
         }
-        resolveDockerToml(deploymentModel);
+        resolveDockerToml(dataHolder, deploymentModel);
         generate(deploymentModel);
         OUT.println();
         OUT.print("\t@kubernetes:Deployment \t\t\t - complete 1/1");

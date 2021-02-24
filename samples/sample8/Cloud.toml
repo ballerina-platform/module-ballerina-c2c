@@ -1,0 +1,9 @@
+[container.image]
+repository="anuruddhal"
+name="hello-api"
+tag="sample8"
+
+[[container.copy.files]]
+sourceFile="./data/data.txt"
+target="/home/ballerina/data/data.txt"
+

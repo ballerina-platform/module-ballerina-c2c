@@ -117,6 +117,7 @@ public class ArtifactManager {
                     .build();
             deploymentModel.addPort(containerPort);
         }
+        KubernetesUtils.resolveDockerToml(kubernetesDataHolder, kubernetesDataHolder.getDeploymentModel());
         DockerModel dockerModel = KubernetesUtils.getDockerModel(deploymentModel);
         kubernetesDataHolder.setDockerModel(dockerModel);
         modifyDockerModelWithToml();
