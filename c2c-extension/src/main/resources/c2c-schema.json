@@ -40,6 +40,30 @@
                             }
                         }
                     }
+                },
+                "copy": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "files": {
+                            "type": "array",
+                            "additionalProperties": false,
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "sourceFile": {
+                                        "type": "string",
+                                        "pattern": "^(?!\\s*$).+"
+                                    },
+                                    "target": {
+                                        "type": "string",
+                                        "pattern": "^(?!\\s*$).+"
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         },
