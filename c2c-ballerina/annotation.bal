@@ -15,54 +15,15 @@
 // under the License.
 
 
-public type DeploymentConfiguration record {|
- |};
 
-# @kubernetes:Deployment annotation to configure deplyoment yaml.
-public const annotation DeploymentConfiguration Deployment on source service, source function, source listener;
 
-# Kubernetes service configuration.
-public type ServiceConfiguration record {|
-|};
-
-# @kubernetes:Service annotation to configure service yaml.
-public const annotation ServiceConfiguration Service on source listener, source service;
-
-# Kubernetes Horizontal Pod Autoscaler configuration
-public type PodAutoscalerConfig record {|
-|};
-
-# @kubernetes:HPA annotation to configure horizontal pod autoscaler yaml.
-public const annotation PodAutoscalerConfig HPA on source service, source function;
-
-# Secret volume mount configurations for kubernetes.
-public type SecretMount record {|
-|};
-
-# @kubernetes:Secret annotation to configure secrets.
-public const annotation SecretMount Secret on source service, source function;
-
-# ConfigMap volume mount configurations for kubernetes.
-public type ConfigMapMount record {|
-|};
-
-# @kubernetes:ConfigMap annotation to configure config maps.
-public const annotation ConfigMapMount ConfigMap on source service, source function;
-
-# Persistent Volume Claims configurations for kubernetes.
-public type PersistentVolumeClaims record {|
-|};
-
-# @kubernetes:PersistentVolumeClaim annotation to configure Persistent Volume Claims.
-public const annotation PersistentVolumeClaims PersistentVolumeClaim on source service, source function;
-
-# Resource Quota configuration for kubernetes.
-public type ResourceQuotas record {|
-|};
-
-# @kubernetes:ResourcesQuotas annotation to configure Resource Quotas.
-public const annotation ResourceQuotas ResourceQuota on source service, source function;
-
+# Cron Job Schedule Configuration.
+#
+# + hours - Hours
+# + monthOfYear - Month of the Year
+# + dayOfMonth - Day of Month
+# + minutes - Minutes
+# + daysOfWeek - Days of Week
 public type ScheduleConfig record {|
      string minutes;
      string hours;
@@ -71,6 +32,9 @@ public type ScheduleConfig record {|
      string daysOfWeek;
 |};
 
+# Task Configuration.
+#
+# + schedule - Task execution schedule
 public type TaskConfig record{|
     ScheduleConfig schedule?;
 |};
