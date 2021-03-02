@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -101,8 +101,7 @@ public abstract class AbstractInvalidPortCodeAction extends ProbeBasedDiagnostic
 
     private String getProbeServiceString(int port, String servicePath, String resourcePath) {
         return String.format("%sservice http:Service %s on new http:Listener(%d) {%s    resource " +
-                        "function get %s (http:Caller caller) returns error? {%s        check caller->respond" +
-                        "(\"Resource is Ready\");%s    }%s}%s",
+                        "function get %s() returns boolean {%s        return true;%s    }%s}%s",
                 CommonUtil.LINE_SEPARATOR, servicePath, port, CommonUtil.LINE_SEPARATOR, resourcePath,
                 CommonUtil.LINE_SEPARATOR, CommonUtil.LINE_SEPARATOR, CommonUtil.LINE_SEPARATOR,
                 CommonUtil.LINE_SEPARATOR);

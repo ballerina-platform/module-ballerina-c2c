@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -103,10 +103,7 @@ public abstract class AbstractInvalidResourceCodeAction extends ProbeBasedDiagno
         } else {
             serviceResourcePath = tomlPath;
         }
-        return "    resource function get " + serviceResourcePath +
-                " (http:Caller caller) returns error? {" + CommonUtil.LINE_SEPARATOR +
-                "        check caller->respond(\"Resource is Ready\");" + CommonUtil.LINE_SEPARATOR +
-                "    }" + CommonUtil.LINE_SEPARATOR;
+        return String.format("    resource function get %s() returns boolean {%s        return true;%s    }%s",
+                serviceResourcePath, CommonUtil.LINE_SEPARATOR, CommonUtil.LINE_SEPARATOR, CommonUtil.LINE_SEPARATOR);
     }
-
 }
