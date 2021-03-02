@@ -46,3 +46,4 @@ samples/*/kubernetes
 samples/*/docker
 velocity.log*
 *Ballerina.lock
+*Dependencies.toml

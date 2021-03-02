@@ -5,10 +5,7 @@ import ballerina/log;
 listener http:Listener helloEP = new(9090);
 
 service http:Service /helloWorld on helloEP {
-    resource function get sayHello(http:Caller caller) {
-        var responseResult = caller->respond("Hello, World from service helloWorld ! \n");
-        if (responseResult is error) {
-            log:printError("error responding back to client.", err = responseResult);
-        }
+    resource function get sayHello() returns string {
+        return "Hello, World from service helloWorld ! \n";
     }
 }

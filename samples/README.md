@@ -22,3 +22,4 @@
 1. [Sample5: Mount config map volumes to deployment](sample5/)
 1. [Sample6: Readiness and Liveness Probes](sample6/)
 1. [Sample7: Multi module Ballerina project](sample7/)
+1. [Sample8: Copy Files to Docker image](sample8) 

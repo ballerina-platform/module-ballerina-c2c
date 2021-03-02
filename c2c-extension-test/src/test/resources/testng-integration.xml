@@ -24,6 +24,9 @@
             <class name="io.ballerina.c2c.test.samples.Sample5Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample6Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample7Test"/>
+            <class name="io.ballerina.c2c.test.samples.Sample8Test"/>
+            <class name="io.ballerina.c2c.test.samples.DockerProjectTest"/>
+            <class name="io.ballerina.c2c.test.samples.DockerSingleTest"/>
         </classes>
     </test>
 
@@ -33,9 +36,12 @@
             <class name="io.ballerina.c2c.test.EnvTest"/>
             <class name="io.ballerina.c2c.test.ServiceExtractionTest"/>
             <class name="io.ballerina.c2c.test.CustomDiagnosticsTest"/>
-            <class name="io.ballerina.c2c.test.codeactions.InvalidServicePath"/>
-            <class name="io.ballerina.c2c.test.codeactions.InvalidResourcePath"/>
-            <class name="io.ballerina.c2c.test.codeactions.InvalidPort"/>
+            <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidServicePath"/>
+            <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidResourcePath"/>
+            <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidPort"/>
+            <class name="io.ballerina.c2c.test.codeactions.CloudEnvTest"/>
+            <class name="io.ballerina.c2c.test.codeactions.CloudProbesTest"/>
+            <class name="io.ballerina.c2c.test.completion.CloudTest"/>
         </classes>
     </test>
 
