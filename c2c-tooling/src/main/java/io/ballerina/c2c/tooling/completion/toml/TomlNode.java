@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2021, WSO2 Inc. (http://wso2.com) All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,24 +12,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
- 
-plugins {
-  id "com.gradle.enterprise" version "3.2"
-}
+package io.ballerina.c2c.tooling.completion.toml;
 
-rootProject.name = 'code2cloud-extension-parent'
-include(':build-config:checkstyle')
-include(':c2c-extension')
-include(':c2c-ballerina')
-include(':c2c-extension-test')
-include (':c2c-extension-examples')
-include (':c2c-tooling')
+/**
+ * Represets Toml Node for completion builder.
+ *
+ * @since 2.0.0
+ */
+public interface TomlNode {
 
-gradleEnterprise {
-    buildScan {
-        termsOfServiceUrl = 'https://gradle.com/terms-of-service'
-        termsOfServiceAgree = 'yes'
-    }
+    String prettyPrint();
 }

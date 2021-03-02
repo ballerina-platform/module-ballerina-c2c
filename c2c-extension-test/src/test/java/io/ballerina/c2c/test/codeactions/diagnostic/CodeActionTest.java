@@ -15,7 +15,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package io.ballerina.c2c.test.codeactions;
+package io.ballerina.c2c.test.codeactions.diagnostic;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

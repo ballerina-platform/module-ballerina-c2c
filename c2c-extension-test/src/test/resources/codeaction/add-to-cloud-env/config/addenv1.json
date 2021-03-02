@@ -1,22 +1,22 @@
 {
-    "line": 7,
-    "character": 23,
+    "line": 6,
+    "character": 13,
     "expected": [
         {
-            "title": "Add Resource to Service",
+            "title": "Add as env to Cloud.toml",
             "edits": [
                 {
                     "range": {
                         "start": {
-                            "line": 30,
+                            "line": 5,
                             "character": 0
                         },
                         "end": {
-                            "line": 30,
+                            "line": 5,
                             "character": 0
                         }
                     },
-                    "newText": "    resource function get readyz() returns boolean {\n        return true;\n    }\n"
+                    "newText": "\n[[cloud.config.envs]]\nkey_ref\u003d\"name\"\nconfig_name\u003d\"name\"\n"
                 }
             ]
         }

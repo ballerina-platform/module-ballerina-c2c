@@ -41,9 +41,12 @@
             <class name="io.ballerina.c2c.test.JobTest"/>
             <class name="io.ballerina.c2c.test.EnvTest"/>
             <class name="io.ballerina.c2c.test.CustomDiagnosticsTest"/>
-            <class name="io.ballerina.c2c.test.codeactions.InvalidServicePath"/>
-            <class name="io.ballerina.c2c.test.codeactions.InvalidResourcePath"/>
-            <class name="io.ballerina.c2c.test.codeactions.InvalidPort"/>
+            <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidServicePath"/>
+            <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidResourcePath"/>
+            <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidPort"/>
+            <class name="io.ballerina.c2c.test.codeactions.CloudEnvTest"/>
+            <class name="io.ballerina.c2c.test.codeactions.CloudProbesTest"/>
+            <class name="io.ballerina.c2c.test.completion.CloudTest"/>
         </classes>
     </test>
 

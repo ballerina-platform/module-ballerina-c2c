@@ -34,10 +34,12 @@ import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CompletionCapabilities;
 import org.eclipse.lsp4j.CompletionItemCapabilities;
+import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.FoldingRangeCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SignatureHelpCapabilities;
 import org.eclipse.lsp4j.SignatureInformationCapabilities;
@@ -66,6 +68,7 @@ import java.util.concurrent.ExecutionException;
 public class TestUtil {
 
     private static final String CODE_ACTION = "textDocument/codeAction";
+    private static final String COMPLETION = "textDocument/completion";
 
     private static final Gson GSON = new Gson();
 
@@ -239,5 +242,26 @@ public class TestUtil {
         diagnostics.addAll(project.get().currentPackage().getCompilation().diagnosticResult().diagnostics());
 
         return diagnostics;
+    }
+
+    /**
+     * Get the textDocument/completion response.
+     *
+     * @param filePath Path of the Bal file
+     * @param position Cursor Position
+     * @param endpoint Service Endpoint to Language Server
+     * @return {@link String}   Response as String
+     */
+    public static String getCompletionResponse(String filePath, Position position, Endpoint endpoint) {
+        CompletableFuture result = endpoint.request(COMPLETION, getCompletionParams(filePath, position));
+        return getResponseString(result);
+    }
+
+    private static CompletionParams getCompletionParams(String filePath, Position position) {
+        CompletionParams completionParams = new CompletionParams();
+        completionParams.setTextDocument(getTextDocumentIdentifier(filePath));
+        completionParams.setPosition(new Position(position.getLine(), position.getCharacter()));
+
+        return completionParams;
     }
 }
