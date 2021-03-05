@@ -52,11 +52,10 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
 public class Sample5Test extends SampleTest {
 
     private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample5");
-    private static final String VERSION = "0.0.1";
     private static final Path DOCKER_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello-" + VERSION);
+            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
     private static final Path KUBERNETES_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello-" + VERSION);
+            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello");
     private static final String DOCKER_IMAGE = "anuruddhal/hello-api:sample5";
     private Deployment deployment;
     private ConfigMap ballerinaConf;
@@ -66,7 +65,7 @@ public class Sample5Test extends SampleTest {
     public void compileSample() throws IOException, InterruptedException {
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH)
                 , 0);
-        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello-" + VERSION + ".yaml").toFile();
+        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
         KubernetesClient client = new DefaultKubernetesClient();
         List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
@@ -77,10 +76,10 @@ public class Sample5Test extends SampleTest {
                     break;
                 case "ConfigMap":
                     switch (data.getMetadata().getName()) {
-                        case "hello-0-0-1-ballerina-conf-config-map":
+                        case "hello-ballerina-conf-config-map":
                             ballerinaConf = (ConfigMap) data;
                             break;
-                        case "hello-0-0-1-data-txt":
+                        case "hello-data-txt":
                             dataMap = (ConfigMap) data;
                             break;
                         default:
@@ -101,11 +100,11 @@ public class Sample5Test extends SampleTest {
     @Test
     public void validateDeployment() {
         Assert.assertNotNull(deployment);
-        Assert.assertEquals(deployment.getMetadata().getName(), "hello-0-0-1-deployment");
+        Assert.assertEquals(deployment.getMetadata().getName(), "hello-deployment");
         Assert.assertEquals(deployment.getSpec().getReplicas().intValue(), 1);
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getVolumes().size(), 3);
         Assert.assertEquals(deployment.getMetadata().getLabels().get(KubernetesConstants
-                .KUBERNETES_SELECTOR_KEY), "hello-" + VERSION);
+                .KUBERNETES_SELECTOR_KEY), "hello");
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         // Assert Containers
@@ -145,7 +144,7 @@ public class Sample5Test extends SampleTest {
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
         Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(),
-                "[/bin/sh, -c, java -Xdiag -cp \"hello-0.0.1.jar:jars/*\" 'hello/hello/0_0_1/$_init']");
+                "[/bin/sh, -c, java -Xdiag -cp \"hello.jar:jars/*\" 'hello/hello/0_0_1/$_init']");
     }
 
     @Test(groups = { "integration" })

@@ -540,7 +540,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             deploymentModel.getReadinessProbe().getHttpGet().setPort(new
                     IntOrString(deploymentModel.getPorts().iterator().next().getContainerPort()));
         }
-        resolveDockerToml(dataHolder, deploymentModel);
+        resolveDockerToml(deploymentModel);
         generate(deploymentModel);
         OUT.println();
         OUT.print("\t@kubernetes:Deployment \t\t\t - complete 1/1");

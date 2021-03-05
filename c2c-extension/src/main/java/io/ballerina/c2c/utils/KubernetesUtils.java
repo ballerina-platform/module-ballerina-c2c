@@ -413,8 +413,8 @@ public class KubernetesUtils {
                 new Name(currentPackage.packageVersion().value().toString()));
     }
 
-    public static void resolveDockerToml(KubernetesDataHolder dataHolder, DeploymentModel deploymentModel)
-            throws KubernetesPluginException {
+    public static void resolveDockerToml(DeploymentModel deploymentModel) throws KubernetesPluginException {
+        KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         final String containerImage = "container.image";
         Toml toml = dataHolder.getBallerinaCloud();
         if (toml != null) {
@@ -425,6 +425,8 @@ public class KubernetesUtils {
                     .setRegistry(TomlHelper.getString(toml, containerImage + ".repository", null));
             dockerModel.setTag(TomlHelper.getString(toml, containerImage + ".tag", dockerModel.getTag()));
             dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", dockerModel.getBaseImage()));
+            dockerModel.setJarFileName(extractJarName(dataHolder.getJarPath()) + EXECUTABLE_JAR);
+            dockerModel.setCmd(TomlHelper.getString(toml, containerImage + ".cmd", dockerModel.getCmd()));
             String imageName = isBlank(dockerModel.getRegistry()) ? dockerModel.getName() + ":" + dockerModel.getTag() :
                     dockerModel.getRegistry() + "/" + dockerModel.getName() + ":" + dockerModel.getTag();
             deploymentModel.setImage(imageName);
@@ -457,19 +459,13 @@ public class KubernetesUtils {
             imageTag = dockerImage.substring(dockerImage.lastIndexOf(":") + 1);
             dockerImage = dockerImage.substring(0, dockerImage.lastIndexOf(":"));
         }
-
+        dockerModel.setJarFileName(extractJarName(dataHolder.getJarPath()) + EXECUTABLE_JAR);
         dockerModel.setPkgId(dataHolder.getPackageID());
-        dockerModel.setBaseImage(deploymentModel.getBaseImage());
         dockerModel.setRegistry(deploymentModel.getRegistry());
         dockerModel.setName(dockerImage);
         dockerModel.setTag(imageTag);
         dockerModel.setEnableDebug(false);
-        dockerModel.setUsername(deploymentModel.getUsername());
-        dockerModel.setPassword(deploymentModel.getPassword());
-        dockerModel.setPush(deploymentModel.isPush());
         dockerModel.setDockerConfig(deploymentModel.getDockerConfigPath());
-        dockerModel.setCmd(deploymentModel.getCmd());
-        dockerModel.setJarFileName(extractJarName(dataHolder.getJarPath()) + EXECUTABLE_JAR);
         dockerModel.setPorts(deploymentModel.getPorts().stream()
                 .map(ContainerPort::getContainerPort)
                 .collect(Collectors.toSet()));

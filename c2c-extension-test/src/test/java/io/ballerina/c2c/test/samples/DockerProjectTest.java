@@ -42,9 +42,8 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
 public class DockerProjectTest extends SampleTest {
 
     private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("docker").resolve("project");
-    private static final String VERSION = "0.0.1";
     private static final Path DOCKER_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello-" + VERSION);
+            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
     private static final String DOCKER_IMAGE = "xlight05/hello:v1.0.0";
 
     @BeforeClass
@@ -66,7 +65,7 @@ public class DockerProjectTest extends SampleTest {
         Assert.assertEquals(ports.get(1), "9096/tcp");
         // Validate ballerina.conf in run command
         Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(),
-                "[/bin/sh, -c, java -Xdiag -cp \"hello-0.0.1.jar:jars/*\" 'hello/hello/0_0_1/$_init']");
+                "[/bin/sh, -c, java -Xdiag -cp \"hello.jar:jars/*\" 'hello/hello/0_0_1/$_init']");
     }
 
     @Test(groups = { "integration" })

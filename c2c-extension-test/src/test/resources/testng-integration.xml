@@ -42,6 +42,7 @@
             <class name="io.ballerina.c2c.test.codeactions.CloudEnvTest"/>
             <class name="io.ballerina.c2c.test.codeactions.CloudProbesTest"/>
             <class name="io.ballerina.c2c.test.completion.CloudTest"/>
+            <class name="io.ballerina.c2c.test.docker.CmdTest"/>
         </classes>
     </test>
 

@@ -54,10 +54,6 @@ public class DeploymentModel extends KubernetesModel {
     private boolean buildImage;
     private String baseImage;
     private List<EnvVar> envVars;
-    private String username;
-    private String password;
-    private boolean push;
-    private String cmd;
     private String dockerHost;
     private String dockerCertPath;
     private List<ContainerPort> ports;
@@ -81,7 +77,6 @@ public class DeploymentModel extends KubernetesModel {
         this.envVars = new ArrayList<>();
         this.buildImage = true;
         this.baseImage = OPENJDK_11_JRE_SLIM_BASE;
-        this.push = false;
         this.labels = new LinkedHashMap<>();
         this.nodeSelector = new LinkedHashMap<>();
         this.imagePullPolicy = KubernetesConstants.ImagePullPolicy.IfNotPresent.name();
@@ -143,9 +138,6 @@ public class DeploymentModel extends KubernetesModel {
                 ", buildImage=" + buildImage +
                 ", baseImage='" + baseImage +
                 ", env=" + envVars +
-                ", username='" + username +
-                ", push=" + push +
-                ", cmd=" + cmd +
                 ", dockerHost='" + dockerHost +
                 ", dockerCertPath='" + dockerCertPath +
                 ", ports=" + ports +

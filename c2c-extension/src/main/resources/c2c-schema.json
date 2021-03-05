@@ -29,6 +29,10 @@
                             "type": "string",
                             "pattern": "^(?!\\s*$).+"
                         },
+                        "cmd": {
+                            "type": "string",
+                            "pattern": ".*"
+                        },
                         "user": {
                             "type": "object",
                             "additionalProperties": false,

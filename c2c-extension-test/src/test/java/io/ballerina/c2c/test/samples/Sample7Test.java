@@ -52,11 +52,10 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
 public class Sample7Test extends SampleTest {
 
     private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample7");
-    private static final String VERSION = "1.0.0";
     private static final Path DOCKER_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("cafe-" + VERSION);
+            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("cafe");
     private static final Path KUBERNETES_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("cafe-" + VERSION);
+            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("cafe");
     private static final String DOCKER_IMAGE = "cafe-repo/menu:1.0.0";
     private Deployment deployment;
     private ConfigMap teaMenuConf;
@@ -66,7 +65,7 @@ public class Sample7Test extends SampleTest {
     public void compileSample() throws IOException, InterruptedException {
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH)
                 , 0);
-        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("cafe-" + VERSION + ".yaml").toFile();
+        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("cafe.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
         KubernetesClient client = new DefaultKubernetesClient();
         List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
@@ -77,10 +76,10 @@ public class Sample7Test extends SampleTest {
                     break;
                 case "ConfigMap":
                     switch (data.getMetadata().getName()) {
-                        case "cafe-1-0-0-tea-json":
+                        case "cafe-tea-json":
                             teaMenuConf = (ConfigMap) data;
                             break;
-                        case "cafe-1-0-0-coffe-json":
+                        case "cafe-coffe-json":
                             coffeMenuConf = (ConfigMap) data;
                             break;
                         default:
@@ -101,11 +100,11 @@ public class Sample7Test extends SampleTest {
     @Test
     public void validateDeployment() {
         Assert.assertNotNull(deployment);
-        Assert.assertEquals(deployment.getMetadata().getName(), "cafe-1-0-0-deployment");
+        Assert.assertEquals(deployment.getMetadata().getName(), "cafe-deployment");
         Assert.assertEquals(deployment.getSpec().getReplicas().intValue(), 1);
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getVolumes().size(), 2);
         Assert.assertEquals(deployment.getMetadata().getLabels().get(KubernetesConstants
-                .KUBERNETES_SELECTOR_KEY), "cafe-" + VERSION);
+                .KUBERNETES_SELECTOR_KEY), "cafe");
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         // Assert Containers
