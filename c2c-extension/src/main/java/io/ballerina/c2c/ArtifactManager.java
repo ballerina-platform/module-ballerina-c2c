@@ -30,8 +30,6 @@ import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.ServiceModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
-import io.ballerina.c2c.utils.TomlHelper;
-import io.ballerina.toml.api.Toml;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import org.ballerinax.docker.generator.models.DockerModel;
@@ -57,14 +55,6 @@ public class ArtifactManager {
         this.kubernetesDataHolder = KubernetesContext.getInstance().getDataHolder();
     }
 
-    /**
-     * Returns print instructions.
-     *
-     * @return instructions.
-     */
-    public static Map<String, String> getInstructions() {
-        return instructions;
-    }
 
     /**
      * Generates artifacts according to the cloud parameter in build options.
@@ -117,10 +107,9 @@ public class ArtifactManager {
                     .build();
             deploymentModel.addPort(containerPort);
         }
-        KubernetesUtils.resolveDockerToml(kubernetesDataHolder, kubernetesDataHolder.getDeploymentModel());
+        KubernetesUtils.resolveDockerToml(kubernetesDataHolder.getDeploymentModel());
         DockerModel dockerModel = KubernetesUtils.getDockerModel(deploymentModel);
         kubernetesDataHolder.setDockerModel(dockerModel);
-        modifyDockerModelWithToml();
         new DockerHandler().createArtifacts();
 
         instructions.put("\tExecute the below command to run the generated docker image: ",
@@ -137,19 +126,6 @@ public class ArtifactManager {
             output.append("-p ").append(port).append(":").append(port).append(" ");
         }
         return output.toString();
-    }
-
-    private void modifyDockerModelWithToml() {
-        final String containerImage = "container.image";
-        Toml toml = kubernetesDataHolder.getBallerinaCloud();
-        if (toml != null) {
-            DockerModel dockerModel = kubernetesDataHolder.getDockerModel();
-            dockerModel.setName(TomlHelper.getString(toml, containerImage + ".name", dockerModel.getName()));
-            dockerModel
-                    .setRegistry(TomlHelper.getString(toml, containerImage + ".repository", null));
-            dockerModel.setTag(TomlHelper.getString(toml, containerImage + ".tag", dockerModel.getTag()));
-            dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", dockerModel.getBaseImage()));
-        }
     }
 
     private void printInstructions() {

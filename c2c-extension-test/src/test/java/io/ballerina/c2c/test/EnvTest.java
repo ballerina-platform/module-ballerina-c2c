@@ -46,12 +46,11 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getDockerImage;
  */
 public class EnvTest {
     private static final Path SOURCE_DIR_PATH = Paths.get("src", "test", "resources", "env");
-    private static final String VERSION = "0.0.1";
     private static final Path DOCKER_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello-" + VERSION);
+            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
     private static final Path KUBERNETES_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello-" + VERSION);
-    private static final String DOCKER_IMAGE = "hello-0-0-1:latest";
+            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello");
+    private static final String DOCKER_IMAGE = "hello:latest";
 
     @Test
     public void testEnvVars() throws IOException, InterruptedException {
@@ -62,7 +61,7 @@ public class EnvTest {
         InspectImageResponse imageInspect = getDockerImage(DOCKER_IMAGE);
         Assert.assertNotNull(imageInspect.getConfig());
 
-        File k8sYaml = KUBERNETES_TARGET_PATH.resolve("hello-" + VERSION + ".yaml").toFile();
+        File k8sYaml = KUBERNETES_TARGET_PATH.resolve("hello.yaml").toFile();
         List<HasMetadata> k8sItems = KubernetesTestUtils.loadYaml(k8sYaml);
         Deployment deployment = null;
         for (HasMetadata data : k8sItems) {
@@ -71,7 +70,7 @@ public class EnvTest {
             }
         }
         assert deployment != null;
-        Assert.assertEquals(deployment.getMetadata().getName(), "hello-0-0-1-deployment");
+        Assert.assertEquals(deployment.getMetadata().getName(), "hello-deployment");
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         Container container = deployment.getSpec().getTemplate().getSpec().getContainers().get(0);

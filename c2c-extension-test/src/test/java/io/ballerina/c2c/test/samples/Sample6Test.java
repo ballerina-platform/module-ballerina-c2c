@@ -50,11 +50,10 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
 public class Sample6Test extends SampleTest {
 
     private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample6");
-    private static final String VERSION = "0.0.1";
     private static final Path DOCKER_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello-" + VERSION);
+            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
     private static final Path KUBERNETES_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello-" + VERSION);
+            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello");
     private static final String DOCKER_IMAGE = "hello-api:sample6";
     private Deployment deployment;
 
@@ -62,7 +61,7 @@ public class Sample6Test extends SampleTest {
     public void compileSample() throws IOException, InterruptedException {
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH)
                 , 0);
-        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello-" + VERSION + ".yaml").toFile();
+        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
         KubernetesClient client = new DefaultKubernetesClient();
         List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
@@ -84,10 +83,10 @@ public class Sample6Test extends SampleTest {
     @Test
     public void validateDeployment() {
         Assert.assertNotNull(deployment);
-        Assert.assertEquals(deployment.getMetadata().getName(), "hello-0-0-1-deployment");
+        Assert.assertEquals(deployment.getMetadata().getName(), "hello-deployment");
         Assert.assertEquals(deployment.getSpec().getReplicas().intValue(), 1);
         Assert.assertEquals(deployment.getMetadata().getLabels().get(KubernetesConstants
-                .KUBERNETES_SELECTOR_KEY), "hello-" + VERSION);
+                .KUBERNETES_SELECTOR_KEY), "hello");
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         // Assert Containers

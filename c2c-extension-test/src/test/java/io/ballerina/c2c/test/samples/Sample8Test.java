@@ -43,9 +43,8 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getExposedPorts;
 public class Sample8Test extends SampleTest {
 
     private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample8");
-    private static final String VERSION = "0.0.1";
     private static final Path DOCKER_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello-" + VERSION);
+            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
     private static final String DOCKER_IMAGE = "anuruddhal/hello-api:sample8";
 
     @BeforeClass
@@ -68,7 +67,7 @@ public class Sample8Test extends SampleTest {
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
         Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(),
-                "[/bin/sh, -c, java -Xdiag -cp \"hello-0.0.1.jar:jars/*\" 'hello/hello/0_0_1/$_init']");
+                "[/bin/sh, -c, java -Xdiag -cp \"hello.jar:jars/*\" 'hello/hello/0_0_1/$_init']");
     }
 
 

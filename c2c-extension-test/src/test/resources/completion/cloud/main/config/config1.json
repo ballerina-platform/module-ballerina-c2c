@@ -22,6 +22,14 @@
             "insertTextFormat": "Snippet"
         },
         {
+            "label": "cmd",
+            "kind": "Snippet",
+            "detail": "String",
+            "sortText": "A",
+            "insertText": "cmd=\"${1:}\"\n",
+            "insertTextFormat": "Snippet"
+        },
+        {
             "label": "cloud.deployment.probes.readiness",
             "kind": "Snippet",
             "detail": "Table",
