@@ -19,9 +19,10 @@ package io.ballerina.c2c;
 
 import io.ballerina.c2c.diagnostics.Config;
 import io.ballerina.c2c.diagnostics.ListenerInfo;
+import io.ballerina.c2c.diagnostics.MutualSSLConfig;
 import io.ballerina.c2c.diagnostics.ProjectServiceInfo;
+import io.ballerina.c2c.diagnostics.SecureSocketConfig;
 import io.ballerina.c2c.diagnostics.ServiceInfo;
-import io.ballerina.c2c.diagnostics.Store;
 import io.ballerina.c2c.diagnostics.Task;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.DeploymentModel;
@@ -116,7 +117,7 @@ public class KubernetesDataExtractor {
 
             serviceModel.setProtocol("http");
 
-            if (listener.getConfig().isPresent() && listener.getConfig().get().getKeyStore().isPresent()) {
+            if (listener.getConfig().isPresent() && listener.getConfig().get().getSecureSocketConfig().isPresent()) {
                 Set<SecretModel> secretModels = processSecureSocketAnnotation(listener);
                 KubernetesContext.getInstance().getDataHolder().addListenerSecret(listener.getName(), secretModels);
                 KubernetesContext.getInstance().getDataHolder().addSecrets(secretModels);
@@ -165,48 +166,56 @@ public class KubernetesDataExtractor {
             return Collections.emptySet();
         }
 
-        Optional<Store> keyStore = config.get().getKeyStore();
-        Optional<Store> trustStore = config.get().getTrustStore();
-
-        if (keyStore.isPresent() && trustStore.isPresent()) {
-            String keyStoreFile = keyStore.get().getPath();
-            String trustStoreFile = trustStore.get().getPath();
-            if (getMountPath(keyStoreFile).equals(getMountPath(trustStoreFile))) {
-                // trust-store and key-store mount to same path
-                String keyStoreContent = readSecretFile(keyStoreFile);
-                String trustStoreContent = readSecretFile(trustStoreFile);
-                SecretModel secretModel = new SecretModel();
+        Optional<SecureSocketConfig> secureSocketConfig = config.get().getSecureSocketConfig();
+        Optional<MutualSSLConfig> mutualSSLConfig = config.get().getMutualSSLConfig();
+        SecretModel secretModel = new SecretModel();
+        if (secureSocketConfig.isPresent()) {
+            String certFile = secureSocketConfig.get().getCertFile();
+            String keyFile = secureSocketConfig.get().getKeyFile();
+            String keyFileContent = readSecretFile(keyFile);
+            String certFileContent = readSecretFile(certFile);
+            if (getMountPath(certFile).equals(getMountPath(keyFile))) {
+                // key and cert mount to same path
                 secretModel.setName(getValidName(listenerInfo.getName()) + "-secure-socket");
-                secretModel.setMountPath(getMountPath(keyStoreFile));
+                secretModel.setMountPath(getMountPath(certFile));
                 Map<String, String> dataMap = new HashMap<>();
-                dataMap.put(String.valueOf(Paths.get(keyStoreFile).getFileName()), keyStoreContent);
-                dataMap.put(String.valueOf(Paths.get(trustStoreFile).getFileName()), trustStoreContent);
+                dataMap.put(String.valueOf(Paths.get(keyFile).getFileName()), keyFileContent);
+                dataMap.put(String.valueOf(Paths.get(certFile).getFileName()), certFileContent);
                 secretModel.setData(dataMap);
                 secrets.add(secretModel);
-                return secrets;
+            } else {
+                // key and cert mount different paths
+                secretModel.setName(getValidName(listenerInfo.getName()) + "-secure-cert");
+                secretModel.setMountPath(getMountPath(certFile));
+                Map<String, String> dataMap = new HashMap<>();
+                dataMap.put(String.valueOf(Paths.get(certFile).getFileName()), certFileContent);
+                secretModel.setData(dataMap);
+
+                SecretModel secretModelKeyFile = new SecretModel();
+                secretModelKeyFile.setName(getValidName(listenerInfo.getName()) + "-secure-key");
+                secretModelKeyFile.setMountPath(getMountPath(keyFile));
+                Map<String, String> dataMapKey = new HashMap<>();
+                dataMapKey.put(String.valueOf(Paths.get(keyFile).getFileName()), keyFileContent);
+                secretModel.setData(dataMapKey);
+
             }
         }
-        if (keyStore.isPresent()) {
-            String keyStoreFile = keyStore.get().getPath();
-            String keyStoreContent = readSecretFile(keyStoreFile);
-            SecretModel secretModel = new SecretModel();
-            secretModel.setName(getValidName(listenerInfo.getName()) + "-keystore");
-            secretModel.setMountPath(getMountPath(keyStoreFile));
-            Map<String, String> dataMap = new HashMap<>();
-            dataMap.put(String.valueOf(Paths.get(keyStoreFile).getFileName()), keyStoreContent);
-            secretModel.setData(dataMap);
-            secrets.add(secretModel);
-        }
-        if (trustStore.isPresent()) {
-            String trustStoreFile = trustStore.get().getPath();
-            String trustStoreContent = readSecretFile(trustStoreFile);
-            SecretModel secretModel = new SecretModel();
-            secretModel.setName(getValidName(listenerInfo.getName()) + "-truststore");
-            secretModel.setMountPath(getMountPath(trustStoreFile));
-            Map<String, String> dataMap = new HashMap<>();
-            dataMap.put(String.valueOf(Paths.get(trustStoreFile).getFileName()), trustStoreContent);
-            secretModel.setData(dataMap);
-            secrets.add(secretModel);
+        if (mutualSSLConfig.isPresent()) {
+            String sslCertPath = mutualSSLConfig.get().getPath();
+            String sslCertPathContent = readSecretFile(sslCertPath);
+            if (getMountPath(sslCertPath).equals(secretModel.getMountPath())) {
+                // Same mount path as key config add data to existing secret.
+                secretModel.getData().put(String.valueOf(Paths.get(sslCertPath).getFileName()), sslCertPathContent);
+            } else {
+                // Different mount Path. Create a new secret.
+                SecretModel sslSecretModel = new SecretModel();
+                secretModel.setName(getValidName(listenerInfo.getName()) + "-mutual-ssl");
+                secretModel.setMountPath(getMountPath(sslCertPath));
+                Map<String, String> dataMap = new HashMap<>();
+                dataMap.put(String.valueOf(Paths.get(sslCertPath).getFileName()), sslCertPathContent);
+                sslSecretModel.setData(dataMap);
+                secrets.add(sslSecretModel);
+            }
         }
         return secrets;
     }

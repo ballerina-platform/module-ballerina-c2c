@@ -18,24 +18,20 @@
 package io.ballerina.c2c.diagnostics;
 
 /**
- * Represents a Store inside a secure socket.
+ * Represents a MutualSSL config inside a secure socket.
  *
  * @since 2.0.0
  */
-public class Store {
-    private String path;
-    private String password;
+public class MutualSSLConfig {
 
-    public Store(String path, String password) {
-        this.path = path;
-        this.password = password;
-    }
+    private String path;
 
     public String getPath() {
         return path;
     }
 
-    public String getPassword() {
-        return password;
+    public void setPath(String path) {
+        this.path = path;
     }
+
 }

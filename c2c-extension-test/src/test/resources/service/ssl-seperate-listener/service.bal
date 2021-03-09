@@ -19,13 +19,12 @@ import ballerina/log;
 
 listener http:Listener helloEP = new(9090, {
     secureSocket: {
-         keyStore: {
-             path: "./security/ballerinaKeystore.p12",
-             password: "ballerina"
+         key: {
+             certFile: "./security/ballerinaKeystore.p12",
+             keyFile: "ballerina"
          },
-         trustStore: {
-             path: "./security/ballerinaTruststore.p12",
-             password: "ballerina"
+         mutualSsl: {
+             cert: "/path/to/public.crt"
          }
     }
 });

@@ -18,16 +18,11 @@ import ballerina/http;
 
 service http:Service /probe on new http:Listener(9091, {
     secureSocket: {
-         keyStore: {
-             path: "./security/ballerinaKeystore.p12",
-             password: "ballerina"
-         },
-         trustStore: {
-             path: "./security/ballerinaTruststore.p12",
-             password: "ballerina"
+         key: {
+            certFile: "./security/ballerinaKeystore.p12",
+            keyFile: "ballerina"
          }
     }}) {
-
     resource function get readyz (http:Caller caller) returns error? {
         check caller->respond("Resource is Ready");
     }

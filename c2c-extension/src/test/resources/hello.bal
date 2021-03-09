@@ -13,7 +13,7 @@ import ballerinax/kubernetes;
 }
 listener http:Listener helloEP = new(9090, config = {
     secureSocket: {
-        keyStore: {
+        keyKey: {
             path: "${ballerina.home}/bre/security/ballerinaKeystore.p12",
             password: "ballerina"
         }

@@ -19,10 +19,10 @@ import ballerina/log;
 
 http:ListenerConfiguration helloWorldEPConfig = {
     secureSocket: {
-        keyStore: {
-            path: "./security/ballerinaKeystore.p12",
-            password: "ballerina"
-        }
+        key: {
+                     certFile: "./security/ballerinaKeystore.p12",
+                     keyFile: "ballerina"
+                 }
     }
 };
 

@@ -17,30 +17,38 @@
  */
 package io.ballerina.c2c.diagnostics;
 
-import java.util.Optional;
-
 /**
- * Represents a Http config of a secure socket.
+ * Represents a Config inside a secure socket.
  *
  * @since 2.0.0
  */
-public class Config {
-    private SecureSocketConfig secureSocketConfig;
-    private MutualSSLConfig mutualSSLConfig;
+public class SecureSocketConfig {
+    private String certFile;
+    private String keyFile;
+    private String path;
 
-    public Optional<SecureSocketConfig> getSecureSocketConfig() {
-        return Optional.ofNullable(secureSocketConfig);
+
+    public String getCertFile() {
+        return certFile;
     }
 
-    public void setSecureSocketConfig(SecureSocketConfig secureSocketConfig) {
-        this.secureSocketConfig = secureSocketConfig;
+    public String getKeyFile() {
+        return keyFile;
     }
 
-    public Optional<MutualSSLConfig> getMutualSSLConfig() {
-        return Optional.ofNullable(mutualSSLConfig);
+    public String getPath() {
+        return path;
     }
 
-    public void setMutualSSLConfig(MutualSSLConfig mutualSSLConfig) {
-        this.mutualSSLConfig = mutualSSLConfig;
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public void setKeyFile(String keyFile) {
+        this.keyFile = keyFile;
+    }
+
+    public void setCertFile(String certFile) {
+        this.certFile = certFile;
     }
 }
