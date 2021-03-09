@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -73,7 +74,7 @@ public class C2CVisitor extends NodeVisitor {
         QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typeDescriptorNode;
         String moduleName = qualified.modulePrefix().text();
         String identifier = qualified.identifier().text();
-        if (!(moduleName.equals("http"))) {
+        if (!("http".equals(moduleName))) {
             return;
         }
         BindingPatternNode variableNode = typedBindingPatternNode.bindingPattern();
@@ -86,10 +87,10 @@ public class C2CVisitor extends NodeVisitor {
         if (moduleVariableDeclarationNode.initializer().isEmpty()) {
             return;
         }
-        if (identifier.equals("Listener")) {
+        if ("Listener".equals(identifier)) {
             extractHttpsListener(moduleVariableDeclarationNode, variableName);
         }
-        if (identifier.equals("ListenerConfiguration")) {
+        if ("ListenerConfiguration".equals(identifier)) {
             Optional<ExpressionNode> initializer = moduleVariableDeclarationNode.initializer();
             if (initializer.isPresent()) {
                 if (initializer.get().kind() != SyntaxKind.MAPPING_CONSTRUCTOR) {
@@ -151,7 +152,7 @@ public class C2CVisitor extends NodeVisitor {
                 continue;
             }
             SpecificFieldNode specificField = (SpecificFieldNode) field;
-            if (getNameOfIdentifier(specificField.fieldName()).equals("schedule")) {
+            if ("schedule".equals(getNameOfIdentifier(specificField.fieldName()))) {
                 Optional<ExpressionNode> expressionNode = specificField.valueExpr();
                 expressionNode.ifPresent(this::processTaskScheduleBlock);
             }
@@ -170,7 +171,7 @@ public class C2CVisitor extends NodeVisitor {
                 SpecificFieldNode timeSpecificField = (SpecificFieldNode) timeField;
                 String identifier = getNameOfIdentifier(timeSpecificField.fieldName());
                 timeSpecificField.valueExpr();
-                switch (identifier) {
+                switch (Objects.requireNonNull(identifier)) {
                     case "minutes":
                         minutes = extractString(timeSpecificField.valueExpr().get());
                         break;
@@ -187,7 +188,7 @@ public class C2CVisitor extends NodeVisitor {
                         daysOfWeek = extractString(timeSpecificField.valueExpr().get());
                         break;
                     default:
-                        continue;
+                        break;
                 }
             }
         }
@@ -266,42 +267,53 @@ public class C2CVisitor extends NodeVisitor {
             }
             SpecificFieldNode specificField = (SpecificFieldNode) child;
             String fieldName = getNameOfIdentifier(specificField.fieldName());
-            if (fieldName.equals("keyStore")) {
-                Optional<Store> store = getStore(specificField.valueExpr().get());
-                store.ifPresent(config::setKeyStore);
-            } else if (fieldName.equals("trustStore")) {
-                Optional<Store> store = getStore(specificField.valueExpr().get());
-                store.ifPresent(config::setTrustStore);
+            if ("key".equals(fieldName)) {
+                SecureSocketConfig secureSocket = getSecureSocketConfig(specificField.valueExpr().get());
+                config.setSecureSocketConfig(secureSocket);
+            } else if ("mutualSsl".equals(fieldName)) {
+                MutualSSLConfig mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
+                config.setMutualSSLConfig(mutualSSLConfig);
             }
         }
         return Optional.of(config);
     }
 
-    private Optional<Store> getStore(ExpressionNode expressionNode) {
-        if (expressionNode.kind() != SyntaxKind.MAPPING_CONSTRUCTOR) {
-            return Optional.empty();
-        }
+    private MutualSSLConfig getMutualSSLConfig(ExpressionNode expressionNode) {
         MappingConstructorExpressionNode expressionNode1 = (MappingConstructorExpressionNode) expressionNode;
         SeparatedNodeList<MappingFieldNode> fields = expressionNode1.fields();
-        String path = null;
-        String password = null;
+        MutualSSLConfig mutualSSLConfig = new MutualSSLConfig();
         for (MappingFieldNode field : fields) {
             if (field.kind() != SyntaxKind.SPECIFIC_FIELD) {
                 continue;
             }
             SpecificFieldNode specificFieldNode = (SpecificFieldNode) field;
             String nameOfIdentifier = getNameOfIdentifier(specificFieldNode.fieldName());
-            if (nameOfIdentifier.equals("path")) {
-                path = extractString(specificFieldNode.valueExpr().get());
-            } else if (nameOfIdentifier.equals("password")) {
-                password = extractString(specificFieldNode.valueExpr().get());
+            if ("path".equals(nameOfIdentifier)) {
+                mutualSSLConfig.setPath(extractString(specificFieldNode.valueExpr().get()));
             }
         }
+        return mutualSSLConfig;
+    }
 
-        if (path != null && password != null) {
-            return Optional.of(new Store(path, password));
+    private SecureSocketConfig getSecureSocketConfig(ExpressionNode expressionNode) {
+        MappingConstructorExpressionNode expressionNode1 = (MappingConstructorExpressionNode) expressionNode;
+        SeparatedNodeList<MappingFieldNode> fields = expressionNode1.fields();
+        SecureSocketConfig secureSocketConfig = new SecureSocketConfig();
+        for (MappingFieldNode field : fields) {
+            if (field.kind() != SyntaxKind.SPECIFIC_FIELD) {
+                continue;
+            }
+            SpecificFieldNode specificFieldNode = (SpecificFieldNode) field;
+            String nameOfIdentifier = getNameOfIdentifier(specificFieldNode.fieldName());
+            if (("certFile").equals(nameOfIdentifier)) {
+                secureSocketConfig.setCertFile(extractString(specificFieldNode.valueExpr().get()));
+            } else if ("keyFile".equals(nameOfIdentifier)) {
+                secureSocketConfig.setKeyFile(extractString(specificFieldNode.valueExpr().get()));
+            } else if ("path".equals(nameOfIdentifier)) {
+                secureSocketConfig.setPath(extractString(specificFieldNode.valueExpr().get()));
+            }
         }
-        return Optional.empty();
+        return secureSocketConfig;
     }
 
     private String extractString(ExpressionNode expressionNode) {
