@@ -10,7 +10,7 @@ service /helloWorld on helloEP {
         response.setTextPayload("Hello, World from service helloWorld ! ");
         var responseResult = caller->respond(response);
         if (responseResult is error) {
-            log:printError("error responding back to client.", err = responseResult);
+            log:printError("error responding back to client.", 'error = responseResult);
         }
     }
 
@@ -23,7 +23,7 @@ service /helloWorld on helloEP {
         //Reply to the client with the response.
         var result = caller->respond(res);
         if (result is error) {
-           log:printError("Error in responding", err = result);
+           log:printError("Error in responding", 'error = result);
         }
     }
 }
