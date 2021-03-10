@@ -14,7 +14,7 @@ service /helloWorld on helloEP {
     resource function get sayHello(http:Caller caller, http:Request request) {
         var responseResult = caller->respond("Hello, World from service helloWorld ! ");
         if (responseResult is error) {
-            log:printError("error responding back to client.", err = responseResult);
+            log:printError("error responding back to client.", 'error = responseResult);
         }
     }
 }

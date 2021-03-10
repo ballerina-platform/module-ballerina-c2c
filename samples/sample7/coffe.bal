@@ -27,13 +27,13 @@ service http:Service /coffe on new http:Listener(9090) {
         http:Response res = new;
         json|error rResult = read("./menus/coffe.json");
         if (rResult is error) {
-            log:printError("Error occurred while reading json: ",err = rResult);
+            log:printError("Error occurred while reading json: ",'error = rResult);
         } else {
             res.setJsonPayload(<@untainted> rResult);
         }
         var result = caller->respond(res);
         if (result is error) {
-            log:printError("Error in responding", err = result);
+            log:printError("Error in responding", 'error = result);
         }
     }
 }
@@ -44,7 +44,7 @@ function read(string path) returns @tainted json|error {
     var result = rch.readJson();
     var isClosed = rch.close();
     if (isClosed is error) {
-        log:printError("Error occurred while closing character stream", err = isClosed);
+        log:printError("Error occurred while closing character stream", 'error = isClosed);
     }
     return result;
 }

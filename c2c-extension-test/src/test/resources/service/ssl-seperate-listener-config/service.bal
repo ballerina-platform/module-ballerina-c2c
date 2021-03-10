@@ -32,7 +32,7 @@ service /hello on helloWorldEP {
     resource function get .(http:Caller caller, http:Request req) {
         var result = caller->respond("Hello World!");
         if (result is error) {
-            log:printError("Error in responding ", err = result);
+            log:printError("Error in responding ", 'error = result);
         }
     }
 }
