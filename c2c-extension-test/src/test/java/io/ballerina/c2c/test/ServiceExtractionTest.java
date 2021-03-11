@@ -150,6 +150,8 @@ public class ServiceExtractionTest {
 
         String keystore = helloListener.getConfig().get().getSecureSocketConfig().get().getCertFile();
         Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
+        String certPath = helloListener.getConfig().get().getMutualSSLConfig().get().getPath();
+        Assert.assertEquals(certPath, "/path/to/public.crt");
     }
 
     @Test
@@ -167,5 +169,7 @@ public class ServiceExtractionTest {
         Assert.assertEquals(helloListener.getPort(), 9095);
         String keystore = helloListener.getConfig().get().getSecureSocketConfig().get().getCertFile();
         Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
+        String certPath = helloListener.getConfig().get().getMutualSSLConfig().get().getPath();
+        Assert.assertEquals(certPath, "/path/to/public.crt");
     }
 }
