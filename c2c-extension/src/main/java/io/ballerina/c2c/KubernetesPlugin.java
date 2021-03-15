@@ -26,6 +26,7 @@ import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.c2c.utils.TomlHelper;
 import io.ballerina.projects.CloudToml;
 import io.ballerina.projects.JBallerinaBackend;
+import io.ballerina.projects.JarLibrary;
 import io.ballerina.projects.JvmTarget;
 import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
@@ -49,10 +50,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.MissingResourceException;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
@@ -162,8 +163,11 @@ public class KubernetesPlugin extends AbstractCompilerPlugin {
             return;
         }
 
-        KubernetesContext.getInstance().getDataHolder().getDockerModel()
-                .addDependencyJarPaths(new HashSet<>(jarResolver.getJarFilePathsRequiredForExecution()));
+        // Add dependency jar files to docker model.
+        KubernetesContext.getInstance().getDataHolder().getDockerModel().addDependencyJarPaths(
+                jarResolver.getJarFilePathsRequiredForExecution().stream()
+                        .map(JarLibrary::path)
+                        .collect(Collectors.toSet()));
         try {
             final Path executablePath = target.getExecutablePath(project.currentPackage());
             KubernetesContext.getInstance().getDataHolder().setSourceRoot(executablePath.getParent()
