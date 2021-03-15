@@ -288,7 +288,7 @@ public class C2CVisitor extends NodeVisitor {
             }
             SpecificFieldNode specificFieldNode = (SpecificFieldNode) field;
             String nameOfIdentifier = getNameOfIdentifier(specificFieldNode.fieldName());
-            if ("path".equals(nameOfIdentifier)) {
+            if ("cert".equals(nameOfIdentifier)) {
                 mutualSSLConfig.setPath(extractString(specificFieldNode.valueExpr().get()));
             }
         }
