@@ -17,7 +17,7 @@
 import ballerina/http;
 
 service http:Service /helloWorld on new http:Listener(9090) {
-    resource function get sayHello(http:Caller caller) {
-        var responseResult = caller->respond("Hello, World from service helloWorld ! \n");
+    resource function get sayHello(http:Caller caller) returns string {
+        return "Hello, World from service helloWorld ! \n";
     }
 }
