@@ -163,7 +163,6 @@ public class ArtifactManager {
 
     public void populateDeploymentModel() {
         DeploymentModel deploymentModel = kubernetesDataHolder.getDeploymentModel();
-        kubernetesDataHolder.setDeploymentModel(deploymentModel);
         String balxFileName = extractJarName(kubernetesDataHolder.getJarPath());
         if (KubernetesUtils.isBlank(deploymentModel.getName())) {
             if (balxFileName != null) {
@@ -184,10 +183,11 @@ public class ArtifactManager {
     private void setDefaultKubernetesInstructions() {
         instructions.put("\tExecute the below command to deploy the Kubernetes artifacts: ",
                 "\tkubectl apply -f " + this.kubernetesDataHolder.getK8sArtifactOutputPath().toAbsolutePath());
-
-        instructions.put("\tExecute the below command to access service via NodePort: ",
-                "\tkubectl expose deployment " + this.kubernetesDataHolder.getDeploymentModel().getName() + " --type" +
-                        "=NodePort --name=" + kubernetesDataHolder.getDeploymentModel().getName()
-                        .replace(KubernetesConstants.DEPLOYMENT_POSTFIX, "-svc-local"));
+        if (!kubernetesDataHolder.getServiceModelList().isEmpty()) {
+            instructions.put("\tExecute the below command to access service via NodePort: ",
+                    "\tkubectl expose deployment " + this.kubernetesDataHolder.getDeploymentModel().getName() +
+                            " --type=NodePort --name=" + kubernetesDataHolder.getDeploymentModel().getName()
+                            .replace(KubernetesConstants.DEPLOYMENT_POSTFIX, "-svc-local"));
+        }
     }
 }

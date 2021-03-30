@@ -212,8 +212,14 @@ public class C2CVisitor extends NodeVisitor {
         }
         FunctionArgumentNode functionArgumentNode = parenthesizedArgList.arguments().get(0);
         ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
-        int port = Integer.parseInt(((BasicLiteralNode) expression).literalToken().text());
-        ListenerInfo listenerInfo = new ListenerInfo(listenerName, port);
+        ListenerInfo listenerInfo;
+        if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+            listenerInfo = new ListenerInfo(listenerName, 0);
+        } else {
+            BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expression;
+            int port = Integer.parseInt(basicLiteralNode.literalToken().text());
+            listenerInfo = new ListenerInfo(listenerName, port);
+        }
         if (parenthesizedArgList.arguments().size() > 1) {
             Optional<Config> config = extractKeyStores(parenthesizedArgList.arguments().get(1));
             config.ifPresent(listenerInfo::setConfig);

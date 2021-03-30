@@ -58,6 +58,7 @@ import static io.ballerina.c2c.utils.KubernetesUtils.getValidName;
  * @since 2.0.0
  */
 public class KubernetesDataExtractor {
+
     private final Project project;
     private final ProjectServiceInfo projectServiceInfo;
 
@@ -72,10 +73,8 @@ public class KubernetesDataExtractor {
         dataHolder.setPackageID(KubernetesUtils.getProjectID(project));
 
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
-        if (isServicesExist(serviceList)) {
-            addDeployments();
-            addHPA();
-        }
+        addDeployments();
+        addHPA();
         addServices(serviceList);
         addJobs();
     }
@@ -144,10 +143,6 @@ public class KubernetesDataExtractor {
             deploymentModel.setDockerCertPath(dockerCertPath);
         }
         KubernetesContext.getInstance().getDataHolder().setDeploymentModel(deploymentModel);
-    }
-
-    private boolean isServicesExist(List<ServiceInfo> serviceList) {
-        return serviceList.size() > 0;
     }
 
     /**

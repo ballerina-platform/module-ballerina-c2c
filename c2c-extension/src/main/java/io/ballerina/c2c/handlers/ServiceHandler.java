@@ -37,13 +37,15 @@ import java.util.List;
 
 import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
 
-
 /**
  * Generates kubernetes service from annotations.
  */
 public class ServiceHandler extends AbstractArtifactHandler {
 
     private void generate(List<ServiceModel> serviceModels) throws KubernetesPluginException {
+        if (serviceModels.isEmpty()) {
+            return;
+        }
         int count = 0;
         ServiceModel commonService = new ServiceModel();
         String balxFileName = extractJarName(KubernetesContext.getInstance().getDataHolder()
