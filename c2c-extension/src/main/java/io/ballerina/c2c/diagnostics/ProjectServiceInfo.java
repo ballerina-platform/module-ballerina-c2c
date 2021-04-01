@@ -24,6 +24,7 @@ import io.ballerina.projects.Project;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,6 +59,13 @@ public class ProjectServiceInfo {
         }
 
         //When service use a listener in another bal file
+        attachListenersInOtherDocument();
+        
+        //Remove services with incomplete listener information
+        removeEmptyServices();
+    }
+
+    private void attachListenersInOtherDocument() {
         for (ServiceInfo serviceInfo : serviceList) {
             ListenerInfo listener = serviceInfo.getListener();
             if (listener.getPort() == 0) {
@@ -67,6 +75,17 @@ public class ProjectServiceInfo {
                         listener.setPort(listenerInfo.getPort());
                     }
                 }
+            }
+        }
+    }
+
+    private void removeEmptyServices() {
+        Iterator<ServiceInfo> iterator = serviceList.iterator();
+        while (iterator.hasNext()) {
+            ServiceInfo serviceInfo = iterator.next();
+            ListenerInfo listener = serviceInfo.getListener();
+            if (listener.getPort() == 0) {
+                iterator.remove();
             }
         }
     }
