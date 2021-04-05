@@ -17,7 +17,9 @@
 import ballerina/http;
 import ballerina/cloud as _;
 
-service http:Service /helloWorld on new http:Listener(9090) {
+listener http:Listener helloWorldEP = new(9091);
+
+service http:Service /helloWorld on helloWorldEP {
     resource function get sayHello(http:Caller caller) returns string {
         return "Hello, World from service helloWorld ! \n";
     }

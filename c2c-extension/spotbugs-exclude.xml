@@ -28,7 +28,7 @@
         <Bug pattern="DM_DEFAULT_ENCODING"/>
     </Match>
     <Match>
-        <Class name="io.ballerina.c2c.KubernetesPlugin"/>
+        <Class name="io.ballerina.c2c.tasks.C2CCodeGeneratedTask"/>
         <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
     </Match>
     <Match>

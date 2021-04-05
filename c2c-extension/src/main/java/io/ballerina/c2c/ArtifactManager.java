@@ -51,7 +51,7 @@ public class ArtifactManager {
     private static final PrintStream OUT = System.out;
     private KubernetesDataHolder kubernetesDataHolder;
 
-    ArtifactManager() {
+    public ArtifactManager() {
         this.kubernetesDataHolder = KubernetesContext.getInstance().getDataHolder();
     }
 

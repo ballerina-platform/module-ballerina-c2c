@@ -11,8 +11,8 @@ listener http:Listener helloWorldEP = new(9090, {
     }
 });
 
-configurable string users = "Not found";
-configurable string groups = "Not found";
+configurable string users = ?;
+configurable string groups = ?;
 
 service /helloWorld on helloWorldEP {
     resource function get config(http:Caller caller, http:Request request) returns @tainted error? {

@@ -14,9 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
-
-
 # Cron Job Schedule Configuration.
 #
 # + hours - Hours
