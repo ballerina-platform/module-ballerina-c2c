@@ -27,7 +27,7 @@ import java.util.Optional;
 public class ListenerInfo {
     private String name;
     private int port;
-    private Config config;
+    private HttpsConfig httpsConfig;
 
     public ListenerInfo(String name, int port) {
         this.name = name;
@@ -50,11 +50,11 @@ public class ListenerInfo {
         this.port = port;
     }
 
-    public Optional<Config> getConfig() {
-        return Optional.ofNullable(config);
+    public Optional<HttpsConfig> getConfig() {
+        return Optional.ofNullable(httpsConfig);
     }
 
-    public void setConfig(Config config) {
-        this.config = config;
+    public void setConfig(HttpsConfig httpsConfig) {
+        this.httpsConfig = httpsConfig;
     }
 }

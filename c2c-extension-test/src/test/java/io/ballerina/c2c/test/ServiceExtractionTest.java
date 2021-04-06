@@ -172,4 +172,24 @@ public class ServiceExtractionTest {
         String certPath = helloListener.getConfig().get().getMutualSSLConfig().get().getPath();
         Assert.assertEquals(certPath, "/path/to/public.crt");
     }
+
+    @Test
+    public void testOptionalPort() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "valid-variable-port");
+
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+        Assert.assertEquals(serviceList.size(), 1);
+    }
+
+    @Test
+    public void testUnsupportedListener() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "unsupported-listener");
+
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+        Assert.assertEquals(serviceList.size(), 0);
+    }
 }

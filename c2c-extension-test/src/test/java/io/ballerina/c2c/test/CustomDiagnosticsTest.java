@@ -15,6 +15,7 @@
  */
 package io.ballerina.c2c.test;
 
+import io.ballerina.c2c.diagnostics.ProjectServiceInfo;
 import io.ballerina.c2c.diagnostics.TomlDiagnosticChecker;
 import io.ballerina.c2c.utils.TomlHelper;
 import io.ballerina.projects.directory.BuildProject;
@@ -32,6 +33,7 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.MissingResourceException;
 
@@ -147,6 +149,15 @@ public class CustomDiagnosticsTest {
         diagnostics.addAll(tomlDiagnosticChecker.validateTomlWithSource(toml));
         Assert.assertEquals(diagnostics.size(), 1);
         Assert.assertEquals(diagnostics.get(0).message(), "Invalid Liveness Probe Resource Path");
+    }
+
+    @Test
+    public void testDefaultConfigValue() {
+        Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "default-config-value");
+        BuildProject project = BuildProject.load(projectPath);
+        List<Diagnostic> diagnostics = new ArrayList<>();
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project, diagnostics);
+        Assert.assertEquals(diagnostics.size(), 1);
     }
 
     private String getValidationSchema() {

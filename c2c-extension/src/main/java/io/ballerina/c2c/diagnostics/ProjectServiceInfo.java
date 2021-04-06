@@ -15,17 +15,21 @@
  */
 package io.ballerina.c2c.diagnostics;
 
+import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.projects.Document;
 import io.ballerina.projects.DocumentId;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
+import io.ballerina.tools.diagnostics.Diagnostic;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -36,66 +40,44 @@ import java.util.Optional;
 public class ProjectServiceInfo {
 
     private List<ServiceInfo> serviceList;
-    private List<ListenerInfo> listenerList;
     private Task task = null;
 
     public ProjectServiceInfo(Project project) {
+        this(project, Collections.emptyList());
+    }
+
+    public ProjectServiceInfo(Project project, List<Diagnostic> diagnostics) {
         this.serviceList = new ArrayList<>();
-        this.listenerList = new ArrayList<>();
         Package currentPackage = project.currentPackage();
         Iterable<Module> modules = currentPackage.modules();
         for (Module module : modules) {
             Collection<DocumentId> documentIds = module.documentIds();
+            //Retrieve Module level variables and store in hashmap
+            Map<String, Node> moduleLevelVariables = new HashMap<>();
+            SemanticModel semanticModel = module.getCompilation().getSemanticModel();
+
+            //TODO Remove when build-time api is out 
+            //https://github.com/ballerina-platform/module-ballerina-c2c/issues/138
             for (DocumentId doc : documentIds) {
                 Document document = module.document(doc);
                 Node node = document.syntaxTree().rootNode();
+                ModuleLevelVariableExtractor visitor = new ModuleLevelVariableExtractor(moduleLevelVariables);
+                node.accept(visitor);
+            }
 
-                C2CVisitor visitor = new C2CVisitor();
+            for (DocumentId doc : documentIds) {
+                Document document = module.document(doc);
+                Node node = document.syntaxTree().rootNode();
+                C2CVisitor visitor = new C2CVisitor(moduleLevelVariables, semanticModel, diagnostics);
                 node.accept(visitor);
                 serviceList.addAll(visitor.getServices());
-                listenerList.addAll(visitor.getListeners());
                 this.task = visitor.getTask();
-            }
-        }
-
-        //When service use a listener in another bal file
-        attachListenersInOtherDocument();
-        
-        //Remove services with incomplete listener information
-        removeEmptyServices();
-    }
-
-    private void attachListenersInOtherDocument() {
-        for (ServiceInfo serviceInfo : serviceList) {
-            ListenerInfo listener = serviceInfo.getListener();
-            if (listener.getPort() == 0) {
-                String name = listener.getName();
-                for (ListenerInfo listenerInfo : listenerList) {
-                    if (name.equals(listenerInfo.getName())) {
-                        listener.setPort(listenerInfo.getPort());
-                    }
-                }
-            }
-        }
-    }
-
-    private void removeEmptyServices() {
-        Iterator<ServiceInfo> iterator = serviceList.iterator();
-        while (iterator.hasNext()) {
-            ServiceInfo serviceInfo = iterator.next();
-            ListenerInfo listener = serviceInfo.getListener();
-            if (listener.getPort() == 0) {
-                iterator.remove();
             }
         }
     }
 
     public List<ServiceInfo> getServiceList() {
         return serviceList;
-    }
-
-    public List<ListenerInfo> getListenerList() {
-        return listenerList;
     }
 
     public Optional<Task> getTask() {
