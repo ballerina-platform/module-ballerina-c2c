@@ -1,7 +1,7 @@
 [container.image]
 repository="anuruddhal" # optional default is local
 name="math" # optional
-tag="sample5"  # default is latest
+tag="sample3"  # default is latest
 
 [cloud.deployment]
 min_memory="100Mi" # optional

@@ -11,7 +11,7 @@ service /Math on new http:Listener(9090) {
 function sumSqrt() returns string {
      float x = 0.0001;
      float i = 0;
-     while (i < 1000000) {
+     while (i < 1000000.0) {
         x = x + floats:sqrt(i);
         i = i + 1;
     }

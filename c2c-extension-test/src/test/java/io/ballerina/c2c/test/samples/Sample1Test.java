@@ -96,6 +96,7 @@ public class Sample1Test extends SampleTest {
         Assert.assertEquals(container.getImagePullPolicy(), KubernetesConstants.ImagePullPolicy.IfNotPresent.name());
         Assert.assertEquals(container.getPorts().size(), 1);
         Assert.assertEquals(container.getEnv().size(), 0);
+        Assert.assertNotNull(podAutoscaler);
     }
 
     @Test

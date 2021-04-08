@@ -73,7 +73,7 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
                 }
                 DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
                 EnvVar ballerinaConfEnv = new EnvVarBuilder()
-                        .withName("BALCONFIGFILE")
+                        .withName("BAL_CONFIG_FILES")
                         .withValue(configMapModel.getMountPath() + BALLERINA_CONF_FILE_NAME)
                         .build();
                 deploymentModel.addEnv(ballerinaConfEnv);

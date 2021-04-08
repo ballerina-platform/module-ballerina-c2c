@@ -1,0 +1,260 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "C2C Spec",
+  "description": "Schema for C2C Cloud file",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "container": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "[a-zA-Z0-9][a-zA-Z0-9_.-]+"
+            },
+            "repository": {
+              "type": "string",
+              "pattern": "^(?!\\s*$).+"
+            },
+            "tag": {
+              "type": "string",
+              "pattern": "^[\\w][\\w.-]{0,127}$"
+            },
+            "base": {
+              "type": "string",
+              "pattern": "^(?!\\s*$).+"
+            },
+            "cmd": {
+              "type": "string",
+              "pattern": ".*"
+            },
+            "user": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "run_as": {
+                  "type": "string",
+                  "pattern": "^(?!\\s*$).+"
+                }
+              }
+            }
+          }
+        },
+        "copy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "files": {
+              "type": "array",
+              "additionalProperties": false,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "sourceFile": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+"
+                  },
+                  "target": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "cloud": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "config": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "envs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "key_ref": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+"
+                  },
+                  "name": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+"
+                  },
+                  "config_name": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+"
+                  }
+                }
+              }
+            },
+            "secrets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "key_ref": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+"
+                  },
+                  "name": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+"
+                  },
+                  "secret_name": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+"
+                  }
+                }
+              }
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+"
+                  },
+                  "mount_path": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deployment": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "internal_domain_name": {
+              "type": "string",
+              "pattern": "^(?!\\s*$).+"
+            },
+            "external_accessible": {
+              "type": "boolean"
+            },
+            "min_memory": {
+              "type": "string",
+              "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(?:[EPTGMK]i?b?)?$"
+            },
+            "max_memory": {
+              "type": "string",
+              "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(?:[EPTGMK]i?b?)?$"
+            },
+            "min_cpu": {
+              "type": "string",
+              "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$"
+            },
+            "max_cpu": {
+              "type": "string",
+              "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$"
+            },
+            "autoscaling": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enable": {
+                  "type": "boolean"
+                },
+                "min_replicas": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "max_replicas": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "cpu": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100
+                },
+                "memory": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100
+                }
+              }
+            },
+            "probes": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "readiness": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "port": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "path": {
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+"
+                    }
+                  }
+                },
+                "liveness": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "port": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "path": {
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+"
+                    }
+                  }
+                }
+              }
+            },
+            "storage": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "volumes": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+"
+                    },
+                    "local_path": {
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+"
+                    },
+                    "size": {
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
