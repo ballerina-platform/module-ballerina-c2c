@@ -371,6 +371,11 @@ public class KubernetesTestUtils {
             log.warn("Deleting already existing ballerina-internal.log file.");
             FileUtils.deleteQuietly(ballerinaInternalLog.toFile());
         }
+        Path dependenciesToml = Paths.get(sourceDirectory.toAbsolutePath().toString(), "Dependencies.toml");
+        if (dependenciesToml.toFile().exists()) {
+            log.warn("Deleting already existing Dependencies.toml file.");
+            FileUtils.deleteQuietly(dependenciesToml.toFile());
+        }
 
         ProcessBuilder pb;
         if (skipTests) {

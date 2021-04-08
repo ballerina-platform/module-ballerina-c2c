@@ -33,7 +33,6 @@ import org.ballerinalang.model.elements.PackageID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -59,14 +58,15 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
 
     @Override
     public void perform(CompilerLifecycleEventContext compilerLifecycleEventContext) {
-        PrintStream out = System.out;
         addDependencyJars(compilerLifecycleEventContext.compilation());
-        out.println(compilerLifecycleEventContext.getGeneratedArtifactPath());
         Optional<Path> executablePath = compilerLifecycleEventContext.getGeneratedArtifactPath();
-        executablePath.ifPresent(path -> codeGeneratedInternal(KubernetesContext.getInstance().getCurrentPackage(),
-                path, compilerLifecycleEventContext.currentPackage().cloudToml(),
-                compilerLifecycleEventContext.currentPackage().project().buildOptions().cloud()));
-
+        executablePath.ifPresent(path -> {
+            KubernetesContext.getInstance().getDataHolder().setSourceRoot(executablePath.get().getParent()
+                    .getParent().getParent());
+            codeGeneratedInternal(KubernetesContext.getInstance().getCurrentPackage(),
+                    path, compilerLifecycleEventContext.currentPackage().cloudToml(),
+                    compilerLifecycleEventContext.currentPackage().project().buildOptions().cloud());
+        });
     }
 
     public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Optional<CloudToml> cloudToml,
