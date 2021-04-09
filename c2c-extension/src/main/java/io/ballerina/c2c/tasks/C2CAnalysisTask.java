@@ -15,7 +15,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package io.ballerina.c2c;
+package io.ballerina.c2c.tasks;
 
 import io.ballerina.c2c.diagnostics.Config;
 import io.ballerina.c2c.diagnostics.ListenerInfo;
@@ -33,7 +33,17 @@ import io.ballerina.c2c.models.PodAutoscalerModel;
 import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.models.ServiceModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
-import io.ballerina.projects.Project;
+import io.ballerina.projects.Package;
+import io.ballerina.projects.plugins.AnalysisTask;
+import io.ballerina.projects.plugins.CompilationAnalysisContext;
+import io.ballerina.tools.diagnostics.Diagnostic;
+import io.ballerina.tools.diagnostics.DiagnosticFactory;
+import io.ballerina.tools.diagnostics.DiagnosticInfo;
+import io.ballerina.tools.diagnostics.DiagnosticSeverity;
+import io.ballerina.tools.diagnostics.Location;
+import io.ballerina.tools.text.LinePosition;
+import io.ballerina.tools.text.LineRange;
+import io.ballerina.tools.text.TextRange;
 import org.apache.commons.codec.binary.Base64;
 
 import java.io.File;
@@ -54,33 +64,36 @@ import static io.ballerina.c2c.KubernetesConstants.SVC_POSTFIX;
 import static io.ballerina.c2c.utils.KubernetesUtils.getValidName;
 
 /**
- * Responsible for extracting data from package and storing in KubernetesDataHolder.
+ * An {@code AnalysisTask} that is triggered for code to cloud.
  *
- * @since 2.0.0
+ * @since 1.0.0
  */
-public class KubernetesDataExtractor {
+public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext> {
 
-    private final Project project;
-    private final ProjectServiceInfo projectServiceInfo;
-
-    public KubernetesDataExtractor(Project project) {
-        this.project = project;
-        this.projectServiceInfo = new ProjectServiceInfo(project);
-    }
-
-    public void packageAnalysis() throws KubernetesPluginException {
-        KubernetesContext.getInstance().setCurrentPackage(KubernetesUtils.getProjectID(project));
+    @Override
+    public void perform(CompilationAnalysisContext compilationAnalysisContext) {
+        Package currentPackage = compilationAnalysisContext.currentPackage();
+        KubernetesContext.getInstance().setCurrentPackage(KubernetesUtils.getProjectID(currentPackage));
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
-        dataHolder.setPackageID(KubernetesUtils.getProjectID(project));
-
+        dataHolder.setPackageID(KubernetesUtils.getProjectID(currentPackage));
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(currentPackage.project());
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+        try {
+            addServices(serviceList);
+        } catch (KubernetesPluginException e) {
+            DiagnosticInfo serviceDiagnosticInfo = new DiagnosticInfo("",
+                    e.getMessage(), DiagnosticSeverity.ERROR);
+            Diagnostic serviceDiagnostic = DiagnosticFactory.createDiagnostic(serviceDiagnosticInfo,
+                    new NullLocation());
+            compilationAnalysisContext.reportDiagnostic(serviceDiagnostic);
+        }
         addDeployments();
         addHPA();
-        addServices(serviceList);
-        addJobs();
+        addJobs(projectServiceInfo);
     }
 
-    private void addJobs() {
+
+    private void addJobs(ProjectServiceInfo projectServiceInfo) {
         if (projectServiceInfo.getTask().isPresent()) {
             Task task = projectServiceInfo.getTask().get();
             JobModel jobModel = new JobModel();
@@ -152,8 +165,7 @@ public class KubernetesDataExtractor {
      * @param listenerInfo Listener info
      * @return List of @{@link SecretModel} objects
      */
-    private Set<SecretModel> processSecureSocketAnnotation(ListenerInfo listenerInfo)
-            throws KubernetesPluginException {
+    private Set<SecretModel> processSecureSocketAnnotation(ListenerInfo listenerInfo) throws KubernetesPluginException {
         Set<SecretModel> secrets = new HashSet<>();
 
         Optional<Config> config = listenerInfo.getConfig();
@@ -238,5 +250,19 @@ public class KubernetesDataExtractor {
             mountPath = BALLERINA_HOME + File.separator + mountPath;
         }
         return String.valueOf(Paths.get(mountPath).getParent());
+    }
+
+    private static class NullLocation implements Location {
+
+        @Override
+        public LineRange lineRange() {
+            LinePosition from = LinePosition.from(0, 0);
+            return LineRange.from("", from, from);
+        }
+
+        @Override
+        public TextRange textRange() {
+            return TextRange.from(0, 0);
+        }
     }
 }

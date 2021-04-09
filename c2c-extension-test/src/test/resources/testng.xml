@@ -26,6 +26,9 @@
         </groups>
         <classes>
             <class name="io.ballerina.c2c.test.samples.Sample1Test"/>
+            <class name="io.ballerina.c2c.test.samples.Sample2Test"/>
+            <class name="io.ballerina.c2c.test.samples.Sample3Test"/>
+            <class name="io.ballerina.c2c.test.samples.Sample4Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample5Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample6Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample7Test"/>

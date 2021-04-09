@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -22,9 +22,10 @@ import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.test.utils.KubernetesTestUtils;
 import io.ballerina.c2c.utils.KubernetesUtils;
-import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -41,31 +42,31 @@ import java.util.List;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
+import static io.ballerina.c2c.KubernetesConstants.KUBERNETES_SELECTOR_KEY;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.deployK8s;
-import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getCommand;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getExposedPorts;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
 
 /**
- * Test cases for sample 5.
+ * Test cases for sample 3.
  */
-public class Sample5Test extends SampleTest {
+public class Sample3Test extends SampleTest {
 
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample5");
+    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample3");
     private static final Path DOCKER_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
+            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("scaling");
     private static final Path KUBERNETES_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello");
-    private static final String DOCKER_IMAGE = "anuruddhal/hello-api:sample5";
+            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("scaling");
+    private static final String DOCKER_IMAGE = "anuruddhal/math:sample3";
     private Deployment deployment;
-    private ConfigMap ballerinaConf;
-    private ConfigMap dataMap;
+    private Service service;
+    private HorizontalPodAutoscaler hpa;
 
     @BeforeClass
     public void compileSample() throws IOException, InterruptedException {
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH)
                 , 0);
-        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello.yaml").toFile();
+        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("scaling.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
         KubernetesClient client = new DefaultKubernetesClient();
         List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
@@ -74,21 +75,13 @@ public class Sample5Test extends SampleTest {
                 case "Deployment":
                     deployment = (Deployment) data;
                     break;
-                case "ConfigMap":
-                    switch (data.getMetadata().getName()) {
-                        case "hello-ballerina-conf-config-map":
-                            ballerinaConf = (ConfigMap) data;
-                            break;
-                        case "hello-data-txt":
-                            dataMap = (ConfigMap) data;
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
                 case "Service":
+                    service = (Service) data;
+                    break;
                 case "Secret":
+                    break;
                 case "HorizontalPodAutoscaler":
+                    hpa = (HorizontalPodAutoscaler) data;
                     break;
                 default:
                     Assert.fail("Unexpected k8s resource found: " + data.getKind());
@@ -100,35 +93,51 @@ public class Sample5Test extends SampleTest {
     @Test
     public void validateDeployment() {
         Assert.assertNotNull(deployment);
-        Assert.assertEquals(deployment.getMetadata().getName(), "hello-deployment");
+        Assert.assertEquals(deployment.getMetadata().getName(), "scaling-deployment");
         Assert.assertEquals(deployment.getSpec().getReplicas().intValue(), 1);
-        Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getVolumes().size(), 3);
         Assert.assertEquals(deployment.getMetadata().getLabels().get(KubernetesConstants
-                .KUBERNETES_SELECTOR_KEY), "hello");
+                .KUBERNETES_SELECTOR_KEY), "scaling");
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         // Assert Containers
         Container container = deployment.getSpec().getTemplate().getSpec().getContainers().get(0);
-        Assert.assertEquals(container.getVolumeMounts().size(), 3);
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE);
+        Assert.assertEquals(container.getResources().getLimits().get("memory").toString(), "256Mi");
+        Assert.assertEquals(container.getResources().getLimits().get("cpu").toString(), "500m");
+        Assert.assertEquals(container.getResources().getRequests().get("cpu").toString(), "200m");
+        Assert.assertEquals(container.getResources().getRequests().get("memory").toString(), "100Mi");
         Assert.assertEquals(container.getImagePullPolicy(), KubernetesConstants.ImagePullPolicy.IfNotPresent.name());
         Assert.assertEquals(container.getPorts().size(), 1);
-        Assert.assertEquals(container.getEnv().size(), 1);
-
-        // Validate config file
-        Assert.assertEquals(container.getEnv().get(0).getName(), "BAL_CONFIG_FILES");
-        Assert.assertEquals(container.getEnv().get(0).getValue(), "/home/ballerina/conf/Config.toml");
     }
 
     @Test
-    public void validateConfigMap() {
-        // Assert ballerina.conf config map
-        Assert.assertNotNull(ballerinaConf);
-        Assert.assertEquals(1, ballerinaConf.getData().size());
+    public void validateService() {
+        Assert.assertNotNull(service);
+        Assert.assertEquals(1, service.getMetadata().getLabels().size());
+        Assert.assertEquals("scaling", service.getMetadata().getLabels().get(KUBERNETES_SELECTOR_KEY));
+        Assert.assertEquals("scaling-svc", service.getMetadata().getName());
+        Assert.assertEquals("ClusterIP", service.getSpec().getType());
+        Assert.assertEquals(1, service.getSpec().getPorts().size());
+        Assert.assertEquals(9090, service.getSpec().getPorts().get(0).getPort().intValue());
+        Assert.assertEquals(9090, service.getSpec().getPorts().get(0).getTargetPort().getIntVal().intValue());
+        Assert.assertEquals("TCP", service.getSpec().getPorts().get(0).getProtocol());
+    }
 
-        // Assert Data config map
-        Assert.assertNotNull(dataMap);
-        Assert.assertEquals(1, dataMap.getData().size());
+    @Test
+    public void validateHPA() {
+        Assert.assertNotNull(hpa);
+        Assert.assertEquals(1, hpa.getMetadata().getLabels().size());
+        Assert.assertEquals("scaling", hpa.getMetadata().getLabels().get(KUBERNETES_SELECTOR_KEY));
+        Assert.assertEquals("scaling-hpa", hpa.getMetadata().getName());
+        Assert.assertEquals(5, hpa.getSpec().getMaxReplicas().intValue());
+        Assert.assertEquals(2, hpa.getSpec().getMinReplicas().intValue());
+        Assert.assertEquals("cpu", hpa.getSpec().getMetrics().get(0).getResource().getName());
+        Assert.assertEquals(50,
+                hpa.getSpec().getMetrics().get(0).getResource().getTarget().getAverageUtilization().intValue());
+        Assert.assertEquals("Utilization", hpa.getSpec().getMetrics().get(0).getResource().getTarget().getType());
+        Assert.assertEquals("Deployment", hpa.getSpec().getScaleTargetRef().getKind());
+        Assert.assertEquals("scaling-deployment", hpa.getSpec().getScaleTargetRef().getName());
+
     }
 
     @Test
@@ -142,12 +151,9 @@ public class Sample5Test extends SampleTest {
         List<String> ports = getExposedPorts(DOCKER_IMAGE);
         Assert.assertEquals(ports.size(), 1);
         Assert.assertEquals(ports.get(0), "9090/tcp");
-        // Validate ballerina.conf in run command
-        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(),
-                "[/bin/sh, -c, java -Xdiag -cp \"hello.jar:jars/*\" 'hello/hello/0_0_1/$_init']");
     }
 
-    @Test(groups = { "integration" })
+    @Test(groups = {"integration"})
     public void deploySample() throws IOException, InterruptedException {
         Assert.assertEquals(0, loadImage(DOCKER_IMAGE));
         Assert.assertEquals(0, deployK8s(KUBERNETES_TARGET_PATH));

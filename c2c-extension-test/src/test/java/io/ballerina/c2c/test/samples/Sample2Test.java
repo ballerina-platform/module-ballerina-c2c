@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -22,9 +22,9 @@ import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.test.utils.KubernetesTestUtils;
 import io.ballerina.c2c.utils.KubernetesUtils;
-import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -47,19 +47,18 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getExposedPorts;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
 
 /**
- * Test cases for sample 5.
+ * Test cases for sample 2.
  */
-public class Sample5Test extends SampleTest {
+public class Sample2Test extends SampleTest {
 
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample5");
+    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample2");
     private static final Path DOCKER_TARGET_PATH =
             SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
     private static final Path KUBERNETES_TARGET_PATH =
             SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello");
-    private static final String DOCKER_IMAGE = "anuruddhal/hello-api:sample5";
+    private static final String DOCKER_IMAGE = "anuruddhal/hello-api:sample2";
     private Deployment deployment;
-    private ConfigMap ballerinaConf;
-    private ConfigMap dataMap;
+    private Service service;
 
     @BeforeClass
     public void compileSample() throws IOException, InterruptedException {
@@ -74,19 +73,9 @@ public class Sample5Test extends SampleTest {
                 case "Deployment":
                     deployment = (Deployment) data;
                     break;
-                case "ConfigMap":
-                    switch (data.getMetadata().getName()) {
-                        case "hello-ballerina-conf-config-map":
-                            ballerinaConf = (ConfigMap) data;
-                            break;
-                        case "hello-data-txt":
-                            dataMap = (ConfigMap) data;
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
                 case "Service":
+                    service = (Service) data;
+                    break;
                 case "Secret":
                 case "HorizontalPodAutoscaler":
                     break;
@@ -102,33 +91,28 @@ public class Sample5Test extends SampleTest {
         Assert.assertNotNull(deployment);
         Assert.assertEquals(deployment.getMetadata().getName(), "hello-deployment");
         Assert.assertEquals(deployment.getSpec().getReplicas().intValue(), 1);
-        Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getVolumes().size(), 3);
         Assert.assertEquals(deployment.getMetadata().getLabels().get(KubernetesConstants
                 .KUBERNETES_SELECTOR_KEY), "hello");
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         // Assert Containers
         Container container = deployment.getSpec().getTemplate().getSpec().getContainers().get(0);
-        Assert.assertEquals(container.getVolumeMounts().size(), 3);
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE);
         Assert.assertEquals(container.getImagePullPolicy(), KubernetesConstants.ImagePullPolicy.IfNotPresent.name());
         Assert.assertEquals(container.getPorts().size(), 1);
-        Assert.assertEquals(container.getEnv().size(), 1);
-
-        // Validate config file
-        Assert.assertEquals(container.getEnv().get(0).getName(), "BAL_CONFIG_FILES");
-        Assert.assertEquals(container.getEnv().get(0).getValue(), "/home/ballerina/conf/Config.toml");
     }
 
     @Test
-    public void validateConfigMap() {
-        // Assert ballerina.conf config map
-        Assert.assertNotNull(ballerinaConf);
-        Assert.assertEquals(1, ballerinaConf.getData().size());
-
-        // Assert Data config map
-        Assert.assertNotNull(dataMap);
-        Assert.assertEquals(1, dataMap.getData().size());
+    public void validateService() {
+        Assert.assertNotNull(service);
+        Assert.assertEquals(1, service.getMetadata().getLabels().size());
+        Assert.assertEquals("hello-svc", service.getMetadata().getName());
+        Assert.assertEquals("ClusterIP", service.getSpec().getType());
+        Assert.assertEquals(1, service.getSpec().getPorts().size());
+        Assert.assertEquals(9090, service.getSpec().getPorts().get(0).getPort().intValue());
+        Assert.assertEquals(9090, service.getSpec().getPorts().get(0).getTargetPort().getIntVal().intValue());
+        Assert.assertEquals("TCP", service.getSpec().getPorts().get(0).getProtocol());
+        Assert.assertEquals("svc-1-helloworl", service.getSpec().getPorts().get(0).getName());
     }
 
     @Test
@@ -147,7 +131,7 @@ public class Sample5Test extends SampleTest {
                 "[/bin/sh, -c, java -Xdiag -cp \"hello.jar:jars/*\" 'hello/hello/0_0_1/$_init']");
     }
 
-    @Test(groups = { "integration" })
+    @Test(groups = {"integration"})
     public void deploySample() throws IOException, InterruptedException {
         Assert.assertEquals(0, loadImage(DOCKER_IMAGE));
         Assert.assertEquals(0, deployK8s(KUBERNETES_TARGET_PATH));

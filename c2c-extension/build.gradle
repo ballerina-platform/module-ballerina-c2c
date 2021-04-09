@@ -89,7 +89,6 @@ test {
         suites 'src/test/resources/testng.xml'
     }
     systemProperties = [
-        buildDir: System.getProperty('buildDir', "$project.buildDir")
+            buildDir: System.getProperty('buildDir', "$project.buildDir")
     ]
 }
-

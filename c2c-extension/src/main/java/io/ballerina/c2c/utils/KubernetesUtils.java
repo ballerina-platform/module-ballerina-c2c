@@ -25,7 +25,6 @@ import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.projects.Package;
-import io.ballerina.projects.Project;
 import io.ballerina.toml.api.Toml;
 import io.fabric8.kubernetes.api.model.ConfigMapKeySelector;
 import io.fabric8.kubernetes.api.model.ConfigMapKeySelectorBuilder;
@@ -406,8 +405,7 @@ public class KubernetesUtils {
         return configAnnotation;
     }
 
-    public static PackageID getProjectID(Project project) {
-        Package currentPackage = project.currentPackage();
+    public static PackageID getProjectID(Package currentPackage) {
         return new PackageID(new Name(currentPackage.packageOrg().value()),
                 new Name(currentPackage.packageName().value()),
                 new Name(currentPackage.packageVersion().value().toString()));
