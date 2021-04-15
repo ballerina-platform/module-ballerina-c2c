@@ -50,7 +50,7 @@ configurations {
 
 dependencies {
 
-    implementation "org.ballerinax.docker:docker-generator:${ballerinaDockerVersion}"
+    implementation "org.ballerinax.docker:docker-generator:${dockerVersion}"
     implementation "com.github.docker-java:docker-java:${dockerJavaVersion}"
     implementation "io.fabric8:kubernetes-client:${fabric8KubernetesClientVersion}"
     implementation "javax.validation:validation-api:${javaxValidationAPIVersion}"
