@@ -83,6 +83,22 @@ task copyStdlibs(type: Copy) {
     }
 }
 
+def ballerinaConfigFile = new File("${project.projectDir}/CompilerPlugin.toml")
+def originalConfig = ballerinaConfigFile.text
+
+task updateTomlFile {
+    doLast {
+        def newConfig = ballerinaConfigFile.text.replace("@c2c.extension.version@", project.version)
+        ballerinaConfigFile.text = newConfig
+    }
+}
+
+task revertTomlFile {
+    doLast {
+        ballerinaConfigFile.text = originalConfig
+    }
+}
+
 task copyThridPartyDependencies(type: Copy) {
     from configurations.thirdPartyJars
     into "${bDistribution}/bre/lib"
@@ -187,4 +203,6 @@ unpackStdLibs.dependsOn unzip
 copyStdlibs.dependsOn unpackStdLibs
 copyThridPartyDependencies.dependsOn copyStdlibs
 ballerinaBuild.dependsOn copyThridPartyDependencies
+ballerinaBuild.dependsOn updateTomlFile
+ballerinaBuild.finalizedBy revertTomlFile
 build.dependsOn ballerinaBuild
