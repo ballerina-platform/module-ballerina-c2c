@@ -89,6 +89,11 @@ public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
     }
 
     @Override
+    public String getName() {
+        return "Add Resource To K8s Code Action";
+    }
+
+    @Override
     public List<CodeAction> getNodeBasedCodeActions(CodeActionContext context,
                                                     NodeBasedPositionDetails positionDetails) {
         NonTerminalNode matchedNode = positionDetails.matchedTopLevelNode();
