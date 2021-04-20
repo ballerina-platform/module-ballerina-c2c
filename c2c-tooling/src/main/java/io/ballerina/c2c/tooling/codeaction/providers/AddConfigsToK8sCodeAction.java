@@ -84,6 +84,11 @@ public class AddConfigsToK8sCodeAction implements LSCodeActionProvider {
     }
 
     @Override
+    public String getName() {
+        return "Add Configs To K8s CodeAction";
+    }
+
+    @Override
     public List<CodeAction> getNodeBasedCodeActions(CodeActionContext context,
                                                     NodeBasedPositionDetails positionDetails) {
         NonTerminalNode matchedNode = positionDetails.matchedTopLevelNode();
