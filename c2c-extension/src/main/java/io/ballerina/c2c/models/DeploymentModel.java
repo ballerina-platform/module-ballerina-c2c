@@ -70,6 +70,7 @@ public class DeploymentModel extends KubernetesModel {
     private boolean uberJar;
     private String dockerConfigPath;
     private ResourceRequirements resourceRequirements;
+    private String internalDomainName;
 
     public DeploymentModel() {
         // Initialize with default values.
