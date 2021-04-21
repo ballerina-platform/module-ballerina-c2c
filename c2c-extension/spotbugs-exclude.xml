@@ -14,7 +14,7 @@
 -->
 <FindBugsFilter>
     <Match>
-        <Class name="io.ballerina.c2c.handlers.DeploymentHandler"/>
+        <Class name="io.ballerina.c2c.CloudTomlResolver"/>
         <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME"/>
     </Match>
     <Match>

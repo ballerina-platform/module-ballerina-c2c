@@ -44,6 +44,7 @@ clean {
 }
 
 def bDistribution = file("$project.buildDir/extracted-distribution/jballerina-tools-${ballerinaLangVersion}")
+def ballerinaCentralAccessToken = System.getenv('BALLERINA_CENTRAL_ACCESS_TOKEN')
 
 task unzip {
     doLast {
@@ -180,6 +181,28 @@ task createArtifactZip(type: Zip) {
     from ballerinaBuild
 }
 
+task ballerinaPublish {
+    doLast {
+        if (project.version.endsWith('-SNAPSHOT')) {
+            return
+        }
+        if (ballerinaCentralAccessToken != null) {
+            println("Publishing to the ballerina central...")
+            exec {
+                workingDir project.projectDir
+                environment "JAVA_OPTS", "-DBALLERINA_DEV_COMPILE_BALLERINA_ORG=true"
+                if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+                    commandLine 'cmd', '/c', "$bDistribution/bin/bal.bat push && exit %%ERRORLEVEL%%"
+                } else {
+                    commandLine 'sh', '-c', "$bDistribution/bin/bal push"
+                }
+            }
+        } else {
+            throw new InvalidUserDataException("Central Access Token is not present")
+        }
+    }
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -206,3 +229,10 @@ ballerinaBuild.dependsOn copyThridPartyDependencies
 ballerinaBuild.dependsOn updateTomlFile
 ballerinaBuild.finalizedBy revertTomlFile
 build.dependsOn ballerinaBuild
+
+ballerinaPublish.dependsOn ":c2c-extension:build"
+ballerinaPublish.dependsOn ":c2c-extension:test"
+ballerinaPublish.dependsOn ballerinaBuild
+publish.dependsOn ":c2c-extension-test:build"
+publish.dependsOn ":c2c-extension-test:test"
+publish.dependsOn ballerinaPublish

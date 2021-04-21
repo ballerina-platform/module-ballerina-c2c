@@ -20,6 +20,7 @@ package io.ballerina.c2c.handlers;
 
 import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
+import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.ServiceModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
@@ -52,8 +53,13 @@ public class ServiceHandler extends AbstractArtifactHandler {
                 .getJarPath());
         commonService.addLabel(KubernetesConstants.KUBERNETES_SELECTOR_KEY, balxFileName);
         commonService.setSelector(balxFileName);
-        commonService.setName(KubernetesUtils.getValidName(dataHolder.getDeploymentModel().getName()
-                .replace(KubernetesConstants.DEPLOYMENT_POSTFIX, "") + KubernetesConstants.SVC_POSTFIX));
+        final DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
+        if (deploymentModel.getInternalDomainName() != null) {
+            commonService.setName(deploymentModel.getInternalDomainName());
+        } else {
+            commonService.setName(KubernetesUtils.getValidName(deploymentModel.getName()
+                    .replace(KubernetesConstants.DEPLOYMENT_POSTFIX, "") + KubernetesConstants.SVC_POSTFIX));
+        }
         List<ServicePort> servicePorts = new ArrayList<>();
         for (ServiceModel serviceModel : serviceModels) {
             count++;
@@ -71,7 +77,7 @@ public class ServiceHandler extends AbstractArtifactHandler {
                     .withContainerPort(serviceModel.getTargetPort())
                     .withProtocol(KubernetesConstants.KUBERNETES_SVC_PROTOCOL)
                     .build();
-            dataHolder.getDeploymentModel().addPort(containerPort);
+            deploymentModel.addPort(containerPort);
             OUT.println();
             OUT.print("\t@kubernetes:Service \t\t\t - complete " + count + "/" + serviceModels.size() + "\r");
         }
