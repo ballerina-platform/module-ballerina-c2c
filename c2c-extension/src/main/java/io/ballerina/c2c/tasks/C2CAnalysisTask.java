@@ -17,7 +17,7 @@
  */
 package io.ballerina.c2c.tasks;
 
-import io.ballerina.c2c.diagnostics.Config;
+import io.ballerina.c2c.diagnostics.HttpsConfig;
 import io.ballerina.c2c.diagnostics.ListenerInfo;
 import io.ballerina.c2c.diagnostics.MutualSSLConfig;
 import io.ballerina.c2c.diagnostics.ProjectServiceInfo;
@@ -49,6 +49,7 @@ import org.apache.commons.codec.binary.Base64;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -76,7 +77,8 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
         KubernetesContext.getInstance().setCurrentPackage(KubernetesUtils.getProjectID(currentPackage));
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         dataHolder.setPackageID(KubernetesUtils.getProjectID(currentPackage));
-        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(currentPackage.project());
+        List<Diagnostic> c2cDiagnostics = new ArrayList<>();
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(currentPackage.project(), c2cDiagnostics);
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
         try {
             addServices(serviceList);
@@ -87,11 +89,14 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
                     new NullLocation());
             compilationAnalysisContext.reportDiagnostic(serviceDiagnostic);
         }
+
+        for (Diagnostic diagnostic : c2cDiagnostics) {
+            compilationAnalysisContext.reportDiagnostic(diagnostic);
+        }
         addDeployments();
         addHPA();
         addJobs(projectServiceInfo);
     }
-
 
     private void addJobs(ProjectServiceInfo projectServiceInfo) {
         if (projectServiceInfo.getTask().isPresent()) {
@@ -168,7 +173,7 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
     private Set<SecretModel> processSecureSocketAnnotation(ListenerInfo listenerInfo) throws KubernetesPluginException {
         Set<SecretModel> secrets = new HashSet<>();
 
-        Optional<Config> config = listenerInfo.getConfig();
+        Optional<HttpsConfig> config = listenerInfo.getConfig();
         if (config.isEmpty()) {
             return Collections.emptySet();
         }

@@ -70,8 +70,8 @@ public class TomlDiagnosticChecker {
         long port = ((TomlLongValueNode) portNode).getValue();
         String path = ((TomlStringValueNode) pathNode).getValue();
 
-        List<ListenerInfo> listenerList = projectServiceInfo.getListenerList();
-        if (!isListenerPortValid(port, listenerList)) {
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+        if (!isListenerPortValid(port, serviceList)) {
             Diagnostic portDiag = getTomlDiagnostic(portNode.location(), "C2C001", "error.invalid.port",
                     DiagnosticSeverity.ERROR, "Invalid " + type.getValue() + " Port");
             Diagnostic pathDiag = getTomlDiagnostic(pathNode.location(), "C2C002", "error.invalid.path",
@@ -81,7 +81,7 @@ public class TomlDiagnosticChecker {
             return diagnosticInfos;
         }
 
-        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+        
         for (ServiceInfo serviceInfo : serviceList) {
             int serviceListenerPort = serviceInfo.getListener().getPort();
             if (serviceListenerPort == port) {
@@ -131,8 +131,9 @@ public class TomlDiagnosticChecker {
         return false;
     }
 
-    private boolean isListenerPortValid(long port, List<ListenerInfo> listenerList) {
-        for (ListenerInfo listener : listenerList) {
+    private boolean isListenerPortValid(long port, List<ServiceInfo> serviceInfo) {
+        for (ServiceInfo service : serviceInfo) {
+            ListenerInfo listener = service.getListener();
             int givenPort = listener.getPort();
             if (givenPort == port) {
                 return true;

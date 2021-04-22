@@ -15,18 +15,20 @@
  */
 package io.ballerina.c2c.diagnostics;
 
+import io.ballerina.compiler.api.SemanticModel;
+import io.ballerina.compiler.api.symbols.ModuleSymbol;
+import io.ballerina.compiler.api.symbols.ServiceDeclarationSymbol;
+import io.ballerina.compiler.api.symbols.TypeDescKind;
+import io.ballerina.compiler.api.symbols.TypeSymbol;
+import io.ballerina.compiler.api.symbols.UnionTypeSymbol;
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.BasicLiteralNode;
-import io.ballerina.compiler.syntax.tree.BindingPatternNode;
-import io.ballerina.compiler.syntax.tree.CaptureBindingPatternNode;
-import io.ballerina.compiler.syntax.tree.CheckExpressionNode;
 import io.ballerina.compiler.syntax.tree.ExplicitNewExpressionNode;
 import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.FunctionArgumentNode;
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.IdentifierToken;
 import io.ballerina.compiler.syntax.tree.ImplicitNewExpressionNode;
-import io.ballerina.compiler.syntax.tree.ListenerDeclarationNode;
 import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingFieldNode;
 import io.ballerina.compiler.syntax.tree.MetadataNode;
@@ -44,9 +46,12 @@ import io.ballerina.compiler.syntax.tree.SpecificFieldNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.TypedBindingPatternNode;
+import io.ballerina.tools.diagnostics.Diagnostic;
+import io.ballerina.tools.diagnostics.DiagnosticFactory;
+import io.ballerina.tools.diagnostics.DiagnosticInfo;
+import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -59,57 +64,17 @@ import java.util.Optional;
  */
 public class C2CVisitor extends NodeVisitor {
 
-    private List<ListenerInfo> listeners = new ArrayList<>();
-    private List<ServiceInfo> services = new ArrayList<>();
-    private Map<String, Config> externalConfigs = new HashMap<>();
+    private final List<ServiceInfo> services = new ArrayList<>();
+    private final Map<String, Node> moduleLevelVariables;
+    private final SemanticModel semanticModel;
+    private final List<Diagnostic> diagnostics;
     private Task task = null;
 
-    @Override
-    public void visit(ModuleVariableDeclarationNode moduleVariableDeclarationNode) {
-        TypedBindingPatternNode typedBindingPatternNode = moduleVariableDeclarationNode.typedBindingPattern();
-        TypeDescriptorNode typeDescriptorNode = typedBindingPatternNode.typeDescriptor();
-        if (typeDescriptorNode.kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
-            return;
-        }
-        QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typeDescriptorNode;
-        String moduleName = qualified.modulePrefix().text();
-        String identifier = qualified.identifier().text();
-        if (!("http".equals(moduleName))) {
-            return;
-        }
-        BindingPatternNode variableNode = typedBindingPatternNode.bindingPattern();
-        if (variableNode.kind() != SyntaxKind.CAPTURE_BINDING_PATTERN) {
-            return;
-        }
-        CaptureBindingPatternNode captureVariableName = (CaptureBindingPatternNode) variableNode;
-        String variableName = captureVariableName.variableName().text();
-
-        if (moduleVariableDeclarationNode.initializer().isEmpty()) {
-            return;
-        }
-        if ("Listener".equals(identifier)) {
-            extractHttpsListener(moduleVariableDeclarationNode, variableName);
-        }
-        if ("ListenerConfiguration".equals(identifier)) {
-            Optional<ExpressionNode> initializer = moduleVariableDeclarationNode.initializer();
-            if (initializer.isPresent()) {
-                if (initializer.get().kind() != SyntaxKind.MAPPING_CONSTRUCTOR) {
-                    return;
-                }
-                Optional<Config> config =
-                        processFieldsInHttpConfig((MappingConstructorExpressionNode) initializer.get());
-                config.ifPresent(value -> externalConfigs.put(variableName, value));
-            }
-        }
-    }
-
-    private void extractHttpsListener(ModuleVariableDeclarationNode moduleVariableDeclarationNode, String varName) {
-        ExpressionNode initExpression = moduleVariableDeclarationNode.initializer().get();
-        if (initExpression.kind() == SyntaxKind.CHECK_EXPRESSION) {
-            CheckExpressionNode checkedInit = (CheckExpressionNode) initExpression;
-            ExpressionNode expression = checkedInit.expression();
-            extractListenerInitializer(varName, expression);
-        }
+    public C2CVisitor(Map<String, Node> moduleLevelVariables, SemanticModel semanticModel,
+                      List<Diagnostic> diagnostics) {
+        this.moduleLevelVariables = moduleLevelVariables;
+        this.semanticModel = semanticModel;
+        this.diagnostics = diagnostics;
     }
 
     @Override
@@ -195,40 +160,36 @@ public class C2CVisitor extends NodeVisitor {
         this.task = new Task(minutes, hours, dayOfMonth, monthOfYear, daysOfWeek);
     }
 
-    @Override
-    public void visit(ListenerDeclarationNode listenerDeclarationNode) {
-        String listenerName = listenerDeclarationNode.variableName().text();
-        Node initializer = listenerDeclarationNode.initializer();
-        extractListenerInitializer(listenerName, initializer);
-    }
-
-    private void extractListenerInitializer(String listenerName, Node initializer) {
+    private Optional<ListenerInfo> extractListenerInitializer(String listenerName, Node initializer) {
         if (initializer.kind() != SyntaxKind.IMPLICIT_NEW_EXPRESSION) {
-            return;
+            return Optional.empty();
         }
         ImplicitNewExpressionNode initializerNode = (ImplicitNewExpressionNode) initializer;
         ParenthesizedArgList parenthesizedArgList = initializerNode.parenthesizedArgList().get();
         if (parenthesizedArgList.arguments().size() == 0) {
-            return;
+            return Optional.empty();
         }
         FunctionArgumentNode functionArgumentNode = parenthesizedArgList.arguments().get(0);
         ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
         ListenerInfo listenerInfo;
         if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-            listenerInfo = new ListenerInfo(listenerName, 0);
+            DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C002", "failed to retrieve port",
+                    DiagnosticSeverity.ERROR);
+            diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo, expression.location()));
+            return Optional.empty();
         } else {
             BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expression;
             int port = Integer.parseInt(basicLiteralNode.literalToken().text());
             listenerInfo = new ListenerInfo(listenerName, port);
         }
         if (parenthesizedArgList.arguments().size() > 1) {
-            Optional<Config> config = extractKeyStores(parenthesizedArgList.arguments().get(1));
+            Optional<HttpsConfig> config = extractKeyStores(parenthesizedArgList.arguments().get(1));
             config.ifPresent(listenerInfo::setConfig);
         }
-        listeners.add(listenerInfo);
+        return Optional.of(listenerInfo);
     }
 
-    private Optional<Config> extractKeyStores(FunctionArgumentNode functionArgumentNode1) {
+    private Optional<HttpsConfig> extractKeyStores(FunctionArgumentNode functionArgumentNode1) {
         if (functionArgumentNode1.kind() != SyntaxKind.POSITIONAL_ARG) {
             return Optional.empty();
         }
@@ -237,14 +198,13 @@ public class C2CVisitor extends NodeVisitor {
             return processFieldsInHttpConfig((MappingConstructorExpressionNode) positionalArgumentNode.expression());
         } else if (positionalArgumentNode.expression().kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
             String varName = ((SimpleNameReferenceNode) positionalArgumentNode.expression()).name().text();
-            Config config = this.externalConfigs.get(varName);
-            return Optional.ofNullable(config);
+            return getHttpsListenerConfig(varName);
         } else {
             return Optional.empty();
         }
     }
 
-    private Optional<Config> processFieldsInHttpConfig(MappingConstructorExpressionNode mapping) {
+    private Optional<HttpsConfig> processFieldsInHttpConfig(MappingConstructorExpressionNode mapping) {
         SeparatedNodeList<MappingFieldNode> fields = mapping.fields();
         for (MappingFieldNode mappingFieldNode : fields) {
             if (mappingFieldNode.kind() != SyntaxKind.SPECIFIC_FIELD) {
@@ -264,9 +224,9 @@ public class C2CVisitor extends NodeVisitor {
         return Optional.empty();
     }
 
-    private Optional<Config> processSecureSocketValue(MappingConstructorExpressionNode mappingConstructorNode) {
+    private Optional<HttpsConfig> processSecureSocketValue(MappingConstructorExpressionNode mappingConstructorNode) {
         SeparatedNodeList<MappingFieldNode> socketChilds = mappingConstructorNode.fields();
-        Config config = new Config();
+        HttpsConfig httpsConfig = new HttpsConfig();
         for (MappingFieldNode child : socketChilds) {
             if (child.kind() != SyntaxKind.SPECIFIC_FIELD) {
                 continue;
@@ -275,13 +235,13 @@ public class C2CVisitor extends NodeVisitor {
             String fieldName = getNameOfIdentifier(specificField.fieldName());
             if ("key".equals(fieldName)) {
                 SecureSocketConfig secureSocket = getSecureSocketConfig(specificField.valueExpr().get());
-                config.setSecureSocketConfig(secureSocket);
+                httpsConfig.setSecureSocketConfig(secureSocket);
             } else if ("mutualSsl".equals(fieldName)) {
                 MutualSSLConfig mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
-                config.setMutualSSLConfig(mutualSSLConfig);
+                httpsConfig.setMutualSSLConfig(mutualSSLConfig);
             }
         }
-        return Optional.of(config);
+        return Optional.of(httpsConfig);
     }
 
     private MutualSSLConfig getMutualSSLConfig(ExpressionNode expressionNode) {
@@ -339,6 +299,13 @@ public class C2CVisitor extends NodeVisitor {
 
     @Override
     public void visit(ServiceDeclarationNode serviceDeclarationNode) {
+        ServiceDeclarationSymbol symbol =
+                (ServiceDeclarationSymbol) semanticModel.symbol(serviceDeclarationNode).orElseThrow();
+        List<TypeSymbol> typeSymbols = symbol.listenerTypes();
+        if (typeSymbols.isEmpty() || !isC2CSupportedListener(typeSymbols.get(0))) {
+            return;
+        }
+
         ListenerInfo listenerInfo = null;
         String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
         ExpressionNode expressionNode = serviceDeclarationNode.expressions().get(0);
@@ -347,7 +314,14 @@ public class C2CVisitor extends NodeVisitor {
             //on helloEP
             SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
             String listenerName = referenceNode.name().text();
-            listenerInfo = this.getListener(listenerName);
+            Optional<ListenerInfo> httpsListener = this.getHttpsListener(listenerName);
+            if (httpsListener.isEmpty()) {
+                DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C002", "failed to retrieve port",
+                        DiagnosticSeverity.ERROR);
+                diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo, expressionNode.location()));
+                return;
+            }
+            listenerInfo = httpsListener.get();
         } else {
             //Inline Listener
             ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
@@ -357,8 +331,24 @@ public class C2CVisitor extends NodeVisitor {
                 if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
                     //on new graphql:Listener(httpListener)
                     SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expression;
-                    String listenerName = referenceNode.name().text();
-                    listenerInfo = this.getListener(listenerName);
+                    String variableName = referenceNode.name().text();
+                    Optional<Integer> port = getPortNumberFromVariable(variableName);
+                    if (port.isEmpty()) {
+                        Optional<ListenerInfo> httpsListener = this.getHttpsListener(variableName);
+                        if (httpsListener.isEmpty()) {
+                            DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C002", "failed to retrieve port",
+                                    DiagnosticSeverity.ERROR);
+                            diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo, expression.location()));
+                            return;
+                        }
+                        listenerInfo = httpsListener.get();
+                    } else {
+                        int portNumber = port.get();
+                        if (portNumber == 0) {
+                            return;
+                        }
+                        listenerInfo = new ListenerInfo(servicePath, portNumber);
+                    }
                 } else {
                     //on new http:Listener(9091)
                     int port = Integer.parseInt(((BasicLiteralNode) expression).literalToken().text());
@@ -369,10 +359,9 @@ public class C2CVisitor extends NodeVisitor {
             //Inline Http config
             if (refNode.parenthesizedArgList().arguments().size() > 1) {
                 FunctionArgumentNode secondParamExpression = refNode.parenthesizedArgList().arguments().get(1);
-                Optional<Config> config = extractKeyStores(secondParamExpression);
+                Optional<HttpsConfig> config = extractKeyStores(secondParamExpression);
                 config.ifPresent(listenerInfo::setConfig);
             }
-            this.listeners.add(listenerInfo);
         }
         ServiceInfo serviceInfo = new ServiceInfo(listenerInfo, serviceDeclarationNode, servicePath);
         NodeList<Node> function = serviceDeclarationNode.members();
@@ -385,6 +374,37 @@ public class C2CVisitor extends NodeVisitor {
             }
         }
         services.add(serviceInfo);
+    }
+
+    private boolean isC2CSupportedListener(TypeSymbol typeSymbol) {
+        if (typeSymbol.typeKind() == TypeDescKind.UNION) {
+            UnionTypeSymbol unionTypeSymbol = (UnionTypeSymbol) typeSymbol;
+            List<TypeSymbol> typeSymbols = unionTypeSymbol.memberTypeDescriptors();
+            for (TypeSymbol symbol : typeSymbols) {
+                if (symbol.typeKind() != TypeDescKind.ERROR) {
+                    return isC2CSupportedListener(symbol);
+                }
+            }
+        }
+        if (typeSymbol.typeKind() == TypeDescKind.TYPE_REFERENCE) {
+            Optional<ModuleSymbol> module = typeSymbol.getModule();
+            if (module.isEmpty() || module.get().getName().isEmpty()) {
+                return false;
+            }
+            String moduleName = module.get().getName().get();
+            switch (moduleName) {
+                case "http":
+                case "grpc":
+                case "graphql":
+                case "tcp":
+                case "udp":
+                    //TODO add other stdlib
+                    return true;
+                default:
+                    return false;
+            }
+        }
+        return false;
     }
 
     private String toAbsoluteServicePath(NodeList<Node> servicePathNodes) {
@@ -402,24 +422,60 @@ public class C2CVisitor extends NodeVisitor {
         return absoluteServicePath.toString();
     }
 
-    private ListenerInfo getListener(String name) {
-        for (ListenerInfo info : this.listeners) {
-            if (info.getName().equals(name)) {
-                return info;
-            }
-        }
-        return new ListenerInfo(name, 0);
-    }
-
-    public List<ListenerInfo> getListeners() {
-        return listeners;
-    }
-
     public List<ServiceInfo> getServices() {
         return services;
     }
 
     public Task getTask() {
         return task;
+    }
+
+    private Optional<HttpsConfig> getHttpsListenerConfig(String variableName) {
+        Node node = this.moduleLevelVariables.get(variableName);
+        if (node == null || node.kind() != SyntaxKind.MAPPING_CONSTRUCTOR) {
+            return Optional.empty();
+        }
+        MappingConstructorExpressionNode initializer = (MappingConstructorExpressionNode) node;
+        return processFieldsInHttpConfig(initializer);
+    }
+
+    private Optional<ListenerInfo> getHttpsListener(String variableName) {
+        Node node = this.moduleLevelVariables.get(variableName);
+        if (node == null || !(node.kind() == SyntaxKind.IMPLICIT_NEW_EXPRESSION)) {
+            return Optional.empty();
+        }
+
+        ImplicitNewExpressionNode init = (ImplicitNewExpressionNode) node;
+        return extractListenerInitializer(variableName, init);
+    }
+
+    private Optional<Integer> getPortNumberFromVariable(String variableName) {
+        Node node = this.moduleLevelVariables.get(variableName);
+        if (node == null || node.kind() != SyntaxKind.MODULE_VAR_DECL) {
+            return Optional.empty();
+        }
+        ModuleVariableDeclarationNode moduleVariableDeclarationNode = (ModuleVariableDeclarationNode) node;
+        TypedBindingPatternNode typedBindingPatternNode = moduleVariableDeclarationNode.typedBindingPattern();
+        TypeDescriptorNode typeDescriptorNode = typedBindingPatternNode.typeDescriptor();
+        if (typeDescriptorNode.kind() != SyntaxKind.INT_TYPE_DESC) {
+            return Optional.empty();
+        }
+        if (moduleVariableDeclarationNode.initializer().isEmpty()) {
+            return Optional.empty();
+        }
+        ExpressionNode expressionNode = moduleVariableDeclarationNode.initializer().get();
+        if (expressionNode.kind() == SyntaxKind.REQUIRED_EXPRESSION) {
+            DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C001", "configurables with no default value is not " +
+                    "supported", DiagnosticSeverity.ERROR);
+            diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo,
+                    moduleVariableDeclarationNode.location()));
+            return Optional.of(0);
+        }
+
+        if (expressionNode.kind() != SyntaxKind.NUMERIC_LITERAL) {
+            return Optional.empty();
+        }
+        BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expressionNode;
+        return Optional.of(Integer.parseInt(basicLiteralNode.literalToken().text()));
     }
 }
