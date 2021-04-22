@@ -190,18 +190,15 @@ public class CloudTomlResolver {
 
             for (Toml secret : secrets) {
                 Path path = Paths.get(Objects.requireNonNull(TomlHelper.getString(secret, "file")));
-                boolean sealed = TomlHelper.getBoolean(secret, "sealed", false);
                 if (path.endsWith(BALLERINA_CONF_FILE_NAME)) {
                     // Resolve ballerina.conf
                     SecretModel secretModel = getBallerinaConfSecret(path.toString(), deploymentName);
-                    secretModel.setSealed(sealed);
                     dataHolder.addSecrets(Collections.singleton(secretModel));
                     continue;
                 }
                 Path mountPath = Paths.get(Objects.requireNonNull(TomlHelper.getString(secret, "mount_path")));
                 final Path fileName = validatePaths(path, mountPath);
                 SecretModel secretModel = new SecretModel();
-                secretModel.setSealed(sealed);
                 secretModel.setName(deploymentName + "-" + getValidName(fileName.toString()));
                 secretModel.setData(getDataForSecret(path.toString()));
                 secretModel.setMountPath(mountPath.toString());
