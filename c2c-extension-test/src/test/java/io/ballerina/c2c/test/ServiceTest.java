@@ -59,7 +59,6 @@ public class ServiceTest {
     @Test
     public void testInvalidInternalDomainName() throws IOException, InterruptedException {
         Path projectPath = Paths.get("src", "test", "resources", "service", "invalid-internal-domain");
-        Assert.assertNotEquals(KubernetesTestUtils.compileBallerinaProject(projectPath)
-                , 0);
+        Assert.assertNotEquals(KubernetesTestUtils.compileBallerinaProject(projectPath), 0);
     }
 }

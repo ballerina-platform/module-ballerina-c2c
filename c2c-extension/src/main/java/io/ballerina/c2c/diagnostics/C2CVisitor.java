@@ -255,7 +255,21 @@ public class C2CVisitor extends NodeVisitor {
             SpecificFieldNode specificFieldNode = (SpecificFieldNode) field;
             String nameOfIdentifier = getNameOfIdentifier(specificFieldNode.fieldName());
             if ("cert".equals(nameOfIdentifier)) {
-                mutualSSLConfig.setPath(extractString(specificFieldNode.valueExpr().get()));
+                ExpressionNode certField = specificFieldNode.valueExpr().get();
+                if (certField.kind() == SyntaxKind.MAPPING_CONSTRUCTOR) {
+                    for (MappingFieldNode mappingFieldNode : ((MappingConstructorExpressionNode) certField).fields()) {
+                        if (mappingFieldNode.kind() != SyntaxKind.SPECIFIC_FIELD) {
+                            continue;
+                        }
+                        SpecificFieldNode certSpecificField = (SpecificFieldNode) mappingFieldNode;
+                        String fieldName = getNameOfIdentifier(certSpecificField.fieldName());
+                        if ("path".equals(fieldName)) {
+                            mutualSSLConfig.setPath(extractString(certSpecificField.valueExpr().get()));
+                        }
+                    }
+                } else {
+                    mutualSSLConfig.setPath(extractString(certField));
+                }
             }
         }
         return mutualSSLConfig;
