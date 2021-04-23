@@ -4,7 +4,7 @@ Code2cloud extension implementation for ballerina.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Daily build](https://github.com/ballerina-platform/module-ballerina-c2c/workflows/Daily%20build/badge.svg)](https://github.com/ballerina-platform/module-ballerina-c2c/actions?query=workflow%3A%22Daily+build%22)
-[![Build master branch](https://github.com/ballerina-platform/module-ballerina-c2c/workflows/build-timestamped-master.yml/badge.svg)](https://github.com/ballerina-platform/module-ballerina-c2c/workflows/build-timestamped-master.yml)
+[![Build master branch](https://github.com/ballerina-platform/module-ballerina-c2c/actions/workflows/build-timestamped-master.yml/badge.svg)](https://github.com/ballerina-platform/module-ballerina-c2c/actions/workflows/build-timestamped-master.yml)
 [![codecov](https://codecov.io/gh/ballerina-platform/module-ballerina-c2c/branch/master/graph/badge.svg)](https://codecov.io/gh/ballerina-platform/module-ballerina-c2c)
 ## Features:
 - Kubernetes deployment support. 
