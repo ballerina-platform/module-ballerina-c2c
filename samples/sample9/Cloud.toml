@@ -1,0 +1,4 @@
+[container.image]
+repository="anuruddhal"
+name="hello-api"
+tag="sample9"
