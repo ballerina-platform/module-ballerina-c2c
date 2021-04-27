@@ -66,7 +66,7 @@ task copyExtensionPlugin {
 task copyTooling {
     dependsOn configurations.tooling
     copy {
-        from file("${projectDir}/../c2c-tooling/build/libs/c2c-tooling-${version}.jar")
+        from file("${projectDir}/../c2c-tooling/build/libs/")
         into file("${distributionLocation}/lib/tools/lang-server/lib/")
     }
 }
