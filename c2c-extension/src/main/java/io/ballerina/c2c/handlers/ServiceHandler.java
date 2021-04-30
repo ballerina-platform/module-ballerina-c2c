@@ -64,7 +64,7 @@ public class ServiceHandler extends AbstractArtifactHandler {
         for (ServiceModel serviceModel : serviceModels) {
             count++;
             if (null == serviceModel.getPortName()) {
-                serviceModel.setPortName(KubernetesUtils.getValidName("svc-" + count + "-" + serviceModel.getName()));
+                serviceModel.setPortName(KubernetesUtils.getValidName("port-" + count + "-" + commonService.getName()));
             }
             ServicePortBuilder servicePortBuilder = new ServicePortBuilder()
                     .withName(serviceModel.getPortName())
