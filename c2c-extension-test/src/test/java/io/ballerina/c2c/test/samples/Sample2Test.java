@@ -112,7 +112,7 @@ public class Sample2Test extends SampleTest {
         Assert.assertEquals(9090, service.getSpec().getPorts().get(0).getPort().intValue());
         Assert.assertEquals(9090, service.getSpec().getPorts().get(0).getTargetPort().getIntVal().intValue());
         Assert.assertEquals("TCP", service.getSpec().getPorts().get(0).getProtocol());
-        Assert.assertEquals("svc-1-helloworl", service.getSpec().getPorts().get(0).getName());
+        Assert.assertEquals("port-1-hello-sv", service.getSpec().getPorts().get(0).getName());
     }
 
     @Test

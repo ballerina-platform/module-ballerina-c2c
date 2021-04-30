@@ -317,7 +317,8 @@ public class KubernetesUtils {
             name = name.substring(1);
         }
         name = name.toLowerCase(Locale.getDefault()).replaceAll("[_.]", "-")
-                .replaceAll("[$]", "").replaceAll("/", "-");
+                .replaceAll("[$]", "").replaceAll("/", "-")
+                .replaceAll("--", "-");
         name = name.substring(0, Math.min(name.length(), 15));
         if (name.endsWith("-")) {
             return name.substring(0, name.length() - 1);
