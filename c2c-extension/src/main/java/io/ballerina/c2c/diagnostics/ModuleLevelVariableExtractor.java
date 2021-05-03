@@ -64,22 +64,9 @@ public class ModuleLevelVariableExtractor extends NodeVisitor {
             return;
         }
         QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typeDescriptorNode;
-        String moduleName = qualified.modulePrefix().text();
         String identifier = qualified.identifier().text();
-
-
+        
         if (moduleVariableDeclarationNode.initializer().isEmpty()) {
-            return;
-        }
-        if ("Listener".equals(identifier)) {
-            ExpressionNode initExpression = moduleVariableDeclarationNode.initializer().get();
-            if (initExpression.kind() == SyntaxKind.CHECK_EXPRESSION) {
-                CheckExpressionNode checkedInit = (CheckExpressionNode) initExpression;
-                ExpressionNode expression = checkedInit.expression();
-                moduleLevelVariables.put(variableName, expression);
-            }
-        }
-        if (!("http".equals(moduleName))) {
             return;
         }
         if ("ListenerConfiguration".equals(identifier)) {
@@ -89,7 +76,15 @@ public class ModuleLevelVariableExtractor extends NodeVisitor {
                     return;
                 }
                 moduleLevelVariables.put(variableName, initializer.get());
+                return;
             }
+        }
+
+        ExpressionNode initExpression = moduleVariableDeclarationNode.initializer().get();
+        if (initExpression.kind() == SyntaxKind.CHECK_EXPRESSION) {
+            CheckExpressionNode checkedInit = (CheckExpressionNode) initExpression;
+            ExpressionNode expression = checkedInit.expression();
+            moduleLevelVariables.put(variableName, expression);
         }
     }
 
@@ -103,13 +98,8 @@ public class ModuleLevelVariableExtractor extends NodeVisitor {
         if (typeDescriptorNode.get().kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
             return;
         }
-
-        QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typeDescriptorNode.get();
-        String identifier = qualified.identifier().text();
-
-        if (identifier.equals("Listener")) {
-            Node initializer = listenerDeclarationNode.initializer();
-            moduleLevelVariables.put(listenerName, initializer);
-        }
+        
+        Node initializer = listenerDeclarationNode.initializer();
+        moduleLevelVariables.put(listenerName, initializer);
     }
 }
