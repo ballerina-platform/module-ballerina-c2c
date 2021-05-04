@@ -15,10 +15,18 @@
  */
 package io.ballerina.c2c.diagnostics;
 
+import io.ballerina.compiler.api.ModuleID;
 import io.ballerina.compiler.api.SemanticModel;
+import io.ballerina.compiler.api.symbols.AnnotationSymbol;
+import io.ballerina.compiler.api.symbols.ClassSymbol;
+import io.ballerina.compiler.api.symbols.MethodSymbol;
 import io.ballerina.compiler.api.symbols.ModuleSymbol;
+import io.ballerina.compiler.api.symbols.ParameterSymbol;
 import io.ballerina.compiler.api.symbols.ServiceDeclarationSymbol;
+import io.ballerina.compiler.api.symbols.Symbol;
+import io.ballerina.compiler.api.symbols.SymbolKind;
 import io.ballerina.compiler.api.symbols.TypeDescKind;
+import io.ballerina.compiler.api.symbols.TypeReferenceTypeSymbol;
 import io.ballerina.compiler.api.symbols.TypeSymbol;
 import io.ballerina.compiler.api.symbols.UnionTypeSymbol;
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
@@ -160,11 +168,8 @@ public class C2CVisitor extends NodeVisitor {
         this.task = new Task(minutes, hours, dayOfMonth, monthOfYear, daysOfWeek);
     }
 
-    private Optional<ListenerInfo> extractListenerInitializer(String listenerName, Node initializer) {
-        if (initializer.kind() != SyntaxKind.IMPLICIT_NEW_EXPRESSION) {
-            return Optional.empty();
-        }
-        ImplicitNewExpressionNode initializerNode = (ImplicitNewExpressionNode) initializer;
+    private Optional<ListenerInfo> extractListenerInitializer(String listenerName,
+                                                              ImplicitNewExpressionNode initializerNode) {
         ParenthesizedArgList parenthesizedArgList = initializerNode.parenthesizedArgList().get();
         if (parenthesizedArgList.arguments().size() == 0) {
             return Optional.empty();
@@ -181,10 +186,6 @@ public class C2CVisitor extends NodeVisitor {
             BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expression;
             int port = Integer.parseInt(basicLiteralNode.literalToken().text());
             listenerInfo = new ListenerInfo(listenerName, port);
-        }
-        if (parenthesizedArgList.arguments().size() > 1) {
-            Optional<HttpsConfig> config = extractKeyStores(parenthesizedArgList.arguments().get(1));
-            config.ifPresent(listenerInfo::setConfig);
         }
         return Optional.of(listenerInfo);
     }
@@ -316,12 +317,17 @@ public class C2CVisitor extends NodeVisitor {
         ServiceDeclarationSymbol symbol =
                 (ServiceDeclarationSymbol) semanticModel.symbol(serviceDeclarationNode).orElseThrow();
         List<TypeSymbol> typeSymbols = symbol.listenerTypes();
-        if (typeSymbols.isEmpty() || !isC2CSupportedListener(typeSymbols.get(0))) {
+        if (typeSymbols.isEmpty()) {
+            return;
+        }
+        String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
+        TypeSymbol typeSymbol = typeSymbols.get(0);
+        if (!isC2CSupportedListener(typeSymbol)) {
+            processExposedAnnotations(typeSymbol, servicePath, serviceDeclarationNode);
             return;
         }
 
         ListenerInfo listenerInfo = null;
-        String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
         ExpressionNode expressionNode = serviceDeclarationNode.expressions().get(0);
         if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
             //External Listener
@@ -388,6 +394,100 @@ public class C2CVisitor extends NodeVisitor {
             }
         }
         services.add(serviceInfo);
+    }
+
+    private Optional<ListenerInfo> getListenerFromST(String path, ServiceDeclarationNode serviceNode, int paramNo) {
+        ExpressionNode expressionNode = serviceNode.expressions().get(0);
+        if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+            //on listener
+            SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
+            String listenerName = referenceNode.name().text();
+            Node node = this.moduleLevelVariables.get(listenerName);
+            if (node == null || !(node.kind() == SyntaxKind.IMPLICIT_NEW_EXPRESSION)) {
+                return Optional.empty();
+            }
+            ImplicitNewExpressionNode init = (ImplicitNewExpressionNode) node;
+            return extractListenerInitializer(listenerName, init);
+        } else {
+            ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
+            FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(paramNo);
+            if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
+                ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
+                if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+                    //on new http:Listener(port)
+                    SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expression;
+                    String variableName = referenceNode.name().text();
+                    Optional<Integer> port = getPortNumberFromVariable(variableName);
+                    if (port.isEmpty()) {
+                        Optional<ListenerInfo> httpsListener = this.getHttpsListener(variableName);
+                        if (httpsListener.isEmpty()) {
+                            DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C002", "failed to retrieve port",
+                                    DiagnosticSeverity.ERROR);
+                            diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo, expression.location()));
+                            return Optional.empty();
+                        }
+                        return httpsListener;
+                    } else {
+                        int portNumber = port.get();
+                        if (portNumber == 0) {
+                            return Optional.empty();
+                        }
+                        return Optional.of(new ListenerInfo(path, portNumber));
+                    }
+                } else {
+                    //on new http:Listener(9091)
+                    int port = Integer.parseInt(((BasicLiteralNode) expression).literalToken().text());
+                    return Optional.of(new ListenerInfo(path, port));
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private void processExposedAnnotations(TypeSymbol typeSymbol, String servicePath,
+                                           ServiceDeclarationNode serviceDeclarationNode) {
+        if (typeSymbol.typeKind() != TypeDescKind.TYPE_REFERENCE) {
+            return;
+        }
+        Symbol typeDefinition = ((TypeReferenceTypeSymbol) typeSymbol).definition();
+        if (typeDefinition.kind() != SymbolKind.CLASS) {
+            return;
+        }
+        ClassSymbol classSymbol = (ClassSymbol) typeDefinition;
+        if (classSymbol.initMethod().isEmpty()) {
+            return;
+        }
+        MethodSymbol initSymbol = classSymbol.initMethod().get();
+        Optional<List<ParameterSymbol>> params = initSymbol.typeDescriptor().params();
+        if (params.isEmpty()) {
+            return;
+        }
+        List<ParameterSymbol> get = params.get();
+        for (int i = 0, getSize = get.size(); i < getSize; i++) {
+            ParameterSymbol parameterSymbol = get.get(i);
+            for (AnnotationSymbol annotation : parameterSymbol.annotations()) {
+                Optional<ModuleSymbol> module = annotation.getModule();
+                if (module.isEmpty()) {
+                    continue;
+                }
+                ModuleSymbol moduleSymbol = module.get();
+                ModuleID id = moduleSymbol.id();
+                if (!id.moduleName().equals("cloud")) {
+                    continue;
+                }
+                if (id.orgName().equals("ballerina")) {
+                    //Get port 
+                    Optional<ListenerInfo> listenerInfo = getListenerFromST(servicePath, serviceDeclarationNode, i);
+                    if (listenerInfo.isEmpty()) {
+                        DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C002", "failed to retrieve port",
+                                DiagnosticSeverity.ERROR);
+                        diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo, parameterSymbol.location()));
+                        continue;
+                    }
+                    this.services.add(new ServiceInfo(listenerInfo.get(), serviceDeclarationNode, servicePath));
+                }
+            }
+        }
     }
 
     private boolean isC2CSupportedListener(TypeSymbol typeSymbol) {
@@ -460,7 +560,17 @@ public class C2CVisitor extends NodeVisitor {
         }
 
         ImplicitNewExpressionNode init = (ImplicitNewExpressionNode) node;
-        return extractListenerInitializer(variableName, init);
+        Optional<ListenerInfo> listenerInfo = extractListenerInitializer(variableName, init);
+        if (listenerInfo.isEmpty() || init.parenthesizedArgList().isEmpty()) {
+            return listenerInfo;
+        }
+        ParenthesizedArgList parenthesizedArgList = init.parenthesizedArgList().get();
+        ListenerInfo listener = listenerInfo.get();
+        if (parenthesizedArgList.arguments().size() > 1) {
+            Optional<HttpsConfig> config = extractKeyStores(parenthesizedArgList.arguments().get(1));
+            config.ifPresent(listener::setConfig);
+        }
+        return Optional.of(listener);
     }
 
     private Optional<Integer> getPortNumberFromVariable(String variableName) {

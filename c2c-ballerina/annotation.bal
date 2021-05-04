@@ -36,5 +36,8 @@ public type TaskConfig record{|
     ScheduleConfig schedule?;
 |};
 
-# @c2c:Task annotation to configure cron job.
+# @cloud:Task annotation to configure cron job.
 public const annotation TaskConfig Task on source function;
+
+# @cloud:Expose annotation marks a port that has to be exposed.
+public const annotation Expose on parameter;

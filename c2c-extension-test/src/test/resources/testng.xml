@@ -34,6 +34,7 @@
             <class name="io.ballerina.c2c.test.samples.Sample7Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample8Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample9Test"/>
+            <class name="io.ballerina.c2c.test.samples.Sample10Test"/>
             <class name="io.ballerina.c2c.test.samples.DockerProjectTest"/>
             <class name="io.ballerina.c2c.test.samples.DockerSingleTest"/>
         </classes>
