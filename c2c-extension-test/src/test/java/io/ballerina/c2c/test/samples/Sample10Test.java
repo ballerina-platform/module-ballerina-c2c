@@ -46,7 +46,7 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getExposedPorts;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
 
 /**
- * Test cases for sample 9.
+ * Test cases for sample 10.
  */
 public class Sample10Test extends SampleTest {
 
