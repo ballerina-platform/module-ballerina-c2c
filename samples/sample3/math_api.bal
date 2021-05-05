@@ -13,7 +13,7 @@ function sumSqrt() returns string {
      float i = 0;
      while (i < 1000000.0) {
         x = x + floats:sqrt(i);
-        i = i + 1;
+        i = i + 1.0;
     }
     io:println(x);
     string sum = "ok";
