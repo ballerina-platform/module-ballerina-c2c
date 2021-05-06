@@ -119,7 +119,7 @@ public class ServiceExtractionTest {
         Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
     }
 
-    @Test(enabled = false)
+    @Test
     public void testGraphQl() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "graphql");
 
