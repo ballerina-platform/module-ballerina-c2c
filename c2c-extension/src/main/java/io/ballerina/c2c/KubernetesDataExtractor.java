@@ -165,34 +165,45 @@ public class KubernetesDataExtractor {
         Optional<MutualSSLConfig> mutualSSLConfig = config.get().getMutualSSLConfig();
         SecretModel secretModel = new SecretModel();
         if (secureSocketConfig.isPresent()) {
-            String certFile = secureSocketConfig.get().getCertFile();
-            String keyFile = secureSocketConfig.get().getKeyFile();
-            String keyFileContent = readSecretFile(keyFile);
-            String certFileContent = readSecretFile(certFile);
-            if (getMountPath(certFile).equals(getMountPath(keyFile))) {
-                // key and cert mount to same path
+            String path = secureSocketConfig.get().getPath();
+            if (path != null && !"".equals(path)) {
+                String keyStoreContent = readSecretFile(path);
                 secretModel.setName(getValidName(listenerInfo.getName()) + "-secure-socket");
-                secretModel.setMountPath(getMountPath(certFile));
+                secretModel.setMountPath(getMountPath(path));
                 Map<String, String> dataMap = new HashMap<>();
-                dataMap.put(String.valueOf(Paths.get(keyFile).getFileName()), keyFileContent);
-                dataMap.put(String.valueOf(Paths.get(certFile).getFileName()), certFileContent);
+                dataMap.put(String.valueOf(Paths.get(path).getFileName()), keyStoreContent);
                 secretModel.setData(dataMap);
                 secrets.add(secretModel);
             } else {
-                // key and cert mount different paths
-                secretModel.setName(getValidName(listenerInfo.getName()) + "-secure-cert");
-                secretModel.setMountPath(getMountPath(certFile));
-                Map<String, String> dataMap = new HashMap<>();
-                dataMap.put(String.valueOf(Paths.get(certFile).getFileName()), certFileContent);
-                secretModel.setData(dataMap);
+                String certFile = secureSocketConfig.get().getCertFile();
+                String keyFile = secureSocketConfig.get().getKeyFile();
+                String keyFileContent = readSecretFile(keyFile);
+                String certFileContent = readSecretFile(certFile);
+                if (getMountPath(certFile).equals(getMountPath(keyFile))) {
+                    // key and cert mount to same path
+                    secretModel.setName(getValidName(listenerInfo.getName()) + "-secure-socket");
+                    secretModel.setMountPath(getMountPath(certFile));
+                    Map<String, String> dataMap = new HashMap<>();
+                    dataMap.put(String.valueOf(Paths.get(keyFile).getFileName()), keyFileContent);
+                    dataMap.put(String.valueOf(Paths.get(certFile).getFileName()), certFileContent);
+                    secretModel.setData(dataMap);
+                    secrets.add(secretModel);
+                } else {
+                    // key and cert mount different paths
+                    secretModel.setName(getValidName(listenerInfo.getName()) + "-secure-cert");
+                    secretModel.setMountPath(getMountPath(certFile));
+                    Map<String, String> dataMap = new HashMap<>();
+                    dataMap.put(String.valueOf(Paths.get(certFile).getFileName()), certFileContent);
+                    secretModel.setData(dataMap);
 
-                SecretModel secretModelKeyFile = new SecretModel();
-                secretModelKeyFile.setName(getValidName(listenerInfo.getName()) + "-secure-key");
-                secretModelKeyFile.setMountPath(getMountPath(keyFile));
-                Map<String, String> dataMapKey = new HashMap<>();
-                dataMapKey.put(String.valueOf(Paths.get(keyFile).getFileName()), keyFileContent);
-                secretModel.setData(dataMapKey);
+                    SecretModel secretModelKeyFile = new SecretModel();
+                    secretModelKeyFile.setName(getValidName(listenerInfo.getName()) + "-secure-key");
+                    secretModelKeyFile.setMountPath(getMountPath(keyFile));
+                    Map<String, String> dataMapKey = new HashMap<>();
+                    dataMapKey.put(String.valueOf(Paths.get(keyFile).getFileName()), keyFileContent);
+                    secretModel.setData(dataMapKey);
 
+                }
             }
         }
         if (mutualSSLConfig.isPresent()) {
