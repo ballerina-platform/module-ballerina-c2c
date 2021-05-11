@@ -1,4 +1,4 @@
 [package]
 org = "ballerina"
 name = "cloud"
-version = "1.0.0"
+version = "@toml.version@"
