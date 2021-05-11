@@ -43,7 +43,8 @@ clean {
     delete "$project.projectDir/Ballerina.lock"
 }
 
-def packageName = "c2c"
+def packageName = "cloud"
+def packageAbbreviation = "c2c"
 def packageOrg = "ballerina"
 def bDistribution = file("$project.buildDir/extracted-distribution/jballerina-tools-${ballerinaLangVersion}")
 def ballerinaCentralAccessToken = System.getenv('BALLERINA_CENTRAL_ACCESS_TOKEN')
@@ -79,18 +80,19 @@ task initializeVariables {
     }
 
     gradle.taskGraph.whenReady { graph ->
-        if (graph.hasTask(":${packageName}-ballerina:build") || graph.hasTask(":${packageName}-ballerina:publish") ||
-                graph.hasTask(":${packageName}-ballerina:publishToMavenLocal")) {
+        if (graph.hasTask(":${packageAbbreviation}-ballerina:build") ||
+                graph.hasTask(":${packageAbbreviation}-ballerina:publish") ||
+                graph.hasTask(":${packageAbbreviation}-ballerina:publishToMavenLocal")) {
             needSeparateTest = false
             needBuildWithTest = true
-            if (graph.hasTask(":${packageName}-ballerina:publish")) {
+            if (graph.hasTask(":${packageAbbreviation}-ballerina:publish")) {
                 needPublishToCentral = true
             }
         } else {
             needSeparateTest = true
         }
 
-        if (graph.hasTask(":${packageName}-ballerina:test")) {
+        if (graph.hasTask(":${packageAbbreviation}-ballerina:test")) {
             testParams = "--code-coverage --includes=*"
         } else {
             testParams = "--skip-tests"
@@ -324,7 +326,7 @@ ballerinaBuild.dependsOn copyStdlibs
 ballerinaBuild.dependsOn updateTomlFile
 ballerinaBuild.finalizedBy revertTomlFile
 ballerinaBuild.dependsOn initializeVariables
-ballerinaBuild.dependsOn ":${packageName}-extension:build"
+ballerinaBuild.dependsOn ":${packageAbbreviation}-extension:build"
 ballerinaBuild.finalizedBy revertTomlFile
 test.dependsOn ballerinaBuild
 build.dependsOn ballerinaBuild
