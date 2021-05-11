@@ -171,12 +171,6 @@ task revertTomlFile {
     }
 }
 
-
-//def ballerinaToml = file("$project.projectDir/Ballerina.toml")
-//def semverMatcher = ballerinaToml.getText("UTF-8") =~ /(([0-9]+)\.([0-9]+)\.([0-9]+))/
-//def tomlSemver = semverMatcher[0][1]
-
-
 def artifactParent = file("$project.projectDir/build/target/c2c-ballerina-zip/")
 def artifactDocs = file("$project.buildDir/apidocs/docs/")
 def artifactBala = file("$project.projectDir/target/bala")
@@ -216,8 +210,8 @@ task ballerinaBuild {
             }
 
             copy {
-                from file("$project.projectDir/target/apidocs/${packageOrg}/${packageName}")
-                into file("$project.buildDir/apidocs/docs/${packageName}")
+                from file("$project.projectDir/target/apidocs/${packageOrg}/cloud")
+                into file("$project.buildDir/apidocs/docs/cloud")
             }
 
             exec {
@@ -253,10 +247,6 @@ task ballerinaBuild {
             copy {
                 from file("$artifactDocs")
                 into file("$artifactParent/docs")
-            }
-            copy {
-                from configurations.extensionPlugin
-                into file("${artifactParent}/libs")
             }
             copy {
                 from file("$artifactCache")
