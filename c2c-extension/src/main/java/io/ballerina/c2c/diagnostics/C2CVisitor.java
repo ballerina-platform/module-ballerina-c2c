@@ -52,6 +52,7 @@ import io.ballerina.compiler.syntax.tree.ServiceDeclarationNode;
 import io.ballerina.compiler.syntax.tree.SimpleNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.SpecificFieldNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
+import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.TypedBindingPatternNode;
 import io.ballerina.tools.diagnostics.Diagnostic;
@@ -589,7 +590,7 @@ public class C2CVisitor extends NodeVisitor {
         }
         ExpressionNode expressionNode = moduleVariableDeclarationNode.initializer().get();
         if (expressionNode.kind() == SyntaxKind.REQUIRED_EXPRESSION) {
-            DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C001", "configurables with no default value is not " +
+            DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C005", "configurables with no default value is not " +
                     "supported", DiagnosticSeverity.ERROR);
             diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo,
                     moduleVariableDeclarationNode.location()));
@@ -599,6 +600,17 @@ public class C2CVisitor extends NodeVisitor {
         if (expressionNode.kind() != SyntaxKind.NUMERIC_LITERAL) {
             return Optional.empty();
         }
+        
+        for (Token qualifier : moduleVariableDeclarationNode.qualifiers()) {
+            if ("configurable".equals(qualifier.text())) {
+                DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C006",
+                        String.format("default value of configurable variable `%s` could be overridden in runtime",
+                                variableName), DiagnosticSeverity.WARNING);
+                diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo,
+                        moduleVariableDeclarationNode.location()));
+            }
+        }
+
         BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expressionNode;
         return Optional.of(Integer.parseInt(basicLiteralNode.literalToken().text()));
     }

@@ -26,7 +26,6 @@ import io.ballerina.tools.diagnostics.Diagnostic;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +42,7 @@ public class ProjectServiceInfo {
     private Task task = null;
 
     public ProjectServiceInfo(Project project) {
-        this(project, Collections.emptyList());
+        this(project, new ArrayList<>());
     }
 
     public ProjectServiceInfo(Project project, List<Diagnostic> diagnostics) {
