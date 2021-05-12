@@ -16,6 +16,7 @@
 package io.ballerina.c2c.test;
 
 import io.ballerina.c2c.diagnostics.ProjectServiceInfo;
+import io.ballerina.c2c.diagnostics.ServiceInfo;
 import io.ballerina.c2c.diagnostics.TomlDiagnosticChecker;
 import io.ballerina.c2c.utils.TomlHelper;
 import io.ballerina.projects.directory.BuildProject;
@@ -23,6 +24,7 @@ import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.validator.TomlValidator;
 import io.ballerina.toml.validator.schema.Schema;
 import io.ballerina.tools.diagnostics.Diagnostic;
+import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 import org.apache.commons.io.IOUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -152,12 +154,30 @@ public class CustomDiagnosticsTest {
     }
 
     @Test
-    public void testDefaultConfigValue() {
+    public void testDefaultConfigValueError() {
         Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "default-config-value");
         BuildProject project = BuildProject.load(projectPath);
         List<Diagnostic> diagnostics = new ArrayList<>();
         ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project, diagnostics);
         Assert.assertEquals(diagnostics.size(), 1);
+        Assert.assertEquals(diagnostics.get(0).message(), "configurables with no default value is not supported");
+        Assert.assertEquals(projectServiceInfo.getServiceList().size(), 0);
+    }
+
+    @Test
+    public void testDefaultConfigValueWarning() {
+        Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "configurable-default-port-warning");
+        BuildProject project = BuildProject.load(projectPath);
+        List<Diagnostic> diagnostics = new ArrayList<>();
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project, diagnostics);
+        Assert.assertEquals(diagnostics.size(), 1);
+        Assert.assertEquals(diagnostics.get(0).diagnosticInfo().severity(), DiagnosticSeverity.WARNING);
+        Assert.assertEquals(diagnostics.get(0).message(),
+                "default value of configurable variable `port` could be overridden in runtime");
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+        Assert.assertEquals(serviceList.size(), 1);
+        Assert.assertEquals(serviceList.get(0).getServicePath(), "/helloWorld");
+        Assert.assertEquals(serviceList.get(0).getListener().getPort(), 9090);
     }
 
     private String getValidationSchema() {
