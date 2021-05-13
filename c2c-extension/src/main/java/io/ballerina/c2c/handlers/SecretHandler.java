@@ -25,7 +25,7 @@ import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
-import io.fabric8.kubernetes.client.internal.SerializationUtils;
+import io.fabric8.kubernetes.client.utils.Serialization;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -45,9 +45,12 @@ public class SecretHandler extends AbstractArtifactHandler {
                 .withData(secretModel.getData())
                 .build();
         try {
-            String secretContent = SerializationUtils.dumpWithoutRuntimeStateAsYaml(secret);
-            KubernetesUtils.writeToFile(secretContent, KubernetesConstants.SECRET_FILE_POSTFIX +
-                    KubernetesConstants.YAML);
+            String secretContent = Serialization.asYaml(secret);
+            String outputFileName = KubernetesConstants.SECRET_FILE_POSTFIX + KubernetesConstants.YAML;
+            if (dataHolder.isSingleYaml()) {
+                outputFileName = secret.getMetadata().getName() + KubernetesConstants.YAML;
+            }
+            KubernetesUtils.writeToFile(secretContent, outputFileName);
         } catch (IOException e) {
             String errorMessage = "error while generating yaml file for secret: " + secretModel.getName();
             throw new KubernetesPluginException(errorMessage, e);
@@ -69,7 +72,7 @@ public class SecretHandler extends AbstractArtifactHandler {
                     throw new KubernetesPluginException("there can be only 1 ballerina config file");
                 }
                 DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
-                deploymentModel.setCommandArgs(" --b7a.config.file=${CONFIG_FILE}");
+//                deploymentModel.setCommandArgs(" --b7a.config.file=${CONFIG_FILE}");
 //                EnvVarValueModel envVarValueModel = new EnvVarValueModel(secretModel.getMountPath() +
 //                        BALLERINA_CONF_FILE_NAME);
 //                deploymentModel.addEnv("CONFIG_FILE", envVarValueModel);

@@ -68,6 +68,14 @@
             "sortText": "C",
             "insertText": "[[cloud.config.envs]]\n",
             "insertTextFormat": "Snippet"
+        },
+        {
+            "label": "settings",
+            "kind": "Snippet",
+            "detail": "Table",
+            "sortText": "C",
+            "insertText": "[settings]\n",
+            "insertTextFormat": "Snippet"
         }
     ]
 }

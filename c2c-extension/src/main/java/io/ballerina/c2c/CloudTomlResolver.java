@@ -54,6 +54,7 @@ import static io.ballerina.c2c.KubernetesConstants.BALLERINA_HOME;
 import static io.ballerina.c2c.KubernetesConstants.BALLERINA_RUNTIME;
 import static io.ballerina.c2c.KubernetesConstants.CONFIG_MAP_POSTFIX;
 import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_POSTFIX;
+import static io.ballerina.c2c.KubernetesConstants.SECRET_POSTFIX;
 import static io.ballerina.c2c.utils.KubernetesUtils.getValidName;
 import static io.ballerina.c2c.utils.KubernetesUtils.isBlank;
 
@@ -69,6 +70,9 @@ public class CloudTomlResolver {
         Toml ballerinaCloud = dataHolder.getBallerinaCloud();
         if (ballerinaCloud != null) {
             DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
+
+            // Resolve settings
+            resolveSettingsToml(ballerinaCloud);
 
             // Deployment configs
             resolveDeploymentToml(deploymentModel, ballerinaCloud);
@@ -86,6 +90,10 @@ public class CloudTomlResolver {
             resolveSecretToml(deploymentModel, ballerinaCloud);
         }
 
+    }
+
+    private void resolveSettingsToml(Toml ballerinaCloud) {
+        dataHolder.setSingleYaml(TomlHelper.getBoolean(ballerinaCloud, "settings.singleYAML", true));
     }
 
     private void resolveDeploymentToml(DeploymentModel deploymentModel, Toml ballerinaCloud) {
@@ -281,9 +289,9 @@ public class CloudTomlResolver {
 
     private SecretModel getBallerinaConfSecret(String configFilePath, String serviceName) throws
             KubernetesPluginException {
-        //create a new config map model with ballerina conf
+        //create a new secret map model with ballerina conf
         SecretModel secretModel = new SecretModel();
-        secretModel.setName(getValidName(serviceName) + "-ballerina-conf" + CONFIG_MAP_POSTFIX);
+        secretModel.setName(getValidName(serviceName) + "-ballerina-conf" + SECRET_POSTFIX);
         secretModel.setMountPath(BALLERINA_CONF_MOUNT_PATH);
         Path dataFilePath = Paths.get(configFilePath);
         if (!dataFilePath.isAbsolute()) {

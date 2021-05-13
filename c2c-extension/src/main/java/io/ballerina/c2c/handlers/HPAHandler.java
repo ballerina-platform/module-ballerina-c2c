@@ -31,7 +31,7 @@ import io.fabric8.kubernetes.api.model.MetricSpec;
 import io.fabric8.kubernetes.api.model.MetricSpecBuilder;
 import io.fabric8.kubernetes.api.model.MetricTarget;
 import io.fabric8.kubernetes.api.model.MetricTargetBuilder;
-import io.fabric8.kubernetes.client.internal.SerializationUtils;
+import io.fabric8.kubernetes.client.utils.Serialization;
 
 import java.io.IOException;
 
@@ -57,9 +57,12 @@ public class HPAHandler extends AbstractArtifactHandler {
                 .endSpec()
                 .build();
         try {
-            String serviceContent = SerializationUtils.dumpWithoutRuntimeStateAsYaml(horizontalPodAutoscaler);
-            KubernetesUtils.writeToFile(serviceContent,
-                    KubernetesConstants.HPA_FILE_POSTFIX + KubernetesConstants.YAML);
+            String hpaContent = Serialization.asYaml(horizontalPodAutoscaler);
+            String outputFileName = KubernetesConstants.HPA_FILE_POSTFIX + KubernetesConstants.YAML;
+            if (dataHolder.isSingleYaml()) {
+                outputFileName = horizontalPodAutoscaler.getMetadata().getName() + KubernetesConstants.YAML;
+            }
+            KubernetesUtils.writeToFile(hpaContent, outputFileName);
         } catch (IOException e) {
             String errorMessage = "error while generating yaml file for autoscaler: " + podAutoscalerModel.getName();
             throw new KubernetesPluginException(errorMessage, e);

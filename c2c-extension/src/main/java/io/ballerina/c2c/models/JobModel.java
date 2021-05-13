@@ -55,7 +55,6 @@ public class JobModel extends KubernetesModel {
     private String dockerCertPath;
     private Set<String> imagePullSecrets;
     private Set<CopyFileModel> copyFiles;
-    private boolean singleYAML;
     private String registry;
     private boolean uberJar;
     private String dockerConfigPath;
@@ -74,7 +73,6 @@ public class JobModel extends KubernetesModel {
 
         this.activeDeadlineSeconds = 20;
         this.imagePullSecrets = new HashSet<>();
-        this.singleYAML = true;
         this.uberJar = false;
     }
 

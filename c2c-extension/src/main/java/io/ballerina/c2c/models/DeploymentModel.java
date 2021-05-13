@@ -63,7 +63,6 @@ public class DeploymentModel extends KubernetesModel {
     private Set<PersistentVolumeClaimModel> volumeClaimModels;
     private Set<String> imagePullSecrets;
     private String commandArgs;
-    private boolean singleYAML;
     private String registry;
     private DeploymentStrategy strategy;
     private Map<String, String> nodeSelector;
@@ -86,7 +85,6 @@ public class DeploymentModel extends KubernetesModel {
         this.configMapModels = new HashSet<>();
         this.volumeClaimModels = new HashSet<>();
         this.imagePullSecrets = new HashSet<>();
-        this.singleYAML = true;
         this.commandArgs = "";
         this.registry = "";
         this.uberJar = false;
@@ -148,7 +146,6 @@ public class DeploymentModel extends KubernetesModel {
                 ", volumeClaimModels=" + volumeClaimModels +
                 ", imagePullSecrets=" + imagePullSecrets +
                 ", commandArgs='" + commandArgs +
-                ", singleYAML=" + singleYAML +
                 ", registry='" + registry +
                 '}';
     }

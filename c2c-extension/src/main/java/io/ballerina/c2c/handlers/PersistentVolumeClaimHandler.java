@@ -18,6 +18,7 @@
 
 package io.ballerina.c2c.handlers;
 
+import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.PersistentVolumeClaimModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
@@ -33,7 +34,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.ballerina.c2c.KubernetesConstants.VOLUME_CLAIM_FILE_POSTFIX;
-import static io.ballerina.c2c.KubernetesConstants.YAML;
 
 /**
  * Generates kubernetes secret.
@@ -63,8 +63,11 @@ public class PersistentVolumeClaimHandler extends AbstractArtifactHandler {
                 .build();
         try {
             String claimContent = SerializationUtils.dumpWithoutRuntimeStateAsYaml(claim);
-            KubernetesUtils.writeToFile(claimContent,
-                    VOLUME_CLAIM_FILE_POSTFIX + YAML);
+            String outputFileName = VOLUME_CLAIM_FILE_POSTFIX + KubernetesConstants.YAML;
+            if (dataHolder.isSingleYaml()) {
+                outputFileName = claim.getMetadata().getName() + KubernetesConstants.YAML;
+            }
+            KubernetesUtils.writeToFile(claimContent, outputFileName);
         } catch (IOException e) {
             String errorMessage = "error while generating yaml file for volume claim: " + volumeClaimModel.getName();
             throw new KubernetesPluginException(errorMessage, e);

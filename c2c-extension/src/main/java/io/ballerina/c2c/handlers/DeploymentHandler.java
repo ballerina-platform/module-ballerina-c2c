@@ -18,6 +18,7 @@
 
 package io.ballerina.c2c.handlers;
 
+import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.ConfigMapModel;
 import io.ballerina.c2c.models.DeploymentModel;
@@ -48,7 +49,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_FILE_POSTFIX;
-import static io.ballerina.c2c.KubernetesConstants.YAML;
 import static io.ballerina.c2c.utils.KubernetesUtils.resolveDockerToml;
 import static org.ballerinax.docker.generator.DockerGenConstants.REGISTRY_SEPARATOR;
 
@@ -221,7 +221,11 @@ public class DeploymentHandler extends AbstractArtifactHandler {
 
         try {
             String deploymentContent = Serialization.asYaml(deployment);
-            KubernetesUtils.writeToFile(deploymentContent, DEPLOYMENT_FILE_POSTFIX + YAML);
+            String outputFileName = DEPLOYMENT_FILE_POSTFIX + KubernetesConstants.YAML;
+            if (dataHolder.isSingleYaml()) {
+                outputFileName = deployment.getMetadata().getName() + KubernetesConstants.YAML;
+            }
+            KubernetesUtils.writeToFile(deploymentContent, outputFileName);
         } catch (IOException e) {
             String errorMessage = "error while generating yaml file for deployment: " + deploymentModel.getName();
             throw new KubernetesPluginException(errorMessage, e);
