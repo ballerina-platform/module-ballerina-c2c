@@ -37,6 +37,7 @@ import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
+import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.FoldingRangeCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.Position;
@@ -69,6 +70,7 @@ public class TestUtil {
 
     private static final String CODE_ACTION = "textDocument/codeAction";
     private static final String COMPLETION = "textDocument/completion";
+    private static final String EXECUTE_COMMAND = "workspace/executeCommand";
 
     private static final Gson GSON = new Gson();
 
@@ -263,5 +265,17 @@ public class TestUtil {
         completionParams.setPosition(new Position(position.getLine(), position.getCharacter()));
 
         return completionParams;
+    }
+
+    /**
+     * Get the workspace/executeCommand response.
+     *
+     * @param params          Execute command parameters
+     * @param serviceEndpoint Service endpoint to language server
+     * @return {@link String}   Lang server Response as String
+     */
+    public static String getExecuteCommandResponse(ExecuteCommandParams params, Endpoint serviceEndpoint) {
+        CompletableFuture result = serviceEndpoint.request(EXECUTE_COMMAND, params);
+        return getResponseString(result);
     }
 }
