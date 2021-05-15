@@ -141,7 +141,7 @@ public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
         for (DocumentMemberDeclarationNode member : documentNode.members()) {
             if (member.kind() == io.ballerina.toml.syntax.tree.SyntaxKind.TABLE) {
                 TableNode tableNode = (TableNode) member;
-                String tableName = TomlSyntaxTreeUtil.toDottedString(tableNode.identifier());
+                String tableName = TomlSyntaxTreeUtil.toDottedString(tableNode.identifier().value());
                 if (tableName.equals("cloud.deployment.probes.liveness")) {
                     probs.remove(ProbeType.LIVENESS);
                 }

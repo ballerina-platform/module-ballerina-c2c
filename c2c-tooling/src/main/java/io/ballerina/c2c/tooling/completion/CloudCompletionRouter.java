@@ -103,11 +103,11 @@ public class CloudCompletionRouter {
 
     private static Map<String, CompletionItem> getTableArrayCompletions(TableArrayNode arrayNode, Map<Parent,
             Map<String, CompletionItem>> snippets) {
-        String tableArrayName = TomlSyntaxTreeUtil.toDottedString(arrayNode.identifier());
+        String tableArrayName = TomlSyntaxTreeUtil.toDottedString(arrayNode.identifier().value());
         Map<String, CompletionItem> completions = new HashMap<>(getChildFromDottedKey(snippets, tableArrayName));
 
         for (KeyValueNode field : arrayNode.fields()) {
-            String key = TomlSyntaxTreeUtil.toDottedString(field.identifier());
+            String key = TomlSyntaxTreeUtil.toDottedString(field.identifier().value());
             completions.remove(key);
         }
 
@@ -143,11 +143,11 @@ public class CloudCompletionRouter {
     private static Map<String, CompletionItem> getTableCompletions(TableNode tableNode,
                                                                    Map<Parent, Map<String, CompletionItem>> snippets) {
 
-        String tableKey = TomlSyntaxTreeUtil.toDottedString(tableNode.identifier());
+        String tableKey = TomlSyntaxTreeUtil.toDottedString(tableNode.identifier().value());
         Map<String, CompletionItem> completions = new HashMap<>(getChildFromDottedKey(snippets, tableKey));
 
         for (KeyValueNode field : tableNode.fields()) {
-            String key = TomlSyntaxTreeUtil.toDottedString(field.identifier());
+            String key = TomlSyntaxTreeUtil.toDottedString(field.identifier().value());
             completions.remove(key);
         }
         //Add main completions to completions
@@ -230,7 +230,7 @@ public class CloudCompletionRouter {
         for (DocumentMemberDeclarationNode documentMemberNode : members) {
             if (documentMemberNode.kind() == SyntaxKind.TABLE) {
                 TableNode rootTableNode = (TableNode) documentMemberNode;
-                String rootTableNodeKey = TomlSyntaxTreeUtil.toDottedString(rootTableNode.identifier());
+                String rootTableNodeKey = TomlSyntaxTreeUtil.toDottedString(rootTableNode.identifier().value());
                 if (completionKey.equals(rootTableNodeKey)) {
                     removal.add(rootTableNodeKey);
                     break;

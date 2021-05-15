@@ -149,7 +149,7 @@ public class AddConfigsToK8sCodeAction implements LSCodeActionProvider {
                 continue;
             }
             TableArrayNode tableNode = (TableArrayNode) member;
-            String tableArrayName = TomlSyntaxTreeUtil.toDottedString(tableNode.identifier());
+            String tableArrayName = TomlSyntaxTreeUtil.toDottedString(tableNode.identifier().value());
             if (tableArrayName.equals(CLOUD_CONFIG_ENVS) && isEnvExistInTableArray(variableName, tableNode)) {
                 return true;
             }
@@ -159,7 +159,7 @@ public class AddConfigsToK8sCodeAction implements LSCodeActionProvider {
 
     private boolean isEnvExistInTableArray(String variableName, TableArrayNode tableNode) {
         for (KeyValueNode keyValueNode : tableNode.fields()) {
-            String key = TomlSyntaxTreeUtil.toDottedString(keyValueNode.identifier());
+            String key = TomlSyntaxTreeUtil.toDottedString(keyValueNode.identifier().value());
             if (!key.equals(KEY_REF)) {
                 continue;
             }
