@@ -37,11 +37,13 @@ public class TomlProbesVisitor extends NodeVisitor {
 
     @Override
     public void visit(TableNode tableNode) {
-        if (TomlSyntaxTreeUtil.toDottedString(tableNode.identifier()).equals("cloud.deployment.probes.liveness")) {
+        if (TomlSyntaxTreeUtil.toDottedString(tableNode.identifier().value())
+                .equals("cloud.deployment.probes.liveness")) {
             Probe livenessProbe = extractProbeInfo(tableNode);
             this.store.setLiveness(livenessProbe);
         }
-        if (TomlSyntaxTreeUtil.toDottedString(tableNode.identifier()).equals("cloud.deployment.probes.readiness")) {
+        if (TomlSyntaxTreeUtil.toDottedString(tableNode.identifier().value())
+                .equals("cloud.deployment.probes.readiness")) {
             Probe readinessProbe = extractProbeInfo(tableNode);
             this.store.setReadiness(readinessProbe);
         }
@@ -50,7 +52,7 @@ public class TomlProbesVisitor extends NodeVisitor {
     private Probe extractProbeInfo(TableNode tableNode) {
         Probe probe = new Probe();
         for (KeyValueNode keyValueNode : tableNode.fields()) {
-            String key = TomlSyntaxTreeUtil.toDottedString(keyValueNode.identifier());
+            String key = TomlSyntaxTreeUtil.toDottedString(keyValueNode.identifier().value());
             if (key.equals("port")) {
                 ValueNode value = keyValueNode.value();
                 if (value.kind() == SyntaxKind.DEC_INT) {
