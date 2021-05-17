@@ -1,8 +1,8 @@
 ## Module Overview
 
-This module offers an annotation based Kubernetes extension implementation for ballerina. 
+Code2cloud extension implementation for Ballerina.  
 
-### Annotation Usage Sample:
+### Usage Sample:
 
 ```ballerina
 import ballerina/http;
@@ -20,9 +20,9 @@ service /helloWorld on helloEP {
 }
 ```
 
-Build the above program with build-option `--cloud = k8s` to generate kubernetes artifacts.
-```bash
+Build the above program with build-option `--cloud = k8s` or `--cloud=docker` to generate artifacts.
 
+```bash
 $> bal build --cloud=k8s hello_world.bal
 
 Compiling source
