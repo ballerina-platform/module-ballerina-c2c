@@ -58,13 +58,13 @@ service /helloWorld on helloEP {
 }
 ```
 
-Build the program with `--cloud=k8s` build option.
+Build the program with `--cloud=k8s` or `--cloud=docker` build option.
 
 ```bash
 $ bal build --cloud=k8s <source_file>.bal 
 ``` 
 
-The kubernetes artifacts will be created in following structure.
+The Kubernetes and Docker artifacts will be created in following structure.
 ```bash
 $> tree
 ├── docker
