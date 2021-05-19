@@ -11,7 +11,8 @@
       "properties": {
         "singleYAML": {
           "type": "boolean",
-          "additionalProperties": false
+          "additionalProperties": false,
+          "default": false
         }
       }
     },
