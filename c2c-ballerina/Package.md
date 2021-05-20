@@ -1,45 +1,27 @@
-## Module Overview
+## Package Overview
 
-Code2cloud extension implementation for Ballerina.  
+The `cloud` library contains modules that are required to generate cloud artifacts of the [Ballerina](https://ballerina.io/) language.
 
-### Usage Sample:
+This module generates [Kubernetes](https://kubernetes.io/) and [Docker](https://www.docker.com/) artifacts required to deploy a [Ballerina](https://ballerina.io/) program in the cloud. 
 
-```ballerina
-import ballerina/http;
-import ballerina/log;
+Supports following artifact generation:
+- Kubernetes deployment
+- Kubernetes job 
+- Kubernetes service
+- Kubernetes liveness probe
+- Kubernetes readiness probe
+- Kubernetes config map
+- Kubernetes horizontal pod autoscaler
+- Docker image generation 
+- Dockerfile generation
 
-listener http:Listener helloEP = new(9090);
 
-service /helloWorld on helloEP {
-    resource function get sayHello(http:Caller caller, http:Request request) {
-        var responseResult = caller->respond("Hello, World from service helloWorld ! ");
-        if (responseResult is error) {
-            log:printError("error responding back to client.", 'error = responseResult);
-        }
-    }
-}
-```
+### Report Issues
 
-Build the above program with build-option `--cloud = k8s` or `--cloud=docker` to generate artifacts.
+To report bugs, request new features, start new discussions, view project boards, etc., go to the [Ballerina Code2Cloud repository](https://github.com/ballerina-platform/module-ballerina-c2c).
 
-```bash
-$> bal build --cloud=k8s hello_world.bal
-
-Compiling source
-	hello_world.bal
-
-Generating executable
-
-Generating artifacts...
-
-	@kubernetes:Service 			 - complete 1/1
-	@kubernetes:Deployment 			 - complete 1/1
-	@kubernetes:HPA 			 - complete 1/1
-	@kubernetes:Docker 			 - complete 2/2
-
-	Execute the below command to deploy the Kubernetes artifacts:
-	kubectl apply -f /Users/anuruddha/workspace/ballerinax/module-ballerina-c2c/samples/sample1/kubernetes
-
-	Execute the below command to access service via NodePort:
-	kubectl expose deployment hello-world-deployment --type=NodePort --name=hello-world-svc-local
-```
+### Useful Links
+- Discuss code changes of the Ballerina project in [ballerina-dev@googlegroups.com](mailto:ballerina-dev@googlegroups.com).
+- Chat live with us via our [Slack channel](https://ballerina.io/community/slack/).
+- Post all technical questions on Stack Overflow with the [#ballerina](https://stackoverflow.com/questions/tagged/ballerina) tag.
+- [Package Guide](https://ballerina.io/learn/user-guide/deployment/code-to-cloud/)
