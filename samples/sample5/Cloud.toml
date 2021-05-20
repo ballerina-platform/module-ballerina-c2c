@@ -3,8 +3,10 @@ repository="anuruddhal"
 name="hello-api"
 tag="sample5"
 
-[[cloud.config.files]]
+[[cloud.files]]
     file="./conf/data.txt"
     mount_path="/home/ballerina/data"
 [[cloud.config.files]]
     file="./conf/Config.toml"
+[[cloud.config.files]]
+    file="./conf/Config2.toml"
