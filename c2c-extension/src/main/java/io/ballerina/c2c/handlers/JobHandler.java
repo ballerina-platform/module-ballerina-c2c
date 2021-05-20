@@ -29,7 +29,7 @@ import io.fabric8.kubernetes.api.model.batch.CronJob;
 import io.fabric8.kubernetes.api.model.batch.CronJobBuilder;
 import io.fabric8.kubernetes.api.model.batch.Job;
 import io.fabric8.kubernetes.api.model.batch.JobBuilder;
-import io.fabric8.kubernetes.client.internal.SerializationUtils;
+import io.fabric8.kubernetes.client.utils.Serialization;
 import org.ballerinax.docker.generator.exceptions.DockerGenException;
 import org.ballerinax.docker.generator.models.DockerModel;
 
@@ -49,11 +49,15 @@ public class JobHandler extends AbstractArtifactHandler {
         try {
             String jobContent;
             if (KubernetesUtils.isBlank(jobModel.getSchedule())) {
-                jobContent = SerializationUtils.dumpWithoutRuntimeStateAsYaml(getJob(jobModel));
+                jobContent = Serialization.asYaml(getJob(jobModel));
             } else {
-                jobContent = SerializationUtils.dumpWithoutRuntimeStateAsYaml(getCronJob(jobModel));
+                jobContent = Serialization.asYaml(getCronJob(jobModel));
             }
-            KubernetesUtils.writeToFile(jobContent, KubernetesConstants.JOB_FILE_POSTFIX + KubernetesConstants.YAML);
+            String outputFileName = KubernetesConstants.JOB_FILE_POSTFIX + KubernetesConstants.YAML;
+            if (dataHolder.isSingleYaml()) {
+                outputFileName = getJob(jobModel).getMetadata().getName() + KubernetesConstants.YAML;
+            }
+            KubernetesUtils.writeToFile(jobContent, outputFileName);
         } catch (IOException e) {
             String errorMessage = "error while generating yaml file for job " + jobModel.getName();
             throw new KubernetesPluginException(errorMessage, e);

@@ -41,7 +41,6 @@ public class KubernetesConstants {
     public static final String SECRET_FILE_POSTFIX = "_secret";
     public static final String CONFIG_MAP_FILE_POSTFIX = "_config_map";
     public static final String VOLUME_CLAIM_FILE_POSTFIX = "_volume_claim";
-    public static final String RESOURCE_QUOTA_FILE_POSTFIX = "_resource_quota";
     public static final String HPA_FILE_POSTFIX = "_hpa";
     public static final String YAML = ".yaml";
     public static final String DOCKER_LATEST_TAG = ":latest";
@@ -50,7 +49,6 @@ public class KubernetesConstants {
     public static final String BALLERINA_CONF_MOUNT_PATH = "/home/ballerina/conf/";
     public static final String BALLERINA_CONF_FILE_NAME = "Config.toml";
     public static final String DOCKER_HOST = "DOCKER_HOST";
-    public static final String LISTENER_PATH_VARIABLE = "path";
     public static final String DOCKER_CERT_PATH = "DOCKER_CERT_PATH";
     public static final String KEY_REF = "key_ref";
     public static final String MIN_MEMORY = "min_memory";

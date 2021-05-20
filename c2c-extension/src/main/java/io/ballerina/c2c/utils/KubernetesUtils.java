@@ -114,9 +114,9 @@ public class KubernetesUtils {
         DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
         JobModel jobModel = dataHolder.getJobModel();
         // Priority given for job, then deployment.
-        if (jobModel != null && jobModel.isSingleYAML()) {
+        if (jobModel != null && dataHolder.isSingleYaml()) {
             artifactFileName = outputDir.resolve(extractJarName(dataHolder.getJarPath()) + YAML);
-        } else if (jobModel == null && deploymentModel != null && deploymentModel.isSingleYAML()) {
+        } else if (jobModel == null && deploymentModel != null && dataHolder.isSingleYaml()) {
             artifactFileName = outputDir.resolve(extractJarName(dataHolder.getJarPath()) + YAML);
         }
 

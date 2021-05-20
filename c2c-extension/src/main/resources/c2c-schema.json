@@ -5,6 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "singleYAML": {
+          "type": "boolean",
+          "additionalProperties": false,
+          "default": false
+        }
+      }
+    },
     "container": {
       "type": "object",
       "additionalProperties": false,

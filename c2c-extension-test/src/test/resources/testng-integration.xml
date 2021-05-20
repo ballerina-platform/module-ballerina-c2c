@@ -32,6 +32,7 @@
             <class name="io.ballerina.c2c.test.samples.Sample10Test"/>
             <class name="io.ballerina.c2c.test.samples.DockerProjectTest"/>
             <class name="io.ballerina.c2c.test.samples.DockerSingleTest"/>
+            <class name="io.ballerina.c2c.test.SettingsTest"/>
         </classes>
     </test>
 
@@ -50,6 +51,7 @@
             <class name="io.ballerina.c2c.test.command.CreateCloudTomlCommandTest"/>
             <class name="io.ballerina.c2c.test.docker.CmdTest"/>
             <class name="io.ballerina.c2c.test.ServiceTest"/>
+            <class name="io.ballerina.c2c.test.SettingsTest"/>
         </classes>
     </test>
 

@@ -52,6 +52,7 @@ public class KubernetesDataHolder {
     private Path sourceRoot;
     private PackageID packageID;
     private Toml ballerinaCloud;
+    private boolean singleYaml;
 
     KubernetesDataHolder() {
         this.serviceModelList = new ArrayList<>();
@@ -62,6 +63,7 @@ public class KubernetesDataHolder {
         this.deploymentModel = new DeploymentModel();
         this.dockerModel = new DockerModel();
         this.ballerinaCloud = null;
+        this.singleYaml = true;
     }
 
     public void addListenerSecret(String listenerName, Set<SecretModel> secretModel) {
