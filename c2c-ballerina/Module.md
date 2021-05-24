@@ -1,6 +1,6 @@
 ## Overview
 
-The `cloud` library contains modules that are required to generate cloud artifacts of the Ballerina language.
+The `cloud` library contains the modules that are required to generate the cloud artifacts of Ballerina.
 
 This module generates the [Kubernetes](https://kubernetes.io/) and [Docker](https://www.docker.com/) artifacts required to deploy a Ballerina program in the cloud. 
 
