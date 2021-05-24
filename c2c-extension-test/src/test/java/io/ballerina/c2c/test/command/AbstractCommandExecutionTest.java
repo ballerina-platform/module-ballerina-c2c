@@ -56,7 +56,7 @@ public abstract class AbstractCommandExecutionTest {
     private static final Logger log = LoggerFactory.getLogger(AbstractCommandExecutionTest.class);
 
     @BeforeClass
-    public void init() throws Exception {
+    public void init() {
         this.serviceEndpoint = TestUtil.initializeLanguageSever();
     }
 
@@ -67,7 +67,7 @@ public abstract class AbstractCommandExecutionTest {
         JsonObject configJsonObject = FileUtils.fileContentAsObject(configJsonPath);
         JsonObject expected = configJsonObject.get("expected").getAsJsonObject();
 
-        List<Object> args = getArgs(configJsonObject, sourcePath);
+        List<Object> args = getArgs(sourcePath);
 
         JsonObject responseJson = getCommandResponse(args, command);
         JsonArray documentChanges = responseJson.get("result").getAsJsonObject().get("edit").getAsJsonObject()
@@ -103,11 +103,10 @@ public abstract class AbstractCommandExecutionTest {
     /**
      * Get args to be sent to LS.
      *
-     * @param configJson Config json
      * @param sourcePath Source file path
      * @return List of args
      */
-    protected List<Object> getArgs(JsonObject configJson, Path sourcePath) {
+    protected List<Object> getArgs(Path sourcePath) {
         List<Object> args = new ArrayList<>();
         args.add(CommandArgument.from("uri", sourcePath.toUri().toString()));
         return args;
@@ -125,16 +124,16 @@ public abstract class AbstractCommandExecutionTest {
         TestUtil.shutdownLanguageServer(this.serviceEndpoint);
     }
 
-    private List argsToJson(List<Object> args) {
-        List<JsonObject> jsonArgs = new ArrayList<>();
+    private List<Object> argsToJson(List<Object> args) {
+        List<Object> jsonArgs = new ArrayList<>();
         for (Object arg : args) {
-            jsonArgs.add((JsonObject) gson.toJsonTree(arg));
+            jsonArgs.add(gson.toJsonTree(arg));
         }
         return jsonArgs;
     }
 
     private JsonObject getCommandResponse(List<Object> args, String command) {
-        List argsList = argsToJson(args);
+        List<Object> argsList = argsToJson(args);
         ExecuteCommandParams params = new ExecuteCommandParams(command, argsList);
         String response = TestUtil.getExecuteCommandResponse(params, this.serviceEndpoint).replace("\\r\\n", "\\n");
         JsonObject responseJson = parser.parse(response).getAsJsonObject();

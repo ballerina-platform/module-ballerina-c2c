@@ -24,9 +24,9 @@ import io.ballerina.c2c.test.utils.KubernetesTestUtils;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.autoscaling.v1.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.testng.Assert;
@@ -131,10 +131,7 @@ public class Sample3Test extends SampleTest {
         Assert.assertEquals("scaling-hpa", hpa.getMetadata().getName());
         Assert.assertEquals(5, hpa.getSpec().getMaxReplicas().intValue());
         Assert.assertEquals(2, hpa.getSpec().getMinReplicas().intValue());
-        Assert.assertEquals("cpu", hpa.getSpec().getMetrics().get(0).getResource().getName());
-        Assert.assertEquals(50,
-                hpa.getSpec().getMetrics().get(0).getResource().getTarget().getAverageUtilization().intValue());
-        Assert.assertEquals("Utilization", hpa.getSpec().getMetrics().get(0).getResource().getTarget().getType());
+        Assert.assertEquals(50, hpa.getSpec().getTargetCPUUtilizationPercentage().intValue());
         Assert.assertEquals("Deployment", hpa.getSpec().getScaleTargetRef().getKind());
         Assert.assertEquals("scaling-deployment", hpa.getSpec().getScaleTargetRef().getName());
 
