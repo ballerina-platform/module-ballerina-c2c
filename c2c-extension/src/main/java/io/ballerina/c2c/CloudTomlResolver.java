@@ -175,12 +175,20 @@ public class CloudTomlResolver {
 
             for (Toml configFile : configFiles) {
                 Path path = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "file")));
-                if (path.endsWith(BALLERINA_CONF_FILE_NAME)) {
-                    // Resolve Config.toml
-                    ConfigMapModel configMapModel = getBallerinaConfConfigMap(path.toString(), deploymentName);
-                    dataHolder.addConfigMaps(Collections.singleton(configMapModel));
-                    continue;
-                }
+                // Resolve Config.toml
+                ConfigMapModel configMapModel = getBallerinaConfConfigMap(path.toString(), deploymentName);
+                dataHolder.addConfigMaps(Collections.singleton(configMapModel));
+            }
+        }
+    }
+
+    public void resolveConfigFilesToml(DeploymentModel deploymentModel, Toml toml) throws KubernetesPluginException {
+        List<Toml> configFiles = toml.getTables("cloud.files");
+        if (configFiles.size() != 0) {
+            final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
+
+            for (Toml configFile : configFiles) {
+                Path path = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "file")));
                 Path mountPath = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "mount_path")));
                 final Path fileName = validatePaths(path, mountPath);
                 ConfigMapModel configMapModel = new ConfigMapModel();
@@ -271,7 +279,7 @@ public class CloudTomlResolver {
 
     private ConfigMapModel getBallerinaConfConfigMap(String configFilePath, String serviceName) throws
             KubernetesPluginException {
-        //create a new config map model with ballerina conf
+        //create a new config map model with Config toml files
         ConfigMapModel configMapModel = new ConfigMapModel();
         configMapModel.setName(getValidName(serviceName) + "-ballerina-conf" + CONFIG_MAP_POSTFIX);
         configMapModel.setMountPath(BALLERINA_CONF_MOUNT_PATH);

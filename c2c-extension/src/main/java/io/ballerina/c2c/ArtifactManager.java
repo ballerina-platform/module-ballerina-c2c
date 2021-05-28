@@ -19,6 +19,7 @@
 package io.ballerina.c2c;
 
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
+import io.ballerina.c2c.handlers.ConfigMapHandler;
 import io.ballerina.c2c.handlers.DeploymentHandler;
 import io.ballerina.c2c.handlers.DockerHandler;
 import io.ballerina.c2c.handlers.HPAHandler;
@@ -85,6 +86,7 @@ public class ArtifactManager {
         } else {
             new PersistentVolumeClaimHandler().createArtifacts();
             new ServiceHandler().createArtifacts();
+            new ConfigMapHandler().createArtifacts();
             new DeploymentHandler().createArtifacts();
             new HPAHandler().createArtifacts();
         }
