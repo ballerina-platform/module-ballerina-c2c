@@ -39,5 +39,8 @@ public type TaskConfig record{|
 # @cloud:Task annotation to configure cron job.
 public const annotation TaskConfig Task on source function;
 
-# @cloud:Expose annotation marks a port that has to be exposed.
+# @cloud:Expose annotation marks a port that has to be exposed in a custom listener initializer.
+# ```ballerina
+# public function init(@cloud:Expose int port) {}
+# ```
 public const annotation Expose on parameter;
