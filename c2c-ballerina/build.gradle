@@ -244,7 +244,6 @@ task ballerinaBuild {
                     from zipTree(balaFile)
                     into file("$artifactParent/bala/${packageOrg}/${packageName}/${tomlVersion}/${platform}")
                 }
-                delete(balaFile)
             }
             copy {
                 from file("$artifactDocs")
