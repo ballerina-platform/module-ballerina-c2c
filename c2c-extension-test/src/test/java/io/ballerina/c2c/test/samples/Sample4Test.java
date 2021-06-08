@@ -66,7 +66,6 @@ public class Sample4Test extends SampleTest {
         Assert.assertEquals(job.getSpec().getSchedule(), "*/2 * * * *");
         Container container = job.getSpec().getJobTemplate().getSpec().getTemplate().getSpec().getContainers().get(0);
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE);
-        Assert.assertEquals(container.getImagePullPolicy(), KubernetesConstants.ImagePullPolicy.IfNotPresent.name());
         Assert.assertEquals(job.getSpec().getJobTemplate().getSpec().getTemplate().getSpec()
                 .getRestartPolicy(), KubernetesConstants.RestartPolicy.OnFailure.name());
     }

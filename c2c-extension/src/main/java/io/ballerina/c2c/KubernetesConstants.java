@@ -65,14 +65,6 @@ public class KubernetesConstants {
     }
 
     /**
-     * ImagePullPolicy type enum.
-     */
-    public enum ImagePullPolicy {
-        IfNotPresent,
-        Always
-    }
-
-    /**
      * Service type enum.
      */
     public enum ServiceType {

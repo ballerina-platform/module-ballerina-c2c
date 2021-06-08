@@ -106,7 +106,6 @@ public class Sample3Test extends SampleTest {
         Assert.assertEquals(container.getResources().getLimits().get("cpu").toString(), "500m");
         Assert.assertEquals(container.getResources().getRequests().get("cpu").toString(), "200m");
         Assert.assertEquals(container.getResources().getRequests().get("memory").toString(), "100Mi");
-        Assert.assertEquals(container.getImagePullPolicy(), KubernetesConstants.ImagePullPolicy.IfNotPresent.name());
         Assert.assertEquals(container.getPorts().size(), 1);
     }
 

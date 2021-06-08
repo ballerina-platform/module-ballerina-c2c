@@ -19,7 +19,6 @@
 package io.ballerina.c2c.test;
 
 import com.github.dockerjava.api.command.InspectImageResponse;
-import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.test.utils.KubernetesTestUtils;
 import io.ballerina.c2c.utils.KubernetesUtils;
@@ -80,7 +79,6 @@ public class EnvTest {
         Assert.assertEquals(envVar.getName(), "b7a_log_level");
         Assert.assertEquals(envVar.getValueFrom().getConfigMapKeyRef().getName(), "cm-loglevel-linker");
         Assert.assertEquals(envVar.getValueFrom().getConfigMapKeyRef().getKey(), "B7A_LOG_LEVEL");
-        Assert.assertEquals(container.getImagePullPolicy(), KubernetesConstants.ImagePullPolicy.IfNotPresent.name());
     }
 
     @AfterClass
