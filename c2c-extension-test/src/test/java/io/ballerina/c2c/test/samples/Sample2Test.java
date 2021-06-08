@@ -127,11 +127,11 @@ public class Sample2Test extends SampleTest {
         Assert.assertEquals(ports.size(), 1);
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
-        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(),
-                "[/bin/sh, -c, java -Xdiag -cp \"hello.jar:jars/*\" 'hello/hello/0_0_1/$_init']");
+        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[/bin/sh, -c, java -Xdiag -cp \"hello.jar:jars/*\" " +
+                "'hello/hello/0_0_1/$_init' || cat ballerina-internal.log]");
     }
 
-    @Test(groups = {"integration"})
+    @Test(groups = { "integration" })
     public void deploySample() throws IOException, InterruptedException {
         Assert.assertEquals(0, loadImage(DOCKER_IMAGE));
         Assert.assertEquals(0, deployK8s(KUBERNETES_TARGET_PATH));
