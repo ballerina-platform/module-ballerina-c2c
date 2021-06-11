@@ -58,9 +58,9 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
 
     @Override
     public void perform(CompilerLifecycleEventContext compilerLifecycleEventContext) {
-        addDependencyJars(compilerLifecycleEventContext.compilation());
         Optional<Path> executablePath = compilerLifecycleEventContext.getGeneratedArtifactPath();
         executablePath.ifPresent(path -> {
+            addDependencyJars(compilerLifecycleEventContext.compilation(), path.getFileName().toString());
             KubernetesContext.getInstance().getDataHolder().setSourceRoot(executablePath.get().getParent()
                     .getParent().getParent());
             codeGeneratedInternal(KubernetesContext.getInstance().getCurrentPackage(),
@@ -95,7 +95,6 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                             kubernetesToml -> dataHolder.setBallerinaCloud(new Toml(kubernetesToml.tomlAstNode())));
                 }
             }
-            dataHolder.setJarPath(executableJarFile);
             dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
             dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
             ArtifactManager artifactManager = new ArtifactManager();
@@ -114,22 +113,26 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 }
             }
         } else {
-            printError("error in resolving docker generation location.");
-            pluginLog.error("error in resolving docker generation location.");
+            printError("error in resolving Docker generation location.");
+            pluginLog.error("error in resolving Docker generation location.");
         }
     }
 
-    private void addDependencyJars(PackageCompilation compilation) {
+    private void addDependencyJars(PackageCompilation compilation, String executableFatJar) {
         JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilation,
                 JvmTarget.JAVA_11);
         io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
 
         // Add dependency jar files to docker model.
-        KubernetesContext.getInstance().getDataHolder().getDockerModel().addDependencyJarPaths(
+        final KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
+        dataHolder.getDockerModel().addDependencyJarPaths(
                 jarResolver.getJarFilePathsRequiredForExecution().stream()
                         .map(JarLibrary::path)
                         .collect(Collectors.toSet()));
-
-
+        jarResolver.getJarFilePathsRequiredForExecution()
+                .stream()
+                .filter(jarLibrary -> jarLibrary.path().getFileName().toString().endsWith(executableFatJar))
+                .findFirst()
+                .ifPresent(jarLibrary -> dataHolder.setJarPath(jarLibrary.path()));
     }
 }
