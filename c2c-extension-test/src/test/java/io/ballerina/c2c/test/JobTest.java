@@ -64,7 +64,6 @@ public class JobTest {
 
         Container container = job.getSpec().getJobTemplate().getSpec().getTemplate().getSpec().getContainers().get(0);
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE_JOB);
-        Assert.assertEquals(container.getImagePullPolicy(), KubernetesConstants.ImagePullPolicy.IfNotPresent.name());
         Assert.assertEquals(job.getSpec().getJobTemplate().getSpec().getTemplate().getSpec()
                 .getRestartPolicy(), KubernetesConstants.RestartPolicy.OnFailure.name());
     }

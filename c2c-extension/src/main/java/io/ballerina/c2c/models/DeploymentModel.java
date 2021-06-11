@@ -17,7 +17,6 @@
  */
 package io.ballerina.c2c.models;
 
-import io.ballerina.c2c.KubernetesConstants;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.Probe;
@@ -49,7 +48,6 @@ public class DeploymentModel extends KubernetesModel {
     private Probe livenessProbe;
     private Probe readinessProbe;
     private String namespace;
-    private String imagePullPolicy;
     private String image;
     private boolean buildImage;
     private String baseImage;
@@ -79,7 +77,6 @@ public class DeploymentModel extends KubernetesModel {
         this.baseImage = OPENJDK_11_JRE_SLIM_BASE;
         this.labels = new LinkedHashMap<>();
         this.nodeSelector = new LinkedHashMap<>();
-        this.imagePullPolicy = KubernetesConstants.ImagePullPolicy.IfNotPresent.name();
         this.ports = new ArrayList<>();
         this.secretModels = new HashSet<>();
         this.configMapModels = new HashSet<>();
@@ -132,7 +129,6 @@ public class DeploymentModel extends KubernetesModel {
                 ", replicas=" + replicas +
                 ", livenessProbe=" + livenessProbe +
                 ", namespace='" + namespace +
-                ", imagePullPolicy='" + imagePullPolicy +
                 ", image='" + image +
                 ", buildImage=" + buildImage +
                 ", baseImage='" + baseImage +

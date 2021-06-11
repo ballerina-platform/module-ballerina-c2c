@@ -111,7 +111,6 @@ public class Sample7Test extends SampleTest {
         Container container = deployment.getSpec().getTemplate().getSpec().getContainers().get(0);
         Assert.assertEquals(container.getVolumeMounts().size(), 2);
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE);
-        Assert.assertEquals(container.getImagePullPolicy(), KubernetesConstants.ImagePullPolicy.IfNotPresent.name());
         Assert.assertEquals(container.getPorts().size(), 2);
 
         //Assert Volume Mount

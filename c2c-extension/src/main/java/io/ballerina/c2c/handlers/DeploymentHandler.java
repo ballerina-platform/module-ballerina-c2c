@@ -120,7 +120,6 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         return new ContainerBuilder()
                 .withName(deploymentModel.getName())
                 .withImage(deploymentImageName)
-                .withImagePullPolicy(deploymentModel.getImagePullPolicy())
                 .withPorts(containerPorts)
                 .withEnv(deploymentModel.getEnvVars())
                 .withVolumeMounts(populateVolumeMounts(deploymentModel))

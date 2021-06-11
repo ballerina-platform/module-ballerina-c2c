@@ -43,7 +43,6 @@ public class JobModel extends KubernetesModel {
     private int activeDeadlineSeconds;
     private String schedule;
     private Map<String, EnvVarValueModel> env;
-    private String imagePullPolicy;
     private String image;
     private boolean buildImage;
     private String dockerHost;
@@ -69,7 +68,6 @@ public class JobModel extends KubernetesModel {
         this.buildImage = true;
         this.nodeSelector = new HashMap<>();
         this.setEnv(new HashMap<>());
-        this.setImagePullPolicy("IfNotPresent");
 
         this.activeDeadlineSeconds = 20;
         this.imagePullSecrets = new HashSet<>();
