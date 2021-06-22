@@ -55,15 +55,23 @@ import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarNam
 public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifecycleEventContext> {
 
     private static final Logger pluginLog = LoggerFactory.getLogger(C2CCodeGeneratedTask.class);
+    private final KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
 
     @Override
     public void perform(CompilerLifecycleEventContext compilerLifecycleEventContext) {
         Optional<Path> executablePath = compilerLifecycleEventContext.getGeneratedArtifactPath();
+        final PackageID currentPackage = KubernetesContext.getInstance().getCurrentPackage();
         executablePath.ifPresent(path -> {
-            addDependencyJars(compilerLifecycleEventContext.compilation(), path.getFileName().toString());
-            KubernetesContext.getInstance().getDataHolder().setSourceRoot(executablePath.get().getParent()
+            String executableJarName = "$anon".equals(currentPackage.orgName.value) ? path.getFileName().toString() :
+                    currentPackage.orgName.value + "-" + currentPackage.name.value +
+                            "-" + currentPackage.version.value + ".jar";
+            String outputName = "$anon".equals(currentPackage.orgName.value) ? extractJarName(path.getFileName()) :
+                    currentPackage.name.value;
+            dataHolder.setOutputName(outputName);
+            addDependencyJars(compilerLifecycleEventContext.compilation(), executableJarName);
+            dataHolder.setSourceRoot(executablePath.get().getParent()
                     .getParent().getParent());
-            codeGeneratedInternal(KubernetesContext.getInstance().getCurrentPackage(),
+            codeGeneratedInternal(currentPackage,
                     path, compilerLifecycleEventContext.currentPackage().cloudToml(),
                     compilerLifecycleEventContext.currentPackage().project().buildOptions().cloud());
         });
@@ -72,7 +80,6 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
     public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Optional<CloudToml> cloudToml,
                                       String buildType) {
         KubernetesContext.getInstance().setCurrentPackage(packageId);
-        KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         dataHolder.setPackageID(packageId);
         executableJarFile = executableJarFile.toAbsolutePath();
         if (null != executableJarFile.getParent() && Files.exists(executableJarFile.getParent())) {
@@ -124,7 +131,6 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
         io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
 
         // Add dependency jar files to docker model.
-        final KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         dataHolder.getDockerModel().addDependencyJarPaths(
                 jarResolver.getJarFilePathsRequiredForExecution().stream()
                         .map(JarLibrary::path)

@@ -110,14 +110,15 @@ public class KubernetesUtils {
      */
     public static void writeToFile(Path outputDir, String context, String fileSuffix) throws IOException {
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
-        Path artifactFileName = outputDir.resolve(extractJarName(dataHolder.getJarPath()) + fileSuffix);
+        final String outputName = dataHolder.getOutputName();
+        Path artifactFileName = outputDir.resolve(outputName + fileSuffix);
         DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
         JobModel jobModel = dataHolder.getJobModel();
         // Priority given for job, then deployment.
         if (jobModel != null && dataHolder.isSingleYaml()) {
-            artifactFileName = outputDir.resolve(extractJarName(dataHolder.getJarPath()) + YAML);
+            artifactFileName = outputDir.resolve(outputName + YAML);
         } else if (jobModel == null && deploymentModel != null && dataHolder.isSingleYaml()) {
-            artifactFileName = outputDir.resolve(extractJarName(dataHolder.getJarPath()) + YAML);
+            artifactFileName = outputDir.resolve(outputName + YAML);
         }
 
         File newFile = artifactFileName.toFile();

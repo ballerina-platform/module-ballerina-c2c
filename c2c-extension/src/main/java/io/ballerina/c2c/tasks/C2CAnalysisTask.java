@@ -120,7 +120,7 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
         for (ServiceInfo serviceInfo : serviceList) {
             ServiceModel serviceModel = new ServiceModel();
             if (KubernetesUtils.isBlank(serviceModel.getName())) {
-                serviceModel.setName(getValidName(serviceInfo.getServicePath()) + SVC_POSTFIX);
+                serviceModel.setName(getValidName(serviceInfo.getServicePath() + SVC_POSTFIX));
             }
 
             ListenerInfo listener = serviceInfo.getListener();

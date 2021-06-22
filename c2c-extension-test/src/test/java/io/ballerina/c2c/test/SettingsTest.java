@@ -33,7 +33,7 @@ public class SettingsTest {
 
     @Test
 
-    public void testMutipleYaml() throws IOException, InterruptedException {
+    public void testMultipleYaml() throws IOException, InterruptedException {
         Path projectPath = Paths.get("src", "test", "resources", "settings", "multi-yaml");
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(projectPath)
                 , 0);

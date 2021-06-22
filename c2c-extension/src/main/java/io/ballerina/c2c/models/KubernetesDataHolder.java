@@ -53,6 +53,7 @@ public class KubernetesDataHolder {
     private PackageID packageID;
     private Toml ballerinaCloud;
     private boolean singleYaml;
+    private String outputName;
 
     KubernetesDataHolder() {
         this.serviceModelList = new ArrayList<>();
