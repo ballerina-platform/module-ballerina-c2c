@@ -40,8 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
-
 /**
  * Generate and write artifacts to files.
  */
@@ -49,7 +47,7 @@ public class ArtifactManager {
 
     private static final Map<String, String> instructions = new LinkedHashMap<>();
     private static final PrintStream OUT = System.out;
-    private KubernetesDataHolder kubernetesDataHolder;
+    private final KubernetesDataHolder kubernetesDataHolder;
 
     public ArtifactManager() {
         this.kubernetesDataHolder = KubernetesContext.getInstance().getDataHolder();
@@ -139,17 +137,17 @@ public class ArtifactManager {
 
     public void populateDeploymentModel() {
         DeploymentModel deploymentModel = kubernetesDataHolder.getDeploymentModel();
-        String balxFileName = extractJarName(kubernetesDataHolder.getJarPath());
+        String deploymentName = kubernetesDataHolder.getOutputName();
         if (KubernetesUtils.isBlank(deploymentModel.getName())) {
-            if (balxFileName != null) {
-                deploymentModel.setName(KubernetesUtils.getValidName(balxFileName)
+            if (deploymentName != null) {
+                deploymentModel.setName(KubernetesUtils.getValidName(deploymentName)
                         + KubernetesConstants.DEPLOYMENT_POSTFIX);
             }
         }
         if (KubernetesUtils.isBlank(deploymentModel.getImage())) {
-            deploymentModel.setImage(balxFileName + KubernetesConstants.DOCKER_LATEST_TAG);
+            deploymentModel.setImage(deploymentName + KubernetesConstants.DOCKER_LATEST_TAG);
         }
-        deploymentModel.addLabel(KubernetesConstants.KUBERNETES_SELECTOR_KEY, balxFileName);
+        deploymentModel.addLabel(KubernetesConstants.KUBERNETES_SELECTOR_KEY, deploymentName);
         kubernetesDataHolder.setDeploymentModel(deploymentModel);
     }
 

@@ -21,7 +21,6 @@ package io.ballerina.c2c.handlers;
 import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.DeploymentModel;
-import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.ServiceModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -36,8 +35,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
-
 /**
  * Generates kubernetes service from annotations.
  */
@@ -49,10 +46,8 @@ public class ServiceHandler extends AbstractArtifactHandler {
         }
         int count = 0;
         ServiceModel commonService = new ServiceModel();
-        String balxFileName = extractJarName(KubernetesContext.getInstance().getDataHolder()
-                .getJarPath());
-        commonService.addLabel(KubernetesConstants.KUBERNETES_SELECTOR_KEY, balxFileName);
-        commonService.setSelector(balxFileName);
+        commonService.addLabel(KubernetesConstants.KUBERNETES_SELECTOR_KEY, dataHolder.getOutputName());
+        commonService.setSelector(dataHolder.getOutputName());
         final DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
         if (deploymentModel.getInternalDomainName() != null) {
             commonService.setName(deploymentModel.getInternalDomainName());

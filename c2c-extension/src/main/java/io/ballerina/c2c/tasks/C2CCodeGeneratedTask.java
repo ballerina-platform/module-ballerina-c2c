@@ -55,15 +55,23 @@ import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarNam
 public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifecycleEventContext> {
 
     private static final Logger pluginLog = LoggerFactory.getLogger(C2CCodeGeneratedTask.class);
+    private final KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
 
     @Override
     public void perform(CompilerLifecycleEventContext compilerLifecycleEventContext) {
-        addDependencyJars(compilerLifecycleEventContext.compilation());
         Optional<Path> executablePath = compilerLifecycleEventContext.getGeneratedArtifactPath();
+        final PackageID currentPackage = KubernetesContext.getInstance().getCurrentPackage();
         executablePath.ifPresent(path -> {
-            KubernetesContext.getInstance().getDataHolder().setSourceRoot(executablePath.get().getParent()
+            String executableJarName = "$anon".equals(currentPackage.orgName.value) ? path.getFileName().toString() :
+                    currentPackage.orgName.value + "-" + currentPackage.name.value +
+                            "-" + currentPackage.version.value + ".jar";
+            String outputName = "$anon".equals(currentPackage.orgName.value) ? extractJarName(path.getFileName()) :
+                    currentPackage.name.value;
+            dataHolder.setOutputName(outputName);
+            addDependencyJars(compilerLifecycleEventContext.compilation(), executableJarName);
+            dataHolder.setSourceRoot(executablePath.get().getParent()
                     .getParent().getParent());
-            codeGeneratedInternal(KubernetesContext.getInstance().getCurrentPackage(),
+            codeGeneratedInternal(currentPackage,
                     path, compilerLifecycleEventContext.currentPackage().cloudToml(),
                     compilerLifecycleEventContext.currentPackage().project().buildOptions().cloud());
         });
@@ -72,7 +80,6 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
     public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Optional<CloudToml> cloudToml,
                                       String buildType) {
         KubernetesContext.getInstance().setCurrentPackage(packageId);
-        KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         dataHolder.setPackageID(packageId);
         executableJarFile = executableJarFile.toAbsolutePath();
         if (null != executableJarFile.getParent() && Files.exists(executableJarFile.getParent())) {
@@ -95,7 +102,6 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                             kubernetesToml -> dataHolder.setBallerinaCloud(new Toml(kubernetesToml.tomlAstNode())));
                 }
             }
-            dataHolder.setJarPath(executableJarFile);
             dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
             dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
             ArtifactManager artifactManager = new ArtifactManager();
@@ -114,22 +120,25 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 }
             }
         } else {
-            printError("error in resolving docker generation location.");
-            pluginLog.error("error in resolving docker generation location.");
+            printError("error in resolving Docker generation location.");
+            pluginLog.error("error in resolving Docker generation location.");
         }
     }
 
-    private void addDependencyJars(PackageCompilation compilation) {
+    private void addDependencyJars(PackageCompilation compilation, String executableFatJar) {
         JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilation,
                 JvmTarget.JAVA_11);
         io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
 
         // Add dependency jar files to docker model.
-        KubernetesContext.getInstance().getDataHolder().getDockerModel().addDependencyJarPaths(
+        dataHolder.getDockerModel().addDependencyJarPaths(
                 jarResolver.getJarFilePathsRequiredForExecution().stream()
                         .map(JarLibrary::path)
                         .collect(Collectors.toSet()));
-
-
+        jarResolver.getJarFilePathsRequiredForExecution()
+                .stream()
+                .filter(jarLibrary -> jarLibrary.path().getFileName().toString().endsWith(executableFatJar))
+                .findFirst()
+                .ifPresent(jarLibrary -> dataHolder.setJarPath(jarLibrary.path()));
     }
 }

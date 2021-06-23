@@ -31,8 +31,6 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 
 import java.io.IOException;
 
-import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
-
 /**
  * Generates kubernetes Horizontal Pod Autoscaler from annotations.
  */
@@ -86,7 +84,7 @@ public class HPAHandler extends AbstractArtifactHandler {
         if (!isHPAEnabled(podAutoscalerModel)) {
             return;
         }
-        String balxFileName = extractJarName(dataHolder.getJarPath());
+        String balxFileName = dataHolder.getOutputName();
         podAutoscalerModel.addLabel(KubernetesConstants.KUBERNETES_SELECTOR_KEY, balxFileName);
         podAutoscalerModel.setDeployment(deploymentModel.getName());
         if (podAutoscalerModel.getMaxReplicas() == 0) {
@@ -96,7 +94,7 @@ public class HPAHandler extends AbstractArtifactHandler {
             podAutoscalerModel.setMinReplicas(deploymentModel.getReplicas());
         }
         if (podAutoscalerModel.getName() == null || podAutoscalerModel.getName().length() == 0) {
-            podAutoscalerModel.setName(KubernetesUtils.getValidName(balxFileName) + KubernetesConstants.HPA_POSTFIX);
+            podAutoscalerModel.setName(KubernetesUtils.getValidName(balxFileName + KubernetesConstants.HPA_POSTFIX));
         }
         resolveToml(podAutoscalerModel);
         generate(podAutoscalerModel);
