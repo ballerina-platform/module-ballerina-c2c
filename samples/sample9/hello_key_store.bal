@@ -18,7 +18,7 @@ listener http:Listener helloWorldEP = new(9090, {
 
 
 service /helloWorld on helloWorldEP {
-    resource function get sayHello(http:Caller caller) returns string {
+    resource function get sayHello() returns string {
         return "Hello, World from service helloWorld ! \n";
     }
 }
