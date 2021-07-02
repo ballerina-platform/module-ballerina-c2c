@@ -13,6 +13,11 @@
           "type": "boolean",
           "additionalProperties": false,
           "default": false
+        },
+        "buildImage": {
+          "type": "boolean",
+          "additionalProperties": false,
+          "default": true
         }
       }
     },

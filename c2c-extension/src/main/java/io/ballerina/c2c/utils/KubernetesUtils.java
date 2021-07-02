@@ -248,7 +248,7 @@ public class KubernetesUtils {
      */
     public static Map<String, String> getMap(BLangExpression expr) throws KubernetesPluginException {
         if (expr.getKind() != NodeKind.RECORD_LITERAL_EXPR) {
-            throw new KubernetesPluginException("unable to parse value: " + expr.toString());
+            throw new KubernetesPluginException("unable to parse value: " + expr);
         } else {
             BLangRecordLiteral fields = (BLangRecordLiteral) expr;
             Map<String, String> map = new LinkedHashMap<>();
@@ -430,6 +430,7 @@ public class KubernetesUtils {
             String imageName = isBlank(dockerModel.getRegistry()) ? dockerModel.getName() + ":" + dockerModel.getTag() :
                     dockerModel.getRegistry() + "/" + dockerModel.getName() + ":" + dockerModel.getTag();
             deploymentModel.setImage(imageName);
+            dockerModel.setBuildImage(TomlHelper.getBoolean(toml, "settings.buildImage", true));
             Set<CopyFileModel> copyFiles = new HashSet<>();
             for (Toml entry : toml.getTables("container.copy.files")) {
                 CopyFileModel copyFileModel = new CopyFileModel();
@@ -473,7 +474,6 @@ public class KubernetesUtils {
         dockerModel.setService(true);
         dockerModel.setDockerHost(deploymentModel.getDockerHost());
         dockerModel.setDockerCertPath(deploymentModel.getDockerCertPath());
-        dockerModel.setBuildImage(deploymentModel.isBuildImage());
         dockerModel.addCommandArg(deploymentModel.getCommandArgs());
         return dockerModel;
     }

@@ -71,11 +71,11 @@ public class CloudTomlResolver {
         if (ballerinaCloud != null) {
             DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
 
-            // Resolve settings
-            resolveSettingsToml(ballerinaCloud);
-
             // Deployment configs
             resolveDeploymentToml(deploymentModel, ballerinaCloud);
+
+            // Resolve settings
+            resolveSettingsToml(ballerinaCloud);
 
             // Resources
             resolveResourcesToml(deploymentModel, ballerinaCloud);
@@ -94,6 +94,8 @@ public class CloudTomlResolver {
 
     private void resolveSettingsToml(Toml ballerinaCloud) {
         dataHolder.setSingleYaml(TomlHelper.getBoolean(ballerinaCloud, "settings.singleYAML", true));
+        dataHolder.getDockerModel().setBuildImage(TomlHelper.getBoolean(ballerinaCloud,
+                "settings.buildImage", true));
     }
 
     private void resolveDeploymentToml(DeploymentModel deploymentModel, Toml ballerinaCloud) {

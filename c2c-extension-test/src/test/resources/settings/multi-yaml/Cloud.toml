@@ -1,7 +1,6 @@
 [container.image]
-repository="anuruddhal"
 name="hello-api"
-tag="sample5"
+tag="v1"
 
 [[cloud.config.files]]
     file="./conf/data.txt"
@@ -11,3 +10,4 @@ tag="sample5"
 
 [settings]
 singleYAML=false
+buildImage=false
