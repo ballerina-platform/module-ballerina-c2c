@@ -179,6 +179,11 @@ public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
     }
 
     private String generateProbeText(ProbeType probeType, int port, String servicePath, String resourcePath) {
+        if (servicePath.equals("/")) {
+            return CommonUtil.LINE_SEPARATOR + "[cloud.deployment.probes." + probeType.tableName + "]" +
+                    CommonUtil.LINE_SEPARATOR + "port = " + port + CommonUtil.LINE_SEPARATOR +
+                    "path = \"" + "/" + resourcePath + "\"" + CommonUtil.LINE_SEPARATOR;
+        }
         return CommonUtil.LINE_SEPARATOR + "[cloud.deployment.probes." + probeType.tableName + "]" +
                 CommonUtil.LINE_SEPARATOR + "port = " + port + CommonUtil.LINE_SEPARATOR +
                 "path = \"" + servicePath + "/" + resourcePath + "\"" + CommonUtil.LINE_SEPARATOR;
