@@ -19,7 +19,6 @@
 package io.ballerina.c2c;
 
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
-import io.ballerina.c2c.handlers.ConfigMapHandler;
 import io.ballerina.c2c.handlers.SecretHandler;
 import io.ballerina.c2c.models.ConfigMapModel;
 import io.ballerina.c2c.models.DeploymentModel;
@@ -83,8 +82,11 @@ public class CloudTomlResolver {
             // Env vars
             resolveEnvToml(deploymentModel, ballerinaCloud);
 
+            // Config.toml files
+            resolveConfigMapToml(ballerinaCloud);
+
             // Config files
-            resolveConfigMapToml(deploymentModel, ballerinaCloud);
+            resolveConfigFilesToml(deploymentModel, ballerinaCloud);
 
             // Secret files
             resolveSecretToml(deploymentModel, ballerinaCloud);
@@ -168,25 +170,40 @@ public class CloudTomlResolver {
         deploymentModel.getResourceRequirements().setRequests(requests);
     }
 
-    private void resolveConfigMapToml(DeploymentModel deploymentModel, Toml toml) throws KubernetesPluginException {
+    private void resolveConfigMapToml(Toml toml) throws KubernetesPluginException {
         List<Toml> configFiles = toml.getTables("cloud.config.files");
-        if (configFiles.size() != 0) {
-            final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
-
+        if (configFiles.size() > 0) {
+            ConfigMapModel configMapModel = new ConfigMapModel();
+            configMapModel.setName(getValidName(BALLERINA_CONF_FILE_NAME.replace(".toml", ""))
+                    + CONFIG_MAP_POSTFIX);
+            configMapModel.setMountPath(BALLERINA_CONF_MOUNT_PATH);
+            Map<String, String> dataMap = new HashMap<>();
             for (Toml configFile : configFiles) {
                 Path path = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "file")));
                 // Resolve Config.toml
-                ConfigMapModel configMapModel = getBallerinaConfConfigMap(path.toString(), deploymentName);
-                dataHolder.addConfigMaps(Collections.singleton(configMapModel));
+                Path fileName = path.getFileName();
+                if (fileName == null) {
+                    throw new KubernetesPluginException("invalid config file name");
+                }
+                Path dataFilePath = path;
+                if (!path.isAbsolute()) {
+                    dataFilePath = KubernetesContext.getInstance().getDataHolder().getSourceRoot().resolve(dataFilePath)
+                            .normalize();
+                }
+                String content = new String(KubernetesUtils.readFileContent(dataFilePath), StandardCharsets.UTF_8);
+                dataMap.put(fileName.toString(), content);
             }
+            configMapModel.setData(dataMap);
+            configMapModel.setBallerinaConf(true);
+            configMapModel.setReadOnly(false);
+            dataHolder.addConfigMaps(Collections.singleton(configMapModel));
         }
     }
 
     public void resolveConfigFilesToml(DeploymentModel deploymentModel, Toml toml) throws KubernetesPluginException {
-        List<Toml> configFiles = toml.getTables("cloud.files");
+        List<Toml> configFiles = toml.getTables("cloud.config.maps");
         if (configFiles.size() != 0) {
             final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
-
             for (Toml configFile : configFiles) {
                 Path path = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "file")));
                 Path mountPath = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "mount_path")));
@@ -195,9 +212,9 @@ public class CloudTomlResolver {
                 configMapModel.setName(deploymentName + "-" + getValidName(fileName.toString()));
                 configMapModel.setData(getDataForConfigMap(path.toString()));
                 configMapModel.setMountPath(mountPath.toString());
+                configMapModel.setBallerinaConf(false);
                 dataHolder.addConfigMaps(Collections.singleton(configMapModel));
             }
-            new ConfigMapHandler().createArtifacts();
         }
     }
 
@@ -277,25 +294,6 @@ public class CloudTomlResolver {
         return dataMap;
     }
 
-    private ConfigMapModel getBallerinaConfConfigMap(String configFilePath, String serviceName) throws
-            KubernetesPluginException {
-        //create a new config map model with Config toml files
-        ConfigMapModel configMapModel = new ConfigMapModel();
-        configMapModel.setName(getValidName(serviceName) + "-ballerina-conf" + CONFIG_MAP_POSTFIX);
-        configMapModel.setMountPath(BALLERINA_CONF_MOUNT_PATH);
-        Path dataFilePath = Paths.get(configFilePath);
-        if (!dataFilePath.isAbsolute()) {
-            dataFilePath = KubernetesContext.getInstance().getDataHolder().getSourceRoot().resolve(dataFilePath)
-                    .normalize();
-        }
-        String content = new String(KubernetesUtils.readFileContent(dataFilePath), StandardCharsets.UTF_8);
-        Map<String, String> dataMap = new HashMap<>();
-        dataMap.put(BALLERINA_CONF_FILE_NAME, content);
-        configMapModel.setData(dataMap);
-        configMapModel.setBallerinaConf(configFilePath);
-        configMapModel.setReadOnly(false);
-        return configMapModel;
-    }
 
     private SecretModel getBallerinaConfSecret(String configFilePath, String serviceName) throws
             KubernetesPluginException {

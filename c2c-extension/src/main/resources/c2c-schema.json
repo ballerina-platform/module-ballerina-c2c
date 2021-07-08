@@ -103,6 +103,25 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "maps": {
+              "type": "array",
+              "additionalProperties": false,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+",
+                    "default": "resource/file.text"
+                  },
+                  "mount_path": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+",
+                    "default": "/home/ballerina/foo/file.conf"
+                  }
+                }
+              }
+            },
             "envs": {
               "type": "array",
               "items": {
@@ -161,11 +180,6 @@
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "default": "resource/file.text"
-                  },
-                  "mount_path": {
-                    "type": "string",
-                    "pattern": "^(?!\\s*$).+",
-                    "default": "/home/ballerina/foo/file.conf"
                   }
                 }
               }

@@ -31,7 +31,7 @@ public class ConfigMapModel extends KubernetesModel {
     private Map<String, String> data;
     private String mountPath;
     private boolean readOnly;
-    private String ballerinaConf;
+    private boolean isBallerinaConf;
     private int defaultMode;
 
     public ConfigMapModel() {
