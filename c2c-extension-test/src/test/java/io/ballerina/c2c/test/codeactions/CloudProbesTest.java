@@ -39,7 +39,8 @@ public class CloudProbesTest extends AbstractCodeActionTest {
     @Override
     public Object[][] dataProvider() {
         return new Object[][]{
-                { "addprobe1.json", "probegen.bal" }
+                { "addprobe1.json", "probegen.bal" },
+                { "empty-service-path.json", "empty-service-path.bal" }
         };
     }
 
