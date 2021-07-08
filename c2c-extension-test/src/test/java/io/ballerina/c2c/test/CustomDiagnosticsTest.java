@@ -90,9 +90,9 @@ public class CustomDiagnosticsTest {
         diagnostics.addAll(tomlDiagnosticChecker.validateTomlWithSource(toml));
         Assert.assertEquals(diagnostics.size(), 2);
         Assert.assertEquals(diagnostics.get(0).message(),
-                "value for key 'min_cpu' expected to match the regex: ^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$");
-        Assert.assertEquals(diagnostics.get(1).message(), "value for key 'max_cpu' expected to match the regex: ^" +
-                "(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$");
+                "value for key 'min_cpu' expected to match the regex: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$");
+        Assert.assertEquals(diagnostics.get(1).message(),
+                "value for key 'max_cpu' expected to match the regex: ^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$");
     }
 
     @Test
