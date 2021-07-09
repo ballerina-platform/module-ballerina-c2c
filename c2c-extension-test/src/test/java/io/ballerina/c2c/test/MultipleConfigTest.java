@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package io.ballerina.c2c.test.samples;
+package io.ballerina.c2c.test;
 
 import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
@@ -37,26 +37,26 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
-import static io.ballerina.c2c.test.utils.KubernetesTestUtils.deployK8s;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getCommand;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getExposedPorts;
-import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
 
 /**
- * Test cases for sample 5.
+ * Test cases for Multiple Config files.
  */
-public class Sample5Test extends SampleTest {
+public class MultipleConfigTest {
 
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample5");
+
+    private static final Path SOURCE_DIR_PATH = Paths.get("src", "test", "resources", "multiple-config");
     private static final Path DOCKER_TARGET_PATH =
             SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
     private static final Path KUBERNETES_TARGET_PATH =
             SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello");
-    private static final String DOCKER_IMAGE = "anuruddhal/hello-api:sample5";
+    private static final String DOCKER_IMAGE = "anuruddhal/hello-api:v1";
     private Deployment deployment;
     private ConfigMap ballerinaConf;
     private ConfigMap dataMap;
@@ -116,14 +116,17 @@ public class Sample5Test extends SampleTest {
 
         // Validate config file
         Assert.assertEquals(container.getEnv().get(0).getName(), "BAL_CONFIG_FILES");
-        Assert.assertEquals(container.getEnv().get(0).getValue(), "/home/ballerina/conf/Config.toml:");
+        Assert.assertEquals(container.getEnv().get(0).getValue(), "/home/ballerina/conf/Config2.toml:" +
+                "/home/ballerina/conf/Config1.toml:");
     }
 
     @Test
     public void validateConfigMap() {
         // Assert ballerina.conf config map
         Assert.assertNotNull(ballerinaConf);
-        Assert.assertEquals(1, ballerinaConf.getData().size());
+        Assert.assertEquals(2, ballerinaConf.getData().size());
+        Assert.assertTrue(ballerinaConf.getData().containsKey("Config1.toml"));
+        Assert.assertTrue(ballerinaConf.getData().containsKey("Config2.toml"));
 
         // Assert Data config map
         Assert.assertNotNull(dataMap);
@@ -146,12 +149,6 @@ public class Sample5Test extends SampleTest {
                 "\"hello-hello-0.0.1.jar:jars/*\" 'hello/hello/0_0_1/$_init' || cat ballerina-internal.log]");
     }
 
-    @Test(groups = { "integration" })
-    public void deploySample() throws IOException, InterruptedException {
-        Assert.assertEquals(0, loadImage(DOCKER_IMAGE));
-        Assert.assertEquals(0, deployK8s(KUBERNETES_TARGET_PATH));
-        KubernetesTestUtils.deleteK8s(KUBERNETES_TARGET_PATH);
-    }
 
     @AfterClass
     public void cleanUp() throws KubernetesPluginException {

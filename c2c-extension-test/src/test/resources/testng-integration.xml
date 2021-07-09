@@ -33,6 +33,7 @@
             <class name="io.ballerina.c2c.test.samples.DockerProjectTest"/>
             <class name="io.ballerina.c2c.test.samples.DockerSingleTest"/>
             <class name="io.ballerina.c2c.test.SettingsTest"/>
+            <class name="io.ballerina.c2c.test.MultipleConfigTest"/>
         </classes>
     </test>
 
@@ -52,6 +53,7 @@
             <class name="io.ballerina.c2c.test.docker.CmdTest"/>
             <class name="io.ballerina.c2c.test.ServiceTest"/>
             <class name="io.ballerina.c2c.test.SettingsTest"/>
+            <class name="io.ballerina.c2c.test.MultipleConfigTest"/>
         </classes>
     </test>
 

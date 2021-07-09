@@ -116,6 +116,14 @@
             "sortText": "C",
             "insertText": "[settings]\n",
             "insertTextFormat": "Snippet"
+        },
+        {
+            "label": "cloud.config.maps",
+            "kind": "Snippet",
+            "detail": "Table Array",
+            "sortText": "C",
+            "insertText": "[[cloud.config.maps]]\n",
+            "insertTextFormat": "Snippet"
         }
     ]
 }
