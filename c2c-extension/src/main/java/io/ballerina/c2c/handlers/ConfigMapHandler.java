@@ -32,8 +32,6 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 import java.io.IOException;
 import java.util.Collection;
 
-import static io.ballerina.c2c.KubernetesConstants.BALLERINA_CONF_FILE_NAME;
-
 /**
  * Generates kubernetes Config Map.
  */
@@ -62,7 +60,7 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
 
     @Override
     public void createArtifacts() throws KubernetesPluginException {
-        //configMap
+        //Config Map
         int count = 0;
         Collection<ConfigMapModel> configMapModels = dataHolder.getConfigMapModelSet();
         if (configMapModels.size() > 0) {
@@ -70,14 +68,11 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
         }
         for (ConfigMapModel configMapModel : configMapModels) {
             count++;
-            if (!KubernetesUtils.isBlank(configMapModel.getBallerinaConf())) {
-                if (configMapModel.getData().size() != 1) {
-                    throw new KubernetesPluginException("there can be only 1 ballerina config file");
-                }
+            if (configMapModel.isBallerinaConf()) {
                 DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
                 EnvVar ballerinaConfEnv = new EnvVarBuilder()
                         .withName("BAL_CONFIG_FILES")
-                        .withValue(configMapModel.getMountPath() + BALLERINA_CONF_FILE_NAME)
+                        .withValue(getBALConfigFiles(configMapModel))
                         .build();
                 deploymentModel.addEnv(ballerinaConfEnv);
                 dataHolder.setDeploymentModel(deploymentModel);
@@ -85,5 +80,13 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
             generate(configMapModel);
             OUT.print("\t@kubernetes:ConfigMap \t\t\t - complete " + count + "/" + configMapModels.size() + "\r");
         }
+    }
+
+    private String getBALConfigFiles(ConfigMapModel configMapModel) {
+        StringBuilder configPaths = new StringBuilder();
+        for (String key : configMapModel.getData().keySet()) {
+            configPaths.append(configMapModel.getMountPath()).append(key).append(":");
+        }
+        return configPaths.toString();
     }
 }

@@ -1,4 +1,5 @@
 [container.image]
+repository="anuruddhal"
 name="hello-api"
 tag="v1"
 
@@ -6,8 +7,6 @@ tag="v1"
     file="./conf/data.txt"
     mount_path="/home/ballerina/data"
 [[cloud.config.files]]
-    file="./conf/Config.toml"
-
-[settings]
-singleYAML=false
-buildImage=false
+    file="./conf/Config1.toml"
+[[cloud.config.files]]
+    file="./conf/Config2.toml"
