@@ -32,27 +32,42 @@
             "name": {
               "type": "string",
               "pattern": "[a-zA-Z0-9][a-zA-Z0-9_.-]+",
-              "default": "hello"
+              "default": "hello",
+              "message" : {
+                "pattern" : "container names must start with an alphanumeric character and can then contain _ . or - in addition to alphanumeric for the rest of the characters"
+              }
             },
             "repository": {
               "type": "string",
               "pattern": "^(?!\\s*$).+",
-              "default": "local"
+              "default": "local",
+              "message" : {
+                "pattern" : "`repository` should not be empty"
+              }
             },
             "tag": {
               "type": "string",
               "pattern": "^[\\w][\\w.-]{0,127}$",
-              "default": "v1.0.0"
+              "default": "v1.0.0",
+              "message" : {
+                "pattern" : "`tag` should not be empty which has less than 127 characters"
+              }
             },
             "base": {
               "type": "string",
               "pattern": "^(?!\\s*$).+",
-              "default": "ballerina/jre11:v1"
+              "default": "ballerina/jre11:v1",
+              "message" : {
+                "pattern" : "`base` should not be empty"
+              }
             },
             "cmd": {
               "type": "string",
-              "pattern": ".*",
-              "default": ""
+              "pattern": "^(?!\\s*$).+",
+              "default": "",
+              "message" : {
+                "pattern" : "`cmd` should not be empty"
+              }
             },
             "user": {
               "type": "object",
@@ -61,7 +76,10 @@
                 "run_as": {
                   "type": "string",
                   "pattern": "^(?!\\s*$).+",
-                  "default": "ballerina"
+                  "default": "ballerina",
+                  "message" : {
+                    "pattern" : "`run_as` should not be empty"
+                  }
                 }
               }
             }
@@ -81,12 +99,18 @@
                   "sourceFile": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "./data/data.txt"
+                    "default": "./data/data.txt",
+                    "message" : {
+                      "pattern" : "`sourceFile` should not be empty"
+                    }
                   },
                   "target": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "/home/ballerina/data/data.txt"
+                    "default": "/home/ballerina/data/data.txt",
+                    "message" : {
+                      "pattern" : "`target` should not be empty"
+                    }
                   }
                 }
               }
@@ -112,12 +136,18 @@
                   "file": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "resource/file.text"
+                    "default": "resource/file.text",
+                    "message" : {
+                      "pattern" : "`file` should not be empty"
+                    }
                   },
                   "mount_path": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "/home/ballerina/foo/file.conf"
+                    "default": "/home/ballerina/foo/file.conf",
+                    "message" : {
+                      "pattern" : "`mount_path` should not be empty"
+                    }
                   }
                 }
               }
@@ -131,17 +161,26 @@
                   "key_ref": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "FOO"
+                    "default": "FOO",
+                    "message" : {
+                      "pattern" : "`key_ref` should not be empty"
+                    }
                   },
                   "name": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "foo"
+                    "default": "foo",
+                    "message" : {
+                      "pattern" : "`name` should not be empty"
+                    }
                   },
                   "config_name": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "module-foo"
+                    "default": "module-foo",
+                    "message" : {
+                      "pattern" : "`config_name` should not be empty"
+                    }
                   }
                 }
               }
@@ -155,17 +194,26 @@
                   "key_ref": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "MYSQL_ROOT_PASSWORD"
+                    "default": "MYSQL_ROOT_PASSWORD",
+                    "message" : {
+                      "pattern" : "`key_ref` should not be empty"
+                    }
                   },
                   "name": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "ROOT_PASSWORD"
+                    "default": "ROOT_PASSWORD",
+                    "message" : {
+                      "pattern" : "`name` should not be empty"
+                    }
                   },
                   "secret_name": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "db-crdential-secret"
+                    "default": "db-crdential-secret",
+                    "message" : {
+                      "pattern" : "`secret_name` should not be empty"
+                    }
                   }
                 }
               }
@@ -179,7 +227,10 @@
                   "file": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "resource/file.text"
+                    "default": "resource/file.text",
+                    "message" : {
+                      "pattern" : "`file` should not be empty"
+                    }
                   }
                 }
               }
@@ -193,7 +244,10 @@
             "internal_domain_name": {
               "type": "string",
               "pattern": "[a-z0-9]([-a-z0-9]*[a-z0-9])?",
-              "default": "module_svc"
+              "default": "module-svc",
+              "message" : {
+                "pattern" : "`internal_domain_name` must start with lowercase alphanumeric character and can then it could contain dash in the middle of the string"
+              }
             },
             "external_accessible": {
               "type": "boolean",
@@ -201,22 +255,22 @@
             },
             "min_memory": {
               "type": "string",
-              "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(?:[EPTGMK]i?b?)?$",
+              "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
               "default": "100Mi"
             },
             "max_memory": {
               "type": "string",
-              "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(?:[EPTGMK]i?b?)?$",
+              "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
               "default": "256Mi"
             },
             "min_cpu": {
               "type": "string",
-              "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$",
+              "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
               "default": "1000m"
             },
             "max_cpu": {
               "type": "string",
-              "pattern": "^(?:0?[1-9]?|[1-9][0-9]*?)\\.?\\d*?(m)?$",
+              "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
               "default": "1500m"
             },
             "autoscaling": {
@@ -300,17 +354,26 @@
                     "name": {
                       "type": "string",
                       "pattern": "^(?!\\s*$).+",
-                      "default": "volume1"
+                      "default": "volume1",
+                      "message" : {
+                        "pattern" : "`name` should not be empty"
+                      }
                     },
                     "local_path": {
                       "type": "string",
                       "pattern": "^(?!\\s*$).+",
-                      "default": "files"
+                      "default": "files",
+                      "message" : {
+                        "pattern" : "`local_path` should not be empty"
+                      }
                     },
                     "size": {
                       "type": "string",
                       "pattern": "^(?!\\s*$).+",
-                      "default": "2Gi"
+                      "default": "2Gi",
+                      "message" : {
+                        "pattern" : "`size` should not be empty"
+                      }
                     }
                   }
                 }
