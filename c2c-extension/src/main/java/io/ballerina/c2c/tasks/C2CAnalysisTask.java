@@ -135,7 +135,7 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
             serviceModel.setProtocol("http");
 
             if (listener.getConfig().isPresent() && listener.getConfig().get().getSecureSocketConfig().isPresent()) {
-                Set<SecretModel> secretModels = processSecureSocketAnnotation(listener);
+                Set<SecretModel> secretModels = processSecureSocketConfig(listener);
                 KubernetesContext.getInstance().getDataHolder().addListenerSecret(listener.getName(), secretModels);
                 KubernetesContext.getInstance().getDataHolder().addSecrets(secretModels);
                 serviceModel.setProtocol("https");
@@ -170,7 +170,7 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
      * @param listenerInfo Listener info
      * @return List of @{@link SecretModel} objects
      */
-    private Set<SecretModel> processSecureSocketAnnotation(ListenerInfo listenerInfo) throws KubernetesPluginException {
+    private Set<SecretModel> processSecureSocketConfig(ListenerInfo listenerInfo) throws KubernetesPluginException {
         Set<SecretModel> secrets = new HashSet<>();
 
         Optional<HttpsConfig> config = listenerInfo.getConfig();

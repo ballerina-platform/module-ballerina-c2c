@@ -41,6 +41,7 @@ import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingFieldNode;
 import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.ModuleVariableDeclarationNode;
+import io.ballerina.compiler.syntax.tree.NamedArgumentNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeVisitor;
@@ -191,19 +192,21 @@ public class C2CVisitor extends NodeVisitor {
         return Optional.of(listenerInfo);
     }
 
-    private Optional<HttpsConfig> extractKeyStores(FunctionArgumentNode functionArgumentNode1) {
-        if (functionArgumentNode1.kind() != SyntaxKind.POSITIONAL_ARG) {
-            return Optional.empty();
+    private Optional<HttpsConfig> extractKeyStores(FunctionArgumentNode functionArgumentNode) {
+        if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
+            PositionalArgumentNode positionalArgumentNode = (PositionalArgumentNode) functionArgumentNode;
+            if (positionalArgumentNode.expression().kind() == SyntaxKind.MAPPING_CONSTRUCTOR) {
+                return processFieldsInHttpConfig((MappingConstructorExpressionNode)
+                        positionalArgumentNode.expression());
+            } else if (positionalArgumentNode.expression().kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+                String varName = ((SimpleNameReferenceNode) positionalArgumentNode.expression()).name().text();
+                return getHttpsListenerConfig(varName);
+            }
+        } else if (functionArgumentNode.kind() == SyntaxKind.NAMED_ARG) {
+            NamedArgumentNode namedArgumentNode = (NamedArgumentNode) functionArgumentNode;
+            return processSecureSocketValue((MappingConstructorExpressionNode) namedArgumentNode.expression());
         }
-        PositionalArgumentNode positionalArgumentNode = (PositionalArgumentNode) functionArgumentNode1;
-        if (positionalArgumentNode.expression().kind() == SyntaxKind.MAPPING_CONSTRUCTOR) {
-            return processFieldsInHttpConfig((MappingConstructorExpressionNode) positionalArgumentNode.expression());
-        } else if (positionalArgumentNode.expression().kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-            String varName = ((SimpleNameReferenceNode) positionalArgumentNode.expression()).name().text();
-            return getHttpsListenerConfig(varName);
-        } else {
-            return Optional.empty();
-        }
+        return Optional.empty();
     }
 
     private Optional<HttpsConfig> processFieldsInHttpConfig(MappingConstructorExpressionNode mapping) {
