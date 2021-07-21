@@ -41,16 +41,12 @@ import io.fabric8.kubernetes.api.model.SecretKeySelector;
 import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import org.apache.commons.io.FileUtils;
 import org.ballerinalang.model.elements.PackageID;
-import org.ballerinalang.model.tree.AnnotationAttachmentNode;
-import org.ballerinalang.model.tree.IdentifierNode;
 import org.ballerinalang.model.tree.NodeKind;
 import org.ballerinax.docker.generator.exceptions.DockerGenException;
 import org.ballerinax.docker.generator.models.CopyFileModel;
 import org.ballerinax.docker.generator.models.DockerModel;
 import org.wso2.ballerinalang.compiler.semantics.model.symbols.BConstantSymbol;
 import org.wso2.ballerinalang.compiler.semantics.model.types.BFiniteType;
-import org.wso2.ballerinalang.compiler.tree.BLangAnnotationAttachment;
-import org.wso2.ballerinalang.compiler.tree.BLangIdentifier;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangRecordLiteral;
@@ -392,20 +388,6 @@ public class KubernetesUtils {
         return fields.stream().map(f -> (BLangRecordLiteral.BLangRecordKeyValueField) f).collect(Collectors.toList());
     }
 
-    /**
-     * Create an annotation node.
-     *
-     * @param annotationName Name of the annotation node.
-     * @return The created node.
-     */
-    public static AnnotationAttachmentNode createAnnotation(String annotationName) {
-        AnnotationAttachmentNode configAnnotation = new BLangAnnotationAttachment();
-        IdentifierNode configIdentifier = new BLangIdentifier();
-        configIdentifier.setValue(annotationName);
-        configAnnotation.setAnnotationName(configIdentifier);
-        configAnnotation.setExpression(new BLangRecordLiteral());
-        return configAnnotation;
-    }
 
     public static PackageID getProjectID(Package currentPackage) {
         return new PackageID(new Name(currentPackage.packageOrg().value()),

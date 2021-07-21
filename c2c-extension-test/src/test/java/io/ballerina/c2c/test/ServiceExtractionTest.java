@@ -174,6 +174,23 @@ public class ServiceExtractionTest {
     }
 
     @Test
+    public void testSSLVariableListenerConfig() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "ssl-variable");
+
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+
+        Assert.assertEquals(serviceList.size(), 1);
+        ServiceInfo helloService = serviceList.get(0);
+        Assert.assertEquals(helloService.getServicePath().trim(), "/helloWorld");
+        ListenerInfo helloListener = helloService.getListener();
+        Assert.assertEquals(helloListener.getPort(), 9090);
+        String keystore = helloListener.getConfig().get().getSecureSocketConfig().get().getPath();
+        Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
+    }
+
+    @Test
     public void testOptionalPort() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "valid-variable-port");
 
