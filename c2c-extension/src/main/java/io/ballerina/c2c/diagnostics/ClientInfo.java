@@ -17,27 +17,18 @@
  */
 package io.ballerina.c2c.diagnostics;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.Optional;
-
 /**
- * Represents Listener information of a ballerina document.
+ * Represents Listener information of a Ballerina Client.
  *
  * @since 2.0.0
  */
+
 @Data
-public class ListenerInfo {
+@AllArgsConstructor
+public class ClientInfo {
     private String name;
-    private int port;
-    private HttpsConfig config;
-
-    public ListenerInfo(String name, int port) {
-        this.name = name;
-        this.port = port;
-    }
-
-    public Optional<HttpsConfig> getConfig() {
-        return Optional.ofNullable(config);
-    }
+    private HttpsConfig httpsConfig;
 }

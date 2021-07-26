@@ -31,6 +31,8 @@ import io.ballerina.compiler.api.symbols.TypeSymbol;
 import io.ballerina.compiler.api.symbols.UnionTypeSymbol;
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.BasicLiteralNode;
+import io.ballerina.compiler.syntax.tree.CaptureBindingPatternNode;
+import io.ballerina.compiler.syntax.tree.CheckExpressionNode;
 import io.ballerina.compiler.syntax.tree.ExplicitNewExpressionNode;
 import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.FunctionArgumentNode;
@@ -60,6 +62,8 @@ import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.diagnostics.DiagnosticFactory;
 import io.ballerina.tools.diagnostics.DiagnosticInfo;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,9 +76,12 @@ import java.util.Optional;
  *
  * @since 2.0.0
  */
+@EqualsAndHashCode(callSuper = true)
+@Data
 public class C2CVisitor extends NodeVisitor {
 
     private final List<ServiceInfo> services = new ArrayList<>();
+    private final List<ClientInfo> clientInfos = new ArrayList<>();
     private final Map<String, Node> moduleLevelVariables;
     private final SemanticModel semanticModel;
     private final List<Diagnostic> diagnostics;
@@ -85,6 +92,34 @@ public class C2CVisitor extends NodeVisitor {
         this.moduleLevelVariables = moduleLevelVariables;
         this.semanticModel = semanticModel;
         this.diagnostics = diagnostics;
+    }
+
+    @Override
+    public void visit(ModuleVariableDeclarationNode moduleVariableDeclarationNode) {
+        TypedBindingPatternNode typedBindingPatternNode = moduleVariableDeclarationNode.typedBindingPattern();
+        if (!("QUALIFIED_NAME_REFERENCE").equals(typedBindingPatternNode.typeDescriptor().kind().name())) {
+            return;
+        }
+        QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typedBindingPatternNode.typeDescriptor();
+        if ("Client".equals(qualified.identifier().text())) {
+            if (moduleVariableDeclarationNode.initializer().isPresent()) {
+                ExpressionNode initExpression = moduleVariableDeclarationNode.initializer().get();
+                if (initExpression.kind() == SyntaxKind.CHECK_EXPRESSION) {
+                    CheckExpressionNode checkedInit = (CheckExpressionNode) initExpression;
+                    ExpressionNode expression = checkedInit.expression();
+                    final ImplicitNewExpressionNode refNode = (ImplicitNewExpressionNode) expression;
+                    refNode.parenthesizedArgList().ifPresent(parenthesizedArgList1 -> {
+                        Optional<HttpsConfig> config = extractKeyStores(parenthesizedArgList1.arguments().get(1));
+                        config.ifPresent(httpsConfig -> {
+                            String name = ((CaptureBindingPatternNode) moduleVariableDeclarationNode
+                                    .typedBindingPattern().bindingPattern()).variableName().text();
+                            clientInfos.add(new ClientInfo(name, httpsConfig));
+                        });
+                    });
+                }
+            }
+        }
+
     }
 
     @Override
@@ -244,6 +279,9 @@ public class C2CVisitor extends NodeVisitor {
             } else if ("mutualSsl".equals(fieldName)) {
                 MutualSSLConfig mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
                 httpsConfig.setMutualSSLConfig(mutualSSLConfig);
+            } else if ("cert".equals(fieldName)) {
+                MutualSSLConfig mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
+                httpsConfig.setMutualSSLConfig(mutualSSLConfig);
             }
         }
         return Optional.of(httpsConfig);
@@ -275,6 +313,8 @@ public class C2CVisitor extends NodeVisitor {
                 } else {
                     mutualSSLConfig.setPath(extractString(certField));
                 }
+            } else if ("path".equals(nameOfIdentifier)) {
+                mutualSSLConfig.setPath(extractString(specificFieldNode.valueExpr().get()));
             }
         }
         return mutualSSLConfig;
@@ -538,14 +578,6 @@ public class C2CVisitor extends NodeVisitor {
             }
         }
         return absoluteServicePath.toString();
-    }
-
-    public List<ServiceInfo> getServices() {
-        return services;
-    }
-
-    public Task getTask() {
-        return task;
     }
 
     private Optional<HttpsConfig> getHttpsListenerConfig(String variableName) {

@@ -17,6 +17,7 @@
  */
 package io.ballerina.c2c.tasks;
 
+import io.ballerina.c2c.diagnostics.ClientInfo;
 import io.ballerina.c2c.diagnostics.HttpsConfig;
 import io.ballerina.c2c.diagnostics.ListenerInfo;
 import io.ballerina.c2c.diagnostics.MutualSSLConfig;
@@ -80,8 +81,10 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
         List<Diagnostic> c2cDiagnostics = new ArrayList<>();
         ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(currentPackage.project(), c2cDiagnostics);
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+        List<ClientInfo> clientInfoList = projectServiceInfo.getClientList();
         try {
             addServices(serviceList);
+            addClientList(clientInfoList);
         } catch (KubernetesPluginException e) {
             DiagnosticInfo serviceDiagnosticInfo = new DiagnosticInfo("",
                     e.getMessage(), DiagnosticSeverity.ERROR);
@@ -113,6 +116,32 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
                 jobModel.setDockerCertPath(dockerCertPath);
             }
             KubernetesContext.getInstance().getDataHolder().setJobModel(jobModel);
+        }
+    }
+
+    private void addClientList(List<ClientInfo> clientInfoList) throws KubernetesPluginException {
+        for (ClientInfo clientInfo : clientInfoList) {
+            final Optional<MutualSSLConfig> mutualSSLConfig = clientInfo.getHttpsConfig().getMutualSSLConfig();
+            if (mutualSSLConfig.isPresent()) {
+                String sslCertPath = mutualSSLConfig.get().getPath();
+                String sslCertPathContent = readSecretFile(sslCertPath);
+                SecretModel secretModel;
+                Optional<SecretModel> existing = getSecretByMountPathExists(getMountPath(sslCertPath));
+                if (existing.isPresent()) {
+                    // Same mount path as key config add data to existing secret.
+                    secretModel = existing.get();
+                    secretModel.getData().put(String.valueOf(Paths.get(sslCertPath).getFileName()), sslCertPathContent);
+                } else {
+                    // Different mount Path. Create a new secret.
+                    secretModel = new SecretModel();
+                    secretModel.setName(getValidName(clientInfo.getName()) + "-mutual-ssl");
+                    secretModel.setMountPath(getMountPath(sslCertPath));
+                    Map<String, String> dataMap = new HashMap<>();
+                    dataMap.put(String.valueOf(Paths.get(sslCertPath).getFileName()), sslCertPathContent);
+                    secretModel.setData(dataMap);
+                    KubernetesContext.getInstance().getDataHolder().addSecrets(Collections.singleton(secretModel));
+                }
+            }
         }
     }
 
@@ -183,9 +212,10 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
         SecretModel secretModel = new SecretModel();
         if (secureSocketConfig.isPresent()) {
             String path = secureSocketConfig.get().getPath();
+            final String validName = getValidName(listenerInfo.getName());
             if (path != null && !"".equals(path)) {
                 String keyStoreContent = readSecretFile(path);
-                secretModel.setName(getValidName(listenerInfo.getName()) + "-secure-socket");
+                secretModel.setName(validName + "-secure-socket");
                 secretModel.setMountPath(getMountPath(path));
                 Map<String, String> dataMap = new HashMap<>();
                 dataMap.put(String.valueOf(Paths.get(path).getFileName()), keyStoreContent);
@@ -198,7 +228,7 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
                 String certFileContent = readSecretFile(certFile);
                 if (getMountPath(certFile).equals(getMountPath(keyFile))) {
                     // key and cert mount to same path
-                    secretModel.setName(getValidName(listenerInfo.getName()) + "-secure-socket");
+                    secretModel.setName(validName + "-secure-socket");
                     secretModel.setMountPath(getMountPath(certFile));
                     Map<String, String> dataMap = new HashMap<>();
                     dataMap.put(String.valueOf(Paths.get(keyFile).getFileName()), keyFileContent);
@@ -207,14 +237,14 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
                     secrets.add(secretModel);
                 } else {
                     // key and cert mount different paths
-                    secretModel.setName(getValidName(listenerInfo.getName()) + "-secure-cert");
+                    secretModel.setName(validName + "-secure-cert");
                     secretModel.setMountPath(getMountPath(certFile));
                     Map<String, String> dataMap = new HashMap<>();
                     dataMap.put(String.valueOf(Paths.get(certFile).getFileName()), certFileContent);
                     secretModel.setData(dataMap);
 
                     SecretModel secretModelKeyFile = new SecretModel();
-                    secretModelKeyFile.setName(getValidName(listenerInfo.getName()) + "-secure-key");
+                    secretModelKeyFile.setName(validName + "-secure-key");
                     secretModelKeyFile.setMountPath(getMountPath(keyFile));
                     Map<String, String> dataMapKey = new HashMap<>();
                     dataMapKey.put(String.valueOf(Paths.get(keyFile).getFileName()), keyFileContent);
@@ -232,8 +262,8 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
             } else {
                 // Different mount Path. Create a new secret.
                 SecretModel sslSecretModel = new SecretModel();
-                secretModel.setName(getValidName(listenerInfo.getName()) + "-mutual-ssl");
-                secretModel.setMountPath(getMountPath(sslCertPath));
+                sslSecretModel.setName(getValidName(listenerInfo.getName()) + "-mutual-ssl");
+                sslSecretModel.setMountPath(getMountPath(sslCertPath));
                 Map<String, String> dataMap = new HashMap<>();
                 dataMap.put(String.valueOf(Paths.get(sslCertPath).getFileName()), sslCertPathContent);
                 sslSecretModel.setData(dataMap);
@@ -241,6 +271,15 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
             }
         }
         return secrets;
+    }
+
+    private Optional<SecretModel> getSecretByMountPathExists(String path) {
+        for (SecretModel secretModel : KubernetesContext.getInstance().getDataHolder().getSecretModelSet()) {
+            if (secretModel.getMountPath().equals(path)) {
+                return Optional.of(secretModel);
+            }
+        }
+        return Optional.empty();
     }
 
     private String readSecretFile(String filePath) throws KubernetesPluginException {
@@ -259,7 +298,7 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
             // Mounts to the same path overriding the source file.
             throw new KubernetesPluginException("Invalid path: " + mountPath + ". " +
                     "Providing relative path in the same level as source file is not supported with code2cloud." +
-                    "Please create a subfolder and provide the relative path. " +
+                    "Please create a sub folder and provide the relative path. " +
                     "eg: './security/ballerinaKeystore.p12'");
         }
         if (!Paths.get(mountPath).isAbsolute()) {
