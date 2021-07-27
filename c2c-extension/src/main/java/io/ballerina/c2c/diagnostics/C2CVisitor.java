@@ -97,7 +97,7 @@ public class C2CVisitor extends NodeVisitor {
     @Override
     public void visit(ModuleVariableDeclarationNode moduleVariableDeclarationNode) {
         TypedBindingPatternNode typedBindingPatternNode = moduleVariableDeclarationNode.typedBindingPattern();
-        if (!("QUALIFIED_NAME_REFERENCE").equals(typedBindingPatternNode.typeDescriptor().kind().name())) {
+        if (!(typedBindingPatternNode.typeDescriptor().kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE)) {
             return;
         }
         QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typedBindingPatternNode.typeDescriptor();
