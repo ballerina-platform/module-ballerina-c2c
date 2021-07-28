@@ -15,6 +15,7 @@
  */
 package io.ballerina.c2c.test;
 
+import io.ballerina.c2c.diagnostics.ClientInfo;
 import io.ballerina.c2c.diagnostics.ListenerInfo;
 import io.ballerina.c2c.diagnostics.ProjectServiceInfo;
 import io.ballerina.c2c.diagnostics.ServiceInfo;
@@ -117,6 +118,21 @@ public class ServiceExtractionTest {
         Assert.assertEquals(helloListener.getPort(), 9090);
         String keystore = helloListener.getConfig().get().getSecureSocketConfig().get().getCertFile();
         Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
+    }
+
+    @Test
+    public void testClientTrustStore() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "client-truststore");
+
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ClientInfo> clientList = projectServiceInfo.getClientList();
+
+        Assert.assertEquals(clientList.size(), 1);
+        ClientInfo clientInfo = clientList.get(0);
+        Assert.assertEquals(clientInfo.getName(), "nettyEP");
+        String keystore = clientInfo.getHttpsConfig().getMutualSSLConfig().get().getPath();
+        Assert.assertEquals(keystore, "./security/ballerinaTruststore.p12");
     }
 
     @Test

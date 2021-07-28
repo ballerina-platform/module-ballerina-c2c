@@ -17,6 +17,7 @@ package io.ballerina.c2c.test;
 
 import io.ballerina.c2c.test.utils.KubernetesTestUtils;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -51,6 +52,27 @@ public class ServiceTest {
             if ("Service".equals(data.getKind())) {
                 Service service = (Service) data;
                 Assert.assertEquals(service.getMetadata().getName(), "hello-svc");
+                return;
+            }
+        }
+    }
+
+
+    @Test
+    public void testClientTrustStore() throws IOException, InterruptedException {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "client-truststore");
+        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(projectPath)
+                , 0);
+        File artifactYaml = projectPath.resolve("target").resolve(KUBERNETES).resolve("clientconfig").resolve(
+                "clientconfig.yaml").toFile();
+        Assert.assertTrue(artifactYaml.exists());
+        KubernetesClient client = new DefaultKubernetesClient();
+        List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
+        for (HasMetadata data : k8sItems) {
+            if ("Secret".equals(data.getKind())) {
+                Secret secret = (Secret) data;
+                Assert.assertEquals(secret.getData().size(), 2);
+                Assert.assertEquals(secret.getMetadata().getName(), "securedep-secure-socket");
                 return;
             }
         }

@@ -23,6 +23,7 @@ import io.ballerina.projects.Module;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
 import io.ballerina.tools.diagnostics.Diagnostic;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,9 +37,11 @@ import java.util.Optional;
  *
  * @since 2.0.0
  */
+@Data
 public class ProjectServiceInfo {
 
-    private List<ServiceInfo> serviceList;
+    private final List<ServiceInfo> serviceList;
+    private final List<ClientInfo> clientList;
     private Task task = null;
 
     public ProjectServiceInfo(Project project) {
@@ -47,6 +50,7 @@ public class ProjectServiceInfo {
 
     public ProjectServiceInfo(Project project, List<Diagnostic> diagnostics) {
         this.serviceList = new ArrayList<>();
+        this.clientList = new ArrayList<>();
         Package currentPackage = project.currentPackage();
         Iterable<Module> modules = currentPackage.modules();
         for (Module module : modules) {
@@ -70,13 +74,10 @@ public class ProjectServiceInfo {
                 C2CVisitor visitor = new C2CVisitor(moduleLevelVariables, semanticModel, diagnostics);
                 node.accept(visitor);
                 serviceList.addAll(visitor.getServices());
+                clientList.addAll(visitor.getClientInfos());
                 this.task = visitor.getTask();
             }
         }
-    }
-
-    public List<ServiceInfo> getServiceList() {
-        return serviceList;
     }
 
     public Optional<Task> getTask() {

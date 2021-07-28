@@ -51,7 +51,8 @@ configurations {
 dependencies {
 
     implementation "org.ballerinax.docker:docker-generator:${dockerVersion}"
-    implementation "com.github.docker-java:docker-java:${dockerJavaVersion}"
+    implementation "commons-io:commons-io:2.11.0"
+    implementation "commons-codec:commons-codec:1.15"
     implementation "io.fabric8:kubernetes-client:${fabric8KubernetesClientVersion}"
     implementation "javax.validation:validation-api:${javaxValidationAPIVersion}"
     implementation "org.yaml:snakeyaml:${snakeYamlVersion}"
