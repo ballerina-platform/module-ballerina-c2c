@@ -89,6 +89,7 @@ public class ArtifactManager {
             new ConfigMapHandler().createArtifacts();
             new DeploymentHandler().createArtifacts();
             new HPAHandler().createArtifacts();
+            new PersistentVolumeClaimHandler().createArtifacts();
         }
         new DockerHandler().createArtifacts();
         printInstructions();

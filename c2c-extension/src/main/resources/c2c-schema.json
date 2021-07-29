@@ -348,15 +348,16 @@
               "additionalProperties": false,
               "properties": {
                 "volumes": {
-                  "type": "object",
+                  "type": "array",
                   "additionalProperties": false,
-                  "properties": {
+                  "items": {
+                    "type": "object",
                     "name": {
                       "type": "string",
                       "pattern": "^(?!\\s*$).+",
                       "default": "volume1",
-                      "message" : {
-                        "pattern" : "`name` should not be empty"
+                      "message": {
+                        "pattern": "`name` should not be empty"
                       }
                     },
                     "local_path": {

@@ -1,0 +1,9 @@
+[container.image]
+repository= "anuruddhal" # optional default is local
+name="hello-api" # optional
+tag="v11"  # default is latest
+
+[[cloud.deployment.storage.volumes]]
+name="my-pvc"
+local_path="/home/ballerina/data"
+size="1G"

@@ -24,6 +24,7 @@ import io.ballerina.c2c.models.ConfigMapModel;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
+import io.ballerina.c2c.models.PersistentVolumeClaimModel;
 import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.c2c.utils.TomlHelper;
@@ -42,10 +43,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import static io.ballerina.c2c.KubernetesConstants.BALLERINA_CONF_FILE_NAME;
 import static io.ballerina.c2c.KubernetesConstants.BALLERINA_CONF_MOUNT_PATH;
@@ -90,8 +93,24 @@ public class CloudTomlResolver {
 
             // Secret files
             resolveSecretToml(deploymentModel, ballerinaCloud);
+
+            // Resolve Volumes
+            resolveVolumes(deploymentModel, ballerinaCloud);
         }
 
+    }
+
+    private void resolveVolumes(DeploymentModel deploymentModel, Toml ballerinaCloud) {
+        List<Toml> volumes = ballerinaCloud.getTables("cloud.deployment.storage.volumes");
+        Set<PersistentVolumeClaimModel> persistentVolumeClaimModels = new HashSet<>();
+        volumes.forEach(volume -> {
+            PersistentVolumeClaimModel pv = new PersistentVolumeClaimModel();
+            pv.setName(TomlHelper.getString(volume, "name"));
+            pv.setMountPath(TomlHelper.getString(volume, "local_path"));
+            pv.setVolumeClaimSizeAmount(TomlHelper.getString(volume, "size"));
+            persistentVolumeClaimModels.add(pv);
+        });
+        deploymentModel.setVolumeClaimModels(persistentVolumeClaimModels);
     }
 
     private void resolveSettingsToml(Toml ballerinaCloud) {
