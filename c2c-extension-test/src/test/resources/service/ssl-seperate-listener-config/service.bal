@@ -21,8 +21,8 @@ http:ListenerConfiguration helloWorldEPConfig = {
     secureSocket: {
         key: {
             certFile: "./security/ballerinaKeystore.p12",
-            keyFile: "ballerina
-        }
+            keyFile: "ballerina"
+        },
         mutualSsl: {
             cert: "/path/to/public.crt"
         }
