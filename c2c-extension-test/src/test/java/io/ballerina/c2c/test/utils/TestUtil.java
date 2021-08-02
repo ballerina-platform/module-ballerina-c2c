@@ -37,6 +37,7 @@ import org.eclipse.lsp4j.CompletionItemCapabilities;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
+import org.eclipse.lsp4j.ExecuteCommandCapabilities;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.FoldingRangeCapabilities;
 import org.eclipse.lsp4j.InitializeParams;
@@ -48,6 +49,7 @@ import org.eclipse.lsp4j.SignatureInformationCapabilities;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.jsonrpc.Endpoint;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseMessage;
@@ -137,7 +139,6 @@ public class TestUtil {
         BallerinaLanguageServer languageServer = new BallerinaLanguageServer();
         Endpoint endpoint = ServiceEndpoints.toEndpoint(languageServer);
         endpoint.request("initialize", getInitializeParams());
-
         return endpoint;
     }
 
@@ -191,14 +192,21 @@ public class TestUtil {
 
         textDocumentClientCapabilities.setCompletion(completionCapabilities);
         textDocumentClientCapabilities.setSignatureHelp(signatureHelpCapabilities);
-        RenameCapabilities renameCapabilities = new RenameCapabilities();
-        renameCapabilities.setPrepareSupport(true);
-        textDocumentClientCapabilities.setRename(renameCapabilities);
         FoldingRangeCapabilities foldingRangeCapabilities = new FoldingRangeCapabilities();
         foldingRangeCapabilities.setLineFoldingOnly(true);
         textDocumentClientCapabilities.setFoldingRange(foldingRangeCapabilities);
+        RenameCapabilities renameCapabilities = new RenameCapabilities();
+        renameCapabilities.setPrepareSupport(true);
+        renameCapabilities.setHonorsChangeAnnotations(true);
+        textDocumentClientCapabilities.setRename(renameCapabilities);
 
         capabilities.setTextDocument(textDocumentClientCapabilities);
+
+        WorkspaceClientCapabilities workspaceCapabilities = new WorkspaceClientCapabilities();
+        workspaceCapabilities.setExecuteCommand(new ExecuteCommandCapabilities(true));
+
+        capabilities.setWorkspace(workspaceCapabilities);
+
         params.setCapabilities(capabilities);
         return params;
     }

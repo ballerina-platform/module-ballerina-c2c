@@ -40,8 +40,8 @@ dependencies {
 
 
 
-    testImplementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.10.0'
-    testImplementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.10.0'
+    testImplementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.12.0'
+    testImplementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.12.0'
 
     extensionPlugin project(path: ":c2c-extension", configuration: "shadow")
     tooling project(path: ":c2c-tooling")
