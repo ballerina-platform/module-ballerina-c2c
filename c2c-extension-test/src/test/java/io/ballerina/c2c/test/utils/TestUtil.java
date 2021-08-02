@@ -139,7 +139,6 @@ public class TestUtil {
         BallerinaLanguageServer languageServer = new BallerinaLanguageServer();
         Endpoint endpoint = ServiceEndpoints.toEndpoint(languageServer);
         endpoint.request("initialize", getInitializeParams());
-//        endpoint.request("initialized", new InitializedParams());
         return endpoint;
     }
 
