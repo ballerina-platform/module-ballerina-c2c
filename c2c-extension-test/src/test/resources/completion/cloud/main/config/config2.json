@@ -24,9 +24,9 @@
         {
             "label": "cloud.deployment.storage.volumes",
             "kind": "Snippet",
-            "detail": "Table",
+            "detail": "Table Array",
             "sortText": "C",
-            "insertText": "[cloud.deployment.storage.volumes]\n",
+            "insertText": "[[cloud.deployment.storage.volumes]]\n",
             "insertTextFormat": "Snippet"
         },
         {

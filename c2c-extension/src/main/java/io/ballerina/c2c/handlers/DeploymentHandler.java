@@ -239,7 +239,6 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         deploymentModel.setPodAutoscalerModel(dataHolder.getPodAutoscalerModel());
         deploymentModel.setSecretModels(dataHolder.getSecretModelSet());
         deploymentModel.setConfigMapModels(dataHolder.getConfigMapModelSet());
-        deploymentModel.setVolumeClaimModels(dataHolder.getVolumeClaimModelSet());
         if (null != deploymentModel.getLivenessProbe() &&
                 deploymentModel.getLivenessProbe().getHttpGet().getPort().getIntVal() == 0) {
             //set first port as liveness port

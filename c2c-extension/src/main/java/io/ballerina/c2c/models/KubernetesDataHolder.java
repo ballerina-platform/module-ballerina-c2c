@@ -43,7 +43,6 @@ public class KubernetesDataHolder {
     private Map<String, Set<SecretModel>> bListenerToSecretMap;
     private Set<SecretModel> secretModelSet;
     private Set<ConfigMapModel> configMapModelSet;
-    private Set<PersistentVolumeClaimModel> volumeClaimModelSet;
     private JobModel jobModel;
     private Path jarPath;
     private Path k8sArtifactOutputPath;
@@ -60,7 +59,6 @@ public class KubernetesDataHolder {
         this.bListenerToSecretMap = new HashMap<>();
         this.secretModelSet = new HashSet<>();
         this.configMapModelSet = new HashSet<>();
-        this.volumeClaimModelSet = new HashSet<>();
         this.deploymentModel = new DeploymentModel();
         this.dockerModel = new DockerModel();
         this.ballerinaCloud = null;
@@ -77,10 +75,6 @@ public class KubernetesDataHolder {
 
     public void addConfigMaps(Set<ConfigMapModel> configMaps) {
         this.configMapModelSet.addAll(configMaps);
-    }
-
-    public void addPersistentVolumeClaims(Set<PersistentVolumeClaimModel> persistentVolumeClaims) {
-        this.volumeClaimModelSet.addAll(persistentVolumeClaims);
     }
 
     public void addServiceModel(ServiceModel serviceModel) {

@@ -24,7 +24,6 @@ import io.ballerina.c2c.handlers.DeploymentHandler;
 import io.ballerina.c2c.handlers.DockerHandler;
 import io.ballerina.c2c.handlers.HPAHandler;
 import io.ballerina.c2c.handlers.JobHandler;
-import io.ballerina.c2c.handlers.PersistentVolumeClaimHandler;
 import io.ballerina.c2c.handlers.ServiceHandler;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.KubernetesContext;
@@ -84,7 +83,6 @@ public class ArtifactManager {
         if (kubernetesDataHolder.getJobModel() != null) {
             new JobHandler().createArtifacts();
         } else {
-            new PersistentVolumeClaimHandler().createArtifacts();
             new ServiceHandler().createArtifacts();
             new ConfigMapHandler().createArtifacts();
             new DeploymentHandler().createArtifacts();
