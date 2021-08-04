@@ -60,7 +60,7 @@ public class ServiceTest {
 
     @Test
     public void testClientTrustStore() throws IOException, InterruptedException {
-        Path projectPath = Paths.get("src", "test", "resources", "service", "client-truststore");
+        Path projectPath = Paths.get("src", "test", "resources", "service", "client-truststore-modulelevel");
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(projectPath)
                 , 0);
         File artifactYaml = projectPath.resolve("target").resolve(KUBERNETES).resolve("clientconfig").resolve(

@@ -17,6 +17,7 @@
  */
 package io.ballerina.c2c.tasks;
 
+import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
 import io.ballerina.c2c.diagnostics.ClientInfo;
 import io.ballerina.c2c.diagnostics.HttpsConfig;
 import io.ballerina.c2c.diagnostics.ListenerInfo;
@@ -86,7 +87,7 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
             addServices(serviceList);
             addClientList(clientInfoList);
         } catch (KubernetesPluginException e) {
-            DiagnosticInfo serviceDiagnosticInfo = new DiagnosticInfo("",
+            DiagnosticInfo serviceDiagnosticInfo = new DiagnosticInfo(C2CDiagnosticCodes.C2C_001.getCode(),
                     e.getMessage(), DiagnosticSeverity.ERROR);
             Diagnostic serviceDiagnostic = DiagnosticFactory.createDiagnostic(serviceDiagnosticInfo,
                     new NullLocation());

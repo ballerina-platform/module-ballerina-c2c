@@ -1,6 +1,6 @@
 [package]
-org = "anjana"
-name = "slp8"
+org = "ballerina"
+name = "clientconfig"
 version = "0.1.0"
 
 [build-options]
