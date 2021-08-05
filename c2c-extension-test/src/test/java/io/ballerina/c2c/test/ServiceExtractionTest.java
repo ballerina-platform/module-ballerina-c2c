@@ -225,4 +225,13 @@ public class ServiceExtractionTest {
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
         Assert.assertEquals(serviceList.size(), 0);
     }
+
+    @Test
+    public void testClientWithoutTrustStore() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "client-no-truststore");
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ClientInfo> clientList = projectServiceInfo.getClientList();
+        Assert.assertEquals(clientList.size(), 0);
+    }
 }

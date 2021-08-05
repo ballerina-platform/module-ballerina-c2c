@@ -109,6 +109,9 @@ public class C2CVisitor extends NodeVisitor {
                     ExpressionNode expression = checkedInit.expression();
                     final ImplicitNewExpressionNode refNode = (ImplicitNewExpressionNode) expression;
                     refNode.parenthesizedArgList().ifPresent(parenthesizedArgList1 -> {
+                        if (!(parenthesizedArgList1.arguments().size() > 1)) {
+                            return;
+                        }
                         Optional<HttpsConfig> config = extractKeyStores(parenthesizedArgList1.arguments().get(1));
                         config.ifPresent(httpsConfig -> {
                             String name = ((CaptureBindingPatternNode) moduleVariableDeclarationNode
