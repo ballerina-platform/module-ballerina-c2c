@@ -58,10 +58,12 @@ import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.TypedBindingPatternNode;
+import io.ballerina.compiler.syntax.tree.UnionTypeDescriptorNode;
+import io.ballerina.compiler.syntax.tree.VariableDeclarationNode;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.diagnostics.DiagnosticFactory;
 import io.ballerina.tools.diagnostics.DiagnosticInfo;
-import io.ballerina.tools.diagnostics.DiagnosticSeverity;
+import io.ballerina.tools.diagnostics.Location;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -96,33 +98,11 @@ public class C2CVisitor extends NodeVisitor {
 
     @Override
     public void visit(ModuleVariableDeclarationNode moduleVariableDeclarationNode) {
-        TypedBindingPatternNode typedBindingPatternNode = moduleVariableDeclarationNode.typedBindingPattern();
-        if (!(typedBindingPatternNode.typeDescriptor().kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE)) {
+        Optional<ExpressionNode> initializer = moduleVariableDeclarationNode.initializer();
+        if (initializer.isEmpty()) {
             return;
         }
-        QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typedBindingPatternNode.typeDescriptor();
-        if ("Client".equals(qualified.identifier().text())) {
-            if (moduleVariableDeclarationNode.initializer().isPresent()) {
-                ExpressionNode initExpression = moduleVariableDeclarationNode.initializer().get();
-                if (initExpression.kind() == SyntaxKind.CHECK_EXPRESSION) {
-                    CheckExpressionNode checkedInit = (CheckExpressionNode) initExpression;
-                    ExpressionNode expression = checkedInit.expression();
-                    final ImplicitNewExpressionNode refNode = (ImplicitNewExpressionNode) expression;
-                    refNode.parenthesizedArgList().ifPresent(parenthesizedArgList1 -> {
-                        if (!(parenthesizedArgList1.arguments().size() > 1)) {
-                            return;
-                        }
-                        Optional<HttpsConfig> config = extractKeyStores(parenthesizedArgList1.arguments().get(1));
-                        config.ifPresent(httpsConfig -> {
-                            String name = ((CaptureBindingPatternNode) moduleVariableDeclarationNode
-                                    .typedBindingPattern().bindingPattern()).variableName().text();
-                            clientInfos.add(new ClientInfo(name, httpsConfig));
-                        });
-                    });
-                }
-            }
-        }
-
+        extractHttpClientConfig(moduleVariableDeclarationNode.typedBindingPattern(), initializer.get());
     }
 
     @Override
@@ -218,9 +198,7 @@ public class C2CVisitor extends NodeVisitor {
         ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
         ListenerInfo listenerInfo;
         if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-            DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C002", "failed to retrieve port",
-                    DiagnosticSeverity.ERROR);
-            diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo, expression.location()));
+            diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_002, expression.location()));
             return Optional.empty();
         } else {
             BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expression;
@@ -349,6 +327,7 @@ public class C2CVisitor extends NodeVisitor {
             String text = ((BasicLiteralNode) expressionNode).literalToken().text();
             return text.substring(1, text.length() - 1);
         }
+        this.diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_003, expressionNode.location()));
         return null;
     }
 
@@ -383,9 +362,7 @@ public class C2CVisitor extends NodeVisitor {
             String listenerName = referenceNode.name().text();
             Optional<ListenerInfo> httpsListener = this.getHttpsListener(listenerName);
             if (httpsListener.isEmpty()) {
-                DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C002", "failed to retrieve port",
-                        DiagnosticSeverity.ERROR);
-                diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo, expressionNode.location()));
+                diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_002, expressionNode.location()));
                 return;
             }
             listenerInfo = httpsListener.get();
@@ -403,9 +380,7 @@ public class C2CVisitor extends NodeVisitor {
                     if (port.isEmpty()) {
                         Optional<ListenerInfo> httpsListener = this.getHttpsListener(variableName);
                         if (httpsListener.isEmpty()) {
-                            DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C002", "failed to retrieve port",
-                                    DiagnosticSeverity.ERROR);
-                            diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo, expression.location()));
+                            diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_002, expression.location()));
                             return;
                         }
                         listenerInfo = httpsListener.get();
@@ -439,6 +414,7 @@ public class C2CVisitor extends NodeVisitor {
                 String resourcePath = toAbsoluteServicePath(functionDefinitionNode.relativeResourcePath());
                 serviceInfo.addResource(new ResourceInfo(functionDefinitionNode, httpMethod, resourcePath));
             }
+            this.visitSyntaxNode(node);
         }
         services.add(serviceInfo);
     }
@@ -468,9 +444,7 @@ public class C2CVisitor extends NodeVisitor {
                     if (port.isEmpty()) {
                         Optional<ListenerInfo> httpsListener = this.getHttpsListener(variableName);
                         if (httpsListener.isEmpty()) {
-                            DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C002", "failed to retrieve port",
-                                    DiagnosticSeverity.ERROR);
-                            diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo, expression.location()));
+                            diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_002, expression.location()));
                             return Optional.empty();
                         }
                         return httpsListener;
@@ -526,9 +500,7 @@ public class C2CVisitor extends NodeVisitor {
                     //Get port 
                     Optional<ListenerInfo> listenerInfo = getListenerFromST(servicePath, serviceDeclarationNode, i);
                     if (listenerInfo.isEmpty()) {
-                        DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C002", "failed to retrieve port",
-                                DiagnosticSeverity.ERROR);
-                        diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo, parameterSymbol.location()));
+                        diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_002, parameterSymbol.location()));
                         continue;
                     }
                     this.services.add(new ServiceInfo(listenerInfo.get(), serviceDeclarationNode, servicePath));
@@ -628,28 +600,90 @@ public class C2CVisitor extends NodeVisitor {
         }
         ExpressionNode expressionNode = moduleVariableDeclarationNode.initializer().get();
         if (expressionNode.kind() == SyntaxKind.REQUIRED_EXPRESSION) {
-            DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C005", "configurables with no default value is not " +
-                    "supported", DiagnosticSeverity.ERROR);
-            diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo,
-                    moduleVariableDeclarationNode.location()));
+            diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_005, moduleVariableDeclarationNode.location()));
             return Optional.of(0);
         }
 
         if (expressionNode.kind() != SyntaxKind.NUMERIC_LITERAL) {
             return Optional.empty();
         }
-        
+
         for (Token qualifier : moduleVariableDeclarationNode.qualifiers()) {
             if ("configurable".equals(qualifier.text())) {
-                DiagnosticInfo diagnosticInfo = new DiagnosticInfo("C2C006",
-                        String.format("default value of configurable variable `%s` could be overridden in runtime",
-                                variableName), DiagnosticSeverity.WARNING);
-                diagnostics.add(DiagnosticFactory.createDiagnostic(diagnosticInfo,
-                        moduleVariableDeclarationNode.location()));
+                diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_006, moduleVariableDeclarationNode.location()
+                        , variableName));
             }
         }
 
         BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expressionNode;
         return Optional.of(Integer.parseInt(basicLiteralNode.literalToken().text()));
+    }
+
+    @Override
+    public void visit(VariableDeclarationNode variableDeclarationNode) {
+        Optional<ExpressionNode> initializer = variableDeclarationNode.initializer();
+        if (initializer.isEmpty()) {
+            return;
+        }
+        extractHttpClientConfig(variableDeclarationNode.typedBindingPattern(), initializer.get());
+    }
+
+    private void extractHttpClientConfig(TypedBindingPatternNode typedBindingPatternNode, ExpressionNode initializer) {
+        TypeDescriptorNode typeDescriptorNode = typedBindingPatternNode.typeDescriptor();
+        if (!isSupportedClientVariable(typeDescriptorNode)) {
+            return;
+        }
+        ExpressionNode refNode;
+        if (initializer.kind() == SyntaxKind.CHECK_EXPRESSION) {
+            CheckExpressionNode checkedInit = (CheckExpressionNode) initializer;
+            refNode = checkedInit.expression();
+        } else {
+            refNode = initializer;
+        }
+        if (refNode.kind() != SyntaxKind.IMPLICIT_NEW_EXPRESSION) {
+            return;
+        }
+        ImplicitNewExpressionNode newExprInit = (ImplicitNewExpressionNode) refNode;
+        newExprInit.parenthesizedArgList().ifPresent(parenthesizedArgList -> {
+            SeparatedNodeList<FunctionArgumentNode> argList = parenthesizedArgList.arguments();
+            if (argList.size() <= 1) {
+                return;
+            }
+            Optional<HttpsConfig> config = extractKeyStores(argList.get(1));
+            config.ifPresent(httpsConfig -> {
+                String name = ((CaptureBindingPatternNode) typedBindingPatternNode.bindingPattern())
+                        .variableName().text();
+                clientInfos.add(new ClientInfo(name, httpsConfig));
+            });
+        });
+    }
+
+    private boolean isSupportedClientVariable(TypeDescriptorNode typeDescriptorNode) {
+        if (typeDescriptorNode.kind() == SyntaxKind.UNION_TYPE_DESC) {
+            UnionTypeDescriptorNode unionType = (UnionTypeDescriptorNode) typeDescriptorNode;
+            return isSupportedClientVariable(unionType.rightTypeDesc()) ||
+                    isSupportedClientVariable(unionType.leftTypeDesc());
+        }
+        if (typeDescriptorNode.kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE) {
+            QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typeDescriptorNode;
+            Optional<Symbol> symbol = semanticModel.symbol(typeDescriptorNode);
+            if (symbol.isEmpty()) {
+                return false;
+            }
+            Optional<ModuleSymbol> module = symbol.get().getModule();
+            if (module.isEmpty()) {
+                return false;
+            }
+            ModuleID moduleId = module.get().id();
+            return "Client".equals(qualified.identifier().text()) && "ballerina".equals(moduleId.orgName()) &&
+                    "http".equals(moduleId.moduleName());
+        }
+        return false;
+    }
+
+    public static Diagnostic createDiagnostic(C2CDiagnosticCodes diagnostic, Location location, Object... args) {
+        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(diagnostic.getCode(),
+                String.format(diagnostic.getMessage(), args), diagnostic.getSeverity());
+        return DiagnosticFactory.createDiagnostic(diagnosticInfo, location);
     }
 }

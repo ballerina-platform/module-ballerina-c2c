@@ -121,8 +121,8 @@ public class ServiceExtractionTest {
     }
 
     @Test
-    public void testClientTrustStore() {
-        Path projectPath = Paths.get("src", "test", "resources", "service", "client-truststore");
+    public void testClientTrustStoreModuleLevel() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "client-truststore-modulelevel");
 
         BuildProject project = BuildProject.load(projectPath);
         ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
@@ -134,6 +134,22 @@ public class ServiceExtractionTest {
         String keystore = clientInfo.getHttpsConfig().getMutualSSLConfig().get().getPath();
         Assert.assertEquals(keystore, "./security/ballerinaTruststore.p12");
     }
+
+    @Test
+    public void testClientTrustStoreBody() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "client-truststore-body");
+
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ClientInfo> clientList = projectServiceInfo.getClientList();
+
+        Assert.assertEquals(clientList.size(), 1);
+        ClientInfo clientInfo = clientList.get(0);
+        Assert.assertEquals(clientInfo.getName(), "nettyEP");
+        String keystore = clientInfo.getHttpsConfig().getMutualSSLConfig().get().getPath();
+        Assert.assertEquals(keystore, "./security/ballerinaTruststore.p12");
+    }
+
 
     @Test
     public void testGraphQl() {
@@ -233,5 +249,16 @@ public class ServiceExtractionTest {
         ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
         List<ClientInfo> clientList = projectServiceInfo.getClientList();
         Assert.assertEquals(clientList.size(), 0);
+    }
+
+    @Test
+    public void testDefaultConfigValue() {
+        Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "configurable-default-port-warning");
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+        Assert.assertEquals(serviceList.size(), 1);
+        Assert.assertEquals(serviceList.get(0).getServicePath(), "/helloWorld");
+        Assert.assertEquals(serviceList.get(0).getListener().getPort(), 9090);
     }
 }
