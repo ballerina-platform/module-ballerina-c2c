@@ -39,9 +39,7 @@ import io.fabric8.kubernetes.api.model.ResourceFieldSelector;
 import io.fabric8.kubernetes.api.model.ResourceFieldSelectorBuilder;
 import io.fabric8.kubernetes.api.model.SecretKeySelector;
 import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
-import org.apache.commons.io.FileUtils;
 import org.ballerinalang.model.elements.PackageID;
-import org.ballerinalang.model.tree.NodeKind;
 import org.ballerinax.docker.generator.exceptions.DockerGenException;
 import org.ballerinax.docker.generator.models.CopyFileModel;
 import org.ballerinax.docker.generator.models.DockerModel;
@@ -49,7 +47,6 @@ import org.wso2.ballerinalang.compiler.semantics.model.symbols.BConstantSymbol;
 import org.wso2.ballerinalang.compiler.semantics.model.types.BFiniteType;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangLiteral;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangRecordLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangSimpleVarRef;
 import org.wso2.ballerinalang.compiler.util.Name;
 
@@ -59,12 +56,10 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -152,33 +147,6 @@ public class KubernetesUtils {
     }
 
     /**
-     * Copy file or directory.
-     *
-     * @param source      source file/directory path
-     * @param destination destination file/directory path
-     */
-    public static void copyFileOrDirectory(String source, String destination) throws KubernetesPluginException {
-        File src = new File(source);
-        File dst = new File(destination);
-        try {
-            // if source is file
-            if (Files.isRegularFile(Paths.get(source))) {
-                if (Files.isDirectory(dst.toPath())) {
-                    // if destination is directory
-                    FileUtils.copyFileToDirectory(src, dst);
-                } else {
-                    // if destination is file
-                    FileUtils.copyFile(src, dst);
-                }
-            } else if (Files.isDirectory(Paths.get(source))) {
-                FileUtils.copyDirectory(src, dst);
-            }
-        } catch (IOException e) {
-            throw new KubernetesPluginException("error while copying file", e);
-        }
-    }
-
-    /**
      * Prints an Error message.
      *
      * @param msg message to be printed
@@ -233,37 +201,6 @@ public class KubernetesUtils {
             }
         }
         return true;
-    }
-
-    /**
-     * Get a map from a ballerina expression.
-     *
-     * @param expr Ballerina record value.
-     * @return Map of key values.
-     * @throws KubernetesPluginException When the expression cannot be parsed.
-     */
-    public static Map<String, String> getMap(BLangExpression expr) throws KubernetesPluginException {
-        if (expr.getKind() != NodeKind.RECORD_LITERAL_EXPR) {
-            throw new KubernetesPluginException("unable to parse value: " + expr);
-        } else {
-            BLangRecordLiteral fields = (BLangRecordLiteral) expr;
-            Map<String, String> map = new LinkedHashMap<>();
-            for (BLangRecordLiteral.BLangRecordKeyValueField keyValue : convertRecordFields(fields.getFields())) {
-                map.put(keyValue.getKey().toString(), getStringValue(keyValue.getValue()));
-            }
-            return map;
-        }
-    }
-
-    /**
-     * Get the boolean value from a ballerina expression.
-     *
-     * @param expr Ballerina boolean value.
-     * @return Parsed boolean value.
-     * @throws KubernetesPluginException When the expression cannot be parsed.
-     */
-    public static boolean getBooleanValue(BLangExpression expr) throws KubernetesPluginException {
-        return Boolean.parseBoolean(getStringValue(expr));
     }
 
     /**
@@ -383,12 +320,6 @@ public class KubernetesUtils {
         return envVars;
     }
 
-    public static List<BLangRecordLiteral.BLangRecordKeyValueField> convertRecordFields(
-            List<BLangRecordLiteral.RecordField> fields) {
-        return fields.stream().map(f -> (BLangRecordLiteral.BLangRecordKeyValueField) f).collect(Collectors.toList());
-    }
-
-
     public static PackageID getProjectID(Package currentPackage) {
         return new PackageID(new Name(currentPackage.packageOrg().value()),
                 new Name(currentPackage.packageName().value()),
@@ -447,12 +378,10 @@ public class KubernetesUtils {
         dockerModel.setRegistry(deploymentModel.getRegistry());
         dockerModel.setName(dockerImage);
         dockerModel.setTag(imageTag);
-        dockerModel.setEnableDebug(false);
         dockerModel.setDockerConfig(deploymentModel.getDockerConfigPath());
         dockerModel.setPorts(deploymentModel.getPorts().stream()
                 .map(ContainerPort::getContainerPort)
                 .collect(Collectors.toSet()));
-        dockerModel.setUberJar(deploymentModel.isUberJar());
         dockerModel.setService(true);
         dockerModel.setDockerHost(deploymentModel.getDockerHost());
         dockerModel.setDockerCertPath(deploymentModel.getDockerCertPath());

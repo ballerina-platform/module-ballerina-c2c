@@ -18,11 +18,16 @@
 
 package io.ballerina.c2c.models;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import java.util.HashMap;
 
 /**
  * Kubernetes Pod Autoscaler annotations model class.
  */
+@EqualsAndHashCode(callSuper = true)
+@Data
 public class PodAutoscalerModel extends KubernetesModel {
     private int minReplicas;
     private int maxReplicas;
@@ -32,38 +37,6 @@ public class PodAutoscalerModel extends KubernetesModel {
     public PodAutoscalerModel() {
         this.cpuPercentage = 50;
         labels = new HashMap<>();
-    }
-
-    public int getMinReplicas() {
-        return minReplicas;
-    }
-
-    public void setMinReplicas(int minReplicas) {
-        this.minReplicas = minReplicas;
-    }
-
-    public int getMaxReplicas() {
-        return maxReplicas;
-    }
-
-    public void setMaxReplicas(int maxReplicas) {
-        this.maxReplicas = maxReplicas;
-    }
-
-    public int getCpuPercentage() {
-        return cpuPercentage;
-    }
-
-    public void setCpuPercentage(int cpuPercentage) {
-        this.cpuPercentage = cpuPercentage;
-    }
-
-    public String getDeployment() {
-        return deployment;
-    }
-
-    public void setDeployment(String deployment) {
-        this.deployment = deployment;
     }
 
     public void addLabel(String key, String value) {

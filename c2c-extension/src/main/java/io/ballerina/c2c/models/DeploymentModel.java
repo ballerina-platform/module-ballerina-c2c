@@ -64,7 +64,6 @@ public class DeploymentModel extends KubernetesModel {
     private String registry;
     private DeploymentStrategy strategy;
     private Map<String, String> nodeSelector;
-    private boolean uberJar;
     private String dockerConfigPath;
     private ResourceRequirements resourceRequirements;
     private String internalDomainName;
@@ -84,7 +83,6 @@ public class DeploymentModel extends KubernetesModel {
         this.imagePullSecrets = new HashSet<>();
         this.commandArgs = "";
         this.registry = "";
-        this.uberJar = false;
         Map<String, Quantity> limit = new HashMap<>();
         limit.put("cpu", new Quantity("500m"));
         limit.put("memory", new Quantity("256Mi"));
