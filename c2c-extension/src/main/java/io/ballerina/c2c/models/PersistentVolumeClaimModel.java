@@ -17,11 +17,16 @@
  */
 package io.ballerina.c2c.models;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import java.util.HashMap;
 
 /**
  * Model class to hold kubernetes Persistent Volume Claim.
  */
+@EqualsAndHashCode(callSuper = true)
+@Data
 public class PersistentVolumeClaimModel extends KubernetesModel {
     private String mountPath;
     private boolean readOnly;
@@ -32,45 +37,5 @@ public class PersistentVolumeClaimModel extends KubernetesModel {
     public PersistentVolumeClaimModel() {
         this.accessMode = "ReadWriteOnce";
         this.setAnnotations(new HashMap<>());
-    }
-
-    public String getMountPath() {
-        return mountPath;
-    }
-
-    public void setMountPath(String mountPath) {
-        this.mountPath = mountPath;
-    }
-
-    public boolean isReadOnly() {
-        return readOnly;
-    }
-
-    public void setReadOnly(boolean readOnly) {
-        this.readOnly = readOnly;
-    }
-
-    public String getAccessMode() {
-        return accessMode;
-    }
-
-    public void setAccessMode(String accessMode) {
-        this.accessMode = accessMode;
-    }
-    
-    public String getVolumeClaimSizeAmount() {
-        return volumeClaimSizeAmount;
-    }
-    
-    public void setVolumeClaimSizeAmount(String volumeClaimSizeAmount) {
-        this.volumeClaimSizeAmount = volumeClaimSizeAmount;
-    }
-    
-    public String getVolumeClaimSizeFormat() {
-        return volumeClaimSizeFormat;
-    }
-    
-    public void setVolumeClaimSizeFormat(String volumeClaimSizeFormat) {
-        this.volumeClaimSizeFormat = volumeClaimSizeFormat;
     }
 }

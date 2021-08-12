@@ -24,15 +24,7 @@ package io.ballerina.c2c.models;
 public class EnvVarValueModel {
     private String value;
     private RefValue valueFrom;
-    
-    public EnvVarValueModel(String value) {
-        this.value = value;
-    }
-    
-    public EnvVarValueModel(RefValue valueFrom) {
-        this.valueFrom = valueFrom;
-    }
-    
+
     public String getValue() {
         return value;
     }
@@ -45,7 +37,7 @@ public class EnvVarValueModel {
     public RefValue getValueFrom() {
         return valueFrom;
     }
-    
+
     public void setValueFrom(RefValue valueFrom) {
         this.value = null;
         this.valueFrom = valueFrom;
@@ -61,15 +53,15 @@ public class EnvVarValueModel {
      */
     public static class FieldRef implements RefValue {
         private String fieldPath;
-        
+
         public String getFieldPath() {
             return fieldPath;
         }
-        
+
         public void setFieldPath(String fieldPath) {
             this.fieldPath = fieldPath;
         }
-        
+
         @Override
         public String toString() {
             return "FieldRef{" + "fieldPath='" + fieldPath + '\'' + '}';
