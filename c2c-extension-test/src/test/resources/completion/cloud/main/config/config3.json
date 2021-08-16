@@ -6,19 +6,32 @@
     "source": "main/source/Cloud.toml",
     "items": [
         {
+            "label": "cloud.config.maps",
+            "kind": "Snippet",
+            "detail": "Table Array",
+            "sortText": "C",
+            "insertText": "[[cloud.config.maps]]"
+        },
+        {
+            "label": "settings",
+            "kind": "Snippet",
+            "detail": "Table",
+            "sortText": "C",
+            "insertText": "[settings]"
+        },
+        {
             "label": "container.copy.files",
             "kind": "Snippet",
             "detail": "Table Array",
             "sortText": "C",
-            "insertText": "[[container.copy.files]]\n",
-            "insertTextFormat": "Snippet"
+            "insertText": "[[container.copy.files]]"
         },
         {
             "label": "external_accessible",
             "kind": "Snippet",
             "detail": "Boolean",
             "sortText": "A",
-            "insertText": "external_accessible\u003d${1:}\n",
+            "insertText": "external_accessible=${1:false}",
             "insertTextFormat": "Snippet"
         },
         {
@@ -26,7 +39,7 @@
             "kind": "Snippet",
             "detail": "String",
             "sortText": "A",
-            "insertText": "min_memory\u003d\"${1:}\"\n",
+            "insertText": "min_memory=\"${1:}\"",
             "insertTextFormat": "Snippet"
         },
         {
@@ -34,23 +47,21 @@
             "kind": "Snippet",
             "detail": "Table",
             "sortText": "C",
-            "insertText": "[cloud.deployment.probes.readiness]\n",
-            "insertTextFormat": "Snippet"
+            "insertText": "[cloud.deployment.probes.readiness]"
         },
         {
             "label": "cloud.config.files",
             "kind": "Snippet",
             "detail": "Table Array",
             "sortText": "C",
-            "insertText": "[[cloud.config.files]]\n",
-            "insertTextFormat": "Snippet"
+            "insertText": "[[cloud.config.files]]"
         },
         {
             "label": "internal_domain_name",
             "kind": "Snippet",
             "detail": "String",
             "sortText": "A",
-            "insertText": "internal_domain_name\u003d\"${1:}\"\n",
+            "insertText": "internal_domain_name=\"${1:}\"",
             "insertTextFormat": "Snippet"
         },
         {
@@ -58,15 +69,14 @@
             "kind": "Snippet",
             "detail": "Table Array",
             "sortText": "C",
-            "insertText": "[[cloud.config.secrets]]\n",
-            "insertTextFormat": "Snippet"
+            "insertText": "[[cloud.config.secrets]]"
         },
         {
             "label": "max_memory",
             "kind": "Snippet",
             "detail": "String",
             "sortText": "A",
-            "insertText": "max_memory\u003d\"${1:}\"\n",
+            "insertText": "max_memory=\"${1:}\"",
             "insertTextFormat": "Snippet"
         },
         {
@@ -74,15 +84,14 @@
             "kind": "Snippet",
             "detail": "Table Array",
             "sortText": "C",
-            "insertText": "[[cloud.deployment.storage.volumes]]\n",
-            "insertTextFormat": "Snippet"
+            "insertText": "[[cloud.deployment.storage.volumes]]"
         },
         {
             "label": "cloud.deployment.probes",
             "kind": "Snippet",
             "detail": "Table",
             "sortText": "B",
-            "insertText": "[cloud.deployment.probes]\n",
+            "insertText": "[cloud.deployment.probes]",
             "insertTextFormat": "Snippet"
         },
         {
@@ -90,7 +99,7 @@
             "kind": "Snippet",
             "detail": "Table",
             "sortText": "B",
-            "insertText": "[cloud.deployment.autoscaling]\n",
+            "insertText": "[cloud.deployment.autoscaling]",
             "insertTextFormat": "Snippet"
         },
         {
@@ -98,7 +107,7 @@
             "kind": "Snippet",
             "detail": "Table",
             "sortText": "B",
-            "insertText": "[cloud.deployment.storage]\n",
+            "insertText": "[cloud.deployment.storage]",
             "insertTextFormat": "Snippet"
         },
         {
@@ -106,24 +115,7 @@
             "kind": "Snippet",
             "detail": "Table Array",
             "sortText": "C",
-            "insertText": "[[cloud.config.envs]]\n",
-            "insertTextFormat": "Snippet"
-        },
-        {
-            "label": "settings",
-            "kind": "Snippet",
-            "detail": "Table",
-            "sortText": "C",
-            "insertText": "[settings]\n",
-            "insertTextFormat": "Snippet"
-        },
-        {
-            "label": "cloud.config.maps",
-            "kind": "Snippet",
-            "detail": "Table Array",
-            "sortText": "C",
-            "insertText": "[[cloud.config.maps]]\n",
-            "insertTextFormat": "Snippet"
+            "insertText": "[[cloud.config.envs]]"
         }
     ]
 }
