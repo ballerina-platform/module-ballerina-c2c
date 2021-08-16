@@ -23,7 +23,7 @@ import io.ballerina.projects.Module;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
 import io.ballerina.tools.diagnostics.Diagnostic;
-import lombok.Data;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,7 +37,7 @@ import java.util.Optional;
  *
  * @since 2.0.0
  */
-@Data
+@Getter
 public class ProjectServiceInfo {
 
     private final List<ServiceInfo> serviceList;

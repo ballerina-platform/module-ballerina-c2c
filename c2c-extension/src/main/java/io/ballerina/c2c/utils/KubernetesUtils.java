@@ -43,11 +43,6 @@ import org.ballerinalang.model.elements.PackageID;
 import org.ballerinax.docker.generator.exceptions.DockerGenException;
 import org.ballerinax.docker.generator.models.CopyFileModel;
 import org.ballerinax.docker.generator.models.DockerModel;
-import org.wso2.ballerinalang.compiler.semantics.model.symbols.BConstantSymbol;
-import org.wso2.ballerinalang.compiler.semantics.model.types.BFiniteType;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangExpression;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangLiteral;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangSimpleVarRef;
 import org.wso2.ballerinalang.compiler.util.Name;
 
 import java.io.File;
@@ -204,43 +199,6 @@ public class KubernetesUtils {
     }
 
     /**
-     * Get the integer value from a ballerina expression.
-     *
-     * @param expr Ballerina integer value.
-     * @return Parsed integer value.
-     * @throws KubernetesPluginException When the expression cannot be parsed.
-     */
-    public static int getIntValue(BLangExpression expr) throws KubernetesPluginException {
-        return Integer.parseInt(getStringValue(expr));
-    }
-
-    /**
-     * Get the string value from a ballerina expression.
-     *
-     * @param expr Ballerina string value.
-     * @return Parsed string value.
-     * @throws KubernetesPluginException When the expression cannot be parsed.
-     */
-    public static String getStringValue(BLangExpression expr) throws KubernetesPluginException {
-        if (expr instanceof BLangSimpleVarRef) {
-            BLangSimpleVarRef varRef = (BLangSimpleVarRef) expr;
-            if (varRef.symbol instanceof BConstantSymbol) {
-                BConstantSymbol constantSymbol = (BConstantSymbol) varRef.symbol;
-                if (constantSymbol.type instanceof BFiniteType) {
-                    // Parse compile time constant
-                    BFiniteType compileConst = (BFiniteType) constantSymbol.type;
-                    if (compileConst.getValueSpace().size() > 0) {
-                        return compileConst.getValueSpace().iterator().next().toString();
-                    }
-                }
-            }
-        } else if (expr instanceof BLangLiteral) {
-            return expr.toString();
-        }
-        throw new KubernetesPluginException("unable to parse value: " + expr.toString());
-    }
-
-    /**
      * Returns valid kubernetes name.
      *
      * @param name actual value
@@ -271,7 +229,9 @@ public class KubernetesUtils {
         if (envMap == null) {
             return envVars;
         }
-        envMap.forEach((k, v) -> {
+        for (Map.Entry<String, EnvVarValueModel> entry : envMap.entrySet()) {
+            String k = entry.getKey();
+            EnvVarValueModel v = entry.getValue();
             EnvVar envVar = null;
             if (v.getValue() != null) {
                 envVar = new EnvVarBuilder().withName(k).withValue(v.getValue()).build();
@@ -316,7 +276,7 @@ public class KubernetesUtils {
             if (envVar != null) {
                 envVars.add(envVar);
             }
-        });
+        }
         return envVars;
     }
 

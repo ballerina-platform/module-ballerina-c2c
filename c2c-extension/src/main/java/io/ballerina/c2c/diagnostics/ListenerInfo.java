@@ -17,7 +17,8 @@
  */
 package io.ballerina.c2c.diagnostics;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Optional;
 
@@ -26,7 +27,8 @@ import java.util.Optional;
  *
  * @since 2.0.0
  */
-@Data
+@Getter
+@Setter
 public class ListenerInfo {
     private String name;
     private int port;
