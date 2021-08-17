@@ -42,7 +42,7 @@ public class CloudTomlSnippetManager extends AbstractTomlSnippetManager {
     /**
      * Returns a single instance of concrete Snippet Manager.
      *
-     * @return {@link AbstractTomlSnippetManager}
+     * @return {@link CloudTomlSnippetManager}
      */
     public static CloudTomlSnippetManager getInstance(LanguageServerContext context) {
         CloudTomlSnippetManager snippetManager = context.get(CLOUD_TOML_SNIPPET_MANAGER_KEY);
