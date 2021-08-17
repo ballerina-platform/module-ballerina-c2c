@@ -40,11 +40,6 @@
             <class name="io.ballerina.c2c.test.samples.DockerSingleTest"/>
             <class name="io.ballerina.c2c.test.SettingsTest"/>
             <class name="io.ballerina.c2c.test.MultipleConfigTest"/>
-        </classes>
-    </test>
-
-    <test name="ballerina-kubernetes-tests" parallel="false">
-        <classes>
             <class name="io.ballerina.c2c.test.ServiceExtractionTest"/>
             <class name="io.ballerina.c2c.test.JobTest"/>
             <class name="io.ballerina.c2c.test.EnvTest"/>
@@ -59,9 +54,6 @@
             <class name="io.ballerina.c2c.test.command.CreateCloudTomlCommandTest"/>
             <class name="io.ballerina.c2c.test.docker.CmdTest"/>
             <class name="io.ballerina.c2c.test.ServiceTest"/>
-            <class name="io.ballerina.c2c.test.SettingsTest"/>
-            <class name="io.ballerina.c2c.test.MultipleConfigTest"/>
         </classes>
     </test>
-
 </suite>

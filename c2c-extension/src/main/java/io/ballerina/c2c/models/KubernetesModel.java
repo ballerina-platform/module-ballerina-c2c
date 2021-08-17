@@ -17,14 +17,17 @@
  */
 package io.ballerina.c2c.models;
 
+import lombok.EqualsAndHashCode;
+
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Kubernetes Model class.
  */
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class KubernetesModel {
     private String version;
+    @EqualsAndHashCode.Include
     protected String name;
     protected Map<String, String> labels;
     protected Map<String, String> annotations;
@@ -59,22 +62,5 @@ public abstract class KubernetesModel {
     
     public void setAnnotations(Map<String, String> annotations) {
         this.annotations = annotations;
-    }
-    
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof KubernetesModel)) {
-            return false;
-        }
-        KubernetesModel that = (KubernetesModel) o;
-        return getName().equals(that.getName());
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(getName());
     }
 }

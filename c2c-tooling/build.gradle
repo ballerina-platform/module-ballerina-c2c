@@ -20,6 +20,8 @@ apply from: "$rootDir/gradle/javaProject.gradle"
 description = 'Ballerina - C2C Tooling Module'
 
 dependencies {
+    implementation project(":c2c-extension")
+    
     implementation "org.ballerinalang:language-server-commons:${ballerinaLangVersion}"
     implementation "org.ballerinalang:ballerina-tools-api:${ballerinaLangVersion}"
     implementation "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
