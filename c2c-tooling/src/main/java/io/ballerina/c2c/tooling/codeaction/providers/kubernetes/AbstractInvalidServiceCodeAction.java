@@ -17,9 +17,9 @@
  */
 package io.ballerina.c2c.tooling.codeaction.providers.kubernetes;
 
-import io.ballerina.c2c.tooling.codeaction.toml.ProjectServiceInfo;
+import io.ballerina.c2c.diagnostics.ProjectServiceInfo;
+import io.ballerina.c2c.diagnostics.ServiceInfo;
 import io.ballerina.c2c.tooling.codeaction.toml.ProjectServiceInfoHolder;
-import io.ballerina.c2c.tooling.codeaction.toml.ServiceInfo;
 import io.ballerina.c2c.tooling.toml.Probe;
 import io.ballerina.c2c.tooling.toml.TomlSyntaxTreeUtil;
 import io.ballerina.projects.Project;
@@ -38,7 +38,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -52,39 +51,37 @@ public abstract class AbstractInvalidServiceCodeAction extends ProbeBasedDiagnos
         Optional<Project> project = ctx.workspace().project(ctx.filePath());
         ProjectServiceInfo projectServiceInfo =
                 ProjectServiceInfoHolder.getInstance(ctx.languageServercontext()).getProjectInfo(project.orElseThrow());
-        Map<String, List<ServiceInfo>> serviceList = projectServiceInfo.getServiceMap();
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
         List<CodeAction> codeActionList = new ArrayList<>();
-        for (List<ServiceInfo> serviceInfos : serviceList.values()) {
-            // TODO: Listener Exists No attatched service -> Generate a service using the listener
-            for (ServiceInfo service : serviceInfos) {
-                int port = service.getListener().getPort();
-                if (probe.getPort().getValue() == port) {
-                    String servicePath = "/" + TomlSyntaxTreeUtil.trimResourcePath(service.getServiceName());
-                    io.ballerina.toml.syntax.tree.Node node = probe.getPath().getNode();
-                    Position startingPos = new Position(node.lineRange().startLine().line(),
-                            node.lineRange().startLine().offset());
-                    Position endingPos = new Position(node.lineRange().endLine().line(),
-                            node.lineRange().endLine().offset());
+        // TODO: Listener Exists No attatched service -> Generate a service using the listener
+        for (ServiceInfo service : serviceList) {
+            int port = service.getListener().getPort();
+            if (probe.getPort().getValue() == port) {
+                String servicePath = "/" + TomlSyntaxTreeUtil.trimResourcePath(service.getServicePath());
+                io.ballerina.toml.syntax.tree.Node node = probe.getPath().getNode();
+                Position startingPos = new Position(node.lineRange().startLine().line(),
+                        node.lineRange().startLine().offset());
+                Position endingPos = new Position(node.lineRange().endLine().line(),
+                        node.lineRange().endLine().offset());
 
-                    CodeAction action = new CodeAction();
-                    action.setKind(CodeActionKind.QuickFix);
+                CodeAction action = new CodeAction();
+                action.setKind(CodeActionKind.QuickFix);
 
-                    TextEdit removeContent = new TextEdit(new Range(startingPos, endingPos), "");
-                    TextEdit addContent = new TextEdit(new Range(startingPos, startingPos), servicePath);
-                    List<TextEdit> edits = new ArrayList<>();
-                    edits.add(removeContent);
-                    edits.add(addContent);
+                TextEdit removeContent = new TextEdit(new Range(startingPos, endingPos), "");
+                TextEdit addContent = new TextEdit(new Range(startingPos, startingPos), servicePath);
+                List<TextEdit> edits = new ArrayList<>();
+                edits.add(removeContent);
+                edits.add(addContent);
 
-                    action.setEdit(new WorkspaceEdit(Collections.singletonList(Either.forLeft(
-                            new TextDocumentEdit(new VersionedTextDocumentIdentifier(ctx.fileUri(), null),
-                                    edits)))));
-                    action.setTitle("Modify service path");
-                    List<Diagnostic> cursorDiagnostics = new ArrayList<>();
-                    cursorDiagnostics.add(diagnostic);
-                    action.setDiagnostics(cursorDiagnostics);
-                    codeActionList.add(action);
-                    break;
-                }
+                action.setEdit(new WorkspaceEdit(Collections.singletonList(Either.forLeft(
+                        new TextDocumentEdit(new VersionedTextDocumentIdentifier(ctx.fileUri(), null),
+                                edits)))));
+                action.setTitle("Modify service path");
+                List<Diagnostic> cursorDiagnostics = new ArrayList<>();
+                cursorDiagnostics.add(diagnostic);
+                action.setDiagnostics(cursorDiagnostics);
+                codeActionList.add(action);
+                break;
             }
         }
 
