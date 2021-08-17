@@ -6,11 +6,53 @@
     "source": "main/source/Cloud.toml",
     "items": [
         {
+            "label": "cloud.config.maps",
+            "kind": "Snippet",
+            "detail": "Table Array",
+            "sortText": "C",
+            "insertText": "[[cloud.config.maps]]"
+        },
+        {
+            "label": "settings",
+            "kind": "Snippet",
+            "detail": "Table",
+            "sortText": "C",
+            "insertText": "[settings]"
+        },
+        {
             "label": "container.copy.files",
             "kind": "Snippet",
             "detail": "Table Array",
             "sortText": "C",
-            "insertText": "[[container.copy.files]]\n",
+            "insertText": "[[container.copy.files]]"
+        },
+        {
+            "label": "cloud.deployment.probes.readiness",
+            "kind": "Snippet",
+            "detail": "Table",
+            "sortText": "C",
+            "insertText": "[cloud.deployment.probes.readiness]"
+        },
+        {
+            "label": "cloud.config.files",
+            "kind": "Snippet",
+            "detail": "Table Array",
+            "sortText": "C",
+            "insertText": "[[cloud.config.files]]"
+        },
+        {
+            "label": "cloud.config.secrets",
+            "kind": "Snippet",
+            "detail": "Table Array",
+            "sortText": "C",
+            "insertText": "[[cloud.config.secrets]]"
+        },
+        {
+            "label": "repository",
+            "kind": "Snippet",
+            "detail": "String",
+            "sortText": "A",
+            "insertText": "repository=\"${1:}\"",
             "insertTextFormat": "Snippet"
         },
         {
@@ -18,47 +60,14 @@
             "kind": "Snippet",
             "detail": "Table Array",
             "sortText": "C",
-            "insertText": "[[cloud.deployment.storage.volumes]]\n",
-            "insertTextFormat": "Snippet"
+            "insertText": "[[cloud.deployment.storage.volumes]]"
         },
         {
             "label": "cmd",
             "kind": "Snippet",
             "detail": "String",
             "sortText": "A",
-            "insertText": "cmd=\"${1:}\"\n",
-            "insertTextFormat": "Snippet"
-        },
-        {
-            "label": "cloud.deployment.probes.readiness",
-            "kind": "Snippet",
-            "detail": "Table",
-            "sortText": "C",
-            "insertText": "[cloud.deployment.probes.readiness]\n",
-            "insertTextFormat": "Snippet"
-        },
-        {
-            "label": "cloud.config.files",
-            "kind": "Snippet",
-            "detail": "Table Array",
-            "sortText": "C",
-            "insertText": "[[cloud.config.files]]\n",
-            "insertTextFormat": "Snippet"
-        },
-        {
-            "label": "cloud.config.maps",
-            "kind": "Snippet",
-            "detail": "Table Array",
-            "sortText": "C",
-            "insertText": "[[cloud.config.maps]]\n",
-            "insertTextFormat": "Snippet"
-        },
-        {
-            "label": "cloud.config.secrets",
-            "kind": "Snippet",
-            "detail": "Table Array",
-            "sortText": "C",
-            "insertText": "[[cloud.config.secrets]]\n",
+            "insertText": "cmd=\"${1:}\"",
             "insertTextFormat": "Snippet"
         },
         {
@@ -66,32 +75,14 @@
             "kind": "Snippet",
             "detail": "Table",
             "sortText": "C",
-            "insertText": "[cloud.deployment.autoscaling]\n",
-            "insertTextFormat": "Snippet"
-        },
-        {
-            "label": "repository",
-            "kind": "Snippet",
-            "detail": "String",
-            "sortText": "A",
-            "insertText": "repository\u003d\"${1:}\"\n",
-            "insertTextFormat": "Snippet"
+            "insertText": "[cloud.deployment.autoscaling]"
         },
         {
             "label": "cloud.config.envs",
             "kind": "Snippet",
             "detail": "Table Array",
             "sortText": "C",
-            "insertText": "[[cloud.config.envs]]\n",
-            "insertTextFormat": "Snippet"
-        },
-        {
-            "label": "settings",
-            "kind": "Snippet",
-            "detail": "Table",
-            "sortText": "C",
-            "insertText": "[settings]\n",
-            "insertTextFormat": "Snippet"
+            "insertText": "[[cloud.config.envs]]"
         }
     ]
 }

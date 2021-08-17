@@ -52,7 +52,7 @@ public class CloudCompletionExtension implements CompletionExtension {
     @Override
     public List<CompletionItem> execute(CompletionParams inputParams, CompletionContext context,
                                         LanguageServerContext serverContext) throws Throwable {
-        CloudCompletionContextImpl cloudContext = new CloudCompletionContextImpl(context, serverContext);
-        return CloudCompletionRouter.getCompletionItems(cloudContext, serverContext);
+        CloudTomlCompletionContext cloudContext = new CloudTomlCompletionContext(context, serverContext);
+        return CloudTomlCompletionUtil.getCompletionItems(cloudContext, serverContext);
     }
 }
