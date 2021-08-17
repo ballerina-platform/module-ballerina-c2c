@@ -155,9 +155,6 @@ public class JobHandler extends AbstractArtifactHandler {
         dockerModel.setRegistry(jobModel.getRegistry());
         dockerModel.setName(dockerImage);
         dockerModel.setTag(imageTag);
-        dockerModel.setUsername(jobModel.getUsername());
-        dockerModel.setPassword(jobModel.getPassword());
-        dockerModel.setPush(jobModel.isPush());
         dockerModel.setCmd(jobModel.getCmd());
         dockerModel.setJarFileName(extractJarName(this.dataHolder.getJarPath()) + KubernetesConstants.EXECUTABLE_JAR);
         dockerModel.setService(false);
@@ -166,7 +163,6 @@ public class JobHandler extends AbstractArtifactHandler {
         dockerModel.setBuildImage(jobModel.isBuildImage());
         dockerModel.setPkgId(dataHolder.getPackageID());
         dockerModel.setCopyFiles(jobModel.getCopyFiles());
-        dockerModel.setUberJar(jobModel.isUberJar());
         dockerModel.setDockerConfig(jobModel.getDockerConfigPath());
         dockerModel.setPkgId(this.dataHolder.getPackageID());
         return dockerModel;
