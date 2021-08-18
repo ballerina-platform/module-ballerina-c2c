@@ -71,9 +71,16 @@ public abstract class AbstractInvalidPortCodeAction extends ProbeBasedDiagnostic
                     ctx.workspace().syntaxTree(balFilePath).orElseThrow();
             ModulePartNode modulePartNode = syntaxTree.rootNode();
             NodeList<ModuleMemberDeclarationNode> members = modulePartNode.members();
-            ModuleMemberDeclarationNode lastTopLevelNode = members.get(members.size() - 1);
-            Position position = new Position(lastTopLevelNode.lineRange().endLine().line() + 1, 0);
-            String content = getProbeServiceString(tomlPort, servicePath, resourcePath);
+            String content;
+            Position position;
+            if (modulePartNode.members().isEmpty()) {
+                content = getProbeServiceWithImportString(tomlPort, servicePath, resourcePath);
+                position = new Position();
+            } else {
+                ModuleMemberDeclarationNode lastTopLevelNode = members.get(members.size() - 1);
+                position = new Position(lastTopLevelNode.lineRange().endLine().line() + 1, 0);
+                content = getProbeServiceString(tomlPort, servicePath, resourcePath);
+            }
             List<TextEdit> edits = Collections.singletonList(
                     new TextEdit(new Range(position, position), content));
 
