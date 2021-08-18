@@ -435,7 +435,7 @@
                       "pattern": "`name` should not be empty"
                     }
                   },
-                  "secret": {
+                  "secret_name": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "default": "mysecret",

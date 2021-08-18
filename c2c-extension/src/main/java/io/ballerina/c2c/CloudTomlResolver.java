@@ -155,7 +155,7 @@ public class CloudTomlResolver {
                     .withNewValueFrom()
                     .withNewSecretKeyRef()
                     .withKey(TomlHelper.getString(secret, KubernetesConstants.KEY_REF))
-                    .withName(TomlHelper.getString(secret, "secret"))
+                    .withName(TomlHelper.getString(secret, "secret_name"))
                     .endSecretKeyRef()
                     .endValueFrom()
                     .build();

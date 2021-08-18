@@ -11,9 +11,6 @@ listener http:Listener helloWorldEP = new(9090, {
     }
 });
 
-configurable string users = ?;
-configurable string groups = ?;
-
 service /helloWorld on helloWorldEP {
 
     resource function get data(http:Caller caller, http:Request request) {
