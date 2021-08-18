@@ -1,22 +1,22 @@
 {
     "line": 6,
-    "character": 13,
+    "character": 9,
     "expected": [
         {
-            "title": "Add as env to Cloud.toml",
+            "title": "Add to Probe file",
             "edits": [
                 {
                     "range": {
                         "start": {
-                            "line": 9,
+                            "line": 0,
                             "character": 0
                         },
                         "end": {
-                            "line": 9,
+                            "line": 0,
                             "character": 0
                         }
                     },
-                    "newText": "\n[[cloud.config.envs]]\nkey_ref\u003d\"name\"\nconfig_name\u003d\"name\"\n"
+                    "newText": "import ballerina/http;\n\nservice http:Service /helloWorld on new http:Listener(9091) {\n    resource function get readyz() returns boolean {\n        return true;\n    }\n}\n"
                 }
             ]
         }

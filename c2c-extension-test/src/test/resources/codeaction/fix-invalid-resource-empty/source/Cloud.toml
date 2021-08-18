@@ -1,0 +1,8 @@
+[container.image]
+name = "hello"
+repository = "local"
+tag = "v1.0.0"
+
+[cloud.deployment.probes.readiness]
+port = 9090
+path = "/helloWorld/readyz"

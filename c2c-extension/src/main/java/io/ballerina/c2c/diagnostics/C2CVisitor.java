@@ -372,30 +372,11 @@ public class C2CVisitor extends NodeVisitor {
             FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(0);
             if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
                 ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
-                if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-                    //on new graphql:Listener(httpListener)
-                    SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expression;
-                    String variableName = referenceNode.name().text();
-                    Optional<Integer> port = getPortNumberFromVariable(variableName);
-                    if (port.isEmpty()) {
-                        Optional<ListenerInfo> httpsListener = this.getHttpsListener(variableName);
-                        if (httpsListener.isEmpty()) {
-                            diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_002, expression.location()));
-                            return;
-                        }
-                        listenerInfo = httpsListener.get();
-                    } else {
-                        int portNumber = port.get();
-                        if (portNumber == 0) {
-                            return;
-                        }
-                        listenerInfo = new ListenerInfo(servicePath, portNumber);
-                    }
-                } else {
-                    //on new http:Listener(9091)
-                    int port = Integer.parseInt(((BasicLiteralNode) expression).literalToken().text());
-                    listenerInfo = new ListenerInfo(servicePath, port);
+                Optional<ListenerInfo> newListenerInfo = getListenerInfo(servicePath, expression);
+                if (newListenerInfo.isEmpty()) {
+                    return;
                 }
+                listenerInfo = newListenerInfo.get();
             }
 
             //Inline Http config
@@ -436,33 +417,37 @@ public class C2CVisitor extends NodeVisitor {
             FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(paramNo);
             if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
                 ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
-                if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-                    //on new http:Listener(port)
-                    SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expression;
-                    String variableName = referenceNode.name().text();
-                    Optional<Integer> port = getPortNumberFromVariable(variableName);
-                    if (port.isEmpty()) {
-                        Optional<ListenerInfo> httpsListener = this.getHttpsListener(variableName);
-                        if (httpsListener.isEmpty()) {
-                            diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_002, expression.location()));
-                            return Optional.empty();
-                        }
-                        return httpsListener;
-                    } else {
-                        int portNumber = port.get();
-                        if (portNumber == 0) {
-                            return Optional.empty();
-                        }
-                        return Optional.of(new ListenerInfo(path, portNumber));
-                    }
-                } else {
-                    //on new http:Listener(9091)
-                    int port = Integer.parseInt(((BasicLiteralNode) expression).literalToken().text());
-                    return Optional.of(new ListenerInfo(path, port));
-                }
+                return getListenerInfo(path, expression);
             }
         }
         return Optional.empty();
+    }
+
+    private Optional<ListenerInfo> getListenerInfo(String path, ExpressionNode expression) {
+        if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+            //on new http:Listener(port)
+            SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expression;
+            String variableName = referenceNode.name().text();
+            Optional<Integer> port = getPortNumberFromVariable(variableName);
+            if (port.isEmpty()) {
+                Optional<ListenerInfo> httpsListener = this.getHttpsListener(variableName);
+                if (httpsListener.isEmpty()) {
+                    diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_002, expression.location()));
+                    return Optional.empty();
+                }
+                return httpsListener;
+            } else {
+                int portNumber = port.get();
+                if (portNumber == 0) {
+                    return Optional.empty();
+                }
+                return Optional.of(new ListenerInfo(path, portNumber));
+            }
+        } else {
+            //on new http:Listener(9091)
+            int port = Integer.parseInt(((BasicLiteralNode) expression).literalToken().text());
+            return Optional.of(new ListenerInfo(path, port));
+        }
     }
 
     private void processExposedAnnotations(TypeSymbol typeSymbol, String servicePath,

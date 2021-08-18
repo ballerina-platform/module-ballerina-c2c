@@ -50,6 +50,24 @@ public class ServiceExtractionTest {
     }
 
     @Test
+    public void testExposeOnListenerDeclaration() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "expose-on-listener");
+
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+
+        Assert.assertEquals(serviceList.size(), 2);
+        ServiceInfo serviceInfo = serviceList.get(0);
+        ListenerInfo listener = serviceInfo.getListener();
+        Assert.assertEquals(listener.getPort(), 8080);
+
+        ServiceInfo serviceInfo1 = serviceList.get(1);
+        ListenerInfo listener1 = serviceInfo1.getListener();
+        Assert.assertEquals(listener1.getPort(), 9090);
+    }
+
+    @Test
     public void testSimpleHttpWithServiceDecl() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "simple-http-with-service-decl");
 
