@@ -1,0 +1,10 @@
+[container.image]
+repository="anuruddhal"
+name="hello-api"
+tag="sample5"
+
+[[cloud.secret.files]]
+    file="./conf/data.txt"
+    mount_path="/home/ballerina/data"
+#[[cloud.secret.envs]]
+#    file="./conf/Config.toml"

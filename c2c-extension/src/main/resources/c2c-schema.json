@@ -383,6 +383,70 @@
               }
             }
           }
+        },
+        "secret": {
+          "type": "object",
+          "additionalItems": false,
+          "properties": {
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+",
+                    "default": "resource/file.text",
+                    "message": {
+                      "pattern": "`file` should not be empty"
+                    }
+                  },
+                  "mount_path": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+",
+                    "default": "/home/ballerina/foo/file.conf",
+                    "message": {
+                      "pattern": "`mount_path` should not be empty"
+                    }
+                  }
+                }
+              }
+            },
+            "envs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "key_ref": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+",
+                    "default": "MY_SECRET",
+                    "message": {
+                      "pattern": "`key_ref` should not be empty"
+                    }
+                  },
+                  "name": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+",
+                    "default": "mykey",
+                    "message": {
+                      "pattern": "`name` should not be empty"
+                    }
+                  },
+                  "secret": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+",
+                    "default": "mysecret",
+                    "message": {
+                      "pattern": "`secret` should not be empty"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
