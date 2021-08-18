@@ -74,11 +74,15 @@ public class EnvTest {
 
         Container container = deployment.getSpec().getTemplate().getSpec().getContainers().get(0);
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE);
-        Assert.assertEquals(container.getEnv().size(), 1);
-        final EnvVar envVar = container.getEnv().get(0);
-        Assert.assertEquals(envVar.getName(), "b7a_log_level");
-        Assert.assertEquals(envVar.getValueFrom().getConfigMapKeyRef().getName(), "cm-loglevel-linker");
-        Assert.assertEquals(envVar.getValueFrom().getConfigMapKeyRef().getKey(), "B7A_LOG_LEVEL");
+        Assert.assertEquals(container.getEnv().size(), 2);
+        final EnvVar configEnvVar = container.getEnv().get(0);
+        Assert.assertEquals(configEnvVar.getName(), "b7a_log_level");
+        Assert.assertEquals(configEnvVar.getValueFrom().getConfigMapKeyRef().getName(), "cm-loglevel-linker");
+        Assert.assertEquals(configEnvVar.getValueFrom().getConfigMapKeyRef().getKey(), "B7A_LOG_LEVEL");
+        final EnvVar secreteEnvVar = container.getEnv().get(1);
+        Assert.assertEquals(secreteEnvVar.getName(), "b7a-password");
+        Assert.assertEquals(secreteEnvVar.getValueFrom().getSecretKeyRef().getName(), "b7a-password");
+        Assert.assertEquals(secreteEnvVar.getValueFrom().getSecretKeyRef().getKey(), "B7A_PASSWORD");
     }
 
     @AfterClass

@@ -148,14 +148,14 @@ public class CloudTomlResolver {
             deploymentModel.addEnv(envVar);
         }
 
-        List<Toml> secrets = ballerinaCloud.getTables("cloud.secrets.envs");
+        List<Toml> secrets = ballerinaCloud.getTables("cloud.secret.envs");
         for (Toml secret : secrets) {
             EnvVar envVar = new EnvVarBuilder()
                     .withName(TomlHelper.getString(secret, "name"))
                     .withNewValueFrom()
                     .withNewSecretKeyRef()
                     .withKey(TomlHelper.getString(secret, KubernetesConstants.KEY_REF))
-                    .withName(TomlHelper.getString(secret, "secret"))
+                    .withName(TomlHelper.getString(secret, "secret_name"))
                     .endSecretKeyRef()
                     .endValueFrom()
                     .build();

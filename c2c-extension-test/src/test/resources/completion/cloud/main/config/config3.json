@@ -116,6 +116,20 @@
             "detail": "Table Array",
             "sortText": "C",
             "insertText": "[[cloud.config.envs]]"
+        },
+        {
+            "label": "cloud.secret.envs",
+            "kind": "Snippet",
+            "detail": "Table Array",
+            "sortText": "C",
+            "insertText": "[[cloud.secret.envs]]"
+        },
+        {
+            "label": "cloud.secret.files",
+            "kind": "Snippet",
+            "detail": "Table Array",
+            "sortText": "C",
+            "insertText": "[[cloud.secret.files]]"
         }
     ]
 }
