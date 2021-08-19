@@ -6,3 +6,6 @@ tag="sample12"
 [[cloud.secret.files]]
     file="./conf/data.txt"
     mount_path="/home/ballerina/data"
+
+[[cloud.secret.files]]
+file="./conf/Config.toml"

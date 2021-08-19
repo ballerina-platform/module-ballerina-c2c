@@ -5,7 +5,7 @@ import ballerina/log;
 listener http:Listener helloWorldEP = new(9090, {
     secureSocket: {
         key: {
-            certFile: "./resource/public.crt",
+            certFile: "./resource1/public.crt",
             keyFile: "./resource/private.key"
         }
     }
