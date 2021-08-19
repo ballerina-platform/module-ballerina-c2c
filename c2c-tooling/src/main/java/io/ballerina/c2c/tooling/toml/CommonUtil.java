@@ -73,7 +73,7 @@ public class CommonUtil {
      */
     public static List<org.eclipse.lsp4j.Diagnostic> toDiagnostics(List<Diagnostic> ballerinaDiags) {
         List<org.eclipse.lsp4j.Diagnostic> lsDiagnostics = new ArrayList<>();
-        ballerinaDiags.forEach(diagnostic -> {
+        for (Diagnostic diagnostic : ballerinaDiags) {
             org.eclipse.lsp4j.Diagnostic lsDiagnostic = new org.eclipse.lsp4j.Diagnostic();
             lsDiagnostic.setSeverity(DiagnosticSeverity.Error);
             lsDiagnostic.setMessage(diagnostic.message());
@@ -99,7 +99,7 @@ public class CommonUtil {
             lsDiagnostic.setRange(range);
 
             lsDiagnostics.add(lsDiagnostic);
-        });
+        }
 
         return lsDiagnostics;
     }

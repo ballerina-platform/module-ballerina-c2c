@@ -9,7 +9,7 @@ listener http:Listener helloWorldEP = new(9090, {
         mutualSsl: {
             verifyClient: http:REQUIRE,
             cert: {
-                path: "./resource/ballerinaKeystore.p12",
+                path: "./resource1/ballerinaKeystore.p12",
                 password: "ballerina"
             }
         }
