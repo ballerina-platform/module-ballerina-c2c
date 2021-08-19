@@ -15,14 +15,8 @@
  */
 package io.ballerina.c2c.tooling.toml;
 
-import io.ballerina.tools.diagnostics.Diagnostic;
-import io.ballerina.tools.diagnostics.Location;
-import io.ballerina.tools.text.LineRange;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
-import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentEdit;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
@@ -56,52 +50,12 @@ public class CommonUtil {
      * @return {@link CodeAction}
      */
     public static CodeAction createQuickFixCodeAction(String commandTitle, List<TextEdit> edits, String uri) {
-        List<Diagnostic> diagnostics = new ArrayList<>();
         CodeAction action = new CodeAction(commandTitle);
         action.setKind(CodeActionKind.QuickFix);
         action.setEdit(new WorkspaceEdit(Collections.singletonList(Either.forLeft(
                 new TextDocumentEdit(new VersionedTextDocumentIdentifier(uri, null), edits)))));
-        action.setDiagnostics(CommonUtil.toDiagnostics(diagnostics));
+        action.setDiagnostics(new ArrayList<>());
         return action;
-    }
-
-    /**
-     * Translates ballerina diagnostics into lsp4j diagnostics.
-     *
-     * @param ballerinaDiags a list of {@link Diagnostic}
-     * @return a list of {@link Diagnostic}
-     */
-    public static List<org.eclipse.lsp4j.Diagnostic> toDiagnostics(List<Diagnostic> ballerinaDiags) {
-        List<org.eclipse.lsp4j.Diagnostic> lsDiagnostics = new ArrayList<>();
-        for (Diagnostic diagnostic : ballerinaDiags) {
-            org.eclipse.lsp4j.Diagnostic lsDiagnostic = new org.eclipse.lsp4j.Diagnostic();
-            lsDiagnostic.setSeverity(DiagnosticSeverity.Error);
-            lsDiagnostic.setMessage(diagnostic.message());
-            Range range = new Range();
-
-            Location location = diagnostic.location();
-            LineRange lineRange = location.lineRange();
-            int startLine = lineRange.startLine().line(); // LSP diagnostics range is 0 based
-            int startChar = lineRange.startLine().offset();
-            int endLine = lineRange.endLine().line();
-            int endChar = lineRange.endLine().offset();
-
-            if (endLine <= 0) {
-                endLine = startLine;
-            }
-
-            if (endChar <= 0) {
-                endChar = startChar + 1;
-            }
-
-            range.setStart(new Position(startLine, startChar));
-            range.setEnd(new Position(endLine, endChar));
-            lsDiagnostic.setRange(range);
-
-            lsDiagnostics.add(lsDiagnostic);
-        }
-
-        return lsDiagnostics;
     }
 
     /**
