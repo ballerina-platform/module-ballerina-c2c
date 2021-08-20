@@ -25,7 +25,6 @@ import org.ballerinax.docker.generator.models.CopyFileModel;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,7 +41,6 @@ public class JobModel extends KubernetesModel {
     private int backoffLimit;
     private int activeDeadlineSeconds;
     private String schedule;
-    private Map<String, EnvVarValueModel> env;
     private String image;
     private boolean buildImage;
     private String dockerHost;
@@ -60,14 +58,12 @@ public class JobModel extends KubernetesModel {
 
     public JobModel() {
         this.labels = new HashMap<>();
-        this.env = new LinkedHashMap<>();
         this.copyFiles = new HashSet<>();
         this.restartPolicy = KubernetesConstants.RestartPolicy.OnFailure.name();
         this.setBaseImage(OPENJDK_11_JRE_SLIM_BASE);
         this.setPush(false);
         this.buildImage = true;
         this.nodeSelector = new HashMap<>();
-        this.setEnv(new HashMap<>());
 
         this.activeDeadlineSeconds = 20;
         this.imagePullSecrets = new HashSet<>();

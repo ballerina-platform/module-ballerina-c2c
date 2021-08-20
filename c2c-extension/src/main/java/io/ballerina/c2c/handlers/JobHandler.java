@@ -70,7 +70,6 @@ public class JobHandler extends AbstractArtifactHandler {
         return new ContainerBuilder()
                 .withName(jobModel.getName())
                 .withImage(jobModel.getImage())
-                .withEnv(KubernetesUtils.populateEnvVar(jobModel.getEnv()))
                 .build();
     }
 
