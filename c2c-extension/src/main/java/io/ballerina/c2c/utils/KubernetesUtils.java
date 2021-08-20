@@ -20,25 +20,12 @@ package io.ballerina.c2c.utils;
 
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.DeploymentModel;
-import io.ballerina.c2c.models.EnvVarValueModel;
 import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.projects.Package;
 import io.ballerina.toml.api.Toml;
-import io.fabric8.kubernetes.api.model.ConfigMapKeySelector;
-import io.fabric8.kubernetes.api.model.ConfigMapKeySelectorBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
-import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.EnvVarBuilder;
-import io.fabric8.kubernetes.api.model.EnvVarSource;
-import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
-import io.fabric8.kubernetes.api.model.ObjectFieldSelector;
-import io.fabric8.kubernetes.api.model.ObjectFieldSelectorBuilder;
-import io.fabric8.kubernetes.api.model.ResourceFieldSelector;
-import io.fabric8.kubernetes.api.model.ResourceFieldSelectorBuilder;
-import io.fabric8.kubernetes.api.model.SecretKeySelector;
-import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import org.ballerinalang.model.elements.PackageID;
 import org.ballerinax.docker.generator.exceptions.DockerGenException;
 import org.ballerinax.docker.generator.models.CopyFileModel;
@@ -52,12 +39,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -216,68 +200,6 @@ public class KubernetesUtils {
             return name.substring(0, name.length() - 1);
         }
         return name;
-    }
-
-    /**
-     * Get a list of environment variables.
-     *
-     * @param envMap Map of Environment variables
-     * @return List of env vars
-     */
-    public static List<EnvVar> populateEnvVar(Map<String, EnvVarValueModel> envMap) {
-        List<EnvVar> envVars = new ArrayList<>();
-        if (envMap == null) {
-            return envVars;
-        }
-        for (Map.Entry<String, EnvVarValueModel> entry : envMap.entrySet()) {
-            String k = entry.getKey();
-            EnvVarValueModel v = entry.getValue();
-            EnvVar envVar = null;
-            if (v.getValue() != null) {
-                envVar = new EnvVarBuilder().withName(k).withValue(v.getValue()).build();
-            } else if (v.getValueFrom() instanceof EnvVarValueModel.FieldRef) {
-                EnvVarValueModel.FieldRef fieldRefModel = (EnvVarValueModel.FieldRef) v.getValueFrom();
-
-                ObjectFieldSelector fieldRef =
-                        new ObjectFieldSelectorBuilder().withFieldPath(fieldRefModel.getFieldPath()).build();
-                EnvVarSource envVarSource = new EnvVarSourceBuilder().withFieldRef(fieldRef).build();
-                envVar = new EnvVarBuilder().withName(k).withValueFrom(envVarSource).build();
-            } else if (v.getValueFrom() instanceof EnvVarValueModel.SecretKeyRef) {
-                EnvVarValueModel.SecretKeyRef secretKeyRefModel = (EnvVarValueModel.SecretKeyRef) v.getValueFrom();
-
-                SecretKeySelector secretRef = new SecretKeySelectorBuilder()
-                        .withName(secretKeyRefModel.getName())
-                        .withKey(secretKeyRefModel.getKey())
-                        .build();
-                EnvVarSource envVarSource = new EnvVarSourceBuilder().withSecretKeyRef(secretRef).build();
-                envVar = new EnvVarBuilder().withName(k).withValueFrom(envVarSource).build();
-            } else if (v.getValueFrom() instanceof EnvVarValueModel.ResourceFieldRef) {
-                EnvVarValueModel.ResourceFieldRef resourceFieldRefModel =
-                        (EnvVarValueModel.ResourceFieldRef) v.getValueFrom();
-
-                ResourceFieldSelector resourceFieldRef = new ResourceFieldSelectorBuilder()
-                        .withContainerName(resourceFieldRefModel.getContainerName())
-                        .withResource(resourceFieldRefModel.getResource())
-                        .build();
-                EnvVarSource envVarSource = new EnvVarSourceBuilder().withResourceFieldRef(resourceFieldRef).build();
-                envVar = new EnvVarBuilder().withName(k).withValueFrom(envVarSource).build();
-            } else if (v.getValueFrom() instanceof EnvVarValueModel.ConfigMapKeyValue) {
-                EnvVarValueModel.ConfigMapKeyValue configMapKeyValue =
-                        (EnvVarValueModel.ConfigMapKeyValue) v.getValueFrom();
-
-                ConfigMapKeySelector configMapKey = new ConfigMapKeySelectorBuilder()
-                        .withKey(configMapKeyValue.getKey())
-                        .withName(configMapKeyValue.getName())
-                        .build();
-                EnvVarSource envVarSource = new EnvVarSourceBuilder().withConfigMapKeyRef(configMapKey).build();
-                envVar = new EnvVarBuilder().withName(k).withValueFrom(envVarSource).build();
-            }
-
-            if (envVar != null) {
-                envVars.add(envVar);
-            }
-        }
-        return envVars;
     }
 
     public static PackageID getProjectID(Package currentPackage) {
