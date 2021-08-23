@@ -19,10 +19,13 @@
 package io.ballerina.c2c.handlers;
 
 import io.ballerina.c2c.KubernetesConstants;
+import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
+import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
+import io.ballerina.tools.diagnostics.Diagnostic;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.utils.Serialization;
@@ -34,7 +37,6 @@ import java.util.Collection;
  * Generates kubernetes secret.
  */
 public class SecretHandler extends AbstractArtifactHandler {
-
 
     private void generate(SecretModel secretModel) throws KubernetesPluginException {
         Secret secret = new SecretBuilder()
@@ -52,8 +54,9 @@ public class SecretHandler extends AbstractArtifactHandler {
             }
             KubernetesUtils.writeToFile(secretContent, outputFileName);
         } catch (IOException e) {
-            String errorMessage = "error while generating yaml file for secret: " + secretModel.getName();
-            throw new KubernetesPluginException(errorMessage, e);
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.ARTIFACT_GEN_FAILED,
+                    new NullLocation(), "secret", secretModel.getName());
+            throw new KubernetesPluginException(diagnostic);
         }
     }
 
@@ -69,7 +72,10 @@ public class SecretHandler extends AbstractArtifactHandler {
             count++;
             if (!KubernetesUtils.isBlank(secretModel.getBallerinaConf())) {
                 if (secretModel.getData().size() != 1) {
-                    throw new KubernetesPluginException("there can be only 1 ballerina config file");
+                    Diagnostic diagnostic =
+                            C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.ONLY_ONE_BALLERINA_CONFIG_ALLOWED,
+                                    new NullLocation());
+                    throw new KubernetesPluginException(diagnostic);
                 }
                 DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
 //                deploymentModel.setCommandArgs(" --b7a.config.file=${CONFIG_FILE}");

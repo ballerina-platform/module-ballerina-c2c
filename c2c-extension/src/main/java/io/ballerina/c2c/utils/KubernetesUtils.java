@@ -18,6 +18,8 @@
 
 package io.ballerina.c2c.utils;
 
+import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
+import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.JobModel;
@@ -25,6 +27,10 @@ import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.projects.Package;
 import io.ballerina.toml.api.Toml;
+import io.ballerina.tools.diagnostics.Diagnostic;
+import io.ballerina.tools.diagnostics.DiagnosticFactory;
+import io.ballerina.tools.diagnostics.DiagnosticInfo;
+import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import org.ballerinalang.model.elements.PackageID;
 import org.ballerinax.docker.generator.exceptions.DockerGenException;
@@ -113,16 +119,29 @@ public class KubernetesUtils {
      * @throws KubernetesPluginException If an error occurs when reading file
      */
     public static byte[] readFileContent(Path targetFilePath) throws KubernetesPluginException {
+        return readFileContent(targetFilePath, C2CDiagnosticCodes.PATH_CONTENT_READ_FAILED);
+    }
+
+    /**
+     * Read contents of a File.
+     *
+     * @param targetFilePath target file path
+     * @throws KubernetesPluginException If an error occurs when reading file
+     */
+    public static byte[] readFileContent(Path targetFilePath, C2CDiagnosticCodes code)
+            throws KubernetesPluginException {
         File file = targetFilePath.toFile();
         // append if file exists
         if (file.exists() && !file.isDirectory()) {
             try {
                 return Files.readAllBytes(targetFilePath);
             } catch (IOException e) {
-                throw new KubernetesPluginException("unable to read contents of the file " + targetFilePath);
+                Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(code, new NullLocation(), targetFilePath);
+                throw new KubernetesPluginException(diagnostic);
             }
         }
-        throw new KubernetesPluginException("unable to read contents of the file " + targetFilePath);
+        Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(code, new NullLocation(), targetFilePath);
+        throw new KubernetesPluginException(diagnostic);
     }
 
     /**
@@ -160,7 +179,9 @@ public class KubernetesUtils {
                     .map(Path::toFile)
                     .forEach(File::delete);
         } catch (IOException e) {
-            throw new KubernetesPluginException("unable to delete directory: " + path, e);
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.DIRECTORY_DELETE_FAILED,
+                    new NullLocation(), path.toString());
+            throw new KubernetesPluginException(diagnostic);
         }
 
     }
@@ -236,7 +257,10 @@ public class KubernetesUtils {
             try {
                 dockerModel.setCopyFiles(copyFiles);
             } catch (DockerGenException e) {
-                throw new KubernetesPluginException(e.getMessage());
+                DiagnosticInfo diagnosticInfo = new DiagnosticInfo(C2CDiagnosticCodes.DOCKER_FAILED.getCode(),
+                        e.getMessage(), DiagnosticSeverity.WARNING);
+                Diagnostic diagnostic = DiagnosticFactory.createDiagnostic(diagnosticInfo, new NullLocation());
+                throw new KubernetesPluginException(diagnostic);
             }
         }
     }

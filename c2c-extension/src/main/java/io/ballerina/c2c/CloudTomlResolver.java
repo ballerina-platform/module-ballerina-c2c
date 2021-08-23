@@ -18,6 +18,8 @@
 
 package io.ballerina.c2c;
 
+import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
+import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.handlers.SecretHandler;
 import io.ballerina.c2c.models.ConfigMapModel;
@@ -29,6 +31,7 @@ import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.c2c.utils.TomlHelper;
 import io.ballerina.toml.api.Toml;
+import io.ballerina.tools.diagnostics.Diagnostic;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HTTPGetAction;
@@ -202,7 +205,9 @@ public class CloudTomlResolver {
                 // Resolve Config.toml
                 Path fileName = path.getFileName();
                 if (fileName == null) {
-                    throw new KubernetesPluginException("invalid config file name");
+                    Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.INVALID_CONFIG_NAME,
+                            new NullLocation());
+                    throw new KubernetesPluginException(diagnostic);
                 }
                 Path dataFilePath = path;
                 if (!path.isAbsolute()) {
@@ -267,24 +272,25 @@ public class CloudTomlResolver {
         final Path runtimePath = Paths.get(BALLERINA_RUNTIME);
         final Path confPath = Paths.get(BALLERINA_CONF_MOUNT_PATH);
         if (mountPath.equals(homePath)) {
-            throw new KubernetesPluginException("Cloud.toml error mount_path " +
-                    "cannot be ballerina home: " +
-                    BALLERINA_HOME);
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.INVALID_MOUNT_PATH_CLOUD,
+                    new NullLocation(), "ballerina home", BALLERINA_HOME);
+            throw new KubernetesPluginException(diagnostic);
         }
         if (mountPath.equals(runtimePath)) {
-            throw new KubernetesPluginException("Cloud.toml error mount_path " +
-                    "cannot be ballerina runtime: " +
-                    BALLERINA_RUNTIME);
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.INVALID_MOUNT_PATH_CLOUD,
+                    new NullLocation(), "ballerina runtime", BALLERINA_RUNTIME);
+            throw new KubernetesPluginException(diagnostic);
         }
         if (mountPath.equals(confPath)) {
-            throw new KubernetesPluginException("Cloud.toml error mount path " +
-                    "cannot be ballerina conf file mount " +
-                    "path: " + BALLERINA_CONF_MOUNT_PATH);
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.INVALID_MOUNT_PATH_CLOUD,
+                    new NullLocation(), "ballerina conf file mount", BALLERINA_CONF_MOUNT_PATH);
+            throw new KubernetesPluginException(diagnostic);
         }
         final Path fileName = path.getFileName();
         if (fileName == null) {
-            throw new KubernetesPluginException("Cloud.toml error invalid path without file name " +
-                    BALLERINA_CONF_MOUNT_PATH);
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.EMPTY_PATH_CLOUD,
+                    new NullLocation(), BALLERINA_CONF_MOUNT_PATH);
+            throw new KubernetesPluginException(diagnostic);
         }
         return fileName;
     }

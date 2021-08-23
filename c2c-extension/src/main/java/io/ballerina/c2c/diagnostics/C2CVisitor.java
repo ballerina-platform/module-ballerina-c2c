@@ -61,9 +61,6 @@ import io.ballerina.compiler.syntax.tree.TypedBindingPatternNode;
 import io.ballerina.compiler.syntax.tree.UnionTypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.VariableDeclarationNode;
 import io.ballerina.tools.diagnostics.Diagnostic;
-import io.ballerina.tools.diagnostics.DiagnosticFactory;
-import io.ballerina.tools.diagnostics.DiagnosticInfo;
-import io.ballerina.tools.diagnostics.Location;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -198,7 +195,8 @@ public class C2CVisitor extends NodeVisitor {
         ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
         ListenerInfo listenerInfo;
         if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-            diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_002, expression.location()));
+            diagnostics.add(C2CDiagnosticCodes
+                    .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expression.location()));
             return Optional.empty();
         } else {
             BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expression;
@@ -327,7 +325,8 @@ public class C2CVisitor extends NodeVisitor {
             String text = ((BasicLiteralNode) expressionNode).literalToken().text();
             return text.substring(1, text.length() - 1);
         }
-        this.diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_003, expressionNode.location()));
+        this.diagnostics.add(C2CDiagnosticCodes
+                .createDiagnostic(C2CDiagnosticCodes.VALUE_STRING_ONLY_SUPPORTED, expressionNode.location()));
         return null;
     }
 
@@ -362,7 +361,8 @@ public class C2CVisitor extends NodeVisitor {
             String listenerName = referenceNode.name().text();
             Optional<ListenerInfo> httpsListener = this.getHttpsListener(listenerName);
             if (httpsListener.isEmpty()) {
-                diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_002, expressionNode.location()));
+                diagnostics.add(C2CDiagnosticCodes
+                        .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expressionNode.location()));
                 return;
             }
             listenerInfo = httpsListener.get();
@@ -432,7 +432,8 @@ public class C2CVisitor extends NodeVisitor {
             if (port.isEmpty()) {
                 Optional<ListenerInfo> httpsListener = this.getHttpsListener(variableName);
                 if (httpsListener.isEmpty()) {
-                    diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_002, expression.location()));
+                    diagnostics.add(C2CDiagnosticCodes
+                            .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expression.location()));
                     return Optional.empty();
                 }
                 return httpsListener;
@@ -485,7 +486,8 @@ public class C2CVisitor extends NodeVisitor {
                     //Get port 
                     Optional<ListenerInfo> listenerInfo = getListenerFromST(servicePath, serviceDeclarationNode, i);
                     if (listenerInfo.isEmpty()) {
-                        diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_002, parameterSymbol.location()));
+                        diagnostics.add(C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
+                                parameterSymbol.location()));
                         continue;
                     }
                     this.services.add(new ServiceInfo(listenerInfo.get(), serviceDeclarationNode, servicePath));
@@ -585,7 +587,8 @@ public class C2CVisitor extends NodeVisitor {
         }
         ExpressionNode expressionNode = moduleVariableDeclarationNode.initializer().get();
         if (expressionNode.kind() == SyntaxKind.REQUIRED_EXPRESSION) {
-            diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_005, moduleVariableDeclarationNode.location()));
+            diagnostics.add(C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.CONFIGURABLE_NO_DEFAULT,
+                    moduleVariableDeclarationNode.location()));
             return Optional.of(0);
         }
 
@@ -595,7 +598,8 @@ public class C2CVisitor extends NodeVisitor {
 
         for (Token qualifier : moduleVariableDeclarationNode.qualifiers()) {
             if ("configurable".equals(qualifier.text())) {
-                diagnostics.add(createDiagnostic(C2CDiagnosticCodes.C2C_006, moduleVariableDeclarationNode.location()
+                diagnostics.add(C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.CONFIGURABLE_OVERRIDE,
+                        moduleVariableDeclarationNode.location()
                         , variableName));
             }
         }
@@ -664,11 +668,5 @@ public class C2CVisitor extends NodeVisitor {
                     "http".equals(moduleId.moduleName());
         }
         return false;
-    }
-
-    public static Diagnostic createDiagnostic(C2CDiagnosticCodes diagnostic, Location location, Object... args) {
-        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(diagnostic.getCode(),
-                String.format(diagnostic.getMessage(), args), diagnostic.getSeverity());
-        return DiagnosticFactory.createDiagnostic(diagnosticInfo, location);
     }
 }
