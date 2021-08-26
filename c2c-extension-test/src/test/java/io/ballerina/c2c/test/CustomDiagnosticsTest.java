@@ -130,11 +130,11 @@ public class CustomDiagnosticsTest {
         Assert.assertEquals(diagnostics.size(), 2);
         Iterator<Diagnostic> iterator = diagnostics.iterator();
         Diagnostic diagnostic = iterator.next();
-        Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.ERROR);
+        Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.WARNING);
         Assert.assertEquals(diagnostic.message(),
-                "unable to read contents of the file ballerina");
+                "unable to read contents of the file `ballerina`");
         diagnostic = iterator.next();
-        Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.ERROR);
+        Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.WARNING);
         Assert.assertEquals(diagnostic.message(),
                 "https config extraction only supports basic string paths");
     }
@@ -147,7 +147,7 @@ public class CustomDiagnosticsTest {
         Assert.assertEquals(diagnostics.size(), 1);
         Iterator<Diagnostic> iterator = diagnostics.iterator();
         Diagnostic diagnostic = iterator.next();
-        Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.ERROR);
+        Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.WARNING);
         Assert.assertEquals(diagnostic.message(), "failed to retrieve port");
     }
 }

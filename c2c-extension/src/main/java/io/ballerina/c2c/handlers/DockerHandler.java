@@ -18,7 +18,13 @@
 
 package io.ballerina.c2c.handlers;
 
+import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
+import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
+import io.ballerina.tools.diagnostics.Diagnostic;
+import io.ballerina.tools.diagnostics.DiagnosticFactory;
+import io.ballerina.tools.diagnostics.DiagnosticInfo;
+import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 import org.ballerinax.docker.generator.DockerArtifactHandler;
 import org.ballerinax.docker.generator.exceptions.DockerGenException;
 
@@ -36,7 +42,10 @@ public class DockerHandler extends AbstractArtifactHandler {
             dockerArtifactHandler.createArtifacts(OUT, "\t@kubernetes:Docker \t\t\t", dataHolder.getJarPath(),
                     dataHolder.getDockerArtifactOutputPath());
         } catch (DockerGenException e) {
-            throw new KubernetesPluginException(e.getMessage(), e);
+            DiagnosticInfo diagnosticInfo = new DiagnosticInfo(C2CDiagnosticCodes.DOCKER_FAILED.getCode(),
+                    e.getMessage(), DiagnosticSeverity.WARNING);
+            Diagnostic diagnostic = DiagnosticFactory.createDiagnostic(diagnosticInfo, new NullLocation());
+            throw new KubernetesPluginException(diagnostic);
         }
     }
 }

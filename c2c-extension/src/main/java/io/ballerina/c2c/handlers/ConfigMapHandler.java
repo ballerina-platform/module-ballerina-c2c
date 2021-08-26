@@ -19,10 +19,13 @@
 package io.ballerina.c2c.handlers;
 
 import io.ballerina.c2c.KubernetesConstants;
+import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
+import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.ConfigMapModel;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
+import io.ballerina.tools.diagnostics.Diagnostic;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -53,8 +56,9 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
             }
             KubernetesUtils.writeToFile(configMapContent, outputFileName);
         } catch (IOException e) {
-            String errorMessage = "Error while parsing yaml file for config map: " + configMapModel.getName();
-            throw new KubernetesPluginException(errorMessage, e);
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.ARTIFACT_GEN_FAILED,
+                    new NullLocation(), "config map" , configMapModel.getName());
+            throw new KubernetesPluginException(diagnostic);
         }
     }
 

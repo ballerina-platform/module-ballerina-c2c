@@ -16,11 +16,14 @@
 package io.ballerina.c2c.handlers;
 
 import io.ballerina.c2c.KubernetesConstants;
+import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
+import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.utils.KubernetesUtils;
+import io.ballerina.tools.diagnostics.Diagnostic;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
@@ -59,8 +62,9 @@ public class JobHandler extends AbstractArtifactHandler {
             }
             KubernetesUtils.writeToFile(jobContent, outputFileName);
         } catch (IOException e) {
-            String errorMessage = "error while generating yaml file for job " + jobModel.getName();
-            throw new KubernetesPluginException(errorMessage, e);
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.ARTIFACT_GEN_FAILED,
+                    new NullLocation(), "job" , jobModel.getName());
+            throw new KubernetesPluginException(diagnostic);
         }
 
     }
@@ -140,7 +144,9 @@ public class JobHandler extends AbstractArtifactHandler {
             OUT.println();
             OUT.print("\t@kubernetes:Job \t\t\t - complete 1/1");
         } catch (DockerGenException e) {
-            throw new KubernetesPluginException("error occurred creating docker image.", e);
+            Diagnostic diagnostic =
+                    C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.DOCKER_FAILED, new NullLocation());
+            throw new KubernetesPluginException(diagnostic);
         }
     }
 

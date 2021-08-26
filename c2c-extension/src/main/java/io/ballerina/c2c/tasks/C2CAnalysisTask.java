@@ -22,6 +22,7 @@ import io.ballerina.c2c.diagnostics.ClientInfo;
 import io.ballerina.c2c.diagnostics.HttpsConfig;
 import io.ballerina.c2c.diagnostics.ListenerInfo;
 import io.ballerina.c2c.diagnostics.MutualSSLConfig;
+import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.diagnostics.ProjectServiceInfo;
 import io.ballerina.c2c.diagnostics.SecureSocketConfig;
 import io.ballerina.c2c.diagnostics.ServiceInfo;
@@ -39,13 +40,6 @@ import io.ballerina.projects.Package;
 import io.ballerina.projects.plugins.AnalysisTask;
 import io.ballerina.projects.plugins.CompilationAnalysisContext;
 import io.ballerina.tools.diagnostics.Diagnostic;
-import io.ballerina.tools.diagnostics.DiagnosticFactory;
-import io.ballerina.tools.diagnostics.DiagnosticInfo;
-import io.ballerina.tools.diagnostics.DiagnosticSeverity;
-import io.ballerina.tools.diagnostics.Location;
-import io.ballerina.tools.text.LinePosition;
-import io.ballerina.tools.text.LineRange;
-import io.ballerina.tools.text.TextRange;
 import org.apache.commons.codec.binary.Base64;
 
 import java.io.File;
@@ -87,11 +81,7 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
             addServices(serviceList);
             addClientList(clientInfoList);
         } catch (KubernetesPluginException e) {
-            DiagnosticInfo serviceDiagnosticInfo = new DiagnosticInfo(C2CDiagnosticCodes.C2C_001.getCode(),
-                    e.getMessage(), DiagnosticSeverity.ERROR);
-            Diagnostic serviceDiagnostic = DiagnosticFactory.createDiagnostic(serviceDiagnosticInfo,
-                    new NullLocation());
-            compilationAnalysisContext.reportDiagnostic(serviceDiagnostic);
+            compilationAnalysisContext.reportDiagnostic(e.getDiagnostic());
         }
 
         for (Diagnostic diagnostic : c2cDiagnostics) {
@@ -290,35 +280,21 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
             filePath = filePath.replace("${ballerina.home}", ballerinaHome);
         }
         Path dataFilePath = Paths.get(filePath);
-        return Base64.encodeBase64String(KubernetesUtils.readFileContent(dataFilePath));
+        return Base64.encodeBase64String(
+                KubernetesUtils.readFileContent(dataFilePath, C2CDiagnosticCodes.PATH_CONTENT_READ_FAILED_WARN));
     }
 
     private String getMountPath(String mountPath) throws KubernetesPluginException {
         Path parentPath = Paths.get(mountPath).getParent();
         if (parentPath != null && ".".equals(parentPath.toString())) {
             // Mounts to the same path overriding the source file.
-            throw new KubernetesPluginException("Invalid path: " + mountPath + ". " +
-                    "Providing relative path in the same level as source file is not supported with code2cloud." +
-                    "Please create a sub folder and provide the relative path. " +
-                    "eg: './security/ballerinaKeystore.p12'");
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.INVALID_MOUNT_PATH,
+                    new NullLocation(), mountPath);
+            throw new KubernetesPluginException(diagnostic);
         }
         if (!Paths.get(mountPath).isAbsolute()) {
             mountPath = BALLERINA_HOME + File.separator + mountPath;
         }
         return String.valueOf(Paths.get(mountPath).getParent());
-    }
-
-    private static class NullLocation implements Location {
-
-        @Override
-        public LineRange lineRange() {
-            LinePosition from = LinePosition.from(0, 0);
-            return LineRange.from("", from, from);
-        }
-
-        @Override
-        public TextRange textRange() {
-            return TextRange.from(0, 0);
-        }
     }
 }

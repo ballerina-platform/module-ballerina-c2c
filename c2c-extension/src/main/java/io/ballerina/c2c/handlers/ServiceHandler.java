@@ -19,10 +19,13 @@
 package io.ballerina.c2c.handlers;
 
 import io.ballerina.c2c.KubernetesConstants;
+import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
+import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.ServiceModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
+import io.ballerina.tools.diagnostics.Diagnostic;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.Service;
@@ -98,8 +101,9 @@ public class ServiceHandler extends AbstractArtifactHandler {
             }
             KubernetesUtils.writeToFile(serviceYAML, outputFileName);
         } catch (IOException e) {
-            String errorMessage = "error while generating yaml file for service: " + commonService.getName();
-            throw new KubernetesPluginException(errorMessage, e);
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.ARTIFACT_GEN_FAILED,
+                    new NullLocation(), "service" , commonService.getName());
+            throw new KubernetesPluginException(diagnostic);
         }
 
     }

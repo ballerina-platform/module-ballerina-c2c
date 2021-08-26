@@ -63,10 +63,8 @@ public class ArtifactManager {
     public void createArtifacts(String cloudType) throws KubernetesPluginException {
         if (cloudType.equals("k8s")) {
             createKubernetesArtifacts();
-        } else if (cloudType.equals("docker")) {
-            createDockerArtifacts();
         } else {
-            throw new KubernetesPluginException("Unsupported cloud option");
+            createDockerArtifacts();
         }
     }
 

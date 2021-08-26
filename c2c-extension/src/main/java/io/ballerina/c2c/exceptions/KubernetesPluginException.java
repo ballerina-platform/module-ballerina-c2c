@@ -18,16 +18,20 @@
 
 package io.ballerina.c2c.exceptions;
 
+import io.ballerina.tools.diagnostics.Diagnostic;
+
 /**
  * Custom exception for kubernetes artifact generation errors.
  */
 public class KubernetesPluginException extends Exception {
+    private final Diagnostic diagnostic;
 
-    public KubernetesPluginException(String msg) {
-        super(msg);
+    public KubernetesPluginException(Diagnostic diagnostic) {
+        super(diagnostic.message());
+        this.diagnostic = diagnostic;
     }
 
-    public KubernetesPluginException(String msg, Throwable e) {
-        super(msg, e);
+    public Diagnostic getDiagnostic() {
+        return diagnostic;
     }
 }
