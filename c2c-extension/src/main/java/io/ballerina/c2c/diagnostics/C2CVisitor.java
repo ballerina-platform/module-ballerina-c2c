@@ -95,6 +95,14 @@ public class C2CVisitor extends NodeVisitor {
 
     @Override
     public void visit(ModuleVariableDeclarationNode moduleVariableDeclarationNode) {
+        // To Parse http:Client Config
+        //http:Client nettyEP = check new("https://netty:8688", {
+        //     secureSocket: {
+        //        cert: {
+        //            path: "./security/ballerinaTruststore.p12",
+        //            password: "ballerina"
+        //   }
+        // }
         Optional<ExpressionNode> initializer = moduleVariableDeclarationNode.initializer();
         if (initializer.isEmpty()) {
             return;
@@ -102,8 +110,91 @@ public class C2CVisitor extends NodeVisitor {
         extractHttpClientConfig(moduleVariableDeclarationNode.typedBindingPattern(), initializer.get());
     }
 
+
+    @Override
+    public void visit(VariableDeclarationNode variableDeclarationNode) {
+        // To Parse http:Client Config
+        //http:Client nettyEP = check new("https://netty:8688", {
+        //     secureSocket: {
+        //        cert: {
+        //            path: "./security/ballerinaTruststore.p12",
+        //            password: "ballerina"
+        //   }
+        // }
+        Optional<ExpressionNode> initializer = variableDeclarationNode.initializer();
+        if (initializer.isEmpty()) {
+            return;
+        }
+        extractHttpClientConfig(variableDeclarationNode.typedBindingPattern(), initializer.get());
+    }
+
+    private void extractHttpClientConfig(TypedBindingPatternNode typedBindingPatternNode, ExpressionNode initializer) {
+        TypeDescriptorNode typeDescriptorNode = typedBindingPatternNode.typeDescriptor();
+        if (!isSupportedClientVariable(typeDescriptorNode)) {
+            return;
+        }
+        ExpressionNode refNode;
+        if (initializer.kind() == SyntaxKind.CHECK_EXPRESSION) {
+            CheckExpressionNode checkedInit = (CheckExpressionNode) initializer;
+            refNode = checkedInit.expression();
+        } else {
+            refNode = initializer;
+        }
+        if (refNode.kind() != SyntaxKind.IMPLICIT_NEW_EXPRESSION) {
+            return;
+        }
+        ImplicitNewExpressionNode newExprInit = (ImplicitNewExpressionNode) refNode;
+        newExprInit.parenthesizedArgList().ifPresent(parenthesizedArgList -> {
+            SeparatedNodeList<FunctionArgumentNode> argList = parenthesizedArgList.arguments();
+            if (argList.size() <= 1) {
+                return;
+            }
+            Optional<HttpsConfig> config = extractKeyStores(argList.get(1));
+            config.ifPresent(httpsConfig -> {
+                String name = ((CaptureBindingPatternNode) typedBindingPatternNode.bindingPattern())
+                        .variableName().text();
+                clientInfos.add(new ClientInfo(name, httpsConfig));
+            });
+        });
+    }
+
+    private boolean isSupportedClientVariable(TypeDescriptorNode typeDescriptorNode) {
+        if (typeDescriptorNode.kind() == SyntaxKind.UNION_TYPE_DESC) {
+            UnionTypeDescriptorNode unionType = (UnionTypeDescriptorNode) typeDescriptorNode;
+            return isSupportedClientVariable(unionType.rightTypeDesc()) ||
+                    isSupportedClientVariable(unionType.leftTypeDesc());
+        }
+        if (typeDescriptorNode.kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE) {
+            QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typeDescriptorNode;
+            Optional<Symbol> symbol = semanticModel.symbol(typeDescriptorNode);
+            if (symbol.isEmpty()) {
+                return false;
+            }
+            Optional<ModuleSymbol> module = symbol.get().getModule();
+            if (module.isEmpty()) {
+                return false;
+            }
+            ModuleID moduleId = module.get().id();
+            return "Client".equals(qualified.identifier().text()) && "ballerina".equals(moduleId.orgName()) &&
+                    "http".equals(moduleId.moduleName());
+        }
+        return false;
+    }
+
     @Override
     public void visit(FunctionDefinitionNode functionDefinitionNode) {
+        // Handling Job/Task scheduling.
+        // @cloud:Task {
+        //  schedule: {
+        //        minutes: "*/2",
+        //        hours: "*",
+        //        dayOfMonth: "*",
+        //        monthOfYear: "*",
+        //        daysOfWeek: "*"
+        //  }
+        //}
+        // public function main(string... args) {
+        //}
         Optional<MetadataNode> metadata = functionDefinitionNode.metadata();
         String funcName = functionDefinitionNode.functionName().text();
         if (!funcName.equals("main")) {
@@ -149,6 +240,13 @@ public class C2CVisitor extends NodeVisitor {
         }
     }
 
+    private String getNameOfIdentifier(Node node) {
+        if (node.kind() == SyntaxKind.IDENTIFIER_TOKEN) {
+            return ((IdentifierToken) node).text();
+        }
+        return null;
+    }
+
     private void processTaskScheduleBlock(ExpressionNode expressionNode) {
         if (expressionNode.kind() != SyntaxKind.MAPPING_CONSTRUCTOR) {
             return;
@@ -183,6 +281,79 @@ public class C2CVisitor extends NodeVisitor {
             }
         }
         this.task = new Task(minutes, hours, dayOfMonth, monthOfYear, daysOfWeek);
+    }
+
+    private String extractString(ExpressionNode expressionNode) {
+        if (expressionNode.kind() == SyntaxKind.STRING_LITERAL) {
+            String text = ((BasicLiteralNode) expressionNode).literalToken().text();
+            return text.substring(1, text.length() - 1);
+        }
+        this.diagnostics.add(C2CDiagnosticCodes
+                .createDiagnostic(C2CDiagnosticCodes.VALUE_STRING_ONLY_SUPPORTED, expressionNode.location()));
+        return null;
+    }
+
+    @Override
+    public void visit(ServiceDeclarationNode serviceDeclarationNode) {
+        ServiceDeclarationSymbol symbol =
+                (ServiceDeclarationSymbol) semanticModel.symbol(serviceDeclarationNode).orElseThrow();
+        List<TypeSymbol> typeSymbols = symbol.listenerTypes();
+        if (typeSymbols.isEmpty()) {
+            return;
+        }
+        String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
+        TypeSymbol typeSymbol = typeSymbols.get(0);
+        if (!isC2CNativelySupportedListener(typeSymbol)) {
+            processCustomExposedAnnotatedListeners(typeSymbol, servicePath, serviceDeclarationNode);
+            return;
+        }
+
+        ListenerInfo listenerInfo = null;
+        ExpressionNode expressionNode = serviceDeclarationNode.expressions().get(0);
+        if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+            //External Listener
+            //on helloEP
+            SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
+            String listenerName = referenceNode.name().text();
+            Optional<ListenerInfo> httpsListener = this.getHttpsListener(listenerName);
+            if (httpsListener.isEmpty()) {
+                diagnostics.add(C2CDiagnosticCodes
+                        .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expressionNode.location()));
+                return;
+            }
+            listenerInfo = httpsListener.get();
+        } else {
+            //Inline Listener
+            ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
+            FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(0);
+            if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
+                ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
+                Optional<ListenerInfo> newListenerInfo = getListenerInfo(servicePath, expression);
+                if (newListenerInfo.isEmpty()) {
+                    return;
+                }
+                listenerInfo = newListenerInfo.get();
+            }
+
+            //Inline Http config
+            if (refNode.parenthesizedArgList().arguments().size() > 1) {
+                FunctionArgumentNode secondParamExpression = refNode.parenthesizedArgList().arguments().get(1);
+                Optional<HttpsConfig> config = extractKeyStores(secondParamExpression);
+                config.ifPresent(listenerInfo::setConfig);
+            }
+        }
+        ServiceInfo serviceInfo = new ServiceInfo(listenerInfo, serviceDeclarationNode, servicePath);
+        NodeList<Node> function = serviceDeclarationNode.members();
+        for (Node node : function) {
+            if (node.kind() == SyntaxKind.RESOURCE_ACCESSOR_DEFINITION) {
+                FunctionDefinitionNode functionDefinitionNode = (FunctionDefinitionNode) node;
+                String httpMethod = functionDefinitionNode.functionName().text();
+                String resourcePath = toAbsoluteServicePath(functionDefinitionNode.relativeResourcePath());
+                serviceInfo.addResource(new ResourceInfo(functionDefinitionNode, httpMethod, resourcePath));
+            }
+            this.visitSyntaxNode(node);
+        }
+        services.add(serviceInfo);
     }
 
     private Optional<ListenerInfo> extractListenerInitializer(String listenerName,
@@ -320,87 +491,7 @@ public class C2CVisitor extends NodeVisitor {
         return secureSocketConfig;
     }
 
-    private String extractString(ExpressionNode expressionNode) {
-        if (expressionNode.kind() == SyntaxKind.STRING_LITERAL) {
-            String text = ((BasicLiteralNode) expressionNode).literalToken().text();
-            return text.substring(1, text.length() - 1);
-        }
-        this.diagnostics.add(C2CDiagnosticCodes
-                .createDiagnostic(C2CDiagnosticCodes.VALUE_STRING_ONLY_SUPPORTED, expressionNode.location()));
-        return null;
-    }
-
-    private String getNameOfIdentifier(Node node) {
-        if (node.kind() == SyntaxKind.IDENTIFIER_TOKEN) {
-            return ((IdentifierToken) node).text();
-        }
-        return null;
-    }
-
-    @Override
-    public void visit(ServiceDeclarationNode serviceDeclarationNode) {
-        ServiceDeclarationSymbol symbol =
-                (ServiceDeclarationSymbol) semanticModel.symbol(serviceDeclarationNode).orElseThrow();
-        List<TypeSymbol> typeSymbols = symbol.listenerTypes();
-        if (typeSymbols.isEmpty()) {
-            return;
-        }
-        String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
-        TypeSymbol typeSymbol = typeSymbols.get(0);
-        if (!isC2CSupportedListener(typeSymbol)) {
-            processExposedAnnotations(typeSymbol, servicePath, serviceDeclarationNode);
-            return;
-        }
-
-        ListenerInfo listenerInfo = null;
-        ExpressionNode expressionNode = serviceDeclarationNode.expressions().get(0);
-        if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-            //External Listener
-            //on helloEP
-            SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
-            String listenerName = referenceNode.name().text();
-            Optional<ListenerInfo> httpsListener = this.getHttpsListener(listenerName);
-            if (httpsListener.isEmpty()) {
-                diagnostics.add(C2CDiagnosticCodes
-                        .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expressionNode.location()));
-                return;
-            }
-            listenerInfo = httpsListener.get();
-        } else {
-            //Inline Listener
-            ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
-            FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(0);
-            if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
-                ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
-                Optional<ListenerInfo> newListenerInfo = getListenerInfo(servicePath, expression);
-                if (newListenerInfo.isEmpty()) {
-                    return;
-                }
-                listenerInfo = newListenerInfo.get();
-            }
-
-            //Inline Http config
-            if (refNode.parenthesizedArgList().arguments().size() > 1) {
-                FunctionArgumentNode secondParamExpression = refNode.parenthesizedArgList().arguments().get(1);
-                Optional<HttpsConfig> config = extractKeyStores(secondParamExpression);
-                config.ifPresent(listenerInfo::setConfig);
-            }
-        }
-        ServiceInfo serviceInfo = new ServiceInfo(listenerInfo, serviceDeclarationNode, servicePath);
-        NodeList<Node> function = serviceDeclarationNode.members();
-        for (Node node : function) {
-            if (node.kind() == SyntaxKind.RESOURCE_ACCESSOR_DEFINITION) {
-                FunctionDefinitionNode functionDefinitionNode = (FunctionDefinitionNode) node;
-                String httpMethod = functionDefinitionNode.functionName().text();
-                String resourcePath = toAbsoluteServicePath(functionDefinitionNode.relativeResourcePath());
-                serviceInfo.addResource(new ResourceInfo(functionDefinitionNode, httpMethod, resourcePath));
-            }
-            this.visitSyntaxNode(node);
-        }
-        services.add(serviceInfo);
-    }
-
-    private Optional<ListenerInfo> getListenerFromST(String path, ServiceDeclarationNode serviceNode, int paramNo) {
+    private Optional<ListenerInfo> getPortValueFromSTForCustomListener(String path, ServiceDeclarationNode serviceNode, int paramNo) {
         ExpressionNode expressionNode = serviceNode.expressions().get(0);
         if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
             //on listener
@@ -451,8 +542,8 @@ public class C2CVisitor extends NodeVisitor {
         }
     }
 
-    private void processExposedAnnotations(TypeSymbol typeSymbol, String servicePath,
-                                           ServiceDeclarationNode serviceDeclarationNode) {
+    private void processCustomExposedAnnotatedListeners(TypeSymbol typeSymbol, String servicePath,
+                                                        ServiceDeclarationNode serviceDeclarationNode) {
         if (typeSymbol.typeKind() != TypeDescKind.TYPE_REFERENCE) {
             return;
         }
@@ -464,14 +555,16 @@ public class C2CVisitor extends NodeVisitor {
         if (classSymbol.initMethod().isEmpty()) {
             return;
         }
+        // Get the init method of the custom listener because thats where the @cloud:Expose is at.
+        // Ex - public function init(@cloud:Expose int port, ListenerConfiguration config) {
         MethodSymbol initSymbol = classSymbol.initMethod().get();
-        Optional<List<ParameterSymbol>> params = initSymbol.typeDescriptor().params();
-        if (params.isEmpty()) {
+        Optional<List<ParameterSymbol>> paramsList = initSymbol.typeDescriptor().params();
+        if (paramsList.isEmpty()) {
             return;
         }
-        List<ParameterSymbol> get = params.get();
-        for (int i = 0, getSize = get.size(); i < getSize; i++) {
-            ParameterSymbol parameterSymbol = get.get(i);
+        List<ParameterSymbol> params = paramsList.get();
+        for (int i = 0, getSize = params.size(); i < getSize; i++) {
+            ParameterSymbol parameterSymbol = params.get(i);
             for (AnnotationSymbol annotation : parameterSymbol.annotations()) {
                 Optional<ModuleSymbol> module = annotation.getModule();
                 if (module.isEmpty()) {
@@ -483,8 +576,10 @@ public class C2CVisitor extends NodeVisitor {
                     continue;
                 }
                 if (id.orgName().equals("ballerina")) {
-                    //Get port 
-                    Optional<ListenerInfo> listenerInfo = getListenerFromST(servicePath, serviceDeclarationNode, i);
+                    //@cloud:Expose int port
+                    //This is a valid custom listener param for c2c. Next, we need to get the value passed to this 
+                    // param. We need to access the syntax tree to get the value as semantic api doesn't have values.
+                    Optional<ListenerInfo> listenerInfo = getPortValueFromSTForCustomListener(servicePath, serviceDeclarationNode, i);
                     if (listenerInfo.isEmpty()) {
                         diagnostics.add(C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
                                 parameterSymbol.location()));
@@ -496,13 +591,14 @@ public class C2CVisitor extends NodeVisitor {
         }
     }
 
-    private boolean isC2CSupportedListener(TypeSymbol typeSymbol) {
+    private boolean isC2CNativelySupportedListener(TypeSymbol typeSymbol) {
+        //To process http:Listener|error recursively.
         if (typeSymbol.typeKind() == TypeDescKind.UNION) {
             UnionTypeSymbol unionTypeSymbol = (UnionTypeSymbol) typeSymbol;
             List<TypeSymbol> typeSymbols = unionTypeSymbol.memberTypeDescriptors();
             for (TypeSymbol symbol : typeSymbols) {
                 if (symbol.typeKind() != TypeDescKind.ERROR) {
-                    return isC2CSupportedListener(symbol);
+                    return isC2CNativelySupportedListener(symbol);
                 }
             }
         }
@@ -606,67 +702,5 @@ public class C2CVisitor extends NodeVisitor {
 
         BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expressionNode;
         return Optional.of(Integer.parseInt(basicLiteralNode.literalToken().text()));
-    }
-
-    @Override
-    public void visit(VariableDeclarationNode variableDeclarationNode) {
-        Optional<ExpressionNode> initializer = variableDeclarationNode.initializer();
-        if (initializer.isEmpty()) {
-            return;
-        }
-        extractHttpClientConfig(variableDeclarationNode.typedBindingPattern(), initializer.get());
-    }
-
-    private void extractHttpClientConfig(TypedBindingPatternNode typedBindingPatternNode, ExpressionNode initializer) {
-        TypeDescriptorNode typeDescriptorNode = typedBindingPatternNode.typeDescriptor();
-        if (!isSupportedClientVariable(typeDescriptorNode)) {
-            return;
-        }
-        ExpressionNode refNode;
-        if (initializer.kind() == SyntaxKind.CHECK_EXPRESSION) {
-            CheckExpressionNode checkedInit = (CheckExpressionNode) initializer;
-            refNode = checkedInit.expression();
-        } else {
-            refNode = initializer;
-        }
-        if (refNode.kind() != SyntaxKind.IMPLICIT_NEW_EXPRESSION) {
-            return;
-        }
-        ImplicitNewExpressionNode newExprInit = (ImplicitNewExpressionNode) refNode;
-        newExprInit.parenthesizedArgList().ifPresent(parenthesizedArgList -> {
-            SeparatedNodeList<FunctionArgumentNode> argList = parenthesizedArgList.arguments();
-            if (argList.size() <= 1) {
-                return;
-            }
-            Optional<HttpsConfig> config = extractKeyStores(argList.get(1));
-            config.ifPresent(httpsConfig -> {
-                String name = ((CaptureBindingPatternNode) typedBindingPatternNode.bindingPattern())
-                        .variableName().text();
-                clientInfos.add(new ClientInfo(name, httpsConfig));
-            });
-        });
-    }
-
-    private boolean isSupportedClientVariable(TypeDescriptorNode typeDescriptorNode) {
-        if (typeDescriptorNode.kind() == SyntaxKind.UNION_TYPE_DESC) {
-            UnionTypeDescriptorNode unionType = (UnionTypeDescriptorNode) typeDescriptorNode;
-            return isSupportedClientVariable(unionType.rightTypeDesc()) ||
-                    isSupportedClientVariable(unionType.leftTypeDesc());
-        }
-        if (typeDescriptorNode.kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE) {
-            QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typeDescriptorNode;
-            Optional<Symbol> symbol = semanticModel.symbol(typeDescriptorNode);
-            if (symbol.isEmpty()) {
-                return false;
-            }
-            Optional<ModuleSymbol> module = symbol.get().getModule();
-            if (module.isEmpty()) {
-                return false;
-            }
-            ModuleID moduleId = module.get().id();
-            return "Client".equals(qualified.identifier().text()) && "ballerina".equals(moduleId.orgName()) &&
-                    "http".equals(moduleId.moduleName());
-        }
-        return false;
     }
 }
