@@ -150,4 +150,12 @@ public class CustomDiagnosticsTest {
         Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.WARNING);
         Assert.assertEquals(diagnostic.message(), "failed to retrieve port");
     }
+
+    @Test
+    public void testSslNamedArg() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "ssl-ref-named-arg");
+        BuildProject project = BuildProject.load(projectPath);
+        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().diagnostics();
+        Assert.assertEquals(diagnostics.size(), 0);
+    }
 }

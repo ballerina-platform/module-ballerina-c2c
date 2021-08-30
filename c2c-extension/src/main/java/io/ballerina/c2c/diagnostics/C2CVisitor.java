@@ -110,7 +110,6 @@ public class C2CVisitor extends NodeVisitor {
         extractHttpClientConfig(moduleVariableDeclarationNode.typedBindingPattern(), initializer.get());
     }
 
-
     @Override
     public void visit(VariableDeclarationNode variableDeclarationNode) {
         // To Parse http:Client Config
@@ -389,7 +388,13 @@ public class C2CVisitor extends NodeVisitor {
             }
         } else if (functionArgumentNode.kind() == SyntaxKind.NAMED_ARG) {
             NamedArgumentNode namedArgumentNode = (NamedArgumentNode) functionArgumentNode;
-            return processSecureSocketValue((MappingConstructorExpressionNode) namedArgumentNode.expression());
+            ExpressionNode expression = namedArgumentNode.expression();
+            if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+                String varName = ((SimpleNameReferenceNode) expression).name().text();
+                return getHttpsListenerConfig(varName);
+            } else if (expression.kind() == SyntaxKind.MAPPING_CONSTRUCTOR) {
+                return processSecureSocketValue((MappingConstructorExpressionNode) expression);
+            }
         }
         return Optional.empty();
     }
@@ -491,29 +496,6 @@ public class C2CVisitor extends NodeVisitor {
         return secureSocketConfig;
     }
 
-    private Optional<ListenerInfo> getPortValueFromSTForCustomListener(String path, ServiceDeclarationNode serviceNode, int paramNo) {
-        ExpressionNode expressionNode = serviceNode.expressions().get(0);
-        if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-            //on listener
-            SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
-            String listenerName = referenceNode.name().text();
-            Node node = this.moduleLevelVariables.get(listenerName);
-            if (node == null || !(node.kind() == SyntaxKind.IMPLICIT_NEW_EXPRESSION)) {
-                return Optional.empty();
-            }
-            ImplicitNewExpressionNode init = (ImplicitNewExpressionNode) node;
-            return extractListenerInitializer(listenerName, init);
-        } else {
-            ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
-            FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(paramNo);
-            if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
-                ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
-                return getListenerInfo(path, expression);
-            }
-        }
-        return Optional.empty();
-    }
-
     private Optional<ListenerInfo> getListenerInfo(String path, ExpressionNode expression) {
         if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
             //on new http:Listener(port)
@@ -579,7 +561,8 @@ public class C2CVisitor extends NodeVisitor {
                     //@cloud:Expose int port
                     //This is a valid custom listener param for c2c. Next, we need to get the value passed to this 
                     // param. We need to access the syntax tree to get the value as semantic api doesn't have values.
-                    Optional<ListenerInfo> listenerInfo = getPortValueFromSTForCustomListener(servicePath, serviceDeclarationNode, i);
+                    Optional<ListenerInfo> listenerInfo =
+                            getPortValueFromSTForCustomListener(servicePath, serviceDeclarationNode, i);
                     if (listenerInfo.isEmpty()) {
                         diagnostics.add(C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
                                 parameterSymbol.location()));
@@ -589,6 +572,30 @@ public class C2CVisitor extends NodeVisitor {
                 }
             }
         }
+    }
+
+    private Optional<ListenerInfo> getPortValueFromSTForCustomListener(String path, ServiceDeclarationNode serviceNode,
+                                                                       int paramNo) {
+        ExpressionNode expressionNode = serviceNode.expressions().get(0);
+        if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+            //on listener
+            SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
+            String listenerName = referenceNode.name().text();
+            Node node = this.moduleLevelVariables.get(listenerName);
+            if (node == null || !(node.kind() == SyntaxKind.IMPLICIT_NEW_EXPRESSION)) {
+                return Optional.empty();
+            }
+            ImplicitNewExpressionNode init = (ImplicitNewExpressionNode) node;
+            return extractListenerInitializer(listenerName, init);
+        } else {
+            ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
+            FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(paramNo);
+            if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
+                ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
+                return getListenerInfo(path, expression);
+            }
+        }
+        return Optional.empty();
     }
 
     private boolean isC2CNativelySupportedListener(TypeSymbol typeSymbol) {
@@ -695,8 +702,7 @@ public class C2CVisitor extends NodeVisitor {
         for (Token qualifier : moduleVariableDeclarationNode.qualifiers()) {
             if ("configurable".equals(qualifier.text())) {
                 diagnostics.add(C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.CONFIGURABLE_OVERRIDE,
-                        moduleVariableDeclarationNode.location()
-                        , variableName));
+                        moduleVariableDeclarationNode.location(), variableName));
             }
         }
 
