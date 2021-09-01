@@ -33,11 +33,37 @@ http:ListenerConfiguration sslProtocolServiceConfig = {
 listener http:Listener sslProtocolListener = new(9249, config = sslProtocolServiceConfig);
 
 service /protocol on sslProtocolListener {
-    
     resource function get protocolResource(http:Caller caller, http:Request req) {
         error? result = caller->respond("Hello World!");
         if (result is error) {
            log:printError("Failed to respond", 'error = result);
+        }
+    }
+}
+
+listener http:Listener helloEP = new(9090);
+
+http:ClientConfiguration sslProtocolClientConfig = {
+    secureSocket: {
+        cert: {
+            path: "./security/ballerinaTruststore.p12",
+            password: "ballerina"
+        },
+        protocol: {
+            name: http:TLS,
+            versions: ["TLSv1.2"]
+        }
+    }
+};
+
+service /hello on helloEP {
+    resource function get world() returns string|error {
+        http:Client clientEP = checkpanic new("https://localhost:9249", sslProtocolClientConfig);
+        http:Response|error resp = clientEP->get("/protocol/protocolResource");
+        if (resp is http:Response) {
+            return "Response Recieved";
+        } else {
+            return resp;
         }
     }
 }

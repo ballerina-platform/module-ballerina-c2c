@@ -16,6 +16,7 @@
 package io.ballerina.c2c.test;
 
 import io.ballerina.projects.directory.BuildProject;
+import io.ballerina.projects.internal.PackageDiagnostic;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 import org.testng.Assert;
@@ -23,8 +24,10 @@ import org.testng.annotations.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Responsible for testing the custom diagnostics implemented by code to cloud module.
@@ -37,7 +40,8 @@ public class CustomDiagnosticsTest {
     public void testValidProject() {
         Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "valid");
         BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().diagnostics();
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 0);
     }
 
@@ -45,7 +49,8 @@ public class CustomDiagnosticsTest {
     public void testValidMultifileProject() {
         Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "valid-multi-files");
         BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().diagnostics();
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 0);
     }
 
@@ -53,7 +58,8 @@ public class CustomDiagnosticsTest {
     public void testInvalidInput() {
         Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "invalid-input");
         BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().diagnostics();
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 2);
         Iterator<Diagnostic> iterator = diagnostics.iterator();
         Assert.assertEquals(iterator.next().message(),
@@ -66,7 +72,8 @@ public class CustomDiagnosticsTest {
     public void testInvalidSyntax() {
         Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "invalid-syntax");
         BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().diagnostics();
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 1);
         Assert.assertEquals(diagnostics.iterator().next().message(), "missing equal token");
     }
@@ -75,7 +82,8 @@ public class CustomDiagnosticsTest {
     public void testMissingPort() {
         Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "missing-port");
         BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().diagnostics();
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 2);
         Iterator<Diagnostic> iterator = diagnostics.iterator();
         Assert.assertEquals(iterator.next().message(), "Invalid Liveness Probe Port");
@@ -86,16 +94,29 @@ public class CustomDiagnosticsTest {
     public void testInvalidServicePath() {
         Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "invalid-service-path");
         BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().diagnostics();
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 1);
         Assert.assertEquals(diagnostics.iterator().next().message(), "Invalid Liveness Probe Service Path");
+    }
+    
+    private List<Diagnostic> getC2CDiagnostics(Collection<Diagnostic> allDiagnostics) {
+        List<Diagnostic> diagnostics = new ArrayList<>();
+        for (Diagnostic diagnostic:allDiagnostics) {
+            if (diagnostic instanceof PackageDiagnostic) {
+                continue;
+            }
+            diagnostics.add(diagnostic);
+        }
+        return diagnostics;
     }
 
     @Test
     public void testInvalidResourcePath() {
         Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "invalid-res-path");
         BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().diagnostics();
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 1);
         Assert.assertEquals(diagnostics.iterator().next().message(), "Invalid Liveness Probe Resource Path");
     }
@@ -104,7 +125,8 @@ public class CustomDiagnosticsTest {
     public void testDefaultConfigValueError() {
         Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "default-config-value");
         BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().diagnostics();
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 1);
         Assert.assertEquals(diagnostics.iterator().next().message(), "configurables with no default value is not " +
                 "supported");
@@ -114,7 +136,8 @@ public class CustomDiagnosticsTest {
     public void testDefaultConfigValueWarning() {
         Path projectPath = Paths.get("src", "test", "resources", "diagnostics", "configurable-default-port-warning");
         BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().diagnostics();
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 1);
         Diagnostic diagnostic = diagnostics.iterator().next();
         Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.WARNING);
@@ -126,7 +149,8 @@ public class CustomDiagnosticsTest {
     public void testInvalidSSLConfigValue() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "invalid-ssl-config");
         BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().diagnostics();
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 2);
         Iterator<Diagnostic> iterator = diagnostics.iterator();
         Diagnostic diagnostic = iterator.next();
@@ -143,7 +167,8 @@ public class CustomDiagnosticsTest {
     public void testFailedPortRetrieval() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "failed-port-retrieval");
         BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().diagnostics();
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 1);
         Iterator<Diagnostic> iterator = diagnostics.iterator();
         Diagnostic diagnostic = iterator.next();
@@ -155,7 +180,17 @@ public class CustomDiagnosticsTest {
     public void testSslNamedArg() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "ssl-ref-named-arg");
         BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().diagnostics();
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
+        Assert.assertEquals(diagnostics.size(), 0);
+    }
+
+    @Test
+    public void testSslListenerClient() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "ssl-listener-and-client");
+        BuildProject project = BuildProject.load(projectPath);
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 0);
     }
 }
