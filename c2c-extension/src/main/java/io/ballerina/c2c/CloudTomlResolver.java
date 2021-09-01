@@ -21,7 +21,6 @@ package io.ballerina.c2c;
 import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
 import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
-import io.ballerina.c2c.handlers.SecretHandler;
 import io.ballerina.c2c.models.ConfigMapModel;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.KubernetesContext;
@@ -264,7 +263,6 @@ public class CloudTomlResolver {
                 dataHolder.addSecrets(Collections.singleton(secretModel));
             }
         }
-        new SecretHandler().createArtifacts();
     }
 
     private Path validatePaths(Path path, Path mountPath) throws KubernetesPluginException {
