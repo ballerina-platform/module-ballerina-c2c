@@ -78,10 +78,11 @@ public class ArtifactManager {
         // add default kubernetes instructions.
         setDefaultKubernetesInstructions();
         OUT.println("\nGenerating artifacts...");
-        new CloudTomlResolver().resolveToml();
         if (kubernetesDataHolder.getJobModel() != null) {
+            new CloudTomlResolver().resolveToml(kubernetesDataHolder.getJobModel());
             new JobHandler().createArtifacts();
         } else {
+            new CloudTomlResolver().resolveToml(kubernetesDataHolder.getDeploymentModel());
             new ServiceHandler().createArtifacts();
             new ConfigMapHandler().createArtifacts();
             new DeploymentHandler().createArtifacts();

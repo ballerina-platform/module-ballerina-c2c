@@ -24,7 +24,7 @@ import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.test.utils.KubernetesTestUtils;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.batch.CronJob;
+import io.fabric8.kubernetes.api.model.batch.v1.CronJob;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
@@ -44,28 +44,31 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getDockerImage;
 public class JobTest {
 
     private static final Path SOURCE_DIR_PATH = Paths.get("src", "test", "resources", "job");
-    private static final Path DOCKER_TARGET_PATH = SOURCE_DIR_PATH.resolve(DOCKER);
-    private static final Path KUBERNETES_TARGET_PATH = SOURCE_DIR_PATH.resolve(KUBERNETES);
-    private static final String DOCKER_IMAGE_JOB = "ballerina_job:latest";
+    private static final Path DOCKER_TARGET_PATH = SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
+    private static final Path KUBERNETES_TARGET_PATH = SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES)
+            .resolve("hello");
+    private static final String DOCKER_IMAGE_JOB = "anuruddhal/hello-api:v4";
 
     @Test
     public void testKubernetesJobGeneration() throws IOException, InterruptedException {
-        Assert.assertEquals(KubernetesTestUtils.compileBallerinaFile(SOURCE_DIR_PATH, "ballerina_job.bal", "k8s"), 0);
+        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH), 0);
 
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         Assert.assertTrue(dockerFile.exists());
         InspectImageResponse imageInspect = getDockerImage(DOCKER_IMAGE_JOB);
         Assert.assertNotNull(imageInspect.getConfig());
 
-        File jobYAML = KUBERNETES_TARGET_PATH.resolve("ballerina_job.yaml").toFile();
+        File jobYAML = KUBERNETES_TARGET_PATH.resolve("hello.yaml").toFile();
         CronJob job = KubernetesTestUtils.loadYaml(jobYAML);
-        Assert.assertEquals(job.getMetadata().getName(), "ballerina-job-job");
+        Assert.assertEquals(job.getMetadata().getName(), "hello-hello-0-0-job");
         Assert.assertEquals(job.getSpec().getJobTemplate().getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         Container container = job.getSpec().getJobTemplate().getSpec().getTemplate().getSpec().getContainers().get(0);
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE_JOB);
         Assert.assertEquals(job.getSpec().getJobTemplate().getSpec().getTemplate().getSpec()
                 .getRestartPolicy(), KubernetesConstants.RestartPolicy.OnFailure.name());
+        Assert.assertEquals(container.getEnv().size(), 1);
+        Assert.assertEquals(container.getEnv().get(0).getName(), "b7a_log_level");
     }
 
     @AfterClass

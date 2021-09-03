@@ -23,9 +23,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.ballerinax.docker.generator.models.CopyFileModel;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import static org.ballerinax.docker.generator.DockerGenConstants.OPENJDK_11_JRE_SLIM_BASE;
@@ -36,7 +36,6 @@ import static org.ballerinax.docker.generator.DockerGenConstants.OPENJDK_11_JRE_
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class JobModel extends KubernetesModel {
-    protected Map<String, String> nodeSelector;
     private String restartPolicy;
     private int backoffLimit;
     private int activeDeadlineSeconds;
@@ -44,10 +43,7 @@ public class JobModel extends KubernetesModel {
     private String image;
     private boolean buildImage;
     private String dockerHost;
-    private String username;
-    private String password;
     private String baseImage;
-    private boolean push;
     private String cmd;
     private String dockerCertPath;
     private Set<String> imagePullSecrets;
@@ -61,16 +57,10 @@ public class JobModel extends KubernetesModel {
         this.copyFiles = new HashSet<>();
         this.restartPolicy = KubernetesConstants.RestartPolicy.OnFailure.name();
         this.setBaseImage(OPENJDK_11_JRE_SLIM_BASE);
-        this.setPush(false);
         this.buildImage = true;
-        this.nodeSelector = new HashMap<>();
-
+        this.envVars = new ArrayList<>();
         this.activeDeadlineSeconds = 20;
         this.imagePullSecrets = new HashSet<>();
         this.uberJar = false;
-    }
-
-    public void addLabel(String key, String value) {
-        this.labels.put(key, value);
     }
 }

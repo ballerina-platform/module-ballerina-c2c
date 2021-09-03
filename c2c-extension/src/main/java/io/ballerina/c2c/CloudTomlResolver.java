@@ -23,8 +23,10 @@ import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.ConfigMapModel;
 import io.ballerina.c2c.models.DeploymentModel;
+import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
+import io.ballerina.c2c.models.KubernetesModel;
 import io.ballerina.c2c.models.PersistentVolumeClaimModel;
 import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
@@ -70,11 +72,20 @@ public class CloudTomlResolver {
     public static final String CLOUD_DEPLOYMENT = "cloud.deployment.";
     KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
 
-    public void resolveToml() throws KubernetesPluginException {
+    public void resolveToml(JobModel jobModel) {
         Toml ballerinaCloud = dataHolder.getBallerinaCloud();
         if (ballerinaCloud != null) {
-            DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
+            // Resolve Env
+            resolveEnvToml(jobModel, ballerinaCloud);
 
+            // Resolve settings
+            resolveSettingsToml(ballerinaCloud);
+        }
+    }
+
+    public void resolveToml(DeploymentModel deploymentModel) throws KubernetesPluginException {
+        Toml ballerinaCloud = dataHolder.getBallerinaCloud();
+        if (ballerinaCloud != null) {
             // Deployment configs
             resolveDeploymentToml(deploymentModel, ballerinaCloud);
 
@@ -132,7 +143,7 @@ public class CloudTomlResolver {
                 "internal_domain_name"));
     }
 
-    private void resolveEnvToml(DeploymentModel deploymentModel, Toml ballerinaCloud) {
+    private void resolveEnvToml(KubernetesModel model, Toml ballerinaCloud) {
         List<Toml> envs = ballerinaCloud.getTables("cloud.config.envs");
         for (Toml env : envs) {
             EnvVar envVar = new EnvVarBuilder()
@@ -147,7 +158,7 @@ public class CloudTomlResolver {
             if (isBlank(envVar.getName())) {
                 envVar.setName(TomlHelper.getString(env, KubernetesConstants.KEY_REF));
             }
-            deploymentModel.addEnv(envVar);
+            model.addEnv(envVar);
         }
 
         List<Toml> secrets = ballerinaCloud.getTables("cloud.secret.envs");
@@ -164,7 +175,7 @@ public class CloudTomlResolver {
             if (isBlank(envVar.getName())) {
                 envVar.setName(TomlHelper.getString(secret, KubernetesConstants.KEY_REF));
             }
-            deploymentModel.addEnv(envVar);
+            model.addEnv(envVar);
         }
     }
 
