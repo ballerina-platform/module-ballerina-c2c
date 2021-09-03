@@ -27,7 +27,7 @@ plugins {
 ext.ballerinaLangVersion = project.ballerinaLangVersion
 ext.ballerinaSourceDirectory = "$buildDir/../src/main/ballerina"
 ext.dockerJavaVersion = "3.1.5"
-ext.fabric8KubernetesClientVersion = "4.11.2"
+ext.fabric8KubernetesClientVersion = "5.7.1"
 ext.javaxValidationAPIVersion = "2.0.0.Final"
 ext.snakeYamlVersion = "1.26"
 ext.projectBuildSourceEncoding = "UTF-8"

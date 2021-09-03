@@ -25,6 +25,7 @@ import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
+import io.ballerina.c2c.models.KubernetesModel;
 import io.ballerina.projects.Package;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.tools.diagnostics.Diagnostic;
@@ -53,6 +54,7 @@ import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_POSTFIX;
 import static io.ballerina.c2c.KubernetesConstants.EXECUTABLE_JAR;
+import static io.ballerina.c2c.KubernetesConstants.JOB_POSTFIX;
 import static io.ballerina.c2c.KubernetesConstants.YAML;
 import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
 
@@ -229,23 +231,34 @@ public class KubernetesUtils {
                 new Name(currentPackage.packageVersion().value().toString()));
     }
 
-    public static void resolveDockerToml(DeploymentModel deploymentModel) throws KubernetesPluginException {
+    public static void resolveDockerToml(KubernetesModel model) throws KubernetesPluginException {
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         final String containerImage = "container.image";
         Toml toml = dataHolder.getBallerinaCloud();
         if (toml != null) {
             DockerModel dockerModel = dataHolder.getDockerModel();
-            dockerModel.setName(TomlHelper.getString(toml, containerImage + ".name",
-                    deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "")));
             dockerModel
                     .setRegistry(TomlHelper.getString(toml, containerImage + ".repository", null));
             dockerModel.setTag(TomlHelper.getString(toml, containerImage + ".tag", dockerModel.getTag()));
             dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", dockerModel.getBaseImage()));
             dockerModel.setJarFileName(extractJarName(dataHolder.getJarPath()) + EXECUTABLE_JAR);
             dockerModel.setCmd(TomlHelper.getString(toml, containerImage + ".cmd", dockerModel.getCmd()));
-            String imageName = isBlank(dockerModel.getRegistry()) ? dockerModel.getName() + ":" + dockerModel.getTag() :
-                    dockerModel.getRegistry() + "/" + dockerModel.getName() + ":" + dockerModel.getTag();
-            deploymentModel.setImage(imageName);
+            if (model instanceof DeploymentModel) {
+
+                dockerModel.setName(TomlHelper.getString(toml, containerImage + ".name",
+                        model.getName().replace(DEPLOYMENT_POSTFIX, "")));
+                String imageName = isBlank(dockerModel.getRegistry()) ?
+                        dockerModel.getName() + ":" + dockerModel.getTag() :
+                        dockerModel.getRegistry() + "/" + dockerModel.getName() + ":" + dockerModel.getTag();
+                ((DeploymentModel) model).setImage(imageName);
+            } else {
+                dockerModel.setName(TomlHelper.getString(toml, containerImage + ".name",
+                        model.getName().replace(JOB_POSTFIX, "")));
+                String imageName = isBlank(dockerModel.getRegistry()) ?
+                        dockerModel.getName() + ":" + dockerModel.getTag() :
+                        dockerModel.getRegistry() + "/" + dockerModel.getName() + ":" + dockerModel.getTag();
+                ((JobModel) model).setImage(imageName);
+            }
             dockerModel.setBuildImage(TomlHelper.getBoolean(toml, "settings.buildImage", true));
             Set<CopyFileModel> copyFiles = new HashSet<>();
             for (Toml entry : toml.getTables("container.copy.files")) {

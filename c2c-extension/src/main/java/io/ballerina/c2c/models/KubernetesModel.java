@@ -17,50 +17,31 @@
  */
 package io.ballerina.c2c.models;
 
+import io.fabric8.kubernetes.api.model.EnvVar;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
 import java.util.Map;
 
 /**
  * Kubernetes Model class.
  */
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Data
 public abstract class KubernetesModel {
     private String version;
     @EqualsAndHashCode.Include
     protected String name;
     protected Map<String, String> labels;
     protected Map<String, String> annotations;
-    
-    public String getName() {
-        return name;
+    protected List<EnvVar> envVars;
+
+    public void addLabel(String key, String value) {
+        this.labels.put(key, value);
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-    
-    public Map<String, String> getLabels() {
-        return labels;
-    }
-    
-    public void setLabels(Map<String, String> labels) {
-        this.labels = labels;
-    }
-    
-    public Map<String, String> getAnnotations() {
-        return annotations;
-    }
-    
-    public void setAnnotations(Map<String, String> annotations) {
-        this.annotations = annotations;
+    public void addEnv(EnvVar envVar) {
+        envVars.add(envVar);
     }
 }

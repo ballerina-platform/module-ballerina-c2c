@@ -1,0 +1,9 @@
+[container.image]
+repository="anuruddhal"
+name="hello-api"
+tag="v4"
+
+[[cloud.config.envs]]
+name= "b7a_log_level"
+config_name= "cm-loglevel-linker"
+key_ref= "B7A_LOG_LEVEL"

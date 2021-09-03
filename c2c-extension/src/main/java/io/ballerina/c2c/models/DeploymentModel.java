@@ -18,7 +18,6 @@
 package io.ballerina.c2c.models;
 
 import io.fabric8.kubernetes.api.model.ContainerPort;
-import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
@@ -51,7 +50,6 @@ public class DeploymentModel extends KubernetesModel {
     private String image;
     private boolean buildImage;
     private String baseImage;
-    private List<EnvVar> envVars;
     private String dockerHost;
     private String dockerCertPath;
     private List<ContainerPort> ports;
@@ -99,7 +97,6 @@ public class DeploymentModel extends KubernetesModel {
         return podAnnotations;
     }
 
-
     public void setLivenessProbe(Probe livenessProbe) {
         this.livenessProbe = livenessProbe;
     }
@@ -112,35 +109,4 @@ public class DeploymentModel extends KubernetesModel {
         this.ports.add(port);
     }
 
-    public void addLabel(String key, String value) {
-        this.labels.put(key, value);
-    }
-
-    public void addEnv(EnvVar envVar) {
-        envVars.add(envVar);
-    }
-
-    @Override
-    public String toString() {
-        return "DeploymentModel{" +
-                "podAnnotations=" + podAnnotations +
-                ", replicas=" + replicas +
-                ", livenessProbe=" + livenessProbe +
-                ", namespace='" + namespace +
-                ", image='" + image +
-                ", buildImage=" + buildImage +
-                ", baseImage='" + baseImage +
-                ", env=" + envVars +
-                ", dockerHost='" + dockerHost +
-                ", dockerCertPath='" + dockerCertPath +
-                ", ports=" + ports +
-                ", podAutoscalerModel=" + podAutoscalerModel +
-                ", secretModels=" + secretModels +
-                ", configMapModels=" + configMapModels +
-                ", volumeClaimModels=" + volumeClaimModels +
-                ", imagePullSecrets=" + imagePullSecrets +
-                ", commandArgs='" + commandArgs +
-                ", registry='" + registry +
-                '}';
-    }
 }

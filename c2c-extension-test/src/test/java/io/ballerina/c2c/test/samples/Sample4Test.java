@@ -24,7 +24,7 @@ import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.test.utils.KubernetesTestUtils;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.batch.CronJob;
+import io.fabric8.kubernetes.api.model.batch.v1.CronJob;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -68,13 +68,6 @@ public class Sample4Test extends SampleTest {
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE);
         Assert.assertEquals(job.getSpec().getJobTemplate().getSpec().getTemplate().getSpec()
                 .getRestartPolicy(), KubernetesConstants.RestartPolicy.OnFailure.name());
-    }
-
-    @Test(groups = {"integration"})
-    public void deploySample() throws IOException, InterruptedException {
-        Assert.assertEquals(0, KubernetesTestUtils.loadImage(DOCKER_IMAGE));
-        Assert.assertEquals(0, KubernetesTestUtils.deployK8s(KUBERNETES_TARGET_PATH));
-        Assert.assertEquals(0, KubernetesTestUtils.deleteK8s(KUBERNETES_TARGET_PATH));
     }
 
     @AfterClass

@@ -28,10 +28,10 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
-import io.fabric8.kubernetes.api.model.batch.CronJob;
-import io.fabric8.kubernetes.api.model.batch.CronJobBuilder;
-import io.fabric8.kubernetes.api.model.batch.Job;
-import io.fabric8.kubernetes.api.model.batch.JobBuilder;
+import io.fabric8.kubernetes.api.model.batch.v1.CronJob;
+import io.fabric8.kubernetes.api.model.batch.v1.CronJobBuilder;
+import io.fabric8.kubernetes.api.model.batch.v1.Job;
+import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import org.ballerinax.docker.generator.exceptions.DockerGenException;
 import org.ballerinax.docker.generator.models.DockerModel;
@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.ballerina.c2c.utils.KubernetesUtils.resolveDockerToml;
 import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
 
 /**
@@ -74,6 +75,7 @@ public class JobHandler extends AbstractArtifactHandler {
         return new ContainerBuilder()
                 .withName(jobModel.getName())
                 .withImage(jobModel.getImage())
+                .withEnv(jobModel.getEnvVars())
                 .build();
     }
 
@@ -89,7 +91,6 @@ public class JobHandler extends AbstractArtifactHandler {
                 .withRestartPolicy(jobModel.getRestartPolicy())
                 .withContainers(generateContainer(jobModel))
                 .withImagePullSecrets(getImagePullSecrets(jobModel))
-                .withNodeSelector(jobModel.getNodeSelector())
                 .endSpec()
                 .endTemplate()
                 .endSpec();
@@ -138,6 +139,7 @@ public class JobHandler extends AbstractArtifactHandler {
                 jobModel.setImage(balxFileName + KubernetesConstants.DOCKER_LATEST_TAG);
             }
             jobModel.addLabel(KubernetesConstants.KUBERNETES_SELECTOR_KEY, balxFileName);
+            resolveDockerToml(jobModel);
             generate(jobModel);
             //generate dockerfile and docker image
             dataHolder.setDockerModel(getDockerModel(jobModel));
