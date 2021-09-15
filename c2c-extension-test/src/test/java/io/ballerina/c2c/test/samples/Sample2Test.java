@@ -42,6 +42,7 @@ import java.util.List;
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.deployK8s;
+import static io.ballerina.c2c.test.utils.KubernetesTestUtils.extractNodePort;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getCommand;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getExposedPorts;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
@@ -135,6 +136,13 @@ public class Sample2Test extends SampleTest {
     public void deploySample() throws IOException, InterruptedException {
         Assert.assertEquals(0, loadImage(DOCKER_IMAGE));
         Assert.assertEquals(0, deployK8s(KUBERNETES_TARGET_PATH));
+        Assert.assertEquals(0, KubernetesTestUtils.executeK8sCommand("expose", "deployment",
+                "hello-deployment", "--type=NodePort", "--name=hello-world-svc-local"));
+        Assert.assertTrue(KubernetesTestUtils.validateService(
+                "http://localhost:" + extractNodePort("hello-world-svc-local") + "/helloWorld/sayHello",
+                "Hello, World from service helloWorld ! \n"));
+        Assert.assertEquals(0, KubernetesTestUtils.executeK8sCommand("delete", "svc",
+                "hello-world-svc-local"));
         KubernetesTestUtils.deleteK8s(KUBERNETES_TARGET_PATH);
     }
 
