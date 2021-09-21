@@ -155,10 +155,10 @@ public class Sample5Test extends SampleTest {
                 "hello-deployment", "--type=NodePort", "--name=hello-world-svc-local"));
         int nodePort = extractNodePort("hello-world-svc-local");
         Assert.assertTrue(KubernetesTestUtils.validateService(
-                "https://localhost:" + nodePort + "/helloWorld/config",
+                "https://127.0.0.1:" + nodePort + "/helloWorld/config",
                 "Configuration: john@ballerina.com,jane@ballerina.com apim,esb"));
         Assert.assertTrue(KubernetesTestUtils.validateService(
-                "https://localhost:" + nodePort + "/helloWorld/data",
+                "https://127.0.0.1:" + nodePort + "/helloWorld/data",
                 "Data: Lorem ipsum dolor sit amet."));
         Assert.assertEquals(0, KubernetesTestUtils.executeK8sCommand("delete", "svc",
                 "hello-world-svc-local"));

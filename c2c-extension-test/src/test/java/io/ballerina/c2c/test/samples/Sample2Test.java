@@ -139,7 +139,7 @@ public class Sample2Test extends SampleTest {
         Assert.assertEquals(0, KubernetesTestUtils.executeK8sCommand("expose", "deployment",
                 "hello-deployment", "--type=NodePort", "--name=hello-world-svc-local"));
         Assert.assertTrue(KubernetesTestUtils.validateService(
-                "http://localhost:" + extractNodePort("hello-world-svc-local") + "/helloWorld/sayHello",
+                "http://127.0.0.1:" + extractNodePort("hello-world-svc-local") + "/helloWorld/sayHello",
                 "Hello, World from service helloWorld ! \n"));
         Assert.assertEquals(0, KubernetesTestUtils.executeK8sCommand("delete", "svc",
                 "hello-world-svc-local"));
