@@ -255,32 +255,6 @@ public class KubernetesTestUtils {
     }
 
     /**
-     * Extract Node port from a given service command.
-     *
-     * @param svcName Node port Service name
-     * @return Exit code
-     * @throws InterruptedException if an error occurs while compiling
-     * @throws IOException          if an error occurs while writing file
-     */
-    public static int extractNodePort(String svcName) throws InterruptedException, IOException {
-        List<String> command = new ArrayList<>();
-        String[] args = {"get", "svc", svcName, "-o", "go-template={{range.spec.ports}}{{if .nodePort}}{{" +
-                ".nodePort}}{{\"\\n\"}}{{end}}{{end}}"};
-        command.add(KUBECTL);
-        command.addAll(Arrays.asList(args));
-        ProcessBuilder pb = new ProcessBuilder(command);
-        log.debug(EXECUTING_COMMAND + pb.command());
-        Process process = pb.start();
-        int exitCode = process.waitFor();
-        if (exitCode == 0) {
-            return Integer.parseInt(new String(process.getInputStream().readAllBytes()).trim());
-        }
-        logOutput(process.getInputStream());
-        logOutput(process.getErrorStream());
-        throw new RuntimeException("Error extracting Node Port");
-    }
-
-    /**
      * Send a request to URL and validate the message.
      *
      * @param url     Service URL
@@ -291,10 +265,17 @@ public class KubernetesTestUtils {
     public static boolean validateService(String url, String message) throws IOException {
         // Custom DNS resolver
         log.info("Accessing URL: " + url);
+
         DnsResolver dnsResolver = new SystemDefaultDnsResolver() {
             @Override
             public InetAddress[] resolve(final String host) throws UnknownHostException {
-                return super.resolve(host);
+                if (host.equalsIgnoreCase("c2c.deployment.test")) {
+                    // If host is matching return the IP address we want, not what is in DNS
+                    return new InetAddress[]{InetAddress.getByName("127.0.0.1")};
+                } else {
+                    // Else, resolve from the DNS
+                    return super.resolve(host);
+                }
             }
         };
 
