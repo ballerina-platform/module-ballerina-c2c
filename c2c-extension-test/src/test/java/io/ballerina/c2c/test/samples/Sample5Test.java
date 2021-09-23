@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
@@ -56,6 +57,8 @@ public class Sample5Test extends SampleTest {
             SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
     private static final Path KUBERNETES_TARGET_PATH =
             SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello");
+    private static final Path INGRESS_PATH =
+            Paths.get("src", "test", "resources", "sample5");
     private static final String DOCKER_IMAGE = "anuruddhal/hello-api:sample5";
     private Deployment deployment;
     private ConfigMap ballerinaConf;
@@ -146,15 +149,23 @@ public class Sample5Test extends SampleTest {
                 "\"hello-hello-0.0.1.jar:jars/*\" 'hello/hello/0/$_init' || cat ballerina-internal.log]");
     }
 
-    @Test(groups = { "integration" })
+    @Test(groups = {"integration"})
     public void deploySample() throws IOException, InterruptedException {
         Assert.assertEquals(0, loadImage(DOCKER_IMAGE));
         Assert.assertEquals(0, deployK8s(KUBERNETES_TARGET_PATH));
+        Assert.assertEquals(0, deployK8s(INGRESS_PATH));
+        Assert.assertTrue(KubernetesTestUtils.validateService(
+                "https://c2c.deployment.test/helloWorld/config",
+                "Configuration: john@ballerina.com,jane@ballerina.com apim,esb"));
+        Assert.assertTrue(KubernetesTestUtils.validateService(
+                "https://c2c.deployment.test/helloWorld/data",
+                "Data: Lorem ipsum dolor sit amet."));
         KubernetesTestUtils.deleteK8s(KUBERNETES_TARGET_PATH);
+        KubernetesTestUtils.deleteK8s(INGRESS_PATH);
     }
 
     @AfterClass
-    public void cleanUp() throws KubernetesPluginException {
+    public void cleanUp() throws KubernetesPluginException, IOException, InterruptedException {
         KubernetesUtils.deleteDirectory(KUBERNETES_TARGET_PATH);
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
         KubernetesTestUtils.deleteDockerImage(DOCKER_IMAGE);

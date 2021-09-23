@@ -265,16 +265,13 @@ public class KubernetesTestUtils {
     public static boolean validateService(String url, String message) throws IOException {
         // Custom DNS resolver
         log.info("Accessing URL: " + url);
+
         DnsResolver dnsResolver = new SystemDefaultDnsResolver() {
             @Override
             public InetAddress[] resolve(final String host) throws UnknownHostException {
-                if (host.equalsIgnoreCase("abc.com") ||
-                        host.equalsIgnoreCase("pizza.com") ||
-                        host.equalsIgnoreCase("pizzashack.com") ||
-                        host.equalsIgnoreCase("internal.pizzashack.com") ||
-                        host.equalsIgnoreCase("burger.com")) {
+                if (host.equalsIgnoreCase("c2c.deployment.test")) {
                     // If host is matching return the IP address we want, not what is in DNS
-                    return new InetAddress[]{ InetAddress.getByName("127.0.0.1") };
+                    return new InetAddress[]{InetAddress.getByName("127.0.0.1")};
                 } else {
                     // Else, resolve from the DNS
                     return super.resolve(host);
