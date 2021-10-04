@@ -99,17 +99,6 @@ public class CustomDiagnosticsTest {
         Assert.assertEquals(diagnostics.size(), 1);
         Assert.assertEquals(diagnostics.iterator().next().message(), "Invalid Liveness Probe Service Path");
     }
-    
-    private List<Diagnostic> getC2CDiagnostics(Collection<Diagnostic> allDiagnostics) {
-        List<Diagnostic> diagnostics = new ArrayList<>();
-        for (Diagnostic diagnostic:allDiagnostics) {
-            if (diagnostic instanceof PackageDiagnostic) {
-                continue;
-            }
-            diagnostics.add(diagnostic);
-        }
-        return diagnostics;
-    }
 
     @Test
     public void testInvalidResourcePath() {
@@ -192,5 +181,62 @@ public class CustomDiagnosticsTest {
         Collection<Diagnostic> diagnostics =
                 getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 0);
+    }
+
+    @Test
+    public void testSslMutualCerts() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "ssl-mutal-ssl-with-certs");
+        BuildProject project = BuildProject.load(projectPath);
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
+        Assert.assertEquals(diagnostics.size(), 0);
+    }
+
+    @Test
+    public void testSslMutualSsl() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "ssl-mutual-ssl");
+        BuildProject project = BuildProject.load(projectPath);
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
+        Assert.assertEquals(diagnostics.size(), 0);
+    }
+
+    @Test
+    public void testHttp2ssl() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "http2-ssl");
+        BuildProject project = BuildProject.load(projectPath);
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
+        Assert.assertEquals(diagnostics.size(), 0);
+    }
+
+    @Test
+    public void testHttp2Mutualssl() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "http2-mutual-ssl");
+        BuildProject project = BuildProject.load(projectPath);
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
+        Assert.assertEquals(diagnostics.size(), 0);
+    }
+
+    @Test
+    public void testClientNoInit() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "client-no-init");
+        BuildProject project = BuildProject.load(projectPath);
+        Collection<Diagnostic> diagnostics = project.currentPackage().getCompilation().diagnosticResult().errors();
+        Iterator<Diagnostic> iterator = diagnostics.iterator();
+        Assert.assertEquals(iterator.next().message(), "uninitialized variable 'x'");
+        Assert.assertEquals(iterator.next().message(), "variable 'y' is not initialized");
+    }
+
+    private List<Diagnostic> getC2CDiagnostics(Collection<Diagnostic> allDiagnostics) {
+        List<Diagnostic> diagnostics = new ArrayList<>();
+        for (Diagnostic diagnostic:allDiagnostics) {
+            if (diagnostic instanceof PackageDiagnostic) {
+                continue;
+            }
+            diagnostics.add(diagnostic);
+        }
+        return diagnostics;
     }
 }

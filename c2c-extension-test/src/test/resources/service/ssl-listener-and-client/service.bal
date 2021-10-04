@@ -58,10 +58,11 @@ http:ClientConfiguration sslProtocolClientConfig = {
 
 service /hello on helloEP {
     resource function get world() returns string|error {
+        int x;
         http:Client clientEP = checkpanic new("https://localhost:9249", sslProtocolClientConfig);
         http:Response|error resp = clientEP->get("/protocol/protocolResource");
         if (resp is http:Response) {
-            return "Response Recieved";
+            return "Response Recieved ";
         } else {
             return resp;
         }
