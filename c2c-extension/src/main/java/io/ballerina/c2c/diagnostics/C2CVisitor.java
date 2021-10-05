@@ -589,10 +589,13 @@ public class C2CVisitor extends NodeVisitor {
             return extractListenerInitializer(listenerName, init);
         } else {
             ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
-            FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(paramNo);
-            if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
-                ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
-                return getListenerInfo(path, expression);
+            SeparatedNodeList<FunctionArgumentNode> arguments = refNode.parenthesizedArgList().arguments();
+            if (arguments.size() > paramNo) {
+                FunctionArgumentNode functionArgumentNode = arguments.get(paramNo);
+                if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
+                    ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
+                    return getListenerInfo(path, expression);
+                }
             }
         }
         return Optional.empty();

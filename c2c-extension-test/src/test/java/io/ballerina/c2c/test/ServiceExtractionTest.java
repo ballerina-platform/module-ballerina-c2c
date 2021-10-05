@@ -20,11 +20,13 @@ import io.ballerina.c2c.diagnostics.ListenerInfo;
 import io.ballerina.c2c.diagnostics.ProjectServiceInfo;
 import io.ballerina.c2c.diagnostics.ServiceInfo;
 import io.ballerina.projects.directory.BuildProject;
+import io.ballerina.tools.diagnostics.Diagnostic;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -65,6 +67,29 @@ public class ServiceExtractionTest {
         ServiceInfo serviceInfo1 = serviceList.get(1);
         ListenerInfo listener1 = serviceInfo1.getListener();
         Assert.assertEquals(listener1.getPort(), 9090);
+    }
+
+    @Test
+    public void testExposeIntOrHttpListener() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "expose-int-or-http");
+
+        BuildProject project = BuildProject.load(projectPath);
+        List<Diagnostic> diagnostics = new ArrayList<>();
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project, diagnostics);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+
+        Assert.assertEquals(serviceList.size(), 2);
+        ServiceInfo serviceInfo = serviceList.get(0);
+        ListenerInfo listener = serviceInfo.getListener();
+        Assert.assertEquals(listener.getPort(), 8080);
+
+        ServiceInfo serviceInfo1 = serviceList.get(1);
+        ListenerInfo listener1 = serviceInfo1.getListener();
+        Assert.assertEquals(listener1.getPort(), 9090);
+        
+        Assert.assertEquals(diagnostics.size(), 1);
+        Diagnostic diagnostic = diagnostics.get(0);
+        Assert.assertEquals(diagnostic.message(), "failed to retrieve port");
     }
 
     @Test
