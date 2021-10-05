@@ -86,7 +86,7 @@ public class ServiceExtractionTest {
         ServiceInfo serviceInfo1 = serviceList.get(1);
         ListenerInfo listener1 = serviceInfo1.getListener();
         Assert.assertEquals(listener1.getPort(), 9090);
-        
+
         Assert.assertEquals(diagnostics.size(), 1);
         Diagnostic diagnostic = diagnostics.get(0);
         Assert.assertEquals(diagnostic.message(), "failed to retrieve port");
@@ -192,8 +192,7 @@ public class ServiceExtractionTest {
         String keystore = clientInfo.getHttpsConfig().getMutualSSLConfig().get().getPath();
         Assert.assertEquals(keystore, "./security/ballerinaTruststore.p12");
     }
-
-
+    
     @Test
     public void testGraphQl() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "graphql");
