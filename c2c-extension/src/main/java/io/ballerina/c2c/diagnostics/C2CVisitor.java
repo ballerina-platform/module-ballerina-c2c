@@ -105,7 +105,7 @@ public class C2CVisitor extends NodeVisitor {
         // }
         Optional<ExpressionNode> initializer = moduleVariableDeclarationNode.initializer();
         if (initializer.isEmpty()) {
-            return;
+            return; //Module level vars always needs to be initialized, validated by compiler
         }
         extractHttpClientConfig(moduleVariableDeclarationNode.typedBindingPattern(), initializer.get());
     }
