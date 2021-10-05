@@ -85,6 +85,12 @@ public class ModuleLevelVariableExtractor extends NodeVisitor {
             CheckExpressionNode checkedInit = (CheckExpressionNode) initExpression;
             ExpressionNode expression = checkedInit.expression();
             moduleLevelVariables.put(variableName, expression);
+            return;
+        }
+
+        if ("Listener".equals(identifier)) {
+            Optional<ExpressionNode> initializer = moduleVariableDeclarationNode.initializer();
+            initializer.ifPresent(expressionNode -> moduleLevelVariables.put(variableName, expressionNode));
         }
     }
 
