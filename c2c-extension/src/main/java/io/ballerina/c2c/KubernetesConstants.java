@@ -54,7 +54,8 @@ public class KubernetesConstants {
     public static final String MIN_MEMORY = "min_memory";
     public static final String MEMORY = "memory";
     public static final String CPU = "cpu";
-
+    public static final String CHOREO = "choreo";
+    
     /**
      * Restart policy enum.
      */

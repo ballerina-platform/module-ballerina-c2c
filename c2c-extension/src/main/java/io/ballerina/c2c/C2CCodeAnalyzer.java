@@ -18,6 +18,7 @@
 package io.ballerina.c2c;
 
 import io.ballerina.c2c.tasks.C2CAnalysisTask;
+import io.ballerina.c2c.tasks.ChoreoAnalysisTask;
 import io.ballerina.c2c.tasks.CloudTomlAnalysisTask;
 import io.ballerina.projects.plugins.CodeAnalysisContext;
 import io.ballerina.projects.plugins.CodeAnalyzer;
@@ -32,5 +33,6 @@ public class C2CCodeAnalyzer extends CodeAnalyzer {
     public void init(CodeAnalysisContext analysisContext) {
         analysisContext.addCompilationAnalysisTask(new CloudTomlAnalysisTask());
         analysisContext.addCompilationAnalysisTask(new C2CAnalysisTask());
+        analysisContext.addCompilationAnalysisTask(new ChoreoAnalysisTask());
     }
 }

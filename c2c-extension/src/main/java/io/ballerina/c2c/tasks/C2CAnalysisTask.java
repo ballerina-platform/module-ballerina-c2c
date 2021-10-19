@@ -37,6 +37,7 @@ import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.models.ServiceModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.projects.Package;
+import io.ballerina.projects.Project;
 import io.ballerina.projects.plugins.AnalysisTask;
 import io.ballerina.projects.plugins.CompilationAnalysisContext;
 import io.ballerina.tools.diagnostics.Diagnostic;
@@ -70,6 +71,11 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
     @Override
     public void perform(CompilationAnalysisContext compilationAnalysisContext) {
         Package currentPackage = compilationAnalysisContext.currentPackage();
+        final Project project = compilationAnalysisContext.currentPackage().project();
+        String cloud = project.buildOptions().cloud();
+        if (cloud == null || !isSupportedBuildOption(cloud)) {
+            return;
+        }
         KubernetesContext.getInstance().setCurrentPackage(KubernetesUtils.getProjectID(currentPackage));
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         dataHolder.setPackageID(KubernetesUtils.getProjectID(currentPackage));
@@ -296,5 +302,14 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
             mountPath = BALLERINA_HOME + File.separator + mountPath;
         }
         return String.valueOf(Paths.get(mountPath).getParent());
+    }
+
+    private boolean isSupportedBuildOption(String buildOption) {
+        switch (buildOption) {
+            case "k8s":
+            case "docker":
+                return true;
+        }
+        return false;
     }
 }
