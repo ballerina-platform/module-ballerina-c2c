@@ -18,6 +18,7 @@
 package io.ballerina.c2c.tasks;
 
 import io.ballerina.c2c.diagnostics.TomlDiagnosticChecker;
+import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.c2c.utils.TomlHelper;
 import io.ballerina.projects.CloudToml;
 import io.ballerina.projects.Project;
@@ -48,7 +49,7 @@ public class CloudTomlAnalysisTask implements AnalysisTask<CompilationAnalysisCo
     public void perform(CompilationAnalysisContext compilationAnalysisContext) {
         final Project project = compilationAnalysisContext.currentPackage().project();
         String cloud = project.buildOptions().cloud();
-        if (cloud == null || !isSupportedBuildOption(cloud)) {
+        if (cloud == null || !KubernetesUtils.isBuildOptionDockerOrK8s(cloud)) {
             return;
         }
         TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker(project);
@@ -79,14 +80,4 @@ public class CloudTomlAnalysisTask implements AnalysisTask<CompilationAnalysisCo
             throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
         }
     }
-
-    private boolean isSupportedBuildOption(String buildOption) {
-        switch (buildOption) {
-            case "k8s":
-            case "docker":
-                return true;
-        }
-        return false;
-    }
-
 }

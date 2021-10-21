@@ -73,7 +73,7 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
         Package currentPackage = compilationAnalysisContext.currentPackage();
         final Project project = compilationAnalysisContext.currentPackage().project();
         String cloud = project.buildOptions().cloud();
-        if (cloud == null || !isSupportedBuildOption(cloud)) {
+        if (cloud == null || !KubernetesUtils.isBuildOptionDockerOrK8s(cloud)) {
             return;
         }
         KubernetesContext.getInstance().setCurrentPackage(KubernetesUtils.getProjectID(currentPackage));
@@ -302,14 +302,5 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
             mountPath = BALLERINA_HOME + File.separator + mountPath;
         }
         return String.valueOf(Paths.get(mountPath).getParent());
-    }
-
-    private boolean isSupportedBuildOption(String buildOption) {
-        switch (buildOption) {
-            case "k8s":
-            case "docker":
-                return true;
-        }
-        return false;
     }
 }

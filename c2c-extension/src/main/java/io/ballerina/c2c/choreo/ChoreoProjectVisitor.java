@@ -15,7 +15,6 @@
  */
 package io.ballerina.c2c.choreo;
 
-
 import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
 import io.ballerina.compiler.api.ModuleID;
 import io.ballerina.compiler.api.SemanticModel;
@@ -224,7 +223,8 @@ public class ChoreoProjectVisitor extends NodeVisitor {
         }
     }
 
-    private Optional<ChoreoListenerInfo> getPortValueFromSTForCustomListener(String path, ServiceDeclarationNode serviceNode,
+    private Optional<ChoreoListenerInfo> getPortValueFromSTForCustomListener(String path,
+                                                                             ServiceDeclarationNode serviceNode,
                                                                              int paramNo) {
         ExpressionNode expressionNode = serviceNode.expressions().get(0);
         if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {

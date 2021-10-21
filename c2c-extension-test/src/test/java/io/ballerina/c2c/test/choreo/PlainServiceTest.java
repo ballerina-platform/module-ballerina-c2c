@@ -76,7 +76,8 @@ public class PlainServiceTest {
     public void validateDockerfile() throws IOException {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
-        Assert.assertTrue(dockerFileContent.contains("CMD java -Xdiag -cp \"hello-hello-0.0.1.jar:jars/*\" 'hello/hello/0/$_init'"));
+        Assert.assertTrue(dockerFileContent
+                .contains("CMD java -Xdiag -cp \"hello-hello-0.0.1.jar:jars/*\" 'hello/hello/0/$_init'"));
         Assert.assertTrue(dockerFileContent.contains("USER ballerina"));
         Assert.assertTrue(dockerFile.exists());
     }

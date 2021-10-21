@@ -18,36 +18,24 @@
 
 package io.ballerina.c2c.models;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 /**
  * Model class to hold ports of the choreo yaml structure.
  *
  * @since 2.0.0
  */
+@Getter
+@Setter
+@NoArgsConstructor
 public class PortModel {
     private int containerPort;
     private String protocol;
 
-    public PortModel() {
-    }
-
     public PortModel(int containerPort, String protocol) {
         this.containerPort = containerPort;
         this.protocol = protocol;
-    }
-
-    public void setContainerPort(int containerPort) {
-        this.containerPort = containerPort;
-    }
-
-    public void setProtocol(String protocol) {
-        this.protocol = protocol;
-    }
-
-    public int getContainerPort() {
-        return containerPort;
-    }
-
-    public String getProtocol() {
-        return protocol;
     }
 }

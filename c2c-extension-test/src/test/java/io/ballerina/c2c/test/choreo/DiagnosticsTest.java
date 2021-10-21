@@ -35,7 +35,7 @@ import java.util.List;
  * @since 2.0.0
  */
 public class DiagnosticsTest {
-    
+
     @Test
     public void testProjectWithCloudToml() {
         Path projectPath = Paths.get("src", "test", "resources", "choreo", "project-cloud");
@@ -43,8 +43,8 @@ public class DiagnosticsTest {
         Collection<Diagnostic> diagnostics =
                 getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 1);
-        Assert.assertEquals(diagnostics.iterator().next().message(), "Cloud.toml is not supported and will be ignored in " +
-                "choreo");
+        Assert.assertEquals(diagnostics.iterator().next().message(),
+                "Cloud.toml is not supported and will be ignored in choreo");
     }
 
     @Test
@@ -59,7 +59,7 @@ public class DiagnosticsTest {
 
     private List<Diagnostic> getC2CDiagnostics(Collection<Diagnostic> allDiagnostics) {
         List<Diagnostic> diagnostics = new ArrayList<>();
-        for (Diagnostic diagnostic:allDiagnostics) {
+        for (Diagnostic diagnostic : allDiagnostics) {
             if (diagnostic instanceof PackageDiagnostic) {
                 continue;
             }

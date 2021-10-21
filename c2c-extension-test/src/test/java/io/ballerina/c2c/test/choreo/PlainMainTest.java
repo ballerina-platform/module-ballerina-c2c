@@ -42,7 +42,7 @@ import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 
 /**
  * Contains the tests for choreo project which has no services.
- * 
+ *
  * @since 2.0.0
  */
 public class PlainMainTest {
@@ -72,11 +72,12 @@ public class PlainMainTest {
     public void validateDockerfile() throws IOException {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
-        Assert.assertTrue(dockerFileContent.contains("CMD java -Xdiag -cp \"hello-hello-0.0.1.jar:jars/*\" 'hello/hello/0/$_init'"));
+        Assert.assertTrue(dockerFileContent
+                .contains("CMD java -Xdiag -cp \"hello-hello-0.0.1.jar:jars/*\" 'hello/hello/0/$_init'"));
         Assert.assertTrue(dockerFileContent.contains("USER ballerina"));
         Assert.assertTrue(dockerFile.exists());
     }
-    
+
     @AfterClass
     public void cleanUp() throws KubernetesPluginException {
         KubernetesUtils.deleteDirectory(CHOREO_TARGET_PATH);

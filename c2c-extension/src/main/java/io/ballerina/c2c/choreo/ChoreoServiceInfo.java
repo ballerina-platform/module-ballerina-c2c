@@ -18,13 +18,16 @@
 package io.ballerina.c2c.choreo;
 
 import io.ballerina.compiler.syntax.tree.ServiceDeclarationNode;
-
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Represents a Service of a ballerina document.
  *
  * @since 2.0.0
  */
+@Getter
+@Setter
 public class ChoreoServiceInfo {
     private ServiceDeclarationNode node;
     private String servicePath;
@@ -34,37 +37,5 @@ public class ChoreoServiceInfo {
         this.listener = listener;
         this.node = node;
         this.servicePath = servicePath;
-    }
-
-    public ServiceDeclarationNode getNode() {
-        return node;
-    }
-
-    public String getServicePath() {
-        return servicePath;
-    }
-
-    public ChoreoListenerInfo getListener() {
-        return listener;
-    }
-
-    public void setNode(ServiceDeclarationNode node) {
-        this.node = node;
-    }
-
-    public void setServicePath(String servicePath) {
-        this.servicePath = servicePath;
-    }
-
-    public void setListener(ChoreoListenerInfo listener) {
-        this.listener = listener;
-    }
-
-    @Override
-    public String toString() {
-        return "ServiceInfo{" +
-                ", serviceName='" + servicePath + '\'' +
-                ", listener=" + listener +
-                '}';
     }
 }

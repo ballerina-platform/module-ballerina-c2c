@@ -62,7 +62,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
     public void perform(CompilerLifecycleEventContext compilerLifecycleEventContext) {
         final Project project = compilerLifecycleEventContext.currentPackage().project();
         String cloud = project.buildOptions().cloud();
-        if (cloud == null || !isSupportedBuildOption(cloud)) {
+        if (cloud == null || !KubernetesUtils.isBuildOptionDockerOrK8s(cloud)) {
             return;
         }
         Optional<Path> executablePath = compilerLifecycleEventContext.getGeneratedArtifactPath();
@@ -146,14 +146,5 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 .filter(jarLibrary -> jarLibrary.path().getFileName().toString().endsWith(executableFatJar))
                 .findFirst()
                 .ifPresent(jarLibrary -> dataHolder.setJarPath(jarLibrary.path()));
-    }
-
-    private boolean isSupportedBuildOption(String buildOption) {
-        switch (buildOption) {
-            case "k8s":
-            case "docker":
-                return true;
-        }
-        return false;
     }
 }

@@ -18,8 +18,8 @@
 package io.ballerina.c2c.tasks;
 
 import io.ballerina.c2c.choreo.ChoreoListenerInfo;
-import io.ballerina.c2c.choreo.ProjectServiceInfo;
 import io.ballerina.c2c.choreo.ChoreoServiceInfo;
+import io.ballerina.c2c.choreo.ProjectServiceInfo;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;

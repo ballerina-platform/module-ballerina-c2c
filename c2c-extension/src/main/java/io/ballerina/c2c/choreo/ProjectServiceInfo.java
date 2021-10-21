@@ -46,10 +46,6 @@ public class ProjectServiceInfo {
 
     private final List<ChoreoServiceInfo> serviceList;
 
-    public ProjectServiceInfo(Project project) {
-        this(project, new ArrayList<>());
-    }
-
     public ProjectServiceInfo(Project project, List<Diagnostic> diagnostics) {
         this.serviceList = new ArrayList<>();
         Package currentPackage = project.currentPackage();
@@ -72,7 +68,8 @@ public class ProjectServiceInfo {
             for (DocumentId doc : documentIds) {
                 Document document = module.document(doc);
                 Node node = document.syntaxTree().rootNode();
-                ChoreoProjectVisitor visitor = new ChoreoProjectVisitor(moduleLevelVariables, semanticModel, diagnostics);
+                ChoreoProjectVisitor visitor =
+                        new ChoreoProjectVisitor(moduleLevelVariables, semanticModel, diagnostics);
                 node.accept(visitor);
                 serviceList.addAll(visitor.getServices());
             }

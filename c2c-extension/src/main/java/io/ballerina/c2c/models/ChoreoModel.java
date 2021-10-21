@@ -18,7 +18,10 @@
 
 package io.ballerina.c2c.models;
 
-import java.util.ArrayList;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.List;
 
 /**
@@ -26,22 +29,13 @@ import java.util.List;
  * 
  * @since 2.0.0
  */
+@Getter
+@Setter
+@NoArgsConstructor
 public class ChoreoModel {
     private List<PortModel> ports;
 
-    public ChoreoModel() {
-        this.ports = new ArrayList<>();
-    }
-
     public ChoreoModel(List<PortModel> ports) {
-        this.ports = ports;
-    }
-
-    public List<PortModel> getPorts() {
-        return ports;
-    }
-
-    public void setPorts(List<PortModel> ports) {
         this.ports = ports;
     }
 }

@@ -307,4 +307,13 @@ public class KubernetesUtils {
         dockerModel.addCommandArg(deploymentModel.getCommandArgs());
         return dockerModel;
     }
+
+    public static boolean isBuildOptionDockerOrK8s(String buildOption) {
+        switch (buildOption) {
+            case "k8s":
+            case "docker":
+                return true;
+        }
+        return false;
+    }
 }
