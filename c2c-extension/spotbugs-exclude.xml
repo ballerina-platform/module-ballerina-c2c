@@ -32,6 +32,10 @@
         <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
     </Match>
     <Match>
+        <Class name="io.ballerina.c2c.tasks.ChoreoCodeGenTask"/>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    </Match>
+    <Match>
         <Class name="io.ballerina.c2c.utils.KubernetesUtils"/>
         <Bug pattern="BC_UNCONFIRMED_CAST"/>
     </Match>

@@ -19,6 +19,7 @@
 package io.ballerina.c2c;
 
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
+import io.ballerina.c2c.handlers.ChoreoHandler;
 import io.ballerina.c2c.handlers.ConfigMapHandler;
 import io.ballerina.c2c.handlers.DeploymentHandler;
 import io.ballerina.c2c.handlers.DockerHandler;
@@ -54,7 +55,6 @@ public class ArtifactManager {
         this.kubernetesDataHolder = KubernetesContext.getInstance().getDataHolder();
     }
 
-
     /**
      * Generates artifacts according to the cloud parameter in build options.
      *
@@ -64,8 +64,10 @@ public class ArtifactManager {
     public void createArtifacts(String cloudType) throws KubernetesPluginException {
         if (cloudType.equals("k8s")) {
             createKubernetesArtifacts();
-        } else {
+        } else if (cloudType.equals("docker")) {
             createDockerArtifacts();
+        } else {
+            createChoreoArtifacts();
         }
     }
 
@@ -95,6 +97,16 @@ public class ArtifactManager {
 
     public void createDockerArtifacts() throws KubernetesPluginException {
         OUT.println("\nGenerating artifacts...");
+        DockerModel dockerModel = getDockerModel(false);
+        kubernetesDataHolder.setDockerModel(dockerModel);
+        new DockerHandler().createArtifacts();
+
+        instructions.put("\tExecute the below command to run the generated docker image: ",
+                "\tdocker run -d " + generatePortInstruction(dockerModel.getPorts()) + dockerModel.getName());
+        printInstructions();
+    }
+
+    private DockerModel getDockerModel(boolean isTomlSkipped) throws KubernetesPluginException {
         List<ServiceModel> serviceModels = kubernetesDataHolder.getServiceModelList();
         DeploymentModel deploymentModel = kubernetesDataHolder.getDeploymentModel();
         for (ServiceModel serviceModel : serviceModels) {
@@ -105,14 +117,18 @@ public class ArtifactManager {
                     .build();
             deploymentModel.addPort(containerPort);
         }
-        KubernetesUtils.resolveDockerToml(kubernetesDataHolder.getDeploymentModel());
-        DockerModel dockerModel = KubernetesUtils.getDockerModel(deploymentModel);
+        if (!isTomlSkipped) {
+            KubernetesUtils.resolveDockerToml(kubernetesDataHolder.getDeploymentModel());
+        }
+        return KubernetesUtils.getDockerModel(deploymentModel);
+    }
+
+    public void createChoreoArtifacts() throws KubernetesPluginException {
+        DockerModel dockerModel = getDockerModel(true);
+        dockerModel.setBuildImage(false);
         kubernetesDataHolder.setDockerModel(dockerModel);
         new DockerHandler().createArtifacts();
-
-        instructions.put("\tExecute the below command to run the generated docker image: ",
-                "\tdocker run -d " + generatePortInstruction(dockerModel.getPorts()) + dockerModel.getName());
-        printInstructions();
+        new ChoreoHandler().createArtifacts();
     }
 
     private String generatePortInstruction(Set<Integer> ports) {

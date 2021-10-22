@@ -18,6 +18,7 @@
 package io.ballerina.c2c;
 
 import io.ballerina.c2c.tasks.C2CCodeGeneratedTask;
+import io.ballerina.c2c.tasks.ChoreoCodeGenTask;
 import io.ballerina.projects.plugins.CompilerLifecycleContext;
 import io.ballerina.projects.plugins.CompilerLifecycleListener;
 
@@ -32,5 +33,6 @@ public class C2CLifecycleListener extends CompilerLifecycleListener {
     @Override
     public void init(CompilerLifecycleContext compilerLifecycleContext) {
         compilerLifecycleContext.addCodeGenerationCompletedTask(new C2CCodeGeneratedTask());
+        compilerLifecycleContext.addCodeGenerationCompletedTask(new ChoreoCodeGenTask());
     }
 }
