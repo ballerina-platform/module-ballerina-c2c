@@ -376,9 +376,9 @@ public class KubernetesTestUtils {
 
         ProcessBuilder pb;
         if (skipTests) {
-            pb = new ProcessBuilder(BALLERINA_COMMAND, BUILD, "--skip-tests");
-        } else {
             pb = new ProcessBuilder(BALLERINA_COMMAND, BUILD);
+        } else {
+            pb = new ProcessBuilder(BALLERINA_COMMAND, BUILD, "--with-tests");
         }
 
         log.info(COMPILING + sourceDirectory.normalize());
