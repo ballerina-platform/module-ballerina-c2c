@@ -54,7 +54,7 @@ public class PlainMainTest {
 
     @BeforeClass
     public void compileSample() throws IOException, InterruptedException {
-        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH, true), 0);
+        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH), 0);
         File artifactYaml = CHOREO_TARGET_PATH.resolve("choreo.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
     }
