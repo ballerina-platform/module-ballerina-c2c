@@ -18,6 +18,7 @@ package io.ballerina.c2c.tooling.command;
 import io.ballerina.c2c.tooling.toml.CommonUtil;
 import io.ballerina.projects.CloudToml;
 import io.ballerina.projects.Project;
+import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.validator.BoilerplateGenerator;
 import io.ballerina.toml.validator.schema.Schema;
 import org.apache.commons.io.IOUtils;
@@ -118,8 +119,8 @@ public class CreateCloudTomlExecutor implements LSCommandExecutor {
                         CommonUtil.LINE_SEPARATOR + CommonUtil.LINE_SEPARATOR);
 
         BoilerplateGenerator generator = new BoilerplateGenerator(Schema.from(getValidationSchema()));
-        for (String line : generator.getOutput()) {
-            content.append("#").append(line);
+        for (DocumentMemberDeclarationNode node : generator.getNodes().values()) {
+            content.append("#").append(node.toSourceCode());
         }
 
         return content.toString();
