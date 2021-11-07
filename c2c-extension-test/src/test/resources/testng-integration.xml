@@ -39,7 +39,6 @@
             <class name="io.ballerina.c2c.test.ServiceExtractionTest"/>
             <class name="io.ballerina.c2c.test.JobTest"/>
             <class name="io.ballerina.c2c.test.EnvTest"/>
-            <class name="io.ballerina.c2c.test.CustomDiagnosticsTest"/>
             <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidServicePath"/>
             <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidResourcePath"/>
             <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidResourcePathEmpty"/>
@@ -57,6 +56,7 @@
             <class name="io.ballerina.c2c.test.choreo.PlainMainTest"/>
             <class name="io.ballerina.c2c.test.choreo.PlainServiceTest"/>
             <class name="io.ballerina.c2c.test.choreo.DiagnosticsTest"/>
+            <class name="io.ballerina.c2c.test.CustomDiagnosticsTest"/>
         </classes>
     </test>
 </suite>
