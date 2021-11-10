@@ -18,6 +18,7 @@ package io.ballerina.c2c.test;
 import io.ballerina.c2c.diagnostics.ClientInfo;
 import io.ballerina.c2c.diagnostics.ListenerInfo;
 import io.ballerina.c2c.diagnostics.ProjectServiceInfo;
+import io.ballerina.c2c.diagnostics.SecureSocketConfig;
 import io.ballerina.c2c.diagnostics.ServiceInfo;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
@@ -206,6 +207,41 @@ public class ServiceExtractionTest {
         Assert.assertEquals(helloService.getServicePath().trim(), "/graphql");
         ListenerInfo helloListener = helloService.getListener();
         Assert.assertEquals(helloListener.getPort(), 9090);
+    }
+
+    @Test
+    public void testWebSocket() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "websocket");
+
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+
+        Assert.assertEquals(serviceList.size(), 1);
+        ServiceInfo helloService = serviceList.get(0);
+        Assert.assertEquals(helloService.getServicePath().trim(), "/chat");
+        ListenerInfo helloListener = helloService.getListener();
+        Assert.assertEquals(helloListener.getPort(), 9090);
+    }
+
+    @Test
+    public void testWebSocketSsl() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "websocket-sec");
+
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+
+        Assert.assertEquals(serviceList.size(), 1);
+        ServiceInfo helloService = serviceList.get(0);
+        Assert.assertEquals(helloService.getServicePath().trim(), "/foo");
+        ListenerInfo helloListener = helloService.getListener();
+        Assert.assertEquals(helloListener.getPort(), 9090);
+        SecureSocketConfig config = helloListener.getConfig().orElseThrow().getSecureSocketConfig().orElseThrow();
+        String certFile = config.getCertFile();
+        String keyFile = config.getKeyFile();
+        Assert.assertEquals(certFile, "./resource/public.crt");
+        Assert.assertEquals(keyFile, "./resource/private.key");
     }
 
     @Test
