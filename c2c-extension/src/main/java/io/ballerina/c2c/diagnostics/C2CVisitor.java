@@ -624,7 +624,8 @@ public class C2CVisitor extends NodeVisitor {
                 case "graphql":
                 case "tcp":
                 case "udp":
-                    //TODO add other stdlib
+                case "websocket":
+                //TODO add other stdlib
                     return true;
                 default:
                     return false;
