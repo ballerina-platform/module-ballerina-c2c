@@ -443,9 +443,13 @@ public class C2CVisitor extends NodeVisitor {
     }
 
     private MutualSSLConfig getMutualSSLConfig(ExpressionNode expressionNode) {
+        MutualSSLConfig mutualSSLConfig = new MutualSSLConfig();
+        if (expressionNode.kind() == SyntaxKind.STRING_LITERAL) {
+            mutualSSLConfig.setPath(extractString(expressionNode));
+            return mutualSSLConfig;
+        }
         MappingConstructorExpressionNode expressionNode1 = (MappingConstructorExpressionNode) expressionNode;
         SeparatedNodeList<MappingFieldNode> fields = expressionNode1.fields();
-        MutualSSLConfig mutualSSLConfig = new MutualSSLConfig();
         for (MappingFieldNode field : fields) {
             if (field.kind() != SyntaxKind.SPECIFIC_FIELD) {
                 continue;
