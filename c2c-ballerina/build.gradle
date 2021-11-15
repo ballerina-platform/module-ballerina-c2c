@@ -93,7 +93,7 @@ task initializeVariables {
         }
 
         if (graph.hasTask(":${packageAbbreviation}-ballerina:test")) {
-            testParams = "--code-coverage --includes=* --with-tests"
+            testParams = ""
         }
     }
 }
