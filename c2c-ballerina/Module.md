@@ -1,6 +1,6 @@
 ## Overview
 
-This modules provides the capabilities to generate the cloud artifacts for Ballerina programs.
+This module provides the capabilities to generate cloud artifacts for Ballerina programs.
 
 This module generates the [Kubernetes](https://kubernetes.io/) and [Docker](https://www.docker.com/) artifacts required to deploy a Ballerina program in the cloud. 
 
@@ -13,7 +13,6 @@ Supports following artifact generation:
 - Kubernetes horizontal pod autoscaler
 - Docker image  
 - Dockerfile 
-
 
 ## Docker artifact generation
 
