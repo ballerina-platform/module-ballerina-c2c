@@ -40,9 +40,9 @@
             <class name="io.ballerina.c2c.test.JobTest"/>
             <class name="io.ballerina.c2c.test.EnvTest"/>
             <class name="io.ballerina.c2c.test.CustomDiagnosticsTest"/>
-            <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidServicePath"/>
+<!--            <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidServicePath"/>-->
 <!--            <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidResourcePath"/>-->
-<!--            <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidResourcePathEmpty"/>-->
+            <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidResourcePathEmpty"/>
             <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidResourcePathEquals"/>
             <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidPort"/>
             <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidPortEmptyProbeExist"/>
