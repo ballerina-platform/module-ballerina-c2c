@@ -76,7 +76,7 @@ public class KubernetesTestUtils {
     private static final Logger log = LoggerFactory.getLogger(KubernetesTestUtils.class);
     private static final String JAVA_OPTS = "JAVA_OPTS";
     private static final Path DISTRIBUTION_PATH = Paths.get(FilenameUtils.separatorsToSystem(
-            System.getProperty("ballerinaPack")));
+            System.getProperty("ballerina.home")));
     private static final String BALLERINA_COMMAND = DISTRIBUTION_PATH +
             File.separator + "bin" +
             File.separator +

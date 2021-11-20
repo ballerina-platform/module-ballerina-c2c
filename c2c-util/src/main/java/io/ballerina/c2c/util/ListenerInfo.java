@@ -15,23 +15,31 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package io.ballerina.c2c.diagnostics;
+package io.ballerina.c2c.util;
+
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.Optional;
 
 /**
- * Represents a MutualSSL config inside a secure socket.
+ * Represents Listener information of a ballerina document.
  *
  * @since 2.0.0
  */
-public class MutualSSLConfig {
+@Getter
+@Setter
+public class ListenerInfo {
+    private String name;
+    private int port;
+    private HttpsConfig config;
 
-    private String path;
-
-    public String getPath() {
-        return path;
+    public ListenerInfo(String name, int port) {
+        this.name = name;
+        this.port = port;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public Optional<HttpsConfig> getConfig() {
+        return Optional.ofNullable(config);
     }
-
 }

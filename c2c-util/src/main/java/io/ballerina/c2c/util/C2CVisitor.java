@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ballerina.c2c.diagnostics;
+package io.ballerina.c2c.util;
 
 import io.ballerina.compiler.api.ModuleID;
 import io.ballerina.compiler.api.SemanticModel;
@@ -341,7 +341,8 @@ public class C2CVisitor extends NodeVisitor {
                 config.ifPresent(listenerInfo::setConfig);
             }
         }
-        ServiceInfo serviceInfo = new ServiceInfo(listenerInfo, serviceDeclarationNode, servicePath);
+        ServiceInfo
+                serviceInfo = new ServiceInfo(listenerInfo, serviceDeclarationNode, servicePath);
         NodeList<Node> function = serviceDeclarationNode.members();
         for (Node node : function) {
             if (node.kind() == SyntaxKind.RESOURCE_ACCESSOR_DEFINITION) {
@@ -366,7 +367,8 @@ public class C2CVisitor extends NodeVisitor {
         ListenerInfo listenerInfo;
         if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
             diagnostics.add(C2CDiagnosticCodes
-                    .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expression.location()));
+                    .createDiagnostic(
+                            C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expression.location()));
             return Optional.empty();
         } else {
             BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expression;
@@ -429,13 +431,16 @@ public class C2CVisitor extends NodeVisitor {
             SpecificFieldNode specificField = (SpecificFieldNode) child;
             String fieldName = getNameOfIdentifier(specificField.fieldName());
             if ("key".equals(fieldName)) {
-                SecureSocketConfig secureSocket = getSecureSocketConfig(specificField.valueExpr().get());
+                SecureSocketConfig
+                        secureSocket = getSecureSocketConfig(specificField.valueExpr().get());
                 httpsConfig.setSecureSocketConfig(secureSocket);
             } else if ("mutualSsl".equals(fieldName)) {
-                MutualSSLConfig mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
+                MutualSSLConfig
+                        mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
                 httpsConfig.setMutualSSLConfig(mutualSSLConfig);
             } else if ("cert".equals(fieldName)) {
-                MutualSSLConfig mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
+                MutualSSLConfig
+                        mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
                 httpsConfig.setMutualSSLConfig(mutualSSLConfig);
             }
         }
@@ -568,7 +573,8 @@ public class C2CVisitor extends NodeVisitor {
                     Optional<ListenerInfo> listenerInfo =
                             getPortValueFromSTForCustomListener(servicePath, serviceDeclarationNode, i);
                     if (listenerInfo.isEmpty()) {
-                        diagnostics.add(C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
+                        diagnostics.add(C2CDiagnosticCodes
+                                .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
                                 parameterSymbol.location()));
                         continue;
                     }
@@ -698,7 +704,8 @@ public class C2CVisitor extends NodeVisitor {
         }
         ExpressionNode expressionNode = moduleVariableDeclarationNode.initializer().get();
         if (expressionNode.kind() == SyntaxKind.REQUIRED_EXPRESSION) {
-            diagnostics.add(C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.CONFIGURABLE_NO_DEFAULT,
+            diagnostics.add(C2CDiagnosticCodes
+                    .createDiagnostic(C2CDiagnosticCodes.CONFIGURABLE_NO_DEFAULT,
                     moduleVariableDeclarationNode.location()));
             return Optional.of(0);
         }

@@ -20,7 +20,13 @@ package io.ballerina.c2c.test.utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import io.ballerina.projects.JBallerinaBackend;
+import io.ballerina.projects.JvmTarget;
+import io.ballerina.projects.PackageCompilation;
 import io.ballerina.projects.Project;
+import io.ballerina.projects.ProjectEnvironmentBuilder;
+import io.ballerina.projects.directory.BuildProject;
+import io.ballerina.projects.repos.FileSystemCache;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import org.ballerinalang.langserver.BallerinaLanguageServer;
 import org.ballerinalang.langserver.LSContextOperation;
@@ -78,6 +84,15 @@ public class TestUtil {
     private static final Gson GSON = new Gson();
 
     private TestUtil() {
+    }
+
+    public static void generateCaches(Path sourcePath, Path jBalToolsPath) {
+        Path repo = jBalToolsPath.resolve("repo");
+        ProjectEnvironmentBuilder defaultBuilder = ProjectEnvironmentBuilder.getDefaultBuilder();
+        defaultBuilder.addCompilationCacheFactory(new FileSystemCache.FileSystemCacheFactory(repo.resolve("cache")));
+        Project project = BuildProject.load(defaultBuilder, sourcePath);
+        PackageCompilation packageCompilation = project.currentPackage().getCompilation();
+        JBallerinaBackend.from(packageCompilation, JvmTarget.JAVA_11);
     }
 
     /**

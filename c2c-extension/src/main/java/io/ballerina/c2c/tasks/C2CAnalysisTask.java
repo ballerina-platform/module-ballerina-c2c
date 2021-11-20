@@ -17,16 +17,7 @@
  */
 package io.ballerina.c2c.tasks;
 
-import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
-import io.ballerina.c2c.diagnostics.ClientInfo;
-import io.ballerina.c2c.diagnostics.HttpsConfig;
-import io.ballerina.c2c.diagnostics.ListenerInfo;
-import io.ballerina.c2c.diagnostics.MutualSSLConfig;
 import io.ballerina.c2c.diagnostics.NullLocation;
-import io.ballerina.c2c.diagnostics.ProjectServiceInfo;
-import io.ballerina.c2c.diagnostics.SecureSocketConfig;
-import io.ballerina.c2c.diagnostics.ServiceInfo;
-import io.ballerina.c2c.diagnostics.Task;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.JobModel;
@@ -35,6 +26,15 @@ import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.PodAutoscalerModel;
 import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.models.ServiceModel;
+import io.ballerina.c2c.util.C2CDiagnosticCodes;
+import io.ballerina.c2c.util.ClientInfo;
+import io.ballerina.c2c.util.HttpsConfig;
+import io.ballerina.c2c.util.ListenerInfo;
+import io.ballerina.c2c.util.MutualSSLConfig;
+import io.ballerina.c2c.util.ProjectServiceInfo;
+import io.ballerina.c2c.util.SecureSocketConfig;
+import io.ballerina.c2c.util.ServiceInfo;
+import io.ballerina.c2c.util.Task;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;

@@ -15,40 +15,32 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package io.ballerina.c2c.diagnostics;
+package io.ballerina.c2c.util;
+
+import java.util.Optional;
 
 /**
- * Represents a Config inside a secure socket.
+ * Represents a Http config of a secure socket.
  *
  * @since 2.0.0
  */
-public class SecureSocketConfig {
-    private String certFile;
-    private String keyFile;
-    private String path;
+public class HttpsConfig {
+    private SecureSocketConfig secureSocketConfig;
+    private MutualSSLConfig mutualSSLConfig;
 
-
-    public String getCertFile() {
-        return certFile;
+    public Optional<SecureSocketConfig> getSecureSocketConfig() {
+        return Optional.ofNullable(secureSocketConfig);
     }
 
-    public String getKeyFile() {
-        return keyFile;
+    public void setSecureSocketConfig(SecureSocketConfig secureSocketConfig) {
+        this.secureSocketConfig = secureSocketConfig;
     }
 
-    public String getPath() {
-        return path;
+    public Optional<MutualSSLConfig> getMutualSSLConfig() {
+        return Optional.ofNullable(mutualSSLConfig);
     }
 
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    public void setKeyFile(String keyFile) {
-        this.keyFile = keyFile;
-    }
-
-    public void setCertFile(String certFile) {
-        this.certFile = certFile;
+    public void setMutualSSLConfig(MutualSSLConfig mutualSSLConfig) {
+        this.mutualSSLConfig = mutualSSLConfig;
     }
 }

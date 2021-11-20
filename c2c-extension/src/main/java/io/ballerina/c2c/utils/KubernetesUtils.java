@@ -18,7 +18,6 @@
 
 package io.ballerina.c2c.utils;
 
-import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
 import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.DeploymentModel;
@@ -26,6 +25,7 @@ import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.KubernetesModel;
+import io.ballerina.c2c.util.C2CDiagnosticCodes;
 import io.ballerina.projects.Package;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.tools.diagnostics.Diagnostic;

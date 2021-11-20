@@ -18,7 +18,6 @@
 
 package io.ballerina.c2c;
 
-import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
 import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.ConfigMapModel;
@@ -29,6 +28,7 @@ import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.KubernetesModel;
 import io.ballerina.c2c.models.PersistentVolumeClaimModel;
 import io.ballerina.c2c.models.SecretModel;
+import io.ballerina.c2c.util.C2CDiagnosticCodes;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.c2c.utils.TomlHelper;
 import io.ballerina.toml.api.Toml;

@@ -17,7 +17,7 @@
  */
 package io.ballerina.c2c.tooling.codeaction.toml;
 
-import io.ballerina.c2c.diagnostics.ProjectServiceInfo;
+import io.ballerina.c2c.util.ProjectServiceInfo;
 import io.ballerina.projects.Project;
 import org.ballerinalang.langserver.commons.LanguageServerContext;
 

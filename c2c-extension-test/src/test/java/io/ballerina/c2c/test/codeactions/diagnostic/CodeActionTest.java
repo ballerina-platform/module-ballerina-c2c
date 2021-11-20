@@ -44,6 +44,7 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -75,7 +76,9 @@ public abstract class CodeActionTest {
     public void test(String config, String source) throws IOException, WorkspaceDocumentException {
         String configJsonPath =
                 "codeaction" + File.separator + getResourceDir() + File.separator + "config" + File.separator + config;
+        
         Path sourcePath = sourcesPath.resolve(getResourceDir()).resolve("source").resolve(source);
+        TestUtil.generateCaches(sourcePath.getParent(), Paths.get(System.getProperty("ballerina.home")));
         JsonObject configJsonObject = FileUtils.fileContentAsObject(configJsonPath);
         TestUtil.openDocument(serviceEndpoint, sourcePath);
 

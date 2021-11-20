@@ -17,6 +17,10 @@
  */
 package io.ballerina.c2c.diagnostics;
 
+import io.ballerina.c2c.util.ListenerInfo;
+import io.ballerina.c2c.util.ProjectServiceInfo;
+import io.ballerina.c2c.util.ResourceInfo;
+import io.ballerina.c2c.util.ServiceInfo;
 import io.ballerina.projects.Project;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.semantic.ast.TomlLongValueNode;

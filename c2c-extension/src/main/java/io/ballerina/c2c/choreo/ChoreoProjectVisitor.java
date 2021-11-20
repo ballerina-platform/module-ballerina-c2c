@@ -15,7 +15,7 @@
  */
 package io.ballerina.c2c.choreo;
 
-import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
+import io.ballerina.c2c.util.C2CDiagnosticCodes;
 import io.ballerina.compiler.api.ModuleID;
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.api.symbols.AnnotationSymbol;

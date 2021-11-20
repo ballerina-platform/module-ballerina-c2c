@@ -16,12 +16,12 @@
 package io.ballerina.c2c.handlers;
 
 import io.ballerina.c2c.KubernetesConstants;
-import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
 import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
+import io.ballerina.c2c.util.C2CDiagnosticCodes;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.fabric8.kubernetes.api.model.Container;
