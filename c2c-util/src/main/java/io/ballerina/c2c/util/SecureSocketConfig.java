@@ -15,43 +15,40 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package io.ballerina.c2c.diagnostics;
-
-import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
+package io.ballerina.c2c.util;
 
 /**
- * Represents Resource of a service in a ballerina document.
+ * Represents a Config inside a secure socket.
  *
  * @since 2.0.0
  */
-public class ResourceInfo {
-    private FunctionDefinitionNode node;
-    private String httpMethod;
+public class SecureSocketConfig {
+    private String certFile;
+    private String keyFile;
     private String path;
 
-    public ResourceInfo(FunctionDefinitionNode node, String httpMethod, String path) {
-        this.node = node;
-        this.httpMethod = httpMethod;
-        this.path = path;
+
+    public String getCertFile() {
+        return certFile;
     }
 
-    public FunctionDefinitionNode getNode() {
-        return node;
-    }
-
-    public String getHttpMethod() {
-        return httpMethod;
+    public String getKeyFile() {
+        return keyFile;
     }
 
     public String getPath() {
         return path;
     }
 
-    @Override
-    public String toString() {
-        return "ResourceInfo{" +
-                ", httpMethod='" + httpMethod + '\'' +
-                ", path='" + path + '\'' +
-                '}';
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public void setKeyFile(String keyFile) {
+        this.keyFile = keyFile;
+    }
+
+    public void setCertFile(String certFile) {
+        this.certFile = certFile;
     }
 }

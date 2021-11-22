@@ -18,12 +18,12 @@
 
 package io.ballerina.c2c.handlers;
 
-import io.ballerina.c2c.diagnostics.C2CDiagnosticCodes;
 import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.ChoreoModel;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.PortModel;
+import io.ballerina.c2c.util.C2CDiagnosticCodes;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.diagnostics.DiagnosticFactory;
 import io.ballerina.tools.diagnostics.DiagnosticInfo;

@@ -15,7 +15,7 @@
  */
 package io.ballerina.c2c.choreo;
 
-import io.ballerina.c2c.diagnostics.ModuleLevelVariableExtractor;
+import io.ballerina.c2c.util.ModuleLevelVariableExtractor;
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeLocation;

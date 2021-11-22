@@ -49,6 +49,7 @@ configurations {
 }
 
 dependencies {
+    implementation project(":c2c-util")
 
     implementation "org.ballerinax.docker:docker-generator:${dockerVersion}"
     implementation "commons-io:commons-io:2.11.0"

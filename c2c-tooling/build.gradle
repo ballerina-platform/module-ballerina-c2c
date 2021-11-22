@@ -15,11 +15,21 @@
  *
  */
 
+plugins {
+    id "com.github.johnrengelman.shadow"
+}
+
 apply from: "$rootDir/gradle/javaProject.gradle"
 
 description = 'Ballerina - C2C Tooling Module'
 
+configurations {
+    extraLibs
+}
+
 dependencies {
+    implementation project(":c2c-util")
+    
     implementation "org.ballerinalang:language-server-commons:${ballerinaLangVersion}"
     implementation "org.ballerinalang:ballerina-tools-api:${ballerinaLangVersion}"
     implementation "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
@@ -29,6 +39,9 @@ dependencies {
     implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.10.0'
     implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.10.0'
     implementation 'commons-io:commons-io:2.6'
+
+    extraLibs project (":c2c-util")
+    configurations.compile.extendsFrom(configurations.extraLibs)
 }
 
 sourceSets {
@@ -36,6 +49,12 @@ sourceSets {
         resources {
             srcDir '../c2c-extension/src/main/resources'
         }
+    }
+}
+
+jar {
+    from {
+        configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
     }
 }
 

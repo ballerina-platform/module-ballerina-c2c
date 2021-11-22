@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ballerina.c2c.tooling.codeaction.diagnostics;
+package io.ballerina.c2c.util;
 
 import io.ballerina.compiler.syntax.tree.BindingPatternNode;
 import io.ballerina.compiler.syntax.tree.CaptureBindingPatternNode;
@@ -54,18 +54,18 @@ public class ModuleLevelVariableExtractor extends NodeVisitor {
         }
         CaptureBindingPatternNode captureVariableName = (CaptureBindingPatternNode) variableNode;
         String variableName = captureVariableName.variableName().text();
-
+        
         if (typeDescriptorNode.kind() == SyntaxKind.INT_TYPE_DESC) {
             moduleLevelVariables.put(variableName, moduleVariableDeclarationNode);
             return;
         }
-
+        
         if (typeDescriptorNode.kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
             return;
         }
         QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typeDescriptorNode;
         String identifier = qualified.identifier().text();
-
+        
         if (moduleVariableDeclarationNode.initializer().isEmpty()) {
             return;
         }
@@ -104,7 +104,7 @@ public class ModuleLevelVariableExtractor extends NodeVisitor {
         if (typeDescriptorNode.get().kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
             return;
         }
-
+        
         Node initializer = listenerDeclarationNode.initializer();
         moduleLevelVariables.put(listenerName, initializer);
     }

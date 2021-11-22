@@ -15,46 +15,32 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package io.ballerina.c2c.tooling.codeaction.diagnostics;
+package io.ballerina.c2c.util;
 
 import java.util.Optional;
 
 /**
- * Represents Listener information of a ballerina document.
+ * Represents a Http config of a secure socket.
  *
  * @since 2.0.0
  */
-public class ListenerInfo {
-    private String name;
-    private int port;
-    private HttpsConfig config;
+public class HttpsConfig {
+    private SecureSocketConfig secureSocketConfig;
+    private MutualSSLConfig mutualSSLConfig;
 
-    public ListenerInfo(String name, int port) {
-        this.name = name;
-        this.port = port;
+    public Optional<SecureSocketConfig> getSecureSocketConfig() {
+        return Optional.ofNullable(secureSocketConfig);
     }
 
-    public Optional<HttpsConfig> getConfig() {
-        return Optional.ofNullable(config);
+    public void setSecureSocketConfig(SecureSocketConfig secureSocketConfig) {
+        this.secureSocketConfig = secureSocketConfig;
     }
 
-    public String getName() {
-        return name;
+    public Optional<MutualSSLConfig> getMutualSSLConfig() {
+        return Optional.ofNullable(mutualSSLConfig);
     }
 
-    public int getPort() {
-        return port;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public void setConfig(HttpsConfig config) {
-        this.config = config;
+    public void setMutualSSLConfig(MutualSSLConfig mutualSSLConfig) {
+        this.mutualSSLConfig = mutualSSLConfig;
     }
 }

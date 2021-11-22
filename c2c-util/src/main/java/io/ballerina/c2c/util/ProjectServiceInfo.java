@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ballerina.c2c.tooling.codeaction.diagnostics;
+package io.ballerina.c2c.util;
 
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.Node;
@@ -23,21 +23,26 @@ import io.ballerina.projects.Module;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
 import io.ballerina.tools.diagnostics.Diagnostic;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Represents service related data of a Project after parsed from Syntax trees.
  *
  * @since 2.0.0
  */
+@Getter
 public class ProjectServiceInfo {
 
     private final List<ServiceInfo> serviceList;
+    private final List<ClientInfo> clientList;
+    private Task task = null;
 
     public ProjectServiceInfo(Project project) {
         this(project, new ArrayList<>());
@@ -45,6 +50,7 @@ public class ProjectServiceInfo {
 
     public ProjectServiceInfo(Project project, List<Diagnostic> diagnostics) {
         this.serviceList = new ArrayList<>();
+        this.clientList = new ArrayList<>();
         Package currentPackage = project.currentPackage();
         Iterable<Module> modules = currentPackage.modules();
         for (Module module : modules) {
@@ -68,11 +74,13 @@ public class ProjectServiceInfo {
                 C2CVisitor visitor = new C2CVisitor(moduleLevelVariables, semanticModel, diagnostics);
                 node.accept(visitor);
                 serviceList.addAll(visitor.getServices());
+                clientList.addAll(visitor.getClientInfos());
+                this.task = visitor.getTask();
             }
         }
     }
 
-    public List<ServiceInfo> getServiceList() {
-        return serviceList;
+    public Optional<Task> getTask() {
+        return Optional.ofNullable(task);
     }
 }

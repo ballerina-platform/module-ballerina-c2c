@@ -15,11 +15,11 @@
  */
 package io.ballerina.c2c.test;
 
-import io.ballerina.c2c.diagnostics.ClientInfo;
-import io.ballerina.c2c.diagnostics.ListenerInfo;
-import io.ballerina.c2c.diagnostics.ProjectServiceInfo;
-import io.ballerina.c2c.diagnostics.SecureSocketConfig;
-import io.ballerina.c2c.diagnostics.ServiceInfo;
+import io.ballerina.c2c.util.ClientInfo;
+import io.ballerina.c2c.util.ListenerInfo;
+import io.ballerina.c2c.util.ProjectServiceInfo;
+import io.ballerina.c2c.util.SecureSocketConfig;
+import io.ballerina.c2c.util.ServiceInfo;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import org.testng.Assert;

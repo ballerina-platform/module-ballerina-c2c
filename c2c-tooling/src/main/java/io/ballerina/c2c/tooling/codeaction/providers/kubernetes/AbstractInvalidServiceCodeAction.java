@@ -17,11 +17,11 @@
  */
 package io.ballerina.c2c.tooling.codeaction.providers.kubernetes;
 
-import io.ballerina.c2c.tooling.codeaction.diagnostics.ProjectServiceInfo;
-import io.ballerina.c2c.tooling.codeaction.diagnostics.ServiceInfo;
 import io.ballerina.c2c.tooling.codeaction.toml.ProjectServiceInfoHolder;
 import io.ballerina.c2c.tooling.toml.Probe;
 import io.ballerina.c2c.tooling.toml.TomlSyntaxTreeUtil;
+import io.ballerina.c2c.util.ProjectServiceInfo;
+import io.ballerina.c2c.util.ServiceInfo;
 import io.ballerina.projects.Project;
 import org.ballerinalang.langserver.commons.CodeActionContext;
 import org.eclipse.lsp4j.CodeAction;

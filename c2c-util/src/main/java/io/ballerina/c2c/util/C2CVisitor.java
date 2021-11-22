@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ballerina.c2c.tooling.codeaction.diagnostics;
+package io.ballerina.c2c.util;
 
 import io.ballerina.compiler.api.ModuleID;
 import io.ballerina.compiler.api.SemanticModel;
@@ -29,7 +29,10 @@ import io.ballerina.compiler.api.symbols.TypeDescKind;
 import io.ballerina.compiler.api.symbols.TypeReferenceTypeSymbol;
 import io.ballerina.compiler.api.symbols.TypeSymbol;
 import io.ballerina.compiler.api.symbols.UnionTypeSymbol;
+import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.BasicLiteralNode;
+import io.ballerina.compiler.syntax.tree.CaptureBindingPatternNode;
+import io.ballerina.compiler.syntax.tree.CheckExpressionNode;
 import io.ballerina.compiler.syntax.tree.ExplicitNewExpressionNode;
 import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.FunctionArgumentNode;
@@ -38,6 +41,7 @@ import io.ballerina.compiler.syntax.tree.IdentifierToken;
 import io.ballerina.compiler.syntax.tree.ImplicitNewExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingFieldNode;
+import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.ModuleVariableDeclarationNode;
 import io.ballerina.compiler.syntax.tree.NamedArgumentNode;
 import io.ballerina.compiler.syntax.tree.Node;
@@ -45,6 +49,7 @@ import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeVisitor;
 import io.ballerina.compiler.syntax.tree.ParenthesizedArgList;
 import io.ballerina.compiler.syntax.tree.PositionalArgumentNode;
+import io.ballerina.compiler.syntax.tree.QualifiedNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.SeparatedNodeList;
 import io.ballerina.compiler.syntax.tree.ServiceDeclarationNode;
 import io.ballerina.compiler.syntax.tree.SimpleNameReferenceNode;
@@ -53,11 +58,16 @@ import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.TypedBindingPatternNode;
+import io.ballerina.compiler.syntax.tree.UnionTypeDescriptorNode;
+import io.ballerina.compiler.syntax.tree.VariableDeclarationNode;
 import io.ballerina.tools.diagnostics.Diagnostic;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -65,12 +75,16 @@ import java.util.Optional;
  *
  * @since 2.0.0
  */
+@EqualsAndHashCode(callSuper = true)
+@Data
 public class C2CVisitor extends NodeVisitor {
 
     private final List<ServiceInfo> services = new ArrayList<>();
+    private final List<ClientInfo> clientInfos = new ArrayList<>();
     private final Map<String, Node> moduleLevelVariables;
     private final SemanticModel semanticModel;
     private final List<Diagnostic> diagnostics;
+    private Task task = null;
 
     public C2CVisitor(Map<String, Node> moduleLevelVariables, SemanticModel semanticModel,
                       List<Diagnostic> diagnostics) {
@@ -79,12 +93,150 @@ public class C2CVisitor extends NodeVisitor {
         this.diagnostics = diagnostics;
     }
 
-    public List<ServiceInfo> getServices() {
-        return services;
+    @Override
+    public void visit(ModuleVariableDeclarationNode moduleVariableDeclarationNode) {
+        // To Parse http:Client Config
+        //http:Client nettyEP = check new("https://netty:8688", {
+        //     secureSocket: {
+        //        cert: {
+        //            path: "./security/ballerinaTruststore.p12",
+        //            password: "ballerina"
+        //   }
+        // }
+        Optional<ExpressionNode> initializer = moduleVariableDeclarationNode.initializer();
+        if (initializer.isEmpty()) {
+            return; //Module level vars always needs to be initialized, validated by compiler
+        }
+        extractHttpClientConfig(moduleVariableDeclarationNode.typedBindingPattern(), initializer.get());
     }
 
-    public List<Diagnostic> getDiagnostics() {
-        return diagnostics;
+    @Override
+    public void visit(VariableDeclarationNode variableDeclarationNode) {
+        // To Parse http:Client Config
+        //http:Client nettyEP = check new("https://netty:8688", {
+        //     secureSocket: {
+        //        cert: {
+        //            path: "./security/ballerinaTruststore.p12",
+        //            password: "ballerina"
+        //   }
+        // }
+        Optional<ExpressionNode> initializer = variableDeclarationNode.initializer();
+        if (initializer.isEmpty()) {
+            return;
+        }
+        extractHttpClientConfig(variableDeclarationNode.typedBindingPattern(), initializer.get());
+    }
+
+    private void extractHttpClientConfig(TypedBindingPatternNode typedBindingPatternNode, ExpressionNode initializer) {
+        TypeDescriptorNode typeDescriptorNode = typedBindingPatternNode.typeDescriptor();
+        if (!isSupportedClientVariable(typeDescriptorNode)) {
+            return;
+        }
+        ExpressionNode refNode;
+        if (initializer.kind() == SyntaxKind.CHECK_EXPRESSION) {
+            CheckExpressionNode checkedInit = (CheckExpressionNode) initializer;
+            refNode = checkedInit.expression();
+        } else {
+            refNode = initializer;
+        }
+        if (refNode.kind() != SyntaxKind.IMPLICIT_NEW_EXPRESSION) {
+            return;
+        }
+        ImplicitNewExpressionNode newExprInit = (ImplicitNewExpressionNode) refNode;
+        newExprInit.parenthesizedArgList().ifPresent(parenthesizedArgList -> {
+            SeparatedNodeList<FunctionArgumentNode> argList = parenthesizedArgList.arguments();
+            if (argList.size() <= 1) {
+                return;
+            }
+            Optional<HttpsConfig> config = extractKeyStores(argList.get(1));
+            config.ifPresent(httpsConfig -> {
+                String name = ((CaptureBindingPatternNode) typedBindingPatternNode.bindingPattern())
+                        .variableName().text();
+                clientInfos.add(new ClientInfo(name, httpsConfig));
+            });
+        });
+    }
+
+    private boolean isSupportedClientVariable(TypeDescriptorNode typeDescriptorNode) {
+        if (typeDescriptorNode.kind() == SyntaxKind.UNION_TYPE_DESC) {
+            UnionTypeDescriptorNode unionType = (UnionTypeDescriptorNode) typeDescriptorNode;
+            return isSupportedClientVariable(unionType.rightTypeDesc()) ||
+                    isSupportedClientVariable(unionType.leftTypeDesc());
+        }
+        if (typeDescriptorNode.kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE) {
+            QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typeDescriptorNode;
+            Optional<Symbol> symbol = semanticModel.symbol(typeDescriptorNode);
+            if (symbol.isEmpty()) {
+                return false;
+            }
+            Optional<ModuleSymbol> module = symbol.get().getModule();
+            if (module.isEmpty()) {
+                return false;
+            }
+            ModuleID moduleId = module.get().id();
+            return "Client".equals(qualified.identifier().text()) && "ballerina".equals(moduleId.orgName()) &&
+                    "http".equals(moduleId.moduleName());
+        }
+        return false;
+    }
+
+    @Override
+    public void visit(FunctionDefinitionNode functionDefinitionNode) {
+        // Handling Job/Task scheduling.
+        // @cloud:Task {
+        //  schedule: {
+        //        minutes: "*/2",
+        //        hours: "*",
+        //        dayOfMonth: "*",
+        //        monthOfYear: "*",
+        //        daysOfWeek: "*"
+        //  }
+        //}
+        // public function main(string... args) {
+        //}
+        Optional<MetadataNode> metadata = functionDefinitionNode.metadata();
+        String funcName = functionDefinitionNode.functionName().text();
+        if (!funcName.equals("main")) {
+            return;
+        }
+        if (metadata.isEmpty()) {
+            return;
+        }
+        processFunctionAnnotation(metadata.get());
+    }
+
+    private void processFunctionAnnotation(MetadataNode metadataNode) {
+        NodeList<AnnotationNode> annotations = metadataNode.annotations();
+        for (AnnotationNode annotationNode : annotations) {
+            Node node = annotationNode.annotReference();
+            if (node.kind() != SyntaxKind.QUALIFIED_NAME_REFERENCE) {
+                continue;
+            }
+            QualifiedNameReferenceNode node1 = (QualifiedNameReferenceNode) node;
+            String modulePrefix = node1.modulePrefix().text();
+            String name = node1.identifier().text();
+            if (modulePrefix.equals("cloud") && name.equals("Task")) {
+                processTaskAnnotationValue(annotationNode);
+            }
+        }
+    }
+
+    private void processTaskAnnotationValue(AnnotationNode annotationNode) {
+        if (annotationNode.annotValue().isEmpty()) {
+            return;
+        }
+        MappingConstructorExpressionNode mappingConstructorExpressionNode = annotationNode.annotValue().get();
+        SeparatedNodeList<MappingFieldNode> fields = mappingConstructorExpressionNode.fields();
+        for (MappingFieldNode field : fields) {
+            if (field.kind() != SyntaxKind.SPECIFIC_FIELD) {
+                continue;
+            }
+            SpecificFieldNode specificField = (SpecificFieldNode) field;
+            if ("schedule".equals(getNameOfIdentifier(specificField.fieldName()))) {
+                Optional<ExpressionNode> expressionNode = specificField.valueExpr();
+                expressionNode.ifPresent(this::processTaskScheduleBlock);
+            }
+        }
     }
 
     private String getNameOfIdentifier(Node node) {
@@ -93,7 +245,43 @@ public class C2CVisitor extends NodeVisitor {
         }
         return null;
     }
-    
+
+    private void processTaskScheduleBlock(ExpressionNode expressionNode) {
+        if (expressionNode.kind() != SyntaxKind.MAPPING_CONSTRUCTOR) {
+            return;
+        }
+        MappingConstructorExpressionNode expressionNode1 = (MappingConstructorExpressionNode) expressionNode;
+        SeparatedNodeList<MappingFieldNode> scheduleFields = expressionNode1.fields();
+        String minutes = null, hours = null, dayOfMonth = null, monthOfYear = null, daysOfWeek = null;
+        for (MappingFieldNode timeField : scheduleFields) {
+            if (timeField.kind() == SyntaxKind.SPECIFIC_FIELD) {
+                SpecificFieldNode timeSpecificField = (SpecificFieldNode) timeField;
+                String identifier = getNameOfIdentifier(timeSpecificField.fieldName());
+                timeSpecificField.valueExpr();
+                switch (Objects.requireNonNull(identifier)) {
+                    case "minutes":
+                        minutes = extractString(timeSpecificField.valueExpr().get());
+                        break;
+                    case "hours":
+                        hours = extractString(timeSpecificField.valueExpr().get());
+                        break;
+                    case "dayOfMonth":
+                        dayOfMonth = extractString(timeSpecificField.valueExpr().get());
+                        break;
+                    case "monthOfYear":
+                        monthOfYear = extractString(timeSpecificField.valueExpr().get());
+                        break;
+                    case "daysOfWeek":
+                        daysOfWeek = extractString(timeSpecificField.valueExpr().get());
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        this.task = new Task(minutes, hours, dayOfMonth, monthOfYear, daysOfWeek);
+    }
+
     private String extractString(ExpressionNode expressionNode) {
         if (expressionNode.kind() == SyntaxKind.STRING_LITERAL) {
             String text = ((BasicLiteralNode) expressionNode).literalToken().text();
@@ -153,7 +341,8 @@ public class C2CVisitor extends NodeVisitor {
                 config.ifPresent(listenerInfo::setConfig);
             }
         }
-        ServiceInfo serviceInfo = new ServiceInfo(listenerInfo, serviceDeclarationNode, servicePath);
+        ServiceInfo
+                serviceInfo = new ServiceInfo(listenerInfo, serviceDeclarationNode, servicePath);
         NodeList<Node> function = serviceDeclarationNode.members();
         for (Node node : function) {
             if (node.kind() == SyntaxKind.RESOURCE_ACCESSOR_DEFINITION) {
@@ -178,7 +367,8 @@ public class C2CVisitor extends NodeVisitor {
         ListenerInfo listenerInfo;
         if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
             diagnostics.add(C2CDiagnosticCodes
-                    .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expression.location()));
+                    .createDiagnostic(
+                            C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expression.location()));
             return Optional.empty();
         } else {
             BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expression;
@@ -241,13 +431,16 @@ public class C2CVisitor extends NodeVisitor {
             SpecificFieldNode specificField = (SpecificFieldNode) child;
             String fieldName = getNameOfIdentifier(specificField.fieldName());
             if ("key".equals(fieldName)) {
-                SecureSocketConfig secureSocket = getSecureSocketConfig(specificField.valueExpr().get());
+                SecureSocketConfig
+                        secureSocket = getSecureSocketConfig(specificField.valueExpr().get());
                 httpsConfig.setSecureSocketConfig(secureSocket);
             } else if ("mutualSsl".equals(fieldName)) {
-                MutualSSLConfig mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
+                MutualSSLConfig
+                        mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
                 httpsConfig.setMutualSSLConfig(mutualSSLConfig);
             } else if ("cert".equals(fieldName)) {
-                MutualSSLConfig mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
+                MutualSSLConfig
+                        mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
                 httpsConfig.setMutualSSLConfig(mutualSSLConfig);
             }
         }
@@ -380,7 +573,8 @@ public class C2CVisitor extends NodeVisitor {
                     Optional<ListenerInfo> listenerInfo =
                             getPortValueFromSTForCustomListener(servicePath, serviceDeclarationNode, i);
                     if (listenerInfo.isEmpty()) {
-                        diagnostics.add(C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
+                        diagnostics.add(C2CDiagnosticCodes
+                                .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
                                 parameterSymbol.location()));
                         continue;
                     }
@@ -441,7 +635,7 @@ public class C2CVisitor extends NodeVisitor {
                 case "tcp":
                 case "udp":
                 case "websocket":
-                    //TODO add other stdlib
+                //TODO add other stdlib
                     return true;
                 default:
                     return false;
@@ -510,7 +704,8 @@ public class C2CVisitor extends NodeVisitor {
         }
         ExpressionNode expressionNode = moduleVariableDeclarationNode.initializer().get();
         if (expressionNode.kind() == SyntaxKind.REQUIRED_EXPRESSION) {
-            diagnostics.add(C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.CONFIGURABLE_NO_DEFAULT,
+            diagnostics.add(C2CDiagnosticCodes
+                    .createDiagnostic(C2CDiagnosticCodes.CONFIGURABLE_NO_DEFAULT,
                     moduleVariableDeclarationNode.location()));
             return Optional.of(0);
         }
