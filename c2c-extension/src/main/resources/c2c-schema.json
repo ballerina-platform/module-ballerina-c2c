@@ -10,13 +10,10 @@
       "additionalProperties": false,
       "properties": {
         "singleYAML": {
-          "type": "boolean",
-          "additionalProperties": false,
-          "default": false
+          "type": "boolean"
         },
         "buildImage": {
           "type": "boolean",
-          "additionalProperties": false,
           "default": true
         }
       }
@@ -40,7 +37,7 @@
             "repository": {
               "type": "string",
               "pattern": "^(?!\\s*$).+",
-              "default": "local",
+              "default": "ballerina",
               "message": {
                 "pattern": "`repository` should not be empty"
               }
@@ -48,7 +45,7 @@
             "tag": {
               "type": "string",
               "pattern": "^[\\w][\\w.-]{0,127}$",
-              "default": "v1.0.0",
+              "default": "latest",
               "message": {
                 "pattern": "`tag` should not be empty which has less than 127 characters"
               }
@@ -64,7 +61,6 @@
             "cmd": {
               "type": "string",
               "pattern": "^(?!\\s*$).+",
-              "default": "",
               "message": {
                 "pattern": "`cmd` should not be empty"
               }
@@ -76,7 +72,6 @@
                 "run_as": {
                   "type": "string",
                   "pattern": "^(?!\\s*$).+",
-                  "default": "ballerina",
                   "message": {
                     "pattern": "`run_as` should not be empty"
                   }
@@ -194,7 +189,6 @@
                   "key_ref": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "MYSQL_ROOT_PASSWORD",
                     "message": {
                       "pattern": "`key_ref` should not be empty"
                     }
@@ -202,7 +196,6 @@
                   "name": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "ROOT_PASSWORD",
                     "message": {
                       "pattern": "`name` should not be empty"
                     }
@@ -210,7 +203,6 @@
                   "secret_name": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "db-crdential-secret",
                     "message": {
                       "pattern": "`secret_name` should not be empty"
                     }
@@ -227,7 +219,6 @@
                   "file": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "resource/file.text",
                     "message": {
                       "pattern": "`file` should not be empty"
                     }
@@ -244,14 +235,12 @@
             "internal_domain_name": {
               "type": "string",
               "pattern": "[a-z0-9]([-a-z0-9]*[a-z0-9])?",
-              "default": "module-svc",
               "message": {
                 "pattern": "`internal_domain_name` must start with lowercase alphanumeric character and can then it could contain dash in the middle of the string"
               }
             },
             "external_accessible": {
-              "type": "boolean",
-              "default": true
+              "type": "boolean"
             },
             "min_memory": {
               "type": "string",
@@ -266,30 +255,29 @@
             "min_cpu": {
               "type": "string",
               "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
-              "default": "1000m"
+              "default": "200m"
             },
             "max_cpu": {
               "type": "string",
               "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
-              "default": "1500m"
+              "default": "500m"
             },
             "autoscaling": {
               "type": "object",
               "additionalProperties": false,
               "properties": {
                 "enable": {
-                  "type": "boolean",
-                  "default": true
+                  "type": "boolean"
                 },
                 "min_replicas": {
                   "type": "integer",
                   "minimum": 1,
-                  "default": 2
+                  "default": 1
                 },
                 "max_replicas": {
                   "type": "integer",
                   "minimum": 1,
-                  "default": 3
+                  "default": 2
                 },
                 "cpu": {
                   "type": "integer",
@@ -300,8 +288,7 @@
                 "memory": {
                   "type": "integer",
                   "minimum": 1,
-                  "maximum": 100,
-                  "default": 80
+                  "maximum": 100
                 }
               }
             },
@@ -321,7 +308,7 @@
                     "path": {
                       "type": "string",
                       "pattern": "^(?!\\s*$).+",
-                      "default": "/readyz"
+                      "default": "/probes/readyz"
                     }
                   }
                 },
@@ -337,7 +324,7 @@
                     "path": {
                       "type": "string",
                       "pattern": "^(?!\\s*$).+",
-                      "default": "/healthz"
+                      "default": "/probes/healthz"
                     }
                   }
                 }
@@ -397,7 +384,6 @@
                   "file": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "resource/file.text",
                     "message": {
                       "pattern": "`file` should not be empty"
                     }
@@ -405,7 +391,6 @@
                   "mount_path": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "/home/ballerina/foo/file.conf",
                     "message": {
                       "pattern": "`mount_path` should not be empty"
                     }
@@ -422,7 +407,6 @@
                   "key_ref": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "MY_SECRET",
                     "message": {
                       "pattern": "`key_ref` should not be empty"
                     }
@@ -430,7 +414,6 @@
                   "name": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "mykey",
                     "message": {
                       "pattern": "`name` should not be empty"
                     }
@@ -438,7 +421,6 @@
                   "secret_name": {
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "mysecret",
                     "message": {
                       "pattern": "`secret` should not be empty"
                     }

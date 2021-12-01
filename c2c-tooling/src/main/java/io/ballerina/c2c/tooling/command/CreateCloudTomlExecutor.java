@@ -19,6 +19,7 @@ import io.ballerina.c2c.tooling.toml.CommonUtil;
 import io.ballerina.projects.CloudToml;
 import io.ballerina.projects.Project;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
+import io.ballerina.toml.syntax.tree.SyntaxKind;
 import io.ballerina.toml.validator.BoilerplateGenerator;
 import io.ballerina.toml.validator.schema.Schema;
 import org.apache.commons.io.IOUtils;
@@ -47,6 +48,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Optional;
 
@@ -116,11 +118,21 @@ public class CreateCloudTomlExecutor implements LSCommandExecutor {
                         ".com/ballerina-platform/ballerina-spec/blob/master/c2c/code-to-cloud-spec.md" +
                         CommonUtil.LINE_SEPARATOR +
                         "# Uncomment Any field below if you want to override the default value." +
-                        CommonUtil.LINE_SEPARATOR + CommonUtil.LINE_SEPARATOR);
+                        CommonUtil.LINE_SEPARATOR);
 
         BoilerplateGenerator generator = new BoilerplateGenerator(Schema.from(getValidationSchema()));
-        for (DocumentMemberDeclarationNode node : generator.getNodes().values()) {
-            content.append("#").append(node.toSourceCode());
+        Map<String, DocumentMemberDeclarationNode> nodes = generator.getNodes();
+        
+        // TODO Remove this from the Toml boilerplate side.
+        // https://github.com/ballerina-platform/ballerina-lang/issues/34086
+        nodes.remove("cloud.config.secrets");
+        nodes.remove("cloud.config.files");
+        
+        for (DocumentMemberDeclarationNode node : nodes.values()) {
+            if (node.kind() != SyntaxKind.KEY_VALUE) {
+                content.append(CommonUtil.LINE_SEPARATOR);
+            }
+            content.append("# ").append(node.toSourceCode());
         }
 
         return content.toString();

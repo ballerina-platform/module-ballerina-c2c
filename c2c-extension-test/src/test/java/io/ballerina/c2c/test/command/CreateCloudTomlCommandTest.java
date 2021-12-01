@@ -43,7 +43,7 @@ public class CreateCloudTomlCommandTest extends AbstractCommandExecutionTest {
     public Object[][] createCloudTomlDataProvider() {
         log.info("Test workspace/executeCommand for command {}", COMMAND);
         return new Object[][] {
-                {"add_single_documentation_with_deprecated1.json", "add_single_documentation_with_deprecated1.bal"},
+                {"create_cloud_toml_cmd.json", "create_cloud_toml_cmd.bal"},
         };
     }
 
