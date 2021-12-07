@@ -15,26 +15,19 @@
  */
 package io.ballerina.c2c.tooling.codeaction.providers;
 
+import io.ballerina.c2c.tooling.codeaction.toml.ProjectServiceInfoHolder;
 import io.ballerina.c2c.tooling.toml.CommonUtil;
 import io.ballerina.c2c.tooling.toml.TomlSyntaxTreeUtil;
-import io.ballerina.compiler.syntax.tree.BasicLiteralNode;
-import io.ballerina.compiler.syntax.tree.ExplicitNewExpressionNode;
-import io.ballerina.compiler.syntax.tree.ExpressionNode;
-import io.ballerina.compiler.syntax.tree.FunctionArgumentNode;
+import io.ballerina.c2c.util.ProjectServiceInfo;
+import io.ballerina.c2c.util.ServiceInfo;
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
-import io.ballerina.compiler.syntax.tree.ImplicitNewExpressionNode;
-import io.ballerina.compiler.syntax.tree.ListenerDeclarationNode;
-import io.ballerina.compiler.syntax.tree.ModulePartNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeList;
-import io.ballerina.compiler.syntax.tree.NodeVisitor;
 import io.ballerina.compiler.syntax.tree.NonTerminalNode;
-import io.ballerina.compiler.syntax.tree.ParenthesizedArgList;
-import io.ballerina.compiler.syntax.tree.PositionalArgumentNode;
 import io.ballerina.compiler.syntax.tree.ServiceDeclarationNode;
-import io.ballerina.compiler.syntax.tree.SimpleNameReferenceNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.projects.CloudToml;
+import io.ballerina.projects.Project;
 import io.ballerina.projects.util.ProjectConstants;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.syntax.tree.DocumentNode;
@@ -43,6 +36,7 @@ import io.ballerina.toml.syntax.tree.TableNode;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import org.ballerinalang.annotation.JavaSPIService;
 import org.ballerinalang.langserver.commons.CodeActionContext;
+import org.ballerinalang.langserver.commons.LanguageServerContext;
 import org.ballerinalang.langserver.commons.codeaction.CodeActionNodeType;
 import org.ballerinalang.langserver.commons.codeaction.spi.DiagBasedPositionDetails;
 import org.ballerinalang.langserver.commons.codeaction.spi.LSCodeActionProvider;
@@ -102,8 +96,8 @@ public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
         }
 
         Path k8sPath = context.workspace().projectRoot(context.filePath()).resolve(ProjectConstants.CLOUD_TOML);
-        Optional<CloudToml> cloudToml =
-                context.workspace().project(context.filePath()).orElseThrow().currentPackage().cloudToml();
+        Project project = context.workspace().project(context.filePath()).orElseThrow();
+        Optional<CloudToml> cloudToml = project.currentPackage().cloudToml();
 
         if (cloudToml.isEmpty()) {
             return Collections.emptyList();
@@ -120,15 +114,18 @@ public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
 
             ServiceDeclarationNode serviceDeclarationNode = (ServiceDeclarationNode) functionDefinitionNode.parent();
             String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
-            int port = getPortOfService(serviceDeclarationNode);
-
+            ;
+            int port = getPortOfService(context.languageServercontext(), project, servicePath);
+            if (port == 0) {
+                continue;
+            }
             String importText = generateProbeText(probe, port, servicePath, resourcePath);
             int endLine = documentNode.members().get(documentNode.members().size() - 1).lineRange().endLine().line();
             Position position = new Position(endLine + 1, 0);
             List<TextEdit> edits = Collections.singletonList(
                     new TextEdit(new Range(position, position), importText));
             CodeAction action = CommonUtil.createQuickFixCodeAction("Add as " + probe.tableName + " probe", edits,
-                                                         k8sPath.toUri().toString());
+                    k8sPath.toUri().toString());
             codeActionList.add(action);
         }
         return codeActionList;
@@ -153,21 +150,15 @@ public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
         return probs;
     }
 
-    private int getPortOfService(ServiceDeclarationNode serviceDeclarationNode) {
-        int port;
-        ExpressionNode expressionNode = serviceDeclarationNode.expressions().get(0);
-        if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-            SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
-            String listenerName = referenceNode.name().text();
-            ModulePartNode modulePartNode = (ModulePartNode) serviceDeclarationNode.parent();
-            ListenerVisitor listenerVisitor = new ListenerVisitor(listenerName);
-            modulePartNode.accept(listenerVisitor);
-            port = listenerVisitor.getPort();
-        } else {
-            ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
-            port = Integer.parseInt(refNode.parenthesizedArgList().arguments().get(0).toString());
+    private int getPortOfService(LanguageServerContext ctx, Project project, String servicePath) {
+        ProjectServiceInfo projectServiceInfo = ProjectServiceInfoHolder.getInstance(ctx).getProjectInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+        for (ServiceInfo serviceInfo : serviceList) {
+            if (serviceInfo.getServicePath().equals(servicePath)) {
+                return serviceInfo.getListener().getPort();
+            }
         }
-        return port;
+        return 0;
     }
 
     private String toAbsoluteServicePath(NodeList<Node> servicePathNodes) {
@@ -179,41 +170,19 @@ public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
     }
 
     private String generateProbeText(ProbeType probeType, int port, String servicePath, String resourcePath) {
+        if (resourcePath.equals(".")) {
+            resourcePath = "";
+        } else {
+            resourcePath = "/" + resourcePath;
+        }
         if (servicePath.equals("/")) {
             return CommonUtil.LINE_SEPARATOR + "[cloud.deployment.probes." + probeType.tableName + "]" +
                     CommonUtil.LINE_SEPARATOR + "port = " + port + CommonUtil.LINE_SEPARATOR +
-                    "path = \"" + "/" + resourcePath + "\"" + CommonUtil.LINE_SEPARATOR;
+                    "path = \"" + resourcePath + "\"" + CommonUtil.LINE_SEPARATOR;
         }
         return CommonUtil.LINE_SEPARATOR + "[cloud.deployment.probes." + probeType.tableName + "]" +
                 CommonUtil.LINE_SEPARATOR + "port = " + port + CommonUtil.LINE_SEPARATOR +
-                "path = \"" + servicePath + "/" + resourcePath + "\"" + CommonUtil.LINE_SEPARATOR;
-    }
-
-    private static class ListenerVisitor extends NodeVisitor {
-
-        private String targetListenerName;
-        private int port;
-
-        public ListenerVisitor(String targetListenerName) {
-            this.targetListenerName = targetListenerName;
-        }
-
-        @Override
-        public void visit(ListenerDeclarationNode listenerDeclarationNode) {
-            String listenerName = listenerDeclarationNode.variableName().text();
-            Node initializer = listenerDeclarationNode.initializer();
-            if (initializer.kind() == SyntaxKind.IMPLICIT_NEW_EXPRESSION && listenerName.equals(targetListenerName)) {
-                ImplicitNewExpressionNode initializerNode = (ImplicitNewExpressionNode) initializer;
-                ParenthesizedArgList parenthesizedArgList = initializerNode.parenthesizedArgList().get();
-                FunctionArgumentNode functionArgumentNode = parenthesizedArgList.arguments().get(0);
-                ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
-                this.port = Integer.parseInt(((BasicLiteralNode) expression).literalToken().text());
-            }
-        }
-
-        public int getPort() {
-            return port;
-        }
+                "path = \"" + servicePath + resourcePath + "\"" + CommonUtil.LINE_SEPARATOR;
     }
 
     enum ProbeType {

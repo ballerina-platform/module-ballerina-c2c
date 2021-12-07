@@ -40,7 +40,8 @@ public class CloudProbesTest extends AbstractCodeActionTest {
     public Object[][] dataProvider() {
         return new Object[][]{
                 { "addprobe1.json", "probegen.bal" },
-                { "empty-service-path.json", "empty-service-path.bal" }
+                { "empty-service-path.json", "empty-service-path.bal" },
+                { "config.json", "config.bal" }
         };
     }
 
