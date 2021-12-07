@@ -23,6 +23,8 @@ dependencies {
     implementation "org.ballerinalang:toml-parser:${ballerinaLangVersion}"
     implementation "org.ballerinalang:ballerina-parser:${ballerinaLangVersion}"
 
+    implementation 'com.google.code.gson:gson:2.8.8'
+
     compileOnly "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
     compileOnly "org.ballerinalang:ballerina-tools-api:${ballerinaLangVersion}"
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
