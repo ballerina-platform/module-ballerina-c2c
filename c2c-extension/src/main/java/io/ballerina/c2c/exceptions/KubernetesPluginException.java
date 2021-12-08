@@ -25,13 +25,25 @@ import io.ballerina.tools.diagnostics.Diagnostic;
  */
 public class KubernetesPluginException extends Exception {
     private final Diagnostic diagnostic;
+    private final boolean skipPrintTrace;
 
     public KubernetesPluginException(Diagnostic diagnostic) {
         super(diagnostic.message());
         this.diagnostic = diagnostic;
+        this.skipPrintTrace = false;
+    }
+
+    public KubernetesPluginException(Diagnostic diagnostic, boolean skipPrintTrace) {
+        super(diagnostic.message());
+        this.diagnostic = diagnostic;
+        this.skipPrintTrace = skipPrintTrace;
     }
 
     public Diagnostic getDiagnostic() {
         return diagnostic;
+    }
+
+    public boolean isSkipPrintTrace() {
+        return this.skipPrintTrace;
     }
 }

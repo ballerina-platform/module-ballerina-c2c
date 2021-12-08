@@ -45,7 +45,7 @@ public class DockerHandler extends AbstractArtifactHandler {
             DiagnosticInfo diagnosticInfo = new DiagnosticInfo(C2CDiagnosticCodes.DOCKER_FAILED.getCode(),
                     e.getMessage(), DiagnosticSeverity.WARNING);
             Diagnostic diagnostic = DiagnosticFactory.createDiagnostic(diagnosticInfo, new NullLocation());
-            throw new KubernetesPluginException(diagnostic);
+            throw new KubernetesPluginException(diagnostic, true);
         }
     }
 }

@@ -118,7 +118,9 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             } catch (KubernetesPluginException e) {
                 String errorMessage = "module [" + packageId + "] " + e.getMessage();
                 printError(errorMessage);
-                pluginLog.error(errorMessage, e);
+                if (!e.isSkipPrintTrace()) {
+                    pluginLog.error(errorMessage, e);
+                }
                 try {
                     KubernetesUtils.deleteDirectory(kubernetesOutputPath);
                 } catch (KubernetesPluginException ignored) {
