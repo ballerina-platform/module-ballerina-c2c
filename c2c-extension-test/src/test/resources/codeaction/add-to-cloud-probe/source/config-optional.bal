@@ -16,7 +16,7 @@
 
 import ballerina/http;
 
-configurable int port = ?;
+configurable int port = 8080;
 
 service /products on new http:Listener(port) {
 

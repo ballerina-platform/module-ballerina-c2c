@@ -23,42 +23,6 @@
                     }
                 ]
             }
-        },
-        {
-            "title": "Add as liveness probe",
-            "edits": [
-                {
-                    "range": {
-                        "start": {
-                            "line": 5,
-                            "character": 0
-                        },
-                        "end": {
-                            "line": 5,
-                            "character": 0
-                        }
-                    },
-                    "newText": "\n[cloud.deployment.probes.liveness]\nport = 8080\npath = \"/products\"\n"
-                }
-            ]
-        },
-        {
-            "title": "Add as readiness probe",
-            "edits": [
-                {
-                    "range": {
-                        "start": {
-                            "line": 5,
-                            "character": 0
-                        },
-                        "end": {
-                            "line": 5,
-                            "character": 0
-                        }
-                    },
-                    "newText": "\n[cloud.deployment.probes.readiness]\nport = 8080\npath = \"/products\"\n"
-                }
-            ]
         }
     ]
 }
