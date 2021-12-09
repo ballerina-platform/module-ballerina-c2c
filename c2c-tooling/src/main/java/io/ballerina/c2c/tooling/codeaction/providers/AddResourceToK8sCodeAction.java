@@ -114,7 +114,6 @@ public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
 
             ServiceDeclarationNode serviceDeclarationNode = (ServiceDeclarationNode) functionDefinitionNode.parent();
             String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
-            ;
             int port = getPortOfService(context.languageServercontext(), project, servicePath);
             if (port == 0) {
                 continue;
