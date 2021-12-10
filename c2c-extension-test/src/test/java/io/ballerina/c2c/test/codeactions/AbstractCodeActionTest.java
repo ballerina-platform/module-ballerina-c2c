@@ -77,7 +77,7 @@ public abstract class AbstractCodeActionTest {
         String configJsonPath =
                 "codeaction" + File.separator + getResourceDir() + File.separator + "config" + File.separator + config;
         Path sourcePath = sourcesPath.resolve(getResourceDir()).resolve("source").resolve(source);
-//        TestUtil.generateCaches(sourcePath.getParent(), Paths.get(System.getProperty("ballerina.home")));
+        TestUtil.generateCaches(sourcePath.getParent(), Paths.get(System.getProperty("ballerina.home")));
         JsonObject configJsonObject = FileUtils.fileContentAsObject(configJsonPath);
         TestUtil.openDocument(serviceEndpoint, sourcePath);
 
