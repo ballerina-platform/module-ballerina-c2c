@@ -17,7 +17,6 @@
  */
 package io.ballerina.c2c.tooling.codeaction.providers.kubernetes;
 
-import io.ballerina.c2c.tooling.codeaction.toml.ProjectServiceInfoHolder;
 import io.ballerina.c2c.tooling.toml.CommonUtil;
 import io.ballerina.c2c.tooling.toml.Probe;
 import io.ballerina.c2c.tooling.toml.TomlSyntaxTreeUtil;
@@ -53,8 +52,7 @@ public abstract class AbstractInvalidResourceCodeAction extends ProbeBasedDiagno
 
     public List<CodeAction> addResourceToService(Diagnostic diagnostic, CodeActionContext ctx, Probe probe) {
         Optional<Project> project = ctx.workspace().project(ctx.filePath());
-        ProjectServiceInfo projectServiceInfo =
-                ProjectServiceInfoHolder.getInstance(ctx.languageServercontext()).getProjectInfo(project.orElseThrow());
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project.orElseThrow());
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
         List<CodeAction> codeActionList = new ArrayList<>();
         for (ServiceInfo service : serviceList) {

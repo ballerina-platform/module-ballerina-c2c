@@ -15,7 +15,6 @@
  */
 package io.ballerina.c2c.tooling.codeaction.providers;
 
-import io.ballerina.c2c.tooling.codeaction.toml.ProjectServiceInfoHolder;
 import io.ballerina.c2c.tooling.toml.CommonUtil;
 import io.ballerina.c2c.tooling.toml.TomlSyntaxTreeUtil;
 import io.ballerina.c2c.util.ProjectServiceInfo;
@@ -36,7 +35,6 @@ import io.ballerina.toml.syntax.tree.TableNode;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import org.ballerinalang.annotation.JavaSPIService;
 import org.ballerinalang.langserver.commons.CodeActionContext;
-import org.ballerinalang.langserver.commons.LanguageServerContext;
 import org.ballerinalang.langserver.commons.codeaction.CodeActionNodeType;
 import org.ballerinalang.langserver.commons.codeaction.spi.DiagBasedPositionDetails;
 import org.ballerinalang.langserver.commons.codeaction.spi.LSCodeActionProvider;
@@ -114,7 +112,7 @@ public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
 
             ServiceDeclarationNode serviceDeclarationNode = (ServiceDeclarationNode) functionDefinitionNode.parent();
             String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
-            int port = getPortOfService(context.languageServercontext(), project, servicePath);
+            int port = getPortOfService(project, servicePath);
             if (port == 0) {
                 continue;
             }
@@ -149,8 +147,8 @@ public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
         return probs;
     }
 
-    private int getPortOfService(LanguageServerContext ctx, Project project, String servicePath) {
-        ProjectServiceInfo projectServiceInfo = ProjectServiceInfoHolder.getInstance(ctx).getProjectInfo(project);
+    private int getPortOfService(Project project, String servicePath) {
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
         for (ServiceInfo serviceInfo : serviceList) {
             if (serviceInfo.getServicePath().equals(servicePath)) {
