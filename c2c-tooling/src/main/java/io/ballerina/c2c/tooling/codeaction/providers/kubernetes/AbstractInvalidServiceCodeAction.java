@@ -17,7 +17,6 @@
  */
 package io.ballerina.c2c.tooling.codeaction.providers.kubernetes;
 
-import io.ballerina.c2c.tooling.codeaction.toml.ProjectServiceInfoHolder;
 import io.ballerina.c2c.tooling.toml.Probe;
 import io.ballerina.c2c.tooling.toml.TomlSyntaxTreeUtil;
 import io.ballerina.c2c.util.ProjectServiceInfo;
@@ -49,8 +48,7 @@ public abstract class AbstractInvalidServiceCodeAction extends ProbeBasedDiagnos
 
     public List<CodeAction> fixServicePath(Diagnostic diagnostic, CodeActionContext ctx, Probe probe) {
         Optional<Project> project = ctx.workspace().project(ctx.filePath());
-        ProjectServiceInfo projectServiceInfo =
-                ProjectServiceInfoHolder.getInstance(ctx.languageServercontext()).getProjectInfo(project.orElseThrow());
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project.orElseThrow());
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
         List<CodeAction> codeActionList = new ArrayList<>();
         // TODO: Listener Exists No attatched service -> Generate a service using the listener

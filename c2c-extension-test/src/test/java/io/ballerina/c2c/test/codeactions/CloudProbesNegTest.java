@@ -28,7 +28,7 @@ import java.io.IOException;
  *
  * @since 2.0.0
  */
-public class CloudProbesTest extends AbstractCodeActionTest {
+public class CloudProbesNegTest extends AbstractCodeActionTest {
 
     @Test(dataProvider = "codeaction-data-provider")
     public void test(String config, String source) throws IOException, WorkspaceDocumentException {
@@ -39,14 +39,12 @@ public class CloudProbesTest extends AbstractCodeActionTest {
     @Override
     public Object[][] dataProvider() {
         return new Object[][]{
-                { "addprobe1.json", "probegen.bal" },
-                { "empty-service-path.json", "empty-service-path.bal" },
-                { "config-optional.json", "config-optional.bal"},
+                { "config.json", "config.bal" },
         };
     }
 
     @Override
     public String getResourceDir() {
-        return "add-to-cloud-probe";
+        return "add-to-cloud-probe-neg";
     }
 }
