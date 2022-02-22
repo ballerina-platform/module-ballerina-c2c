@@ -225,6 +225,34 @@ public class ServiceExtractionTest {
     }
 
     @Test
+    public void testWebSub() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "websub");
+
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+
+        Assert.assertEquals(serviceList.size(), 1);
+        ServiceInfo helloService = serviceList.get(0);
+        ListenerInfo helloListener = helloService.getListener();
+        Assert.assertEquals(helloListener.getPort(), 9090);
+    }
+
+    @Test
+    public void testWebSubHub() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "websubhub");
+
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+
+        Assert.assertEquals(serviceList.size(), 1);
+        ServiceInfo helloService = serviceList.get(0);
+        ListenerInfo helloListener = helloService.getListener();
+        Assert.assertEquals(helloListener.getPort(), 9090);
+    }
+
+    @Test
     public void testWebSocketSsl() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "websocket-sec");
 

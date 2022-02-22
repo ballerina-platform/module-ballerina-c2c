@@ -635,6 +635,8 @@ public class C2CVisitor extends NodeVisitor {
                 case "tcp":
                 case "udp":
                 case "websocket":
+                case "websub":
+                case "websubhub":
                 //TODO add other stdlib
                     return true;
                 default:
