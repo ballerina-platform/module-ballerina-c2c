@@ -236,6 +236,9 @@ public class CustomDiagnosticsTest {
                 continue;
             }
             diagnostics.add(diagnostic);
+            if (diagnostic.diagnosticInfo().code().startsWith("C2C")) {
+                diagnostics.add(diagnostic);
+            }
         }
         return diagnostics;
     }
