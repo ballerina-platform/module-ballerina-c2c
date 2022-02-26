@@ -16,7 +16,6 @@
 package io.ballerina.c2c.test;
 
 import io.ballerina.projects.directory.BuildProject;
-import io.ballerina.projects.internal.PackageDiagnostic;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 import org.testng.Assert;
@@ -24,10 +23,10 @@ import org.testng.annotations.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
+
+import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getC2CDiagnostics;
 
 /**
  * Responsible for testing the custom diagnostics implemented by code to cloud module.
@@ -227,19 +226,5 @@ public class CustomDiagnosticsTest {
         Iterator<Diagnostic> iterator = diagnostics.iterator();
         Assert.assertEquals(iterator.next().message(), "uninitialized variable 'x'");
         Assert.assertEquals(iterator.next().message(), "variable 'y' is not initialized");
-    }
-
-    private List<Diagnostic> getC2CDiagnostics(Collection<Diagnostic> allDiagnostics) {
-        List<Diagnostic> diagnostics = new ArrayList<>();
-        for (Diagnostic diagnostic:allDiagnostics) {
-            if (diagnostic instanceof PackageDiagnostic) {
-                continue;
-            }
-            diagnostics.add(diagnostic);
-            if (diagnostic.diagnosticInfo().code().startsWith("C2C")) {
-                diagnostics.add(diagnostic);
-            }
-        }
-        return diagnostics;
     }
 }
