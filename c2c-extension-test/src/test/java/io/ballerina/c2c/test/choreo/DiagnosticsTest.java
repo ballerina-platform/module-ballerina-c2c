@@ -18,16 +18,15 @@
 package io.ballerina.c2c.test.choreo;
 
 import io.ballerina.projects.directory.BuildProject;
-import io.ballerina.projects.internal.PackageDiagnostic;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+
+import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getC2CDiagnostics;
 
 /**
  * Contains the tests for choreo specific diagnostics.
@@ -55,16 +54,5 @@ public class DiagnosticsTest {
                 getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 1);
         Assert.assertEquals(diagnostics.iterator().next().message(), "choreo only supports one service at the moment");
-    }
-
-    private List<Diagnostic> getC2CDiagnostics(Collection<Diagnostic> allDiagnostics) {
-        List<Diagnostic> diagnostics = new ArrayList<>();
-        for (Diagnostic diagnostic : allDiagnostics) {
-            if (diagnostic instanceof PackageDiagnostic) {
-                continue;
-            }
-            diagnostics.add(diagnostic);
-        }
-        return diagnostics;
     }
 }
