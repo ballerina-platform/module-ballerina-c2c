@@ -50,7 +50,6 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getExposedPorts;
  */
 public class MultipleConfigTest {
 
-
     private static final Path SOURCE_DIR_PATH = Paths.get("src", "test", "resources", "multiple-config");
     private static final Path DOCKER_TARGET_PATH =
             SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
@@ -146,9 +145,9 @@ public class MultipleConfigTest {
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
         Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[/bin/sh, -c, java -Xdiag -cp " +
-                "\"hello-hello-0.0.1.jar:jars/*\" 'hello/hello/0/$_init' || cat ballerina-internal.log]");
+                "\"hello-hello-0.0.1.jar:jars/*\" 'hello/hello/0/$_init' ||" +
+                " [ -f \"ballerina-internal.log\" ] && cat ballerina-internal.log]");
     }
-
 
     @AfterClass
     public void cleanUp() throws KubernetesPluginException {

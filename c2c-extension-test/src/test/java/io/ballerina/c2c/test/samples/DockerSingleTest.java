@@ -63,7 +63,8 @@ public class DockerSingleTest extends SampleTest {
         Assert.assertEquals(ports.get(0), "9096/tcp");
         // Validate ballerina.conf in run command
         Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(),
-                "[/bin/sh, -c, java -Xdiag -cp \"service.jar:jars/*\" '$_init' || cat ballerina-internal.log]");
+                "[/bin/sh, -c, java -Xdiag -cp \"service.jar:jars/*\" '$_init' ||" +
+                        " [ -f \"ballerina-internal.log\" ] && cat ballerina-internal.log]");
     }
 
     @Test(groups = { "integration" })
