@@ -101,7 +101,7 @@ public class ArtifactManager {
         kubernetesDataHolder.setDockerModel(dockerModel);
         new DockerHandler().createArtifacts();
 
-        instructions.put("\tExecute the below command to run the generated docker image: ",
+        instructions.put("\tExecute the below command to run the generated Docker image: ",
                 "\tdocker run -d " + generatePortInstruction(dockerModel.getPorts()) + dockerModel.getName());
         printInstructions();
     }
