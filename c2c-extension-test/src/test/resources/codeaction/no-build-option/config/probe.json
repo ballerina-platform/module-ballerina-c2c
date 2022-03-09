@@ -1,6 +1,6 @@
 {
-    "line": 8,
-    "character": 27,
+    "line": 23,
+    "character": 29,
     "expected": [
         {
             "title": "Document this",
@@ -12,11 +12,11 @@
                         "key":"node.range",
                         "value":{
                             "start":{
-                                "line":8,
+                                "line":23,
                                 "character":4
                             },
                             "end":{
-                                "line":10,
+                                "line":25,
                                 "character":5
                             }
                         }
