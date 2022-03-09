@@ -1,0 +1,28 @@
+{
+    "line": 8,
+    "character": 27,
+    "expected": [
+        {
+            "title": "Document this",
+            "command": {
+                "title": "Document this",
+                "command": "ADD_DOC",
+                "arguments": [
+                    {
+                        "key":"node.range",
+                        "value":{
+                            "start":{
+                                "line":8,
+                                "character":4
+                            },
+                            "end":{
+                                "line":10,
+                                "character":5
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

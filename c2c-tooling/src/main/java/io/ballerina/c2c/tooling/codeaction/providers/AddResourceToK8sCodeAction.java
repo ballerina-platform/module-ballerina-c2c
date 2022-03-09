@@ -95,6 +95,10 @@ public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
 
         Path k8sPath = context.workspace().projectRoot(context.filePath()).resolve(ProjectConstants.CLOUD_TOML);
         Project project = context.workspace().project(context.filePath()).orElseThrow();
+        if (!project.buildOptions().cloud().equals("k8s")) {
+            return Collections.emptyList();
+        }
+        
         Optional<CloudToml> cloudToml = project.currentPackage().cloudToml();
 
         if (cloudToml.isEmpty()) {

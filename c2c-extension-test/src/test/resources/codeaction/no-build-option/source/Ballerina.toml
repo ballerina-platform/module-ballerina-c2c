@@ -2,7 +2,3 @@
 org = "anjana"
 name = "myproject"
 version = "0.1.0"
-
-[build-options]
-observabilityIncluded = true
-cloud = "k8s"

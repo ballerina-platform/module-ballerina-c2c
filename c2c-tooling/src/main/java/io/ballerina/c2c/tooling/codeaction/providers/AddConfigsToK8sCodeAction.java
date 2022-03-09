@@ -24,6 +24,7 @@ import io.ballerina.compiler.syntax.tree.NonTerminalNode;
 import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.projects.CloudToml;
+import io.ballerina.projects.Project;
 import io.ballerina.projects.util.ProjectConstants;
 import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.syntax.tree.DocumentNode;
@@ -97,9 +98,12 @@ public class AddConfigsToK8sCodeAction implements LSCodeActionProvider {
         }
 
         Path k8sPath = context.workspace().projectRoot(context.filePath()).resolve(ProjectConstants.CLOUD_TOML);
-
-        Optional<CloudToml> cloudToml =
-                context.workspace().project(context.filePath()).orElseThrow().currentPackage().cloudToml();
+        Project project = context.workspace().project(context.filePath()).orElseThrow();
+        if (!project.buildOptions().cloud().equals("k8s")) {
+            return Collections.emptyList();
+        }
+        
+        Optional<CloudToml> cloudToml = project.currentPackage().cloudToml();
 
         if (cloudToml.isEmpty()) {
             return Collections.emptyList();
