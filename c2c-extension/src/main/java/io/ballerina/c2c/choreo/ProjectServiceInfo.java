@@ -15,7 +15,9 @@
  */
 package io.ballerina.c2c.choreo;
 
+import io.ballerina.c2c.util.C2CVisitor;
 import io.ballerina.c2c.util.ModuleLevelVariableExtractor;
+import io.ballerina.c2c.util.ServiceInfo;
 import io.ballerina.compiler.api.SemanticModel;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeLocation;
@@ -44,7 +46,7 @@ import java.util.Map;
 @Getter
 public class ProjectServiceInfo {
 
-    private final List<ChoreoServiceInfo> serviceList;
+    private final List<ServiceInfo> serviceList;
 
     public ProjectServiceInfo(Project project, List<Diagnostic> diagnostics) {
         this.serviceList = new ArrayList<>();
@@ -68,8 +70,7 @@ public class ProjectServiceInfo {
             for (DocumentId doc : documentIds) {
                 Document document = module.document(doc);
                 Node node = document.syntaxTree().rootNode();
-                ChoreoProjectVisitor visitor =
-                        new ChoreoProjectVisitor(moduleLevelVariables, semanticModel, diagnostics);
+                C2CVisitor visitor = new C2CVisitor(moduleLevelVariables, semanticModel, diagnostics);
                 node.accept(visitor);
                 serviceList.addAll(visitor.getServices());
             }

@@ -17,13 +17,13 @@
  */
 package io.ballerina.c2c.tasks;
 
-import io.ballerina.c2c.choreo.ChoreoListenerInfo;
-import io.ballerina.c2c.choreo.ChoreoServiceInfo;
 import io.ballerina.c2c.choreo.ProjectServiceInfo;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.ServiceModel;
+import io.ballerina.c2c.util.ListenerInfo;
+import io.ballerina.c2c.util.ServiceInfo;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.projects.CloudToml;
 import io.ballerina.projects.Package;
@@ -72,7 +72,7 @@ public class ChoreoAnalysisTask implements AnalysisTask<CompilationAnalysisConte
 
         List<Diagnostic> c2cDiagnostics = new ArrayList<>();
         ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(currentPackage.project(), c2cDiagnostics);
-        List<ChoreoServiceInfo> serviceList = projectServiceInfo.getServiceList();
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
         addServices(serviceList);
         addDeployments();
         for (Diagnostic diagnostic : c2cDiagnostics) {
@@ -80,14 +80,14 @@ public class ChoreoAnalysisTask implements AnalysisTask<CompilationAnalysisConte
         }
     }
 
-    private void addServices(List<ChoreoServiceInfo> serviceList) {
-        for (ChoreoServiceInfo choreoServiceInfo : serviceList) {
+    private void addServices(List<ServiceInfo> serviceList) {
+        for (ServiceInfo choreoServiceInfo : serviceList) {
             ServiceModel serviceModel = new ServiceModel();
             if (KubernetesUtils.isBlank(serviceModel.getName())) {
                 serviceModel.setName(getValidName(choreoServiceInfo.getServicePath() + SVC_POSTFIX));
             }
 
-            ChoreoListenerInfo listener = choreoServiceInfo.getListener();
+            ListenerInfo listener = choreoServiceInfo.getListener();
             int port = listener.getPort();
             if (serviceModel.getPort() == -1) {
                 serviceModel.setPort(port);
