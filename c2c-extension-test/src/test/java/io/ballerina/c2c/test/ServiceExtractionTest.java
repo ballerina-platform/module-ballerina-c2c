@@ -79,7 +79,7 @@ public class ServiceExtractionTest {
         ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project, diagnostics);
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
 
-        Assert.assertEquals(serviceList.size(), 2);
+        Assert.assertEquals(serviceList.size(), 3);
         ServiceInfo serviceInfo = serviceList.get(0);
         ListenerInfo listener = serviceInfo.getListener();
         Assert.assertEquals(listener.getPort(), 8080);
@@ -87,6 +87,10 @@ public class ServiceExtractionTest {
         ServiceInfo serviceInfo1 = serviceList.get(1);
         ListenerInfo listener1 = serviceInfo1.getListener();
         Assert.assertEquals(listener1.getPort(), 9090);
+
+        ServiceInfo serviceInfo2 = serviceList.get(2);
+        ListenerInfo listener2 = serviceInfo2.getListener();
+        Assert.assertEquals(listener2.getPort(), 9091);
 
         Assert.assertEquals(diagnostics.size(), 1);
         Diagnostic diagnostic = diagnostics.get(0);
