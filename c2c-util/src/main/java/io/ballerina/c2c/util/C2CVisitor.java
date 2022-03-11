@@ -357,25 +357,21 @@ public class C2CVisitor extends NodeVisitor {
     }
 
     private Optional<ListenerInfo> extractListenerInitializer(String listenerName,
-                                                              ImplicitNewExpressionNode initializerNode) {
+                                                              ImplicitNewExpressionNode initializerNode, int paramNo) {
         ParenthesizedArgList parenthesizedArgList = initializerNode.parenthesizedArgList().get();
         if (parenthesizedArgList.arguments().size() == 0) {
             return Optional.empty();
         }
-        FunctionArgumentNode functionArgumentNode = parenthesizedArgList.arguments().get(0);
+        FunctionArgumentNode functionArgumentNode = parenthesizedArgList.arguments().get(paramNo);
         ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
-        ListenerInfo listenerInfo;
         if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-            diagnostics.add(C2CDiagnosticCodes
-                    .createDiagnostic(
-                            C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expression.location()));
-            return Optional.empty();
-        } else {
+            return getListenerInfo(listenerName, expression);
+        } else if (expression instanceof BasicLiteralNode) {
             BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expression;
             int port = Integer.parseInt(basicLiteralNode.literalToken().text());
-            listenerInfo = new ListenerInfo(listenerName, port);
+            return Optional.of(new ListenerInfo(listenerName, port));
         }
-        return Optional.of(listenerInfo);
+        return Optional.empty();
     }
 
     private Optional<HttpsConfig> extractKeyStores(FunctionArgumentNode functionArgumentNode) {
@@ -575,7 +571,7 @@ public class C2CVisitor extends NodeVisitor {
                     if (listenerInfo.isEmpty()) {
                         diagnostics.add(C2CDiagnosticCodes
                                 .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
-                                parameterSymbol.location()));
+                                        parameterSymbol.location()));
                         continue;
                     }
                     this.services.add(new ServiceInfo(listenerInfo.get(), serviceDeclarationNode, servicePath));
@@ -596,7 +592,7 @@ public class C2CVisitor extends NodeVisitor {
                 return Optional.empty();
             }
             ImplicitNewExpressionNode init = (ImplicitNewExpressionNode) node;
-            return extractListenerInitializer(listenerName, init);
+            return extractListenerInitializer(listenerName, init, paramNo);
         } else {
             ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
             SeparatedNodeList<FunctionArgumentNode> arguments = refNode.parenthesizedArgList().arguments();
@@ -637,7 +633,7 @@ public class C2CVisitor extends NodeVisitor {
                 case "websocket":
                 case "websub":
                 case "websubhub":
-                //TODO add other stdlib
+                    //TODO add other stdlib
                     return true;
                 default:
                     return false;
@@ -677,7 +673,7 @@ public class C2CVisitor extends NodeVisitor {
         }
 
         ImplicitNewExpressionNode init = (ImplicitNewExpressionNode) node;
-        Optional<ListenerInfo> listenerInfo = extractListenerInitializer(variableName, init);
+        Optional<ListenerInfo> listenerInfo = extractListenerInitializer(variableName, init, 0);
         if (listenerInfo.isEmpty() || init.parenthesizedArgList().isEmpty()) {
             return listenerInfo;
         }
@@ -708,7 +704,7 @@ public class C2CVisitor extends NodeVisitor {
         if (expressionNode.kind() == SyntaxKind.REQUIRED_EXPRESSION) {
             diagnostics.add(C2CDiagnosticCodes
                     .createDiagnostic(C2CDiagnosticCodes.CONFIGURABLE_NO_DEFAULT,
-                    moduleVariableDeclarationNode.location()));
+                            moduleVariableDeclarationNode.location()));
             return Optional.of(0);
         }
 
