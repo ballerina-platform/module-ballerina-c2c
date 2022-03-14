@@ -165,6 +165,19 @@ public class CustomDiagnosticsTest {
     }
 
     @Test
+    public void testFailedPortRetrievalVarRef() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "client-ssl-config-neg");
+        BuildProject project = BuildProject.load(projectPath);
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
+        Assert.assertEquals(diagnostics.size(), 1);
+        Iterator<Diagnostic> iterator = diagnostics.iterator();
+        Diagnostic diagnostic = iterator.next();
+        Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.WARNING);
+        Assert.assertEquals(diagnostic.message(), "failed to retrieve port");
+    }
+
+    @Test
     public void testSslNamedArg() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "ssl-ref-named-arg");
         BuildProject project = BuildProject.load(projectPath);
