@@ -431,23 +431,34 @@ public class C2CVisitor extends NodeVisitor {
                         secureSocket = getSecureSocketConfig(specificField.valueExpr().get());
                 httpsConfig.setSecureSocketConfig(secureSocket);
             } else if ("mutualSsl".equals(fieldName)) {
-                MutualSSLConfig
+                Optional<MutualSSLConfig>
                         mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
-                httpsConfig.setMutualSSLConfig(mutualSSLConfig);
+                if (mutualSSLConfig.isEmpty()) {
+                    return Optional.empty();
+                }
+                httpsConfig.setMutualSSLConfig(mutualSSLConfig.get());
             } else if ("cert".equals(fieldName)) {
-                MutualSSLConfig
+                Optional<MutualSSLConfig>
                         mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
-                httpsConfig.setMutualSSLConfig(mutualSSLConfig);
+                if (mutualSSLConfig.isEmpty()) {
+                    return Optional.empty();
+                }
+                httpsConfig.setMutualSSLConfig(mutualSSLConfig.get());
             }
         }
         return Optional.of(httpsConfig);
     }
 
-    private MutualSSLConfig getMutualSSLConfig(ExpressionNode expressionNode) {
+    private Optional<MutualSSLConfig> getMutualSSLConfig(ExpressionNode expressionNode) {
         MutualSSLConfig mutualSSLConfig = new MutualSSLConfig();
         if (expressionNode.kind() == SyntaxKind.STRING_LITERAL) {
             mutualSSLConfig.setPath(extractString(expressionNode));
-            return mutualSSLConfig;
+            return Optional.of(mutualSSLConfig);
+        }
+        if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+            diagnostics.add(C2CDiagnosticCodes
+                    .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expressionNode.location()));
+            return Optional.empty();
         }
         MappingConstructorExpressionNode expressionNode1 = (MappingConstructorExpressionNode) expressionNode;
         SeparatedNodeList<MappingFieldNode> fields = expressionNode1.fields();
@@ -477,7 +488,7 @@ public class C2CVisitor extends NodeVisitor {
                 mutualSSLConfig.setPath(extractString(specificFieldNode.valueExpr().get()));
             }
         }
-        return mutualSSLConfig;
+        return Optional.of(mutualSSLConfig);
     }
 
     private SecureSocketConfig getSecureSocketConfig(ExpressionNode expressionNode) {
