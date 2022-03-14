@@ -456,8 +456,9 @@ public class C2CVisitor extends NodeVisitor {
             return Optional.of(mutualSSLConfig);
         }
         if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+            String name = ((SimpleNameReferenceNode) expressionNode).name().text();
             diagnostics.add(C2CDiagnosticCodes
-                    .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expressionNode.location()));
+                    .createDiagnostic(C2CDiagnosticCodes.FAILED_VARIABLE_RETRIEVAL, expressionNode.location(), name));
             return Optional.empty();
         }
         MappingConstructorExpressionNode expressionNode1 = (MappingConstructorExpressionNode) expressionNode;

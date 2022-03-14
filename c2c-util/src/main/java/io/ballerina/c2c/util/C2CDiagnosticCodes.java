@@ -50,6 +50,7 @@ public enum C2CDiagnosticCodes {
     INVALID_MOUNT_PATH_CLOUD("C2C_014", "Cloud.toml error mount_path cannot be `%s`: `%s`", ERROR),
     EMPTY_PATH_CLOUD("C2C_015", "Cloud.toml error invalid path without file name `%s`", ERROR),
     PATH_CONTENT_READ_FAILED_WARN("C2C_006", "unable to read contents of the file `%s`", WARNING),
+    FAILED_VARIABLE_RETRIEVAL("C2C_016", "unable to retrieve the value of variable `%s`", WARNING),
     ;
 
     private final String code;

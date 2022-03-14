@@ -174,7 +174,7 @@ public class CustomDiagnosticsTest {
         Iterator<Diagnostic> iterator = diagnostics.iterator();
         Diagnostic diagnostic = iterator.next();
         Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.WARNING);
-        Assert.assertEquals(diagnostic.message(), "failed to retrieve port");
+        Assert.assertEquals(diagnostic.message(), "unable to retrieve the value of variable `certPath`");
     }
 
     @Test
