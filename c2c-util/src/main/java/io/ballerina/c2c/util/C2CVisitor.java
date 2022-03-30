@@ -513,7 +513,8 @@ public class C2CVisitor extends NodeVisitor {
                 secureSocketConfig.setPath(extractString(specificFieldNode.valueExpr().get()));
             }
         }
-        if (secureSocketConfig.getPath() == null && secureSocketConfig.getCertFile() == null && secureSocketConfig.getKeyFile() == null) {
+        if (secureSocketConfig.getPath() == null && secureSocketConfig.getCertFile() == null &&
+                secureSocketConfig.getKeyFile() == null) {
             return Optional.empty();
         }
         return Optional.of(secureSocketConfig);
