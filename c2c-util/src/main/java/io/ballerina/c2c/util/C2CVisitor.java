@@ -427,9 +427,12 @@ public class C2CVisitor extends NodeVisitor {
             SpecificFieldNode specificField = (SpecificFieldNode) child;
             String fieldName = getNameOfIdentifier(specificField.fieldName());
             if ("key".equals(fieldName)) {
-                SecureSocketConfig
+                Optional<SecureSocketConfig>
                         secureSocket = getSecureSocketConfig(specificField.valueExpr().get());
-                httpsConfig.setSecureSocketConfig(secureSocket);
+                if (secureSocket.isEmpty()) {
+                    return Optional.empty();
+                }
+                httpsConfig.setSecureSocketConfig(secureSocket.get());
             } else if ("mutualSsl".equals(fieldName)) {
                 Optional<MutualSSLConfig>
                         mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
@@ -492,7 +495,7 @@ public class C2CVisitor extends NodeVisitor {
         return Optional.of(mutualSSLConfig);
     }
 
-    private SecureSocketConfig getSecureSocketConfig(ExpressionNode expressionNode) {
+    private Optional<SecureSocketConfig> getSecureSocketConfig(ExpressionNode expressionNode) {
         MappingConstructorExpressionNode expressionNode1 = (MappingConstructorExpressionNode) expressionNode;
         SeparatedNodeList<MappingFieldNode> fields = expressionNode1.fields();
         SecureSocketConfig secureSocketConfig = new SecureSocketConfig();
@@ -510,7 +513,10 @@ public class C2CVisitor extends NodeVisitor {
                 secureSocketConfig.setPath(extractString(specificFieldNode.valueExpr().get()));
             }
         }
-        return secureSocketConfig;
+        if (secureSocketConfig.getPath() == null && secureSocketConfig.getCertFile() == null && secureSocketConfig.getKeyFile() == null) {
+            return Optional.empty();
+        }
+        return Optional.of(secureSocketConfig);
     }
 
     private Optional<ListenerInfo> getListenerInfo(String path, ExpressionNode expression) {
