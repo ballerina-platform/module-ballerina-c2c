@@ -165,6 +165,19 @@ public class CustomDiagnosticsTest {
     }
 
     @Test
+    public void testFailedGrpcSSL() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "grpc-ssl-key-config-neg");
+        BuildProject project = BuildProject.load(projectPath);
+        Collection<Diagnostic> diagnostics =
+                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
+        Assert.assertEquals(diagnostics.size(), 2);
+        Iterator<Diagnostic> iterator = diagnostics.iterator();
+        Diagnostic diagnostic = iterator.next();
+        Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.WARNING);
+        Assert.assertEquals(diagnostic.message(), "https config extraction only supports basic string paths");
+    }
+
+    @Test
     public void testFailedPortRetrievalVarRef() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "client-ssl-config-neg");
         BuildProject project = BuildProject.load(projectPath);
