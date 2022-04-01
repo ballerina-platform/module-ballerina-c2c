@@ -164,11 +164,6 @@ public class KubernetesTestUtils {
     public static int compileBallerinaFile(Path sourceDirectory, String fileName, Map<String, String> envVar,
                                            String buildOption)
             throws InterruptedException, IOException {
-        Path ballerinaInternalLog = Paths.get(sourceDirectory.toAbsolutePath().toString(), "ballerina-internal.log");
-        if (ballerinaInternalLog.toFile().exists()) {
-            log.warn("Deleting already existing ballerina-internal.log file.");
-            FileUtils.deleteQuietly(ballerinaInternalLog.toFile());
-        }
 
         ProcessBuilder pb = new ProcessBuilder(BALLERINA_COMMAND, BUILD, "--cloud=" + buildOption, fileName);
         log.info(COMPILING + sourceDirectory.resolve(fileName).normalize());
@@ -183,12 +178,6 @@ public class KubernetesTestUtils {
         log.info(EXIT_CODE + exitCode);
         logOutput(process.getInputStream());
         logOutput(process.getErrorStream());
-
-        // log ballerina-internal.log content
-        if (Files.exists(ballerinaInternalLog)) {
-            log.error("ballerina-internal.log file found. content: ");
-            log.error(FileUtils.readFileToString(ballerinaInternalLog.toFile(), Charset.defaultCharset()));
-        }
         return exitCode;
     }
 
@@ -366,11 +355,6 @@ public class KubernetesTestUtils {
      */
     public static int compileBallerinaProject(Path sourceDirectory) throws InterruptedException,
             IOException {
-        Path ballerinaInternalLog = Paths.get(sourceDirectory.toAbsolutePath().toString(), "ballerina-internal.log");
-        if (ballerinaInternalLog.toFile().exists()) {
-            log.warn("Deleting already existing ballerina-internal.log file.");
-            FileUtils.deleteQuietly(ballerinaInternalLog.toFile());
-        }
         Path dependenciesToml = Paths.get(sourceDirectory.toAbsolutePath().toString(), "Dependencies.toml");
         if (dependenciesToml.toFile().exists()) {
             log.warn("Deleting already existing Dependencies.toml file.");
@@ -390,13 +374,6 @@ public class KubernetesTestUtils {
         log.info(EXIT_CODE + exitCode);
         logOutput(process.getInputStream());
         logOutput(process.getErrorStream());
-
-        // log ballerina-internal.log content
-        if (Files.exists(ballerinaInternalLog)) {
-            log.info("ballerina-internal.log file found. content: ");
-            log.info(FileUtils.readFileToString(ballerinaInternalLog.toFile(), Charset.defaultCharset()));
-        }
-
         return exitCode;
     }
 
