@@ -30,7 +30,6 @@ import io.ballerina.toml.api.Toml;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.fabric8.kubernetes.api.model.autoscaling.v1.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.autoscaling.v1.HorizontalPodAutoscalerBuilder;
-import io.fabric8.kubernetes.client.utils.Serialization;
 
 import java.io.IOException;
 
@@ -54,7 +53,7 @@ public class HPAHandler extends AbstractArtifactHandler {
                 .endSpec()
                 .build();
         try {
-            String hpaContent = Serialization.asYaml(horizontalPodAutoscaler);
+            String hpaContent = KubernetesUtils.asYaml(horizontalPodAutoscaler);
             String outputFileName = KubernetesConstants.HPA_FILE_POSTFIX + KubernetesConstants.YAML;
             if (dataHolder.isSingleYaml()) {
                 outputFileName = horizontalPodAutoscaler.getMetadata().getName() + KubernetesConstants.YAML;

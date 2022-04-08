@@ -18,6 +18,10 @@
 
 package io.ballerina.c2c.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.DeploymentModel;
@@ -65,6 +69,9 @@ public class KubernetesUtils {
 
     private static final PrintStream ERR = System.err;
     private static final PrintStream OUT = System.out;
+    private static final ObjectMapper YAML_MAPPER = new ObjectMapper(
+            new YAMLFactory().disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID)
+    );
 
     /**
      * Write content to a File. Create the required directories if they don't not exists.
@@ -315,5 +322,16 @@ public class KubernetesUtils {
                 return true;
         }
         return false;
+    }
+
+
+    public static <T> String asYaml(T object) throws KubernetesPluginException {
+        try {
+            return YAML_MAPPER.writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            DiagnosticInfo diagnosticInfo = new DiagnosticInfo(C2CDiagnosticCodes.ARTIFACT_GEN_FAILED.getCode(),
+                    e.getMessage(), DiagnosticSeverity.WARNING);
+            throw new KubernetesPluginException(DiagnosticFactory.createDiagnostic(diagnosticInfo, new NullLocation()));
+        }
     }
 }

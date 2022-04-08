@@ -32,7 +32,6 @@ import io.fabric8.kubernetes.api.model.batch.v1.CronJob;
 import io.fabric8.kubernetes.api.model.batch.v1.CronJobBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
-import io.fabric8.kubernetes.client.utils.Serialization;
 import org.ballerinax.docker.generator.exceptions.DockerGenException;
 import org.ballerinax.docker.generator.models.DockerModel;
 
@@ -53,9 +52,9 @@ public class JobHandler extends AbstractArtifactHandler {
         try {
             String jobContent;
             if (KubernetesUtils.isBlank(jobModel.getSchedule())) {
-                jobContent = Serialization.asYaml(getJob(jobModel));
+                jobContent = KubernetesUtils.asYaml(getJob(jobModel));
             } else {
-                jobContent = Serialization.asYaml(getCronJob(jobModel));
+                jobContent = KubernetesUtils.asYaml(getCronJob(jobModel));
             }
             String outputFileName = KubernetesConstants.JOB_FILE_POSTFIX + KubernetesConstants.YAML;
             if (dataHolder.isSingleYaml()) {

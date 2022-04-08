@@ -32,7 +32,6 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
-import io.fabric8.kubernetes.client.utils.Serialization;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -94,7 +93,7 @@ public class ServiceHandler extends AbstractArtifactHandler {
                 .endSpec()
                 .build();
         try {
-            String serviceYAML = Serialization.asYaml(service);
+            String serviceYAML = KubernetesUtils.asYaml(service);
             String outputFileName = KubernetesConstants.SVC_FILE_POSTFIX + KubernetesConstants.YAML;
             if (dataHolder.isSingleYaml()) {
                 outputFileName = service.getMetadata().getName() + KubernetesConstants.YAML;

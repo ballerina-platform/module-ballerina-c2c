@@ -28,7 +28,6 @@ import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
-import io.fabric8.kubernetes.client.utils.Serialization;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -47,7 +46,7 @@ public class SecretHandler extends AbstractArtifactHandler {
                 .withData(secretModel.getData())
                 .build();
         try {
-            String secretContent = Serialization.asYaml(secret);
+            String secretContent = KubernetesUtils.asYaml(secret);
             String outputFileName = KubernetesConstants.SECRET_FILE_POSTFIX + KubernetesConstants.YAML;
             if (dataHolder.isSingleYaml()) {
                 outputFileName = secret.getMetadata().getName() + KubernetesConstants.YAML;

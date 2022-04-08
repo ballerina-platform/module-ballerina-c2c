@@ -30,7 +30,6 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
-import io.fabric8.kubernetes.client.utils.Serialization;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -49,7 +48,7 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
                 .withData(configMapModel.getData())
                 .build();
         try {
-            String configMapContent = Serialization.asYaml(configMap);
+            String configMapContent = KubernetesUtils.asYaml(configMap);
             String outputFileName = KubernetesConstants.CONFIG_MAP_FILE_POSTFIX + KubernetesConstants.YAML;
             if (dataHolder.isSingleYaml()) {
                 outputFileName = configMap.getMetadata().getName() + KubernetesConstants.YAML;
