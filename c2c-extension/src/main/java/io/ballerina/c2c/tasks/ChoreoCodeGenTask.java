@@ -39,8 +39,8 @@ import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.KubernetesConstants.CHOREO;
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
+import static io.ballerina.c2c.utils.DockerGenUtils.extractJarName;
 import static io.ballerina.c2c.utils.KubernetesUtils.printError;
-import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
 
 /**
  * A {@code CompilerLifecycleTask} Code generated Task for choreo projects.

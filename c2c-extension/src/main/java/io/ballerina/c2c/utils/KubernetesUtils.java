@@ -23,8 +23,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import io.ballerina.c2c.diagnostics.NullLocation;
+import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
+import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DeploymentModel;
+import io.ballerina.c2c.models.DockerModel;
 import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
@@ -38,9 +41,6 @@ import io.ballerina.tools.diagnostics.DiagnosticInfo;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import org.ballerinalang.model.elements.PackageID;
-import org.ballerinax.docker.generator.exceptions.DockerGenException;
-import org.ballerinax.docker.generator.models.CopyFileModel;
-import org.ballerinax.docker.generator.models.DockerModel;
 import org.wso2.ballerinalang.compiler.util.Name;
 
 import java.io.File;
@@ -60,7 +60,7 @@ import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_POSTFIX;
 import static io.ballerina.c2c.KubernetesConstants.EXECUTABLE_JAR;
 import static io.ballerina.c2c.KubernetesConstants.JOB_POSTFIX;
 import static io.ballerina.c2c.KubernetesConstants.YAML;
-import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
+import static io.ballerina.c2c.utils.DockerGenUtils.extractJarName;
 
 /**
  * Util methods used for artifact generation.
@@ -304,13 +304,10 @@ public class KubernetesUtils {
         dockerModel.setRegistry(deploymentModel.getRegistry());
         dockerModel.setName(dockerImage);
         dockerModel.setTag(imageTag);
-        dockerModel.setDockerConfig(deploymentModel.getDockerConfigPath());
         dockerModel.setPorts(deploymentModel.getPorts().stream()
                 .map(ContainerPort::getContainerPort)
                 .collect(Collectors.toSet()));
         dockerModel.setService(true);
-        dockerModel.setDockerHost(deploymentModel.getDockerHost());
-        dockerModel.setDockerCertPath(deploymentModel.getDockerCertPath());
         dockerModel.addCommandArg(deploymentModel.getCommandArgs());
         return dockerModel;
     }

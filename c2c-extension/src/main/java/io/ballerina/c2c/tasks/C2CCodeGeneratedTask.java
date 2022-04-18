@@ -41,8 +41,8 @@ import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
+import static io.ballerina.c2c.utils.DockerGenUtils.extractJarName;
 import static io.ballerina.c2c.utils.KubernetesUtils.printError;
-import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
 
 /*
     Code generated Task for c2c projects.

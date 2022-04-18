@@ -50,9 +50,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static io.ballerina.c2c.DockerGenConstants.REGISTRY_SEPARATOR;
 import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_FILE_POSTFIX;
 import static io.ballerina.c2c.utils.KubernetesUtils.resolveDockerToml;
-import static org.ballerinax.docker.generator.DockerGenConstants.REGISTRY_SEPARATOR;
 
 /**
  * Generates kubernetes deployment from annotations.

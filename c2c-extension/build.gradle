@@ -50,32 +50,30 @@ configurations {
 
 dependencies {
     implementation project(":c2c-util")
-
-    implementation "org.ballerinax.docker:docker-generator:${dockerVersion}"
-    implementation "commons-io:commons-io:2.11.0"  // One usage for copying. should be migrate
-    implementation "commons-codec:commons-codec:1.15" // For secret convert base64
-    implementation "io.fabric8:kubernetes-model-core:${fabric8KubernetesClientVersion}"
-    implementation "io.fabric8:kubernetes-model-apps:${fabric8KubernetesClientVersion}"
-    implementation "io.fabric8:kubernetes-model-autoscaling:${fabric8KubernetesClientVersion}"
-    implementation "io.fabric8:kubernetes-model-batch:${fabric8KubernetesClientVersion}"
-//    implementation "org.yaml:snakeyaml:${snakeYamlVersion}"
+    
+    implementation group: 'io.fabric8', name: 'kubernetes-model-core', version: "${fabric8KubernetesClientVersion}"
+    implementation group: 'io.fabric8', name: 'kubernetes-model-apps', version: "${fabric8KubernetesClientVersion}"
+    implementation group: 'io.fabric8', name: 'kubernetes-model-autoscaling', version: "${fabric8KubernetesClientVersion}"
+    implementation group: 'io.fabric8', name: 'kubernetes-model-batch', version: "${fabric8KubernetesClientVersion}"
 
     implementation group: 'org.ballerinalang', name: 'ballerina-lang', version: "${ballerinaLangVersion}"
     implementation group: 'org.ballerinalang', name: 'ballerina-tools-api', version: "${ballerinaLangVersion}"
     implementation group: 'org.ballerinalang', name: 'ballerina-parser', version: "${ballerinaLangVersion}"
     implementation group: 'org.ballerinalang', name: 'toml-parser', version: "${ballerinaLangVersion}"
-    
-    implementation "org.slf4j:slf4j-log4j12:${slf4jVersion}"
-    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.13.2'
 
-    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: "${slf4jVersion}"
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: "${jacksonYamlVersion}"
+    implementation group: 'commons-io', name: 'commons-io', version: "${commonIoVersion}"
+    implementation group: 'commons-codec', name: 'commons-codec', version: "${commonsCodecVersion}"
 
-    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: "${lombokVersion}"
 
-    testImplementation "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
-    testImplementation "org.slf4j:slf4j-api:${slf4jVersion}"
-    testImplementation "org.slf4j:slf4j-log4j12:${slf4jVersion}"
-    testImplementation "org.testng:testng:${testngVersion}"
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: "${lombokVersion}"
+
+    testImplementation group: 'org.ballerinalang', name: 'ballerina-lang', version: "${ballerinaLangVersion}"
+    testImplementation group: 'org.slf4j', name: 'slf4j-api', version: "${slf4jVersion}"
+    testImplementation group: 'org.slf4j', name: 'slf4j-log4j12', version: "${slf4jVersion}"
+    testImplementation group: 'org.testng', name: 'testng', version: "${testngVersion}"
 
     checkstyle project(":build-config:checkstyle")
     checkstyle "com.puppycrawl.tools:checkstyle:${puppycrawlCheckstyleVersion}"

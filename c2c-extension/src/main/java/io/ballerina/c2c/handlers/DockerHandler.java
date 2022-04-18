@@ -19,14 +19,14 @@
 package io.ballerina.c2c.handlers;
 
 import io.ballerina.c2c.diagnostics.NullLocation;
+import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.util.C2CDiagnosticCodes;
+import io.ballerina.c2c.utils.DockerGenerator;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.diagnostics.DiagnosticFactory;
 import io.ballerina.tools.diagnostics.DiagnosticInfo;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
-import org.ballerinax.docker.generator.DockerArtifactHandler;
-import org.ballerinax.docker.generator.exceptions.DockerGenException;
 
 /**
  * Wrapper handler for creating docker artifacts.
@@ -37,7 +37,7 @@ public class DockerHandler extends AbstractArtifactHandler {
     public void createArtifacts() throws KubernetesPluginException {
         try {
             // Generate docker artifacts
-            DockerArtifactHandler dockerArtifactHandler = new DockerArtifactHandler(dataHolder.getDockerModel());
+            DockerGenerator dockerArtifactHandler = new DockerGenerator(dataHolder.getDockerModel());
             OUT.println();
             dockerArtifactHandler.createArtifacts(OUT, "\t@kubernetes:Docker \t\t\t", dataHolder.getJarPath(),
                     dataHolder.getDockerArtifactOutputPath());

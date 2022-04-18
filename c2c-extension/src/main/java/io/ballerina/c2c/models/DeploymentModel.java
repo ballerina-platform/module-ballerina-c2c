@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.ballerinax.docker.generator.DockerGenConstants.OPENJDK_11_JRE_SLIM_BASE;
+import static io.ballerina.c2c.DockerGenConstants.OPENJDK_11_JRE_SLIM_BASE;
 
 /**
  * Kubernetes deployment annotations model class.
