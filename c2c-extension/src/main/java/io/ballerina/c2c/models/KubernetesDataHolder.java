@@ -21,7 +21,6 @@ package io.ballerina.c2c.models;
 import io.ballerina.toml.api.Toml;
 import lombok.Data;
 import org.ballerinalang.model.elements.PackageID;
-import org.ballerinax.docker.generator.models.DockerModel;
 
 import java.nio.file.Path;
 import java.util.ArrayList;

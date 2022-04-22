@@ -28,13 +28,13 @@ import io.ballerina.c2c.handlers.JobHandler;
 import io.ballerina.c2c.handlers.SecretHandler;
 import io.ballerina.c2c.handlers.ServiceHandler;
 import io.ballerina.c2c.models.DeploymentModel;
+import io.ballerina.c2c.models.DockerModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.ServiceModel;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
-import org.ballerinax.docker.generator.models.DockerModel;
 
 import java.io.PrintStream;
 import java.util.LinkedHashMap;

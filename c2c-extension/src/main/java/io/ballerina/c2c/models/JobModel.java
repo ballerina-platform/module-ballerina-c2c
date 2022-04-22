@@ -21,14 +21,13 @@ package io.ballerina.c2c.models;
 import io.ballerina.c2c.KubernetesConstants;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.ballerinax.docker.generator.models.CopyFileModel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.ballerinax.docker.generator.DockerGenConstants.OPENJDK_11_JRE_SLIM_BASE;
+import static io.ballerina.c2c.DockerGenConstants.OPENJDK_11_JRE_SLIM_BASE;
 
 /**
  * Job model class.

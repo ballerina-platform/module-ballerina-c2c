@@ -25,6 +25,11 @@
             </run>
         </groups>
         <classes>
+            <class name="io.ballerina.c2c.test.docker.DockerGeneratorTests"/>
+            <class name="io.ballerina.c2c.test.docker.DockerGeneratorNegativeTests"/>
+            <class name="io.ballerina.c2c.test.docker.DockerCMDTest"/>
+            <class name="io.ballerina.c2c.test.docker.DockerInvalidCopyTest"/>
+            <class name="io.ballerina.c2c.test.docker.DockerGeneratorWindowsTests"/>
             <class name="io.ballerina.c2c.test.samples.Sample1Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample2Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample3Test"/>

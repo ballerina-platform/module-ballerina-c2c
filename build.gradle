@@ -26,9 +26,8 @@ plugins {
 
 ext.ballerinaLangVersion = project.ballerinaLangVersion
 ext.ballerinaSourceDirectory = "$buildDir/../src/main/ballerina"
-ext.dockerJavaVersion = "3.1.5"
+ext.dockerJavaVersion = "3.2.11"
 ext.fabric8KubernetesClientVersion = "5.7.1"
-ext.javaxValidationAPIVersion = "2.0.0.Final"
 ext.snakeYamlVersion = "1.26"
 ext.projectBuildSourceEncoding = "UTF-8"
 ext.projectReportingOutputEncoding = "UTF-8"
@@ -36,6 +35,9 @@ ext.puppycrawlCheckstyleVersion = "8.18"
 ext.slf4jVersion = "1.7.26"
 ext.testngVersion = "6.14.3"
 ext.lombokVersion = "1.18.10"
+ext.commonIoVersion = "2.11.0"
+ext.jacksonYamlVersion = "2.13.2"
+ext.commonsCodecVersion = "1.15"
 
 allprojects {
     apply plugin: 'jacoco'
@@ -82,9 +84,14 @@ subprojects {
     configurations {
         ballerinaStdLibs
         thirdPartyJars
+        jbalTools
     }
 
     dependencies {
+        jbalTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
+            transitive = false
+        }
+        
         /* Standard libraries */
         ballerinaStdLibs "io.ballerina.stdlib:io-ballerina:${stdlibIoVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:http-ballerina:${stdlibHttpVersion}"

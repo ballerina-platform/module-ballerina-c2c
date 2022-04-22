@@ -17,7 +17,9 @@ package io.ballerina.c2c.handlers;
 
 import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.diagnostics.NullLocation;
+import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
+import io.ballerina.c2c.models.DockerModel;
 import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
@@ -32,16 +34,13 @@ import io.fabric8.kubernetes.api.model.batch.v1.CronJob;
 import io.fabric8.kubernetes.api.model.batch.v1.CronJobBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
-import io.fabric8.kubernetes.client.utils.Serialization;
-import org.ballerinax.docker.generator.exceptions.DockerGenException;
-import org.ballerinax.docker.generator.models.DockerModel;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.ballerina.c2c.utils.DockerGenUtils.extractJarName;
 import static io.ballerina.c2c.utils.KubernetesUtils.resolveDockerToml;
-import static org.ballerinax.docker.generator.utils.DockerGenUtils.extractJarName;
 
 /**
  * Job generator.
@@ -53,9 +52,9 @@ public class JobHandler extends AbstractArtifactHandler {
         try {
             String jobContent;
             if (KubernetesUtils.isBlank(jobModel.getSchedule())) {
-                jobContent = Serialization.asYaml(getJob(jobModel));
+                jobContent = KubernetesUtils.asYaml(getJob(jobModel));
             } else {
-                jobContent = Serialization.asYaml(getCronJob(jobModel));
+                jobContent = KubernetesUtils.asYaml(getCronJob(jobModel));
             }
             String outputFileName = KubernetesConstants.JOB_FILE_POSTFIX + KubernetesConstants.YAML;
             if (dataHolder.isSingleYaml()) {
@@ -165,12 +164,9 @@ public class JobHandler extends AbstractArtifactHandler {
         dockerModel.setCmd(jobModel.getCmd());
         dockerModel.setJarFileName(extractJarName(this.dataHolder.getJarPath()) + KubernetesConstants.EXECUTABLE_JAR);
         dockerModel.setService(false);
-        dockerModel.setDockerHost(jobModel.getDockerHost());
-        dockerModel.setDockerCertPath(jobModel.getDockerCertPath());
         dockerModel.setBuildImage(jobModel.isBuildImage());
         dockerModel.setPkgId(dataHolder.getPackageID());
         dockerModel.setCopyFiles(jobModel.getCopyFiles());
-        dockerModel.setDockerConfig(jobModel.getDockerConfigPath());
         dockerModel.setPkgId(this.dataHolder.getPackageID());
         return dockerModel;
     }

@@ -42,7 +42,6 @@ import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.fabric8.kubernetes.client.utils.Serialization;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -51,9 +50,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static io.ballerina.c2c.DockerGenConstants.REGISTRY_SEPARATOR;
 import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_FILE_POSTFIX;
 import static io.ballerina.c2c.utils.KubernetesUtils.resolveDockerToml;
-import static org.ballerinax.docker.generator.DockerGenConstants.REGISTRY_SEPARATOR;
 
 /**
  * Generates kubernetes deployment from annotations.
@@ -222,7 +221,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                 .build();
 
         try {
-            String deploymentContent = Serialization.asYaml(deployment);
+            String deploymentContent = KubernetesUtils.asYaml(deployment);
             String outputFileName = DEPLOYMENT_FILE_POSTFIX + KubernetesConstants.YAML;
             if (dataHolder.isSingleYaml()) {
                 outputFileName = deployment.getMetadata().getName() + KubernetesConstants.YAML;

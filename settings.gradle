@@ -24,8 +24,8 @@ include(':build-config:checkstyle')
 include(':c2c-extension')
 include(':c2c-ballerina')
 include(':c2c-extension-test')
-include (':c2c-tooling')
-include (':c2c-util')
+include(':c2c-tooling')
+include(':c2c-util')
 
 gradleEnterprise {
     buildScan {

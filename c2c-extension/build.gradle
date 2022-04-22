@@ -44,32 +44,36 @@ configurations {
         exclude group: "com.squareup.okio"
         exclude group: "org.antlr"
         exclude group: "org.joda", module: "joda-convert"
+        exclude group: "org.ballerinalang"
     }
 }
 
 dependencies {
     implementation project(":c2c-util")
+    
+    implementation group: 'io.fabric8', name: 'kubernetes-model-core', version: "${fabric8KubernetesClientVersion}"
+    implementation group: 'io.fabric8', name: 'kubernetes-model-apps', version: "${fabric8KubernetesClientVersion}"
+    implementation group: 'io.fabric8', name: 'kubernetes-model-autoscaling', version: "${fabric8KubernetesClientVersion}"
+    implementation group: 'io.fabric8', name: 'kubernetes-model-batch', version: "${fabric8KubernetesClientVersion}"
 
-    implementation "org.ballerinax.docker:docker-generator:${dockerVersion}"
-    implementation "commons-io:commons-io:2.11.0"
-    implementation "commons-codec:commons-codec:1.15"
-    implementation "io.fabric8:kubernetes-client:${fabric8KubernetesClientVersion}"
-    implementation "javax.validation:validation-api:${javaxValidationAPIVersion}"
-    implementation "org.yaml:snakeyaml:${snakeYamlVersion}"
+    implementation group: 'org.ballerinalang', name: 'ballerina-lang', version: "${ballerinaLangVersion}"
+    implementation group: 'org.ballerinalang', name: 'ballerina-tools-api', version: "${ballerinaLangVersion}"
+    implementation group: 'org.ballerinalang', name: 'ballerina-parser', version: "${ballerinaLangVersion}"
+    implementation group: 'org.ballerinalang', name: 'toml-parser', version: "${ballerinaLangVersion}"
 
-    implementation "org.ballerinalang:toml-parser:${ballerinaLangVersion}"
-    implementation "org.ballerinalang:ballerina-parser:${ballerinaLangVersion}"
+    implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: "${slf4jVersion}"
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: "${jacksonYamlVersion}"
+    implementation group: 'commons-io', name: 'commons-io', version: "${commonIoVersion}"
+    implementation group: 'commons-codec', name: 'commons-codec', version: "${commonsCodecVersion}"
 
-    compileOnly "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
-    compileOnly "org.ballerinalang:ballerina-tools-api:${ballerinaLangVersion}"
-    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: "${lombokVersion}"
 
-    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: "${lombokVersion}"
 
-    testImplementation "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
-    testImplementation "org.slf4j:slf4j-api:${slf4jVersion}"
-    testImplementation "org.slf4j:slf4j-log4j12:${slf4jVersion}"
-    testImplementation "org.testng:testng:${testngVersion}"
+    testImplementation group: 'org.ballerinalang', name: 'ballerina-lang', version: "${ballerinaLangVersion}"
+    testImplementation group: 'org.slf4j', name: 'slf4j-api', version: "${slf4jVersion}"
+    testImplementation group: 'org.slf4j', name: 'slf4j-log4j12', version: "${slf4jVersion}"
+    testImplementation group: 'org.testng', name: 'testng', version: "${testngVersion}"
 
     checkstyle project(":build-config:checkstyle")
     checkstyle "com.puppycrawl.tools:checkstyle:${puppycrawlCheckstyleVersion}"
