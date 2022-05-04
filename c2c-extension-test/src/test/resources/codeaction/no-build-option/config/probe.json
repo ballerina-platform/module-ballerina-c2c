@@ -2,27 +2,5 @@
     "line": 23,
     "character": 29,
     "expected": [
-        {
-            "title": "Document this",
-            "command": {
-                "title": "Document this",
-                "command": "ADD_DOC",
-                "arguments": [
-                    {
-                        "key":"node.range",
-                        "value":{
-                            "start":{
-                                "line":23,
-                                "character":4
-                            },
-                            "end":{
-                                "line":25,
-                                "character":5
-                            }
-                        }
-                    }
-                ]
-            }
-        }
     ]
 }
