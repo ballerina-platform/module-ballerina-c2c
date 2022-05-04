@@ -5,3 +5,6 @@ tag="sample2"  # default is latest
 
 [cloud.deployment]
 internal_domain_name="hello_svc"
+
+[settings]
+buildImage = false

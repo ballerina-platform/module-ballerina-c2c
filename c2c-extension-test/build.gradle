@@ -79,8 +79,8 @@ task prepareDistribution {
 }
 
 test {
-    minHeapSize = "1024m" // initial heap size
-    maxHeapSize = "2048m" // maximum heap size
+    minHeapSize = "512m" // initial heap size
+    maxHeapSize = "800m" // maximum heap size
     dependsOn prepareDistribution
     useTestNG() {
         if (project.hasProperty('Travis')) {
