@@ -51,6 +51,7 @@ public enum C2CDiagnosticCodes {
     EMPTY_PATH_CLOUD("C2C_015", "Cloud.toml error invalid path without file name `%s`", ERROR),
     PATH_CONTENT_READ_FAILED_WARN("C2C_006", "unable to read contents of the file `%s`", WARNING),
     FAILED_VARIABLE_RETRIEVAL("C2C_016", "unable to retrieve the value of variable `%s`", WARNING),
+    INVALID_CONFIG_FILE_NAME_TAKEN("C2C_017", "duplicate file under the same config map", ERROR),
     ;
 
     private final String code;
