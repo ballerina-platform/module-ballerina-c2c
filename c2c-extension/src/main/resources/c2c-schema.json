@@ -222,6 +222,13 @@
                     "message": {
                       "pattern": "`file` should not be empty"
                     }
+                  },
+                  "name": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+",
+                    "message": {
+                      "pattern": "`name` should not be empty"
+                    }
                   }
                 }
               }

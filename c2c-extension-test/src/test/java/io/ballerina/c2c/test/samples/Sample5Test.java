@@ -79,7 +79,7 @@ public class Sample5Test extends SampleTest {
                     break;
                 case "ConfigMap":
                     switch (data.getMetadata().getName()) {
-                        case "config-config-map":
+                        case "sample5-config-map":
                             ballerinaConf = (ConfigMap) data;
                             break;
                         case "hello-data-txt":
