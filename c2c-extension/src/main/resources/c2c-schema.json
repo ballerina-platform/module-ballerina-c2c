@@ -6,27 +6,33 @@
   "additionalProperties": false,
   "properties": {
     "settings": {
+      "description": "Settings related to artifacts generation",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "singleYAML": {
+          "description": "Generate a single YAML file with all the artifacts",
           "type": "boolean"
         },
         "buildImage": {
+          "description": "Build the Docker image while building the project",
           "type": "boolean",
           "default": true
         }
       }
     },
     "container": {
+      "description": "Properties related to the container",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "image": {
+          "description": "Properties related to the container image",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "name": {
+              "description": "Name of the container image",
               "type": "string",
               "pattern": "[a-zA-Z0-9][a-zA-Z0-9_.-]+",
               "default": "hello",
@@ -35,6 +41,7 @@
               }
             },
             "repository": {
+              "description": "Container repository to host the container",
               "type": "string",
               "pattern": "^(?!\\s*$).+",
               "default": "ballerina",
@@ -43,6 +50,7 @@
               }
             },
             "tag": {
+              "description": "Tag of the container",
               "type": "string",
               "pattern": "^[\\w][\\w.-]{0,127}$",
               "default": "latest",
@@ -51,6 +59,7 @@
               }
             },
             "base": {
+              "description": "Base container of the container image",
               "type": "string",
               "pattern": "^(?!\\s*$).+",
               "default": "ballerina/jre11:v1",
@@ -59,6 +68,7 @@
               }
             },
             "cmd": {
+              "description": "Instruction, which is executed when the container starts up",
               "type": "string",
               "pattern": "^(?!\\s*$).+",
               "message": {
@@ -66,6 +76,7 @@
               }
             },
             "user": {
+              "description": "Sets the username to use when running the image",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -81,10 +92,12 @@
           }
         },
         "copy": {
+          "description": "Copy the files to the container image",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "files": {
+              "description": "Copy the files to the container image",
               "type": "array",
               "additionalProperties": false,
               "items": {
@@ -92,6 +105,7 @@
                 "additionalProperties": false,
                 "properties": {
                   "sourceFile": {
+                    "description": "Path to the external file",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "default": "./data/data.txt",
@@ -100,6 +114,7 @@
                     }
                   },
                   "target": {
+                    "description": "Path of the file within the container",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "default": "/home/ballerina/data/data.txt",
@@ -115,20 +130,24 @@
       }
     },
     "cloud": {
+      "description": "Properties related to Kubernetes ",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "config": {
+          "description": "Properties related to the Kubernetes configurations",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "maps": {
+              "description": "External files required for the code",
               "type": "array",
               "additionalProperties": false,
               "items": {
                 "type": "object",
                 "properties": {
                   "file": {
+                    "description": "Path of the external file",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "default": "resource/file.text",
@@ -137,6 +156,7 @@
                     }
                   },
                   "mount_path": {
+                    "description": "Path of the file in the container",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "default": "/home/ballerina/foo/file.conf",
@@ -148,12 +168,14 @@
               }
             },
             "envs": {
+              "description": "Environment variables required for the application",
               "type": "array",
               "items": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                   "key_ref": {
+                    "description": "Key of the environment variable",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "default": "FOO",
@@ -162,6 +184,7 @@
                     }
                   },
                   "name": {
+                    "description": "Name of the env if it is different from the key",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "default": "foo",
@@ -170,6 +193,7 @@
                     }
                   },
                   "config_name": {
+                    "description": "Name of the config config map",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "default": "module-foo",
@@ -181,12 +205,14 @@
               }
             },
             "secrets": {
+              "description": "Secrets required for the application",
               "type": "array",
               "items": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                   "key_ref": {
+                    "description": "Reference key of the secret",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "message": {
@@ -194,6 +220,7 @@
                     }
                   },
                   "name": {
+                    "description": "Name of the secret if it is different from the key",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "message": {
@@ -201,6 +228,7 @@
                     }
                   },
                   "secret_name": {
+                    "description": "Name of the secret group",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "message": {
@@ -211,12 +239,14 @@
               }
             },
             "files": {
+              "description": "Config TOML files required for the code",
               "type": "array",
               "items": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                   "file": {
+                    "description": "Path of the external TOML file",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "message": {
@@ -224,6 +254,7 @@
                     }
                   },
                   "name": {
+                    "description": "Name field for the configmap",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "message": {
@@ -236,63 +267,76 @@
           }
         },
         "deployment": {
+          "description": "Properties related to the deployment",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "internal_domain_name": {
+              "description": "Name of the internal domain (Kubernetes service name)",
               "type": "string",
               "pattern": "[a-z0-9]([-a-z0-9]*[a-z0-9])?",
               "message": {
-                "pattern": "`internal_domain_name` must start with lowercase alphanumeric character and can then it could contain dash in the middle of the string"
+                "pattern": "The `internal_domain_name` must start with a lowercase alphanumeric character. It can contain a dash in the middle of the string"
               }
             },
             "external_accessible": {
+              "description": "External accessibility of the deployment",
               "type": "boolean"
             },
             "min_memory": {
+              "description": "Minimum memory allocated to the container",
               "type": "string",
               "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
               "default": "100Mi"
             },
             "max_memory": {
+              "description": "Maximum memory allocated to the container",
               "type": "string",
               "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
               "default": "256Mi"
             },
             "min_cpu": {
+              "description": "Minimum CPU allocated to the container",
               "type": "string",
               "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
               "default": "200m"
             },
             "max_cpu": {
+              "description": "Maximum CPU allocated to the container",
               "type": "string",
               "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
               "default": "500m"
             },
             "autoscaling": {
+              "description": "Matrices to auto-scale the container",
               "type": "object",
               "additionalProperties": false,
               "properties": {
                 "enable": {
+                  "description": "Status of autoscaling",
                   "type": "boolean"
                 },
                 "min_replicas": {
+                  "description": "Minimum number of replicas of the container alive at a given time",
                   "type": "integer",
                   "minimum": 1,
                   "default": 1
                 },
                 "max_replicas": {
+                  "description": "Maximum number of replicas of the container alive at a given time",
                   "type": "integer",
                   "minimum": 1,
                   "default": 2
                 },
                 "cpu": {
+                  "description": "CPU Utilization threshold for spawning a new instance",
                   "type": "integer",
                   "minimum": 1,
                   "maximum": 100,
                   "default": 50
                 },
                 "memory": {
+                  "description": "Memory utilization threshold for spawning a new instance",
                   "type": "integer",
                   "minimum": 1,
                   "maximum": 100
@@ -300,19 +344,23 @@
               }
             },
             "probes": {
+              "description": "Properties related to Kubernetes probes such as readiness and liveness",
               "type": "object",
               "additionalProperties": false,
               "properties": {
                 "readiness": {
+                  "description": "Probe to indicate whether the container is ready to respond to requests. No readiness probe will be generated if not specified",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "port": {
+                      "description": "Port of the readiness probe endpoint",
                       "type": "integer",
                       "minimum": 0,
                       "default": 9091
                     },
                     "path": {
+                      "description": "Endpoint of the readiness probe",
                       "type": "string",
                       "pattern": "^(?!\\s*$).+",
                       "default": "/probes/readyz"
@@ -320,15 +368,18 @@
                   }
                 },
                 "liveness": {
+                  "description": "Probe to indicate whether the container is running. No liveness probe will be generated if not specified",
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
                     "port": {
+                      "description": "Port of the liveness probe endpoint",
                       "type": "integer",
                       "minimum": 0,
                       "default": 9091
                     },
                     "path": {
+                      "description": "Endpoint of the liveness probe",
                       "type": "string",
                       "pattern": "^(?!\\s*$).+",
                       "default": "/probes/healthz"
@@ -338,16 +389,19 @@
               }
             },
             "storage": {
+              "description": "Properties related to storage",
               "type": "object",
               "additionalProperties": false,
               "properties": {
                 "volumes": {
+                  "description": "Volume definitions of the application. No default volumes will be generated if not specified",
                   "type": "array",
                   "additionalProperties": false,
                   "items": {
                     "type": "object",
                     "properties": {
                       "name": {
+                        "description": "Name of the volume",
                         "type": "string",
                         "pattern": "^(?!\\s*$).+",
                         "default": "volume1",
@@ -356,6 +410,7 @@
                         }
                       },
                       "local_path": {
+                        "description": "Path of the volume",
                         "type": "string",
                         "pattern": "^(?!\\s*$).+",
                         "default": "files",
@@ -364,6 +419,7 @@
                         }
                       },
                       "size": {
+                        "description": "Maximum size of the volume",
                         "type": "string",
                         "pattern": "^(?!\\s*$).+",
                         "default": "2Gi",
@@ -379,16 +435,19 @@
           }
         },
         "secret": {
+          "description": "Properties for secret volume mounting",
           "type": "object",
           "additionalItems": false,
           "properties": {
             "files": {
+              "description": "Properties to mount files as secret volumes",
               "type": "array",
               "items": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                   "file": {
+                    "description": "External file path to mount as a secret volume",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "message": {
@@ -396,6 +455,7 @@
                     }
                   },
                   "mount_path": {
+                    "description": "Path of the file within the container",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "message": {
@@ -406,12 +466,14 @@
               }
             },
             "envs": {
+              "description": "Properties to mount environment variables as secrets",
               "type": "array",
               "items": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                   "key_ref": {
+                    "description": "Name of the secret component in the cluster",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "message": {
@@ -419,6 +481,7 @@
                     }
                   },
                   "name": {
+                    "description": "Name of the environment variable",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "message": {
@@ -426,6 +489,7 @@
                     }
                   },
                   "secret_name": {
+                    "description": "Name of the key in the secret component",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "message": {
