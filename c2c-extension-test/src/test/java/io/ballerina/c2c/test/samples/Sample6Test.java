@@ -49,7 +49,7 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
  */
 public class Sample6Test extends SampleTest {
 
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample6");
+    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("kubernetes-readiness-liveness-probes");
     private static final Path DOCKER_TARGET_PATH =
             SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
     private static final Path KUBERNETES_TARGET_PATH =

@@ -1,0 +1,9 @@
+[container.image]
+repository="anuruddhal" # Container repository to host the container
+name="hello-api" # Name of the container image 
+tag="sample8" # Tag of the container 
+
+[[container.copy.files]]
+sourceFile="./data/data.txt" # Path to the external file
+target="/home/ballerina/data/data.txt" # Path of the file in the container
+

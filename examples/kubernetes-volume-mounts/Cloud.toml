@@ -1,0 +1,9 @@
+[container.image]
+repository= "anuruddhal" # Container repository to host the container 
+name="hello-api" # Name of the container
+tag="v11"  # Tag of the container
+
+[[cloud.deployment.storage.volumes]]
+name="my-pvc" # Name of the volume 
+local_path="/home/ballerina/data" # Path of the volume
+size="1G" # Size of the volume

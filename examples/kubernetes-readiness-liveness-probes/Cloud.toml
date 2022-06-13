@@ -1,0 +1,11 @@
+[container.image]
+name="hello-api" # Name of the container image
+tag="sample6"  # Tag of the container image 
+
+[cloud.deployment.probes.readiness]
+port=9090 # Port of the readiness probe endpoint 
+path="/helloWorld/readyz" # Endpoint of the readiness probe
+
+[cloud.deployment.probes.liveness]
+port=9090 # Port of the liveness probe endpoint
+path="/helloWorld/healthz" # Endpoint of the liveness probe

@@ -92,7 +92,7 @@ test {
                 "ballerina.home" : "${distributionLocation.absolutePath}/",
                 "ballerina.version" : "${version}",
                 "experimental" : "true",
-                sampleDir      : System.getProperty('sampleDir', project.projectDir.absolutePath + "/../samples"),
+                sampleDir      : System.getProperty('sampleDir', project.projectDir.absolutePath + "/../examples"),
                 jacocoAgentLine: "-javaagent:${configurations.jacocoRuntime.asPath}=destfile=${test.jacoco.destinationFile.absolutePath},append=true,inclnolocationclasses=true,exclclassloader=jdk.internal.reflect.DelegatingClassLoader"
         ]
     }
