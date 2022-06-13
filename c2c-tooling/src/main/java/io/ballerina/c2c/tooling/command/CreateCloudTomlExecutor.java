@@ -132,7 +132,9 @@ public class CreateCloudTomlExecutor implements LSCommandExecutor {
             if (node.kind() != SyntaxKind.KEY_VALUE) {
                 content.append(CommonUtil.LINE_SEPARATOR);
             }
-            content.append("# ").append(node.toSourceCode());
+            String nodeContent = node.toSourceCode();
+            nodeContent = nodeContent.replaceAll("\n" , "\n#");
+            content.append(nodeContent);
         }
 
         return content.toString();
