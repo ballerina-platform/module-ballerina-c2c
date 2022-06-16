@@ -6,4 +6,3 @@ tag="sample8" # Tag of the container
 [[container.copy.files]]
 sourceFile="./data/data.txt" # Path to the external file
 target="/home/ballerina/data/data.txt" # Path of the file in the container
-

@@ -1,7 +1,17 @@
 ## Kubernetes Sample With Custom Listener
 
-- This sample shows how create a sample listener.
+- This sample shows how create a sample code to cloud compatible listener.
 
+### How to write:
+This segment shows how a c2c segment is mapped into cloud element.  
+
+1. `Ballerina file (mod.bal)`
+```bal
+public function init(@cloud:Expose int port, ListenerConfiguration config) {
+}
+```
+   `@cloud:Expose int port` is used to specify a port. When a package consumes this listener, this port will be used to generate the Dockerfile, and Kubernetes yamls.
+   
 
 ### How to run:
 
@@ -28,12 +38,3 @@ Generating artifacts...
 
         target/bin/hello.jar
 ```
-### How to write:
-This segment shows how a c2c segment is mapped into cloud element.  
-
-1. `Ballerina file (mod.bal)`
-   ```bal
-        public function init(@cloud:Expose int port, ListenerConfiguration config) {
-        }
-   ```
-   `@cloud:Expose int port` is used to specify a port. This port is automatically used is every places(Dockerfile, Kubernetes YAML).

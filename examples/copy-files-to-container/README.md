@@ -2,34 +2,47 @@
 
 - This sample runs simple ballerina hello world service with data.txt file copied to the Docker Image
 
+### How to write:
+This segment shows how a c2c segment is mapped into cloud element.  
+1. ```Cloud.toml``` segment
+```toml
+[[container.copy.files]]
+sourceFile="./data/data.txt" # Path to the external file
+target="/home/ballerina/data/data.txt" # Path of the file in the container
+```
+2. `Dockerfile` segment
+```Dockerfile
+COPY data.txt /home/ballerina/data/data.txt
+```
+
 ### How to run:
 
 1. Compile the ballerina module. Command to deploy kubernetes artifacts will be printed on build success.
 ```bash
 $> bal build 
 Compiling source
-	hello/hello:0.0.1
+   hello/hello:0.0.1
 
 Creating balas
-	target/bala/hello-2020r2-any-0.0.1.bala
+   target/bala/hello-2020r2-any-0.0.1.bala
 
 Running Tests
 
-	hello/hello:0.0.1
-	No tests found
+   hello/hello:0.0.1
+   No tests found
 
 
 Generating executables
-	target/bin/hello.jar
+   target/bin/hello.jar
 
 Generating artifacts...
 
-	@kubernetes:Docker 			 - complete 2/2
+   @kubernetes:Docker 			 - complete 2/2
 
-    Execute the below command to run the generated docker image:
-    docker run -d -p 9090:9090 anuruddhal/hello-api:sample8
+   Execute the below command to run the generated docker image:
+   docker run -d -p 9090:9090 anuruddhal/hello-api:sample8
 
-    target/bin/hello-0.0.1.jar
+   target/bin/hello-0.0.1.jar
 ```
 
 2. Verify the docker image is created:
@@ -59,19 +72,7 @@ $> curl https://127.0.0.1:9090/helloWorld/data -k
 Data: Lorem ipsum dolor sit amet.
 ```
 
-7. Undeploy sample:
+6. Undeploy sample:
 ```bash
 $> docker kill 8440e38b7330
 ```
-### How to write:
-This segment shows how a c2c segment is mapped into cloud element.  
-1. ```Cloud.toml``` segment
-   ```toml
-   [[container.copy.files]]
-	sourceFile="./data/data.txt" # Path to the external file
-	target="/home/ballerina/data/data.txt" # Path of the file in the container
-   ```
-2. `Dockerfile` segment
-   ```Dockerfile
-	COPY data.txt /home/ballerina/data/data.txt
-   ```

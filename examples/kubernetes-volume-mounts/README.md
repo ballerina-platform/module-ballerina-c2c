@@ -2,6 +2,52 @@
 
 - This sample shows how to mount volumes.
 
+### How to write:
+This segment shows how a c2c segment is mapped into cloud element.  
+1. ```Cloud.toml``` segment
+```toml
+[[cloud.deployment.storage.volumes]]
+name="my-pvc" # Name of the volume 
+local_path="/home/ballerina/data" # Path of the volume
+size="1G" # Size of the volume
+```
+   
+2. Kubernetes YAML file segment
+```yaml
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  .
+  .
+  .
+spec:
+  .
+  .
+  .
+  template:
+    .
+    .
+    .
+    spec:
+      containers:
+      - image: "anuruddhal/hello-api:v11"
+        .
+        .
+        .
+        volumeMounts:
+        - mountPath: "/home/ballerina/data"
+          name: "my-pvc-volume"
+          readOnly: false
+      nodeSelector: {}
+      volumes:
+      - name: "my-pvc-volume"
+        persistentVolumeClaim:
+          claimName: "my-pvc"
+```
+
+   `volume` and `volumeMount` are used to create a persistent volume to the container.
+
+
 ### How to run:
 
 1. Compile the ballerina module. Command to deploy kubernetes artifacts will be printed on build success.
@@ -27,47 +73,3 @@ Generating artifacts...
 
         target/bin/hello.jar
 ```
-### How to write:
-This segment shows how a c2c segment is mapped into cloud element.  
-1. ```Cloud.toml``` segment
-   ```toml
-	[[cloud.deployment.storage.volumes]]
-	name="my-pvc" # Name of the volume 
-	local_path="/home/ballerina/data" # Path of the volume
-	size="1G" # Size of the volume
-   ```
-   
-2. Kubernetes YAML file segment
-   ```yaml
-	apiVersion: "apps/v1"
-	kind: "Deployment"
-		.
-		.
-		.
-	name: "hello-deployment"
-	spec:
-		.
-		.
-		.
-	template:
-		.
-		.
-		.
-		spec:
-		containers:
-		- image: "anuruddhal/hello-api:v11"
-			.
-			.
-			.
-			volumeMounts:
-			- mountPath: "/home/ballerina/data"
-			name: "my-pvc-volume"
-			readOnly: false
-		nodeSelector: {}
-		volumes:
-		- name: "my-pvc-volume"
-			persistentVolumeClaim:
-			claimName: "my-pvc"
-   ```
-
-   `volume` and `volumeMount` are used to create a persistent volume to the container.
