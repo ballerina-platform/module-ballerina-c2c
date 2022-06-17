@@ -1,0 +1,4 @@
+[container.image]
+name = "hello" # Name of the container image
+repository = "xlight05" # Container repository to host the container
+tag = "v1.0.0" # Tag of the container

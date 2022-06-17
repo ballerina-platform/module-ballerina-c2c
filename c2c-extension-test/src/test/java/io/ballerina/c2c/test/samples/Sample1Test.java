@@ -50,7 +50,7 @@ import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
  */
 public class Sample1Test extends SampleTest {
 
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample1");
+    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("kubernetes-yaml-with-single-bal-file");
     private static final Path DOCKER_TARGET_PATH = SOURCE_DIR_PATH.resolve(DOCKER);
     private static final Path KUBERNETES_TARGET_PATH = SOURCE_DIR_PATH.resolve(KUBERNETES);
     private static final String DOCKER_IMAGE = "hello_world:latest";

@@ -41,7 +41,7 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
  */
 public class DockerSingleTest extends SampleTest {
 
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("docker").resolve("single");
+    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("docker-image-with-single-bal-file");
     private static final Path DOCKER_TARGET_PATH = SOURCE_DIR_PATH.resolve(DOCKER);
     private static final String DOCKER_IMAGE = "service:latest";
 

@@ -1,0 +1,4 @@
+[container.image]
+repository= "anuruddhal" # Container repository to host the container
+name="hello-api" # Name of the container
+tag="sample2"  # Tag of the container

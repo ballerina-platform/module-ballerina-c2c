@@ -52,7 +52,7 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
  */
 public class Sample5Test extends SampleTest {
 
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample5");
+    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("kubernetes-mount-config-map-volumes");
     private static final Path DOCKER_TARGET_PATH =
             SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
     private static final Path KUBERNETES_TARGET_PATH =

@@ -43,7 +43,7 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getDockerImage;
  */
 public class Sample4Test extends SampleTest {
 
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample4");
+    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("kubernetes-job-scheduling");
     private static final Path DOCKER_TARGET_PATH = SOURCE_DIR_PATH.resolve(DOCKER);
     private static final Path KUBERNETES_TARGET_PATH = SOURCE_DIR_PATH.resolve(KUBERNETES);
     private static final String DOCKER_IMAGE = "hello_world_job:latest";

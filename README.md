@@ -16,7 +16,7 @@ Code2cloud extension implementation for ballerina.
 - Dockerfile generation. 
 - Kubernetes config map support.
 
-**Refer [samples](samples) for more info.**
+**Refer [samples](examples) for more info.**
 
 ## How to build
 

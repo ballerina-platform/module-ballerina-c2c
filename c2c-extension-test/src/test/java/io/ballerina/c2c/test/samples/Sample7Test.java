@@ -51,7 +51,7 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
  */
 public class Sample7Test extends SampleTest {
 
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("sample7");
+    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("kubernetes-multi-module-ballerina-project");
     private static final Path DOCKER_TARGET_PATH =
             SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("cafe");
     private static final Path KUBERNETES_TARGET_PATH =

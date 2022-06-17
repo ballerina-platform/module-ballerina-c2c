@@ -1,0 +1,15 @@
+[container.image]
+repository="anuruddhal" # Container repository to host the image
+name="math" # Name of the container image
+tag="sample3"  # Tag of the container
+
+[cloud.deployment]
+min_memory="100Mi" # Minimum memory allocated to the container
+max_memory="256Mi" # Maximum memory allocated to the container 
+min_cpu="200m" # Minimum CPU allocated to the container
+max_cpu="500m" # Maximum CPU allocated to the container 
+
+[cloud.deployment.autoscaling]
+min_replicas=2 # Minimum number of replicas of the container alive at a given time
+max_replicas=5 # Maximum number of replicas of the container alive at a given time
+cpu=50 # CPU utilization threshold for spawning a new instance
