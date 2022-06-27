@@ -1,0 +1,91 @@
+name: Generate and push jvm-runtime base image to Dockerhub
+
+on: 
+  workflow_dispatch:
+    inputs:
+      replace_prev:
+        description: Replace previous tag
+        required: false
+        type: string
+      is_patch:
+        description: Update patch version
+        required: false
+        default: true
+        type: boolean
+      is_minor:
+        description: Update minor version
+        required: false
+        default: false
+        type: boolean
+      is_major:
+        description: Update major version
+        required: false
+        default: false
+        type: boolean
+  
+
+jobs:
+  build-jre-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      
+      - name: Generate new tag
+        run: |
+          last_tag=$(curl -s -S 'https://registry.hub.docker.com/v2/repositories/ballerina/ballerina-jvm-runtime/tags/' | jq '."results"[0]["name"]') 
+          if [ $last_tag == null ]; then
+            last_tag="v0.0.0"
+          fi
+          if [ `expr length "$last_tag"` -lt 6  ]; then
+            last_tag="v0.0.0"
+          fi  
+          echo $last_tag
+          last_tag_array=( $(grep -Eo '[[:digit:]]+|[^[:digit:]]+' <<<"$last_tag") ) 
+          major=${last_tag_array[1]}
+          minor=${last_tag_array[3]}
+          patch=${last_tag_array[5]}
+          if [ -z ${{ inputs.replace_prev }} ] ; then
+            if [ ${{ inputs.is_patch }} = true ] ; then
+              patch=$(($patch + 1))
+            fi
+            if [ ${{ inputs.is_minor }} = true ] ; then
+              minor=$(($minor + 1))
+              patch=0
+            fi
+            if [ ${{ inputs.is_major }} = true ] ; then
+              major=$(($major + 1))
+              minor=0
+              patch=0
+            fi
+            tag="v$major.$minor.$patch"
+          else
+            tag=${{ inputs.replace_prev }}
+          fi
+          echo ::set-output name=TAG::$tag
+        id: tag-gen
+        
+      - name: Build and push with latest
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:latest
+
+      - name: Build and push with tag
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
+
+        
