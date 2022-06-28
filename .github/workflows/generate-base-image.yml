@@ -7,22 +7,14 @@ on:
         description: Replace previous tag
         required: false
         type: string
-      is_patch:
-        description: Update patch version
+      sem-ver:
+        type: choice
+        description: sem-ver option to increase
         required: false
-        default: true
-        type: boolean
-      is_minor:
-        description: Update minor version
-        required: false
-        default: false
-        type: boolean
-      is_major:
-        description: Update major version
-        required: false
-        default: false
-        type: boolean
-  
+        options: 
+          - patch
+          - minor
+          - major
 
 jobs:
   build-jre-docker:
@@ -33,8 +25,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          username: ${{ secrets.BAL_DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.BAL_DOCKER_HUB_ACCESS_TOKEN }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       
@@ -53,14 +45,14 @@ jobs:
           minor=${last_tag_array[3]}
           patch=${last_tag_array[5]}
           if [ -z ${{ inputs.replace_prev }} ] ; then
-            if [ ${{ inputs.is_patch }} = true ] ; then
+            if [ ${{ inputs.sem-ver }} = "patch" ] ; then
               patch=$(($patch + 1))
             fi
-            if [ ${{ inputs.is_minor }} = true ] ; then
+            if [ ${{ inputs.sem-ver }} = "minor" ] ; then
               minor=$(($minor + 1))
               patch=0
             fi
-            if [ ${{ inputs.is_major }} = true ] ; then
+            if [ ${{ inputs.sem-ver }} = "major" ] ; then
               major=$(($major + 1))
               minor=0
               patch=0
@@ -76,16 +68,16 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./Dockerfile
+          file: ./base-image/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:latest
+          tags: ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:latest
 
       - name: Build and push with tag
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./Dockerfile
+          file: ./base-image/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
+          tags: ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
 
         
