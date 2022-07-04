@@ -43,7 +43,7 @@ jobs:
           i=1
           while :
           do
-              retrieved_tags=( $(curl -s -S 'https://registry.hub.docker.com/v2/repositories/ballerina/ballerina-jvm-runtime/tags/?page='$i'&page_size=100' | jq '."results"[]["name"]') )
+              retrieved_tags=( $(curl -s -S 'https://hub.docker.com/v2/repositories/ballerina/jvm-runtime/tags/?page='$i'&page_size=100' | jq '."results"[]["name"]') )
               last_tags=( ${last_tags[@]} ${retrieved_tags[@]} )
               if [ ${#retrieved_tags[@]} -lt 100 ] ; then
                   break
@@ -153,7 +153,7 @@ jobs:
           context: .
           file: ./base-image/Dockerfile
           push: true
-          tags: ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
+          tags: ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
 
       - name: Build and push latest only major.minor.patch, major.minor
         if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_TWO_TAG == 1 }}
@@ -163,8 +163,8 @@ jobs:
           file: ./base-image/Dockerfile
           push: true
           tags: >
-            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:${{ steps.tag-gen.outputs.TAG }} , 
-            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
+            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }} , 
+            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
 
       - name: Build and push latest only major.minor.patch, major.minor, major
         if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_THREE_TAG == 1 }}
@@ -174,9 +174,9 @@ jobs:
           file: ./base-image/Dockerfile
           push: true
           tags: >
-            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:${{ steps.tag-gen.outputs.TAG }} , 
-            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }} , 
-            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}
+            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }} , 
+            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }} , 
+            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}
 
       - name: Build and push latest only major.minor.patch, major.minor, major, latest
         if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_FOUR_TAG == 1 }}
@@ -186,7 +186,7 @@ jobs:
           file: ./base-image/Dockerfile
           push: true
           tags: > 
-            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:${{ steps.tag-gen.outputs.TAG }}, 
-            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}, 
-            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}, 
-            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/ballerina-jvm-runtime:latest
+            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}, 
+            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}, 
+            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}, 
+            ${{ secrets.BAL_DOCKER_HUB_USERNAME }}/jvm-runtime:latest
