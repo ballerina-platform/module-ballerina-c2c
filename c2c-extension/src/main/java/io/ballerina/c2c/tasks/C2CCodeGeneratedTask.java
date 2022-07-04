@@ -25,7 +25,9 @@ import io.ballerina.projects.CloudToml;
 import io.ballerina.projects.JBallerinaBackend;
 import io.ballerina.projects.JarLibrary;
 import io.ballerina.projects.JvmTarget;
+import io.ballerina.projects.Package;
 import io.ballerina.projects.PackageCompilation;
+import io.ballerina.projects.PackageDescriptor;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.plugins.CompilerLifecycleEventContext;
 import io.ballerina.projects.plugins.CompilerLifecycleTask;
@@ -66,18 +68,19 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             return;
         }
         Optional<Path> executablePath = compilerLifecycleEventContext.getGeneratedArtifactPath();
-        final PackageID currentPackage = KubernetesContext.getInstance().getCurrentPackage();
+        final Package currentPackage = compilerLifecycleEventContext.currentPackage();
+        PackageDescriptor descriptor = currentPackage.descriptor();
         executablePath.ifPresent(path -> {
-            String executableJarName = "$anon".equals(currentPackage.orgName.value) ? path.getFileName().toString() :
-                    currentPackage.orgName.value + "-" + currentPackage.name.value +
-                            "-" + currentPackage.version.value + ".jar";
-            String outputName = "$anon".equals(currentPackage.orgName.value) ? extractJarName(path.getFileName()) :
-                    currentPackage.name.value;
+            String executableJarName = "$anon".equals(descriptor.org().value()) ? path.getFileName().toString() :
+                    descriptor.org().value() + "-" + descriptor.name().value() +
+                            "-" + descriptor.version().value() + ".jar";
+            String outputName = "$anon".equals(descriptor.org().value()) ? extractJarName(path.getFileName()) :
+                    descriptor.name().value();
             dataHolder.setOutputName(outputName);
             addDependencyJars(compilerLifecycleEventContext.compilation(), executableJarName);
             dataHolder.setSourceRoot(executablePath.get().getParent()
                     .getParent().getParent());
-            codeGeneratedInternal(currentPackage,
+            codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage),
                     path, compilerLifecycleEventContext.currentPackage().cloudToml(),
                     compilerLifecycleEventContext.currentPackage().project().buildOptions().cloud());
         });
