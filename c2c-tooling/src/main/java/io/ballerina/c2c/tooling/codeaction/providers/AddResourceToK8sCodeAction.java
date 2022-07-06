@@ -32,13 +32,10 @@ import io.ballerina.toml.syntax.tree.DocumentMemberDeclarationNode;
 import io.ballerina.toml.syntax.tree.DocumentNode;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
 import io.ballerina.toml.syntax.tree.TableNode;
-import io.ballerina.tools.diagnostics.Diagnostic;
 import org.ballerinalang.annotation.JavaSPIService;
 import org.ballerinalang.langserver.commons.CodeActionContext;
-import org.ballerinalang.langserver.commons.codeaction.CodeActionNodeType;
-import org.ballerinalang.langserver.commons.codeaction.spi.DiagBasedPositionDetails;
-import org.ballerinalang.langserver.commons.codeaction.spi.LSCodeActionProvider;
-import org.ballerinalang.langserver.commons.codeaction.spi.NodeBasedPositionDetails;
+import org.ballerinalang.langserver.commons.codeaction.spi.RangeBasedCodeActionProvider;
+import org.ballerinalang.langserver.commons.codeaction.spi.RangeBasedPositionDetails;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -56,28 +53,11 @@ import java.util.Optional;
  * @since 2.0.0
  */
 @JavaSPIService("org.ballerinalang.langserver.commons.codeaction.spi.LSCodeActionProvider")
-public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
+public class AddResourceToK8sCodeAction implements RangeBasedCodeActionProvider {
 
     @Override
-    public List<CodeAction> getDiagBasedCodeActions(Diagnostic diagnostic,
-                                                    DiagBasedPositionDetails diagBasedPositionDetails,
-                                                    CodeActionContext codeActionContext) {
-        throw new UnsupportedOperationException("Not supported");
-    }
-
-    @Override
-    public boolean isNodeBasedSupported() {
-        return true;
-    }
-
-    @Override
-    public boolean isDiagBasedSupported() {
-        return false;
-    }
-
-    @Override
-    public List<CodeActionNodeType> getCodeActionNodeTypes() {
-        return Collections.singletonList(CodeActionNodeType.RESOURCE);
+    public List<SyntaxKind> getSyntaxKinds() {
+        return Collections.singletonList(SyntaxKind.RESOURCE_ACCESSOR_DEFINITION);
     }
 
     @Override
@@ -86,8 +66,8 @@ public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
     }
 
     @Override
-    public List<CodeAction> getNodeBasedCodeActions(CodeActionContext context,
-                                                    NodeBasedPositionDetails positionDetails) {
+    public List<CodeAction> getCodeActions(CodeActionContext context,
+                                           RangeBasedPositionDetails positionDetails) {
         NonTerminalNode matchedNode = positionDetails.matchedTopLevelNode();
         if (matchedNode.kind() != SyntaxKind.RESOURCE_ACCESSOR_DEFINITION) {
             return Collections.emptyList();
