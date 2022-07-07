@@ -72,7 +72,7 @@ public class AddConfigsToK8sCodeAction implements RangeBasedCodeActionProvider {
     @Override
     public List<CodeAction> getCodeActions(CodeActionContext context,
                                            RangeBasedPositionDetails positionDetails) {
-        NonTerminalNode matchedNode = positionDetails.matchedTopLevelNode();
+        NonTerminalNode matchedNode = positionDetails.matchedCodeActionNode();
         if (!isConfigurableVariable(matchedNode)) {
             return Collections.emptyList();
         }
@@ -82,7 +82,7 @@ public class AddConfigsToK8sCodeAction implements RangeBasedCodeActionProvider {
         if (!project.buildOptions().cloud().equals("k8s")) {
             return Collections.emptyList();
         }
-        
+
         Optional<CloudToml> cloudToml = project.currentPackage().cloudToml();
 
         if (cloudToml.isEmpty()) {

@@ -68,7 +68,7 @@ public class AddResourceToK8sCodeAction implements RangeBasedCodeActionProvider 
     @Override
     public List<CodeAction> getCodeActions(CodeActionContext context,
                                            RangeBasedPositionDetails positionDetails) {
-        NonTerminalNode matchedNode = positionDetails.matchedTopLevelNode();
+        NonTerminalNode matchedNode = positionDetails.matchedCodeActionNode();
         if (matchedNode.kind() != SyntaxKind.RESOURCE_ACCESSOR_DEFINITION) {
             return Collections.emptyList();
         }
@@ -78,7 +78,7 @@ public class AddResourceToK8sCodeAction implements RangeBasedCodeActionProvider 
         if (!project.buildOptions().cloud().equals("k8s")) {
             return Collections.emptyList();
         }
-        
+
         Optional<CloudToml> cloudToml = project.currentPackage().cloudToml();
 
         if (cloudToml.isEmpty()) {

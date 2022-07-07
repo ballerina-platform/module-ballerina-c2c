@@ -24,7 +24,7 @@ import com.google.gson.JsonParser;
 import io.ballerina.c2c.test.utils.FileUtils;
 import io.ballerina.c2c.test.utils.TestUtil;
 import org.ballerinalang.langserver.codeaction.CodeActionUtil;
-import org.ballerinalang.langserver.common.utils.CommonUtil;
+import org.ballerinalang.langserver.common.utils.PositionUtil;
 import org.ballerinalang.langserver.commons.LanguageServerContext;
 import org.ballerinalang.langserver.commons.workspace.WorkspaceDocumentException;
 import org.ballerinalang.langserver.commons.workspace.WorkspaceManager;
@@ -89,7 +89,7 @@ public abstract class CodeActionTest {
         Position pos = new Position(configJsonObject.get("line").getAsInt(),
                 configJsonObject.get("character").getAsInt());
         diags = diags.stream().
-                filter(diag -> CommonUtil.isWithinRange(pos, diag.getRange()))
+                filter(diag -> PositionUtil.isWithinRange(pos, diag.getRange()))
                 .collect(Collectors.toList());
         CodeActionContext codeActionContext = new CodeActionContext(diags);
 
