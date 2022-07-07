@@ -1,7 +1,7 @@
 [container.image]
 repository="anuruddhal" # Container repository to host the container 
 name="hello-api" # Name of the container image
-tag="sample5" # Tag of the contaoner 
+tag="sample5" # Tag of the container 
 
 [[cloud.config.maps]]
 file="./conf/data.txt" # Path of the external file

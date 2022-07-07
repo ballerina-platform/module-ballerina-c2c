@@ -244,8 +244,6 @@ public class DockerGenerator {
             dockerfileContent.append("    && adduser -S -s /bin/bash -g 'ballerina' -G troupe -D ballerina \\")
                     .append("\n");
             dockerfileContent.append("    && apk add --update --no-cache bash \\").append(System.lineSeparator());
-            dockerfileContent.append("    && chown -R ballerina:troupe /usr/bin/java \\")
-                    .append(System.lineSeparator());
             dockerfileContent.append("    && rm -rf /var/cache/apk/*").append(System.lineSeparator());
             dockerfileContent.append("\n");
         }

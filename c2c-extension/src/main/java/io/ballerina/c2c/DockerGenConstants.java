@@ -27,7 +27,7 @@ public class DockerGenConstants {
     public static final String EXECUTABLE_JAR = ".jar";
     public static final String REGISTRY_SEPARATOR = "/";
     public static final String TAG_SEPARATOR = ":";
-    public static final String OPENJDK_11_JRE_SLIM_BASE = "ballerina/jre11:v1";
+    public static final String OPENJDK_11_JRE_SLIM_BASE = "ballerina/jvm-runtime:1.0";
     public static final String OPENJDK_11_JRE_WINDOWS_BASE_IMAGE = "openjdk:11-windowsservercore";
 
 }
