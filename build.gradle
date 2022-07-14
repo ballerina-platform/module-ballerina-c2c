@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2022, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,6 @@ ext.lombokVersion = "1.18.10"
 ext.commonIoVersion = "2.11.0"
 ext.jacksonYamlVersion = "2.13.2"
 ext.commonsCodecVersion = "1.15"
-
 
 allprojects {
     group = project.group
