@@ -1,0 +1,9 @@
+[[cloud.config.envs]]
+name= "b7a_log_level"
+config_name= "cm-loglevel-linker"
+key_ref= "B7A_LOG_LEVEL"
+
+[[cloud.secret.envs]]
+name= "b7a-password"
+secret_name= "b7a-password"
+key_ref= "B7A_PASSWORD"

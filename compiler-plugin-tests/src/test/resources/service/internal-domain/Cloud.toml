@@ -1,0 +1,5 @@
+[cloud.deployment]
+internal_domain_name="hello-svc"
+
+[settings]
+buildImage=false

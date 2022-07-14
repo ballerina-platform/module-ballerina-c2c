@@ -1,0 +1,23 @@
+[container.image]
+base="local"
+name="name"
+tag="latest"
+
+[container.image.user]
+
+
+
+[cloud.deployment]
+min_cpu="1000m"
+max_cpu="1500m"
+
+[cloud.deployment.probes.liveness]
+port = 9090
+path = "/helloWorld/test"
+
+[[cloud.config.maps]]
+file="./conf/data.txt"
+
+
+[[cloud.config.files]]
+file="./conf/Config.toml"

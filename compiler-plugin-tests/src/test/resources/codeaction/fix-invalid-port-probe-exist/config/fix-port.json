@@ -1,0 +1,24 @@
+{
+    "line": 10,
+    "character": 9,
+    "expected": [
+        {
+            "title": "Add to Probe file",
+            "edits": [
+                {
+                    "range": {
+                        "start": {
+                            "line": 7,
+                            "character": 0
+                        },
+                        "end": {
+                            "line": 7,
+                            "character": 0
+                        }
+                    },
+                    "newText": "\nservice http:Service /helloWorld on new http:Listener(9092) {\n    resource function get livez() returns boolean {\n        return true;\n    }\n}\n"
+                }
+            ]
+        }
+    ]
+}

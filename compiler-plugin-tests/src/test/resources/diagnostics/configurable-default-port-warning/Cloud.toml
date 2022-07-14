@@ -1,0 +1,4 @@
+[container.image]
+ repository="anupamgogoi"
+ name="hello"
+ tag="v0.1.0"

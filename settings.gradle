@@ -14,18 +14,24 @@
  * limitations under the License.
  *
  */
- 
+
 plugins {
-  id "com.gradle.enterprise" version "3.2"
+    id "com.gradle.enterprise" version "3.2"
 }
 
-rootProject.name = 'code2cloud-extension-parent'
-include(':build-config:checkstyle')
-include(':c2c-extension')
-include(':c2c-ballerina')
-include(':c2c-extension-test')
+rootProject.name = 'cloud'
+
+include ':checkstyle'
+include ':cloud-ballerina'
+include ':cloud-compiler-plugin'
+include ':cloud-compiler-plugin-tests'
 include(':c2c-tooling')
 include(':c2c-util')
+
+project(':checkstyle').projectDir = file("build-config${File.separator}checkstyle")
+project(':cloud-ballerina').projectDir = file('ballerina')
+project(':cloud-compiler-plugin').projectDir = file('compiler-plugin')
+project(':cloud-compiler-plugin-tests').projectDir = file('compiler-plugin-tests')
 
 gradleEnterprise {
     buildScan {

@@ -1,8 +1,0 @@
-[package]
-org = "anjana"
-name = "c2c_alpha2"
-version = "0.1.0"
-
-[build-options]
-observabilityIncluded = true   
-cloud = "k8s" 

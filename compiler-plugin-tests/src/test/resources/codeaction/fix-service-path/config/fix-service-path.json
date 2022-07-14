@@ -1,0 +1,37 @@
+{
+    "line": 7,
+    "character": 14,
+    "expected": [
+        {
+            "title": "Modify service path",
+            "edits": [
+                {
+                    "range": {
+                        "start": {
+                            "line": 7,
+                            "character": 8
+                        },
+                        "end": {
+                            "line": 7,
+                            "character": 23
+                        }
+                    },
+                    "newText": ""
+                },
+                {
+                    "range": {
+                        "start": {
+                            "line": 7,
+                            "character": 8
+                        },
+                        "end": {
+                            "line": 7,
+                            "character": 8
+                        }
+                    },
+                    "newText": "/helloWorld"
+                }
+            ]
+        }
+    ]
+}

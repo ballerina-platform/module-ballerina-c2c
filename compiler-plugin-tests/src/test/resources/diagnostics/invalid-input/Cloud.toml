@@ -1,0 +1,8 @@
+[container.image]
+repository = "wso2" #simple docker img name conv
+name = "hello"
+base="ballerina/jvm-runtime:1.0"
+
+[cloud.deployment]
+min_cpu="aa"
+max_cpu="aaa"

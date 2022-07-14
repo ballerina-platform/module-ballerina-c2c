@@ -1,0 +1,9 @@
+[container.image]
+name = "hello"
+repository = "local"
+tag = "v1.0.0"
+base = "openjdk:slim"
+
+[[cloud.config.envs]]
+key_ref="test"
+config_name="test"
