@@ -94,6 +94,5 @@ checkstyle {
     configProperties = ["suppressionFile" : rootProject.file("build-config/checkstyle/build/suppressions.xml")]
 }
 
-
 spotbugsMain.finalizedBy validateSpotbugs
 checkstyleMain.dependsOn(":checkstyle:downloadMultipleFiles")
