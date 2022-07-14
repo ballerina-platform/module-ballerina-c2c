@@ -28,7 +28,7 @@ configurations {
 dependencies {
     jacocoRuntime "org.jacoco:org.jacoco.agent:${jacoco.toolVersion}:runtime"
 
-    checkstyle project(":build-config:checkstyle")
+    checkstyle project(":checkstyle")
     checkstyle "com.puppycrawl.tools:checkstyle:${puppycrawlCheckstyleVersion}"
 }
 
@@ -96,4 +96,4 @@ checkstyle {
 
 
 spotbugsMain.finalizedBy validateSpotbugs
-checkstyleMain.dependsOn(":build-config:checkstyle:downloadMultipleFiles")
+checkstyleMain.dependsOn(":checkstyle:downloadMultipleFiles")

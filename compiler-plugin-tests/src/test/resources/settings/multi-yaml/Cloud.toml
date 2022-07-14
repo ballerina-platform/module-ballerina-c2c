@@ -1,0 +1,13 @@
+[container.image]
+name="hello-api"
+tag="v1"
+
+[[cloud.config.maps]]
+    file="./conf/data.txt"
+    mount_path="/home/ballerina/data"
+[[cloud.config.files]]
+    file="./conf/Config.toml"
+
+[settings]
+singleYAML=false
+buildImage=false

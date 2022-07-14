@@ -15,10 +15,8 @@
  *
  */
 
-
 plugins {
-    id "base"
-    id "com.github.spotbugs" version "4.0.5"
+    id "com.github.spotbugs" version "4.2.3"
     id "com.github.johnrengelman.shadow" version "5.2.0"
     id "de.undercouch.download" version "4.0.4"
     id "net.researchgate.release" version "2.8.0"
@@ -29,6 +27,14 @@ ext.ballerinaSourceDirectory = "$buildDir/../src/main/ballerina"
 ext.dockerJavaVersion = "3.2.11"
 ext.fabric8KubernetesClientVersion = "5.7.1"
 ext.snakeYamlVersion = "1.26"
+ext.testngVersion = "6.14.3"
+ext.commomsIOVersion = "2.6"
+ext.commonsLoggingVersion = "1.2"
+ext.googleGsonVersion = "2.7"
+ext.slf4jVersion = "1.7.26"
+
+ext.puppycrawlCheckstyleVersion = "8.18"
+
 ext.projectBuildSourceEncoding = "UTF-8"
 ext.projectReportingOutputEncoding = "UTF-8"
 ext.puppycrawlCheckstyleVersion = "8.18"
@@ -39,17 +45,18 @@ ext.commonIoVersion = "2.11.0"
 ext.jacksonYamlVersion = "2.13.2"
 ext.commonsCodecVersion = "1.15"
 
+
 allprojects {
+    group = project.group
+    version = project.version
+
     apply plugin: 'jacoco'
+    apply plugin: 'maven-publish'
+
     repositories {
         mavenLocal()
-        mavenCentral()
         maven {
             url = 'https://maven.wso2.org/nexus/content/repositories/releases/'
-        }
-
-        maven {
-            url = 'https://maven.wso2.org/nexus/content/repositories/snapshots/'
         }
 
         maven {
@@ -57,12 +64,9 @@ allprojects {
         }
 
         maven {
-            url = 'https://maven.wso2.org/nexus/content/repositories/orgballerinalang-1614'
-        }
-
-        maven {
             url = 'https://repo.maven.apache.org/maven2'
         }
+
         maven {
             url = 'https://maven.pkg.github.com/ballerina-platform/*'
             credentials {
@@ -71,87 +75,65 @@ allprojects {
             }
         }
     }
+
     ext {
+        snapshotVersion= '-SNAPSHOT'
         timestampedVersionRegex = '.*-\\d{8}-\\d{6}-\\w.*\$'
-        snapshotVersion = '-SNAPSHOT'
     }
 }
 
 subprojects {
-    apply plugin: 'java'
-    apply plugin: 'maven-publish'
 
     configurations {
         ballerinaStdLibs
-        thirdPartyJars
         jbalTools
     }
-
     dependencies {
+        /* JBallerina Tools */
         jbalTools ("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
             transitive = false
         }
-        
+
         /* Standard libraries */
         ballerinaStdLibs "io.ballerina.stdlib:io-ballerina:${stdlibIoVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:http-ballerina:${stdlibHttpVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:log-ballerina:${stdlibLogVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:auth-ballerina:${stdlibAuthVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:file-ballerina:${stdlibFileVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:regex-ballerina:${stdlibRegexVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:cache-ballerina:${stdlibCacheVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:crypto-ballerina:${stdlibCryptoVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:time-ballerina:${stdlibTimeVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:mime-ballerina:${stdlibMimeVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:auth-ballerina:${stdlibAuthVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:jwt-ballerina:${stdlibJwtVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:oauth2-ballerina:${stdlibOAuth2Version}"
+        ballerinaStdLibs "io.ballerina.stdlib:cache-ballerina:${stdlibCacheVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:time-ballerina:${stdlibTimeVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:url-ballerina:${stdlibUrlVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:crypto-ballerina:${stdlibCryptoVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:file-ballerina:${stdlibFileVersion}"
+
+        // Transitive dependencies
         ballerinaStdLibs "io.ballerina.stdlib:os-ballerina:${stdlibOsVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:task-ballerina:${stdlibTaskVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:jwt-ballerina:${stdlibJwtVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:grpc-ballerina:${stdlibGrpcVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:oauth2-ballerina:${stdlibOAuth2Version}"
         ballerinaStdLibs "io.ballerina.stdlib:uuid-ballerina:${stdlibUuidVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:graphql-ballerina:${stdlibGraphqlVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:url-ballerina:${stdlibUrlVersion}"
+        ballerinaStdLibs "io.ballerina.stdlib:http-ballerina:${stdlibHttpVersion}"
         ballerinaStdLibs "io.ballerina.stdlib:observe-ballerina:${observeVersion}"
         ballerinaStdLibs "io.ballerina:observe-ballerina:${observeInternalVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:graphql-ballerina:${stdlibGraphqlVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:websub-ballerina:${stdlibWebsubVersion}"
-        ballerinaStdLibs "io.ballerina.stdlib:websubhub-ballerina:${stdlibWebsubhubVersion}"
     }
-
-    release {
-        // Disable check snapshots temporarily
-        buildTasks = []
-        failOnSnapshotDependencies = false
-        failOnCommitNeeded = false
-        versionPropertyFile = 'gradle.properties'
-        tagTemplate = 'v${version}'
-        git {
-            // To release from any branch
-            requireBranch = null
-        }
-    }
-
 }
 
-task codeCoverageReport(type: JacocoReport) {
-    dependsOn = subprojects.test
+def moduleVersion = project.version.replace("-SNAPSHOT", "")
 
-    executionData fileTree(project.rootDir.absolutePath).include("**/build/coverage-reports/*.exec")
+release {
+    failOnPublishNeeded = false
 
-    subprojects.each {
-        sourceSets it.sourceSets.main
+    buildTasks = ['build']
+    failOnSnapshotDependencies = true
+    versionPropertyFile = 'gradle.properties'
+    tagTemplate = 'v$version'
+
+    git {
+        requireBranch = "release-${moduleVersion}"
+        pushToRemote = 'origin'
     }
+}
 
-    reports {
-        xml.enabled = true
-        html.enabled = true
-        csv.enabled = true
-        xml.destination = new File("${buildDir}/reports/jacoco/report.xml")
-        html.destination = new File("${buildDir}/reports/jacoco/report.html")
-        csv.destination = new File("${buildDir}/reports/jacoco/report.csv")
-    }
-
-    onlyIf = {
-        true
-    }
+task build {
+    dependsOn(':cloud-ballerina:build')
 }

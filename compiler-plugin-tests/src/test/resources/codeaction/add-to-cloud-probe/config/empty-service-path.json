@@ -1,0 +1,42 @@
+{
+    "line": 24,
+    "character": 29,
+    "expected": [
+        {
+            "title": "Add as liveness probe",
+            "edits": [
+                {
+                    "range": {
+                        "start": {
+                            "line": 5,
+                            "character": 0
+                        },
+                        "end": {
+                            "line": 5,
+                            "character": 0
+                        }
+                    },
+                    "newText": "\n[cloud.deployment.probes.liveness]\nport \u003d 9090\npath \u003d \"/wew\"\n"
+                }
+            ]
+        },
+        {
+            "title": "Add as readiness probe",
+            "edits": [
+                {
+                    "range": {
+                        "start": {
+                            "line": 5,
+                            "character": 0
+                        },
+                        "end": {
+                            "line": 5,
+                            "character": 0
+                        }
+                    },
+                    "newText": "\n[cloud.deployment.probes.readiness]\nport \u003d 9090\npath \u003d \"/wew\"\n"
+                }
+            ]
+        }
+    ]
+}

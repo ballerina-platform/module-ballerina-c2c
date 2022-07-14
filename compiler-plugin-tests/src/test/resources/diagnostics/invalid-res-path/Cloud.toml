@@ -1,0 +1,8 @@
+[container.image]
+repository = "wso2"
+name = "hello"
+base="ballerina/jvm-runtime:1.0"
+
+[cloud.deployment.probes.liveness]
+port = 9090
+path = "/helloWorld/test"
