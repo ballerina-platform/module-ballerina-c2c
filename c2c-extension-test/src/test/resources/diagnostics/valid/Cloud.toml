@@ -1,4 +1,4 @@
 [container.image]
 repository = "wso2" #simple docker img name conv
 name = "hello"
-base="ballerina/jre11:v1"
+base="ballerina/jvm-runtime:1.0"
