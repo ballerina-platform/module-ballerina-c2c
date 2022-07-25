@@ -213,20 +213,20 @@ public class ServiceExtractionTest {
         Assert.assertEquals(helloListener.getPort(), 9090);
     }
 
-    @Test
-    public void testWebSocket() {
-        Path projectPath = Paths.get("src", "test", "resources", "service", "websocket");
-
-        BuildProject project = BuildProject.load(projectPath);
-        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
-        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
-
-        Assert.assertEquals(serviceList.size(), 1);
-        ServiceInfo helloService = serviceList.get(0);
-        Assert.assertEquals(helloService.getServicePath().trim(), "/chat");
-        ListenerInfo helloListener = helloService.getListener();
-        Assert.assertEquals(helloListener.getPort(), 9090);
-    }
+//    @Test
+//    public void testWebSocket() {
+//        Path projectPath = Paths.get("src", "test", "resources", "service", "websocket");
+//
+//        BuildProject project = BuildProject.load(projectPath);
+//        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+//        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+//
+//        Assert.assertEquals(serviceList.size(), 1);
+//        ServiceInfo helloService = serviceList.get(0);
+//        Assert.assertEquals(helloService.getServicePath().trim(), "/chat");
+//        ListenerInfo helloListener = helloService.getListener();
+//        Assert.assertEquals(helloListener.getPort(), 9090);
+//    }
 
     @Test
     public void testWebSub() {
