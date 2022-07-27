@@ -77,7 +77,7 @@ public class AddResourceToK8sCodeAction implements LSCodeActionProvider {
 
     @Override
     public List<CodeActionNodeType> getCodeActionNodeTypes() {
-        return Collections.singletonList(CodeActionNodeType.RESOURCE);
+        return Collections.singletonList(CodeActionNodeType.FUNCTION);
     }
 
     @Override
