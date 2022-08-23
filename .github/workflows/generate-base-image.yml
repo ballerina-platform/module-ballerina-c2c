@@ -22,11 +22,22 @@ on:
 
 
 jobs:
+  pre-validate-registry-sync:
+    uses: ./.github/workflows/validate-registry-sync.yml
+    secrets: inherit
+
   build-jre-docker:
+    needs: pre-validate-registry-sync
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
         uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -34,12 +45,16 @@ jobs:
           username: ${{ secrets.BAL_DOCKER_HUB_USERNAME }}
           password: ${{ secrets.BAL_DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+      - name: Login to ACR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io
+          username: ${{ secrets.DOCKER_ACR_USERNAME }}
+          password: ${{ secrets.DOCKER_ACR_PASSWORD }}
 
       - name: Generate new tag
         run: |
-          docker_hub_name="ballerina"
+          docker_hub_name="${{ secrets.DOCKER_REPO_NAME }}"
 
           # Assume updating latest version
           do_change_latest=1
@@ -59,7 +74,7 @@ jobs:
               fi
               i=$(($i +1))    
           done
-
+          
           # Assign a last tag based retrieved set of tags
           if [ -z "$last_tags" ]; then
             last_tag="0.0.0"
@@ -80,7 +95,7 @@ jobs:
           major=${last_tag_array[0]}
           minor=${last_tag_array[1]}
           patch=${last_tag_array[2]}
-          
+
           # Modify existing tag (replace_prev --> tag needs to be modified)
           if [ "${{ inputs.replace_prev }}" != "" ] && [ ${{ inputs.sem-ver }} = "existing" ]; then
             curr_tag=${{ inputs.replace_prev }}
@@ -88,7 +103,7 @@ jobs:
             major=${curr_tag_array[0]}
             minor=${curr_tag_array[1]}
             patch=${curr_tag_array[2]}
-
+          
             # Compare tags pairwise with curr_tag
             for (( i=1; i<${#formatted_tags[@]}; i++ ))
             do 
@@ -97,7 +112,6 @@ jobs:
               prev_major=${prev_tag_array[0]}
               prev_minor=${prev_tag_array[1]}
               prev_patch=${prev_tag_array[2]}
-
               next_tag=${formatted_tags[$i]}
               next_tag_array=( $(grep -Eo '[0-9]+' <<<"$next_tag") ) 
               next_major=${next_tag_array[0]}
@@ -112,7 +126,7 @@ jobs:
                     do_change_latest=0
                     do_change_major=0
                     do_change_major_minor=0
-          
+
               # Case 2 :- Upgrade patch / Replace existing latest patch (Updatable minor)
               # ( 1.0.0 , 1.0.1 , 1.0.2 , 1.1.0 - update 1.0.2,1.0.3)
               elif [ $major -eq $prev_major ] && [ $minor -eq $prev_minor ] && 
@@ -121,7 +135,7 @@ jobs:
                       do_change_latest=0
                       do_change_major=0
                       do_change_major_minor=1
-
+          
               # Case 3 :- Upgrade patch / Replace existing latest patch (Updatable minor & major)
               # ( 1.0.0 , 1.0.1 , 1.0.2 , 2.0.0 - update 1.0.2,1.0.3)
               elif [ $major -eq $prev_major ] && [ $minor -ge $prev_minor ] && 
@@ -136,7 +150,7 @@ jobs:
             echo "Inputs are not given properly"
             exit 1
           fi
-          
+
           # Update latest version
           if [ -z ${{ inputs.replace_prev }} ] && [ ${{ inputs.sem-ver }} != "none" ]; then
             if [ ${{ inputs.sem-ver }} = "patch" ] ; then
@@ -167,61 +181,90 @@ jobs:
           generate_only_two_tag=$(($do_change_latest==0 && $do_change_major==0 && $do_change_major_minor==1))
           generate_only_three_tag=$(($do_change_latest==0 && $do_change_major==1 && $do_change_major_minor==1))
           generate_only_four_tag=$(($do_change_latest==1 && $do_change_major==1 && $do_change_major_minor==1))
-
           echo ::set-output name=TAG::$tag
           echo ::set-output name=MAJ_MIN_TAG::$maj_min_tag
           echo ::set-output name=MAJ_TAG::$maj_tag
-
           echo ::set-output name=GENERATE_ONLY_ONE_TAG::$generate_only_one_tag
           echo ::set-output name=GENERATE_ONLY_TWO_TAG::$generate_only_two_tag
           echo ::set-output name=GENERATE_ONLY_THREE_TAG::$generate_only_three_tag
           echo ::set-output name=GENERATE_ONLY_FOUR_TAG::$generate_only_four_tag
-          
+
           echo ::set-output name=DOCKER_HUB_NAME::$docker_hub_name
         id: tag-gen
 
       - name: Build and push only major.minor.patch tag
         if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_ONE_TAG == 1 }}
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: .
           file: ./base-image/Dockerfile
           push: true
-          tags: ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
+          tags: |
+            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
 
       - name: Build and push only major.minor.patch, major.minor
         if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_TWO_TAG == 1 }}
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: .
           file: ./base-image/Dockerfile
           push: true
-          tags: >
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }} , 
+          tags: |
+            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
             ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
-
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
       - name: Build and push only major.minor.patch, major.minor, major
         if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_THREE_TAG == 1 }}
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: .
           file: ./base-image/Dockerfile
           push: true
-          tags: >
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }} , 
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }} , 
+          tags: |
+            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
+            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
             ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}
-
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}
       - name: Build and push only major.minor.patch, major.minor, major, latest
         if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_FOUR_TAG == 1 }}
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: .
           file: ./base-image/Dockerfile
           push: true
-          tags: >
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}, 
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}, 
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}, 
+          tags: |
+            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
+            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
+            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}
             ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:latest
-
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:latest
+      - name: Send Notifications
+        run: |
+          tags=""
+          if [[ ${{ steps.tag-gen.outputs.GENERATE_ONLY_ONE_TAG }} == 1 ]]
+          then
+            tags="${{ steps.tag-gen.outputs.TAG }} (patch)"
+          elif [[ ${{ steps.tag-gen.outputs.GENERATE_ONLY_TWO_TAG }} == 1 ]]
+          then
+            tags="${{ steps.tag-gen.outputs.TAG }} (patch), ${{ steps.tag-gen.outputs.MAJ_MIN_TAG }} (minor)"
+          elif [[ ${{ steps.tag-gen.outputs.GENERATE_ONLY_THREE_TAG }} == 1 ]]
+          then
+            tags="${{ steps.tag-gen.outputs.TAG }} (patch), ${{ steps.tag-gen.outputs.MAJ_MIN_TAG }} (minor), ${{ steps.tag-gen.outputs.MAJ_TAG }} (major)"
+          elif [[ ${{ steps.tag-gen.outputs.GENERATE_ONLY_FOUR_TAG }} == 1 ]]
+          then
+            tags="${{ steps.tag-gen.outputs.TAG }} (patch), ${{ steps.tag-gen.outputs.MAJ_MIN_TAG }} (minor), ${{ steps.tag-gen.outputs.MAJ_TAG }} (major), latest"
+          else
+            tags="no tags has been updated"
+          fi
+          docker run  -e SPACE_ID="${{ secrets.SPACE_ID }}" -e MESSAGE_KEY="${{ secrets.MESSAGE_KEY }}" -e CHAT_TOKEN="${{ secrets.CHAT_TOKEN }}" -e TAGS="${tags}" ballerina/base_image_update_notifications
+  post-validate-registry-sync:
+    needs: build-jre-docker
+    uses: ./.github/workflows/validate-registry-sync.yml
+    secrets: inherit

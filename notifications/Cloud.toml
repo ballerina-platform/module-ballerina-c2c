@@ -1,0 +1,3 @@
+[container.image]
+repository= "ballerina"
+name="base_image_update_notifications"

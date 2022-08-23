@@ -1,0 +1,79 @@
+name: Validate Docker Registry Sync
+
+on:
+  workflow_call:
+    secrets:
+      DOCKER_ACR_NAME:
+        required: true
+      DOCKER_REPO_NAME:
+        required: true
+      DOCKER_ACR_USERNAME:
+        required: true
+      DOCKER_ACR_PASSWORD:
+        required: true
+
+jobs:
+  validate-registry-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: CHECKOUT
+        uses: actions/checkout@v2
+      - name: Login to ACR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io
+          username: ${{ secrets.DOCKER_ACR_USERNAME }}
+          password: ${{ secrets.DOCKER_ACR_PASSWORD }}
+      - name: Validate Registry Sync
+        run: |
+          registryName="${{ secrets.DOCKER_ACR_NAME }}"
+          user="${{ secrets.DOCKER_ACR_USERNAME }}"
+          password="${{ secrets.DOCKER_ACR_PASSWORD }}"
+
+          docker_hub_name="${{ secrets.DOCKER_REPO_NAME }}"
+
+          docker_tags=()
+          i=1
+
+          while :
+          do
+              retrieved_tags=( $(curl -s -S 'https://hub.docker.com/v2/repositories/'$docker_hub_name'/jvm-runtime/tags/?page='$i'&page_size=100' | jq '."results"[]["name"]') )
+              docker_tags=( ${docker_tags[@]} ${retrieved_tags[@]} )
+              if [ ${#retrieved_tags[@]} -lt 100 ] ; then
+                  break
+              fi
+              i=$(($i +1))    
+          done
+
+          credentials=$(echo -n "$user:$password" | base64 -w 0)
+
+          acr_tags=( $(curl -s -H "Authorization: Basic $credentials" "https://$registryName.azurecr.io/acr/v1/ballerina/jvm-runtime/_tags" | jq '."tags"[]["name"]') )
+
+          echo ${docker_tags[@]}
+          echo ${acr_tags[@]}
+
+
+          if [ ${#docker_tags[@]} != ${#acr_tags[@]} ] ; then
+              echo "Docker registry and ACR's tag count does not match. Please sync the two registries"
+              exit 1
+          fi
+
+          for tag in ${docker_tags[@]}; do
+
+              tag=$(echo "$tag" | tr -d '"')
+
+              docker pull $docker_hub_name/jvm-runtime:$tag
+              docker pull $registryName.azurecr.io/ballerina/jvm-runtime:$tag
+
+              dockerSha=$(docker inspect --format='{{json .RootFS.Layers}}' $docker_hub_name/jvm-runtime:$tag) 
+              acrSha=$(docker inspect --format='{{json .RootFS.Layers}}' $registryName.azurecr.io/ballerina/jvm-runtime:$tag)
+
+              out1=$(echo $dockerSha | jq -S)
+              out2=$(echo $acrSha | jq -S)
+
+              if [ "$out1" != "$out2" ]; then
+                  echo "Digest mismatch for " + $tag
+                  echo "Please sync the two registries"
+              fi
+
+          done
