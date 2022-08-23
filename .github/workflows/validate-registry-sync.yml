@@ -71,9 +71,6 @@ jobs:
               out1=$(echo $dockerSha | jq -S)
               out2=$(echo $acrSha | jq -S)
 
-              # echo $out1
-              # echo $out2
-
               if [ "$out1" != "$out2" ]; then
                   echo "Digest mismatch for " + $tag
                   echo "Please sync the two registries"
