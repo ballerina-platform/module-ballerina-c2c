@@ -37,26 +37,6 @@ public class ScheduledTask extends Task {
         this.daysOfWeek = daysOfWeek;
     }
 
-    public String getMinutes() {
-        return minutes;
-    }
-
-    public String getHours() {
-        return hours;
-    }
-
-    public String getDayOfMonth() {
-        return dayOfMonth;
-    }
-
-    public String getMonthOfYear() {
-        return monthOfYear;
-    }
-
-    public String getDaysOfWeek() {
-        return daysOfWeek;
-    }
-
     public String getSchedule () {
         return minutes + " " + hours + " " + dayOfMonth + " "
                 + monthOfYear + " " + daysOfWeek;
