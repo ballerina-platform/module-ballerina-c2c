@@ -23,42 +23,5 @@ package io.ballerina.c2c.util;
  * @since 2.0.0
  */
 public class Task {
-    private final String minutes;
-    private final String hours;
-    private final String dayOfMonth;
-    private final String monthOfYear;
-    private final String daysOfWeek;
 
-    public Task(String minutes, String hours, String dayOfMonth, String monthOfYear, String daysOfWeek) {
-        this.minutes = minutes;
-        this.hours = hours;
-        this.dayOfMonth = dayOfMonth;
-        this.monthOfYear = monthOfYear;
-        this.daysOfWeek = daysOfWeek;
-    }
-
-    public String getMinutes() {
-        return minutes;
-    }
-
-    public String getHours() {
-        return hours;
-    }
-
-    public String getDayOfMonth() {
-        return dayOfMonth;
-    }
-
-    public String getMonthOfYear() {
-        return monthOfYear;
-    }
-
-    public String getDaysOfWeek() {
-        return daysOfWeek;
-    }
-
-    public String getSchedule () {
-        return minutes + " " + hours + " " + dayOfMonth + " "
-                + monthOfYear + " " + daysOfWeek;
-    }
 }
