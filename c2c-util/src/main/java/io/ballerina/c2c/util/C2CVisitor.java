@@ -216,6 +216,7 @@ public class C2CVisitor extends NodeVisitor {
             String modulePrefix = node1.modulePrefix().text();
             String name = node1.identifier().text();
             if (modulePrefix.equals("cloud") && name.equals("Task")) {
+                this.task = new Task();
                 processTaskAnnotationValue(annotationNode);
             }
         }
@@ -279,7 +280,7 @@ public class C2CVisitor extends NodeVisitor {
                 }
             }
         }
-        this.task = new Task(minutes, hours, dayOfMonth, monthOfYear, daysOfWeek);
+        this.task = new ScheduledTask(minutes, hours, dayOfMonth, monthOfYear, daysOfWeek);
     }
 
     private String extractString(ExpressionNode expressionNode) {

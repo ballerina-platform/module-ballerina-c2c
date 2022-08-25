@@ -32,6 +32,7 @@ import io.ballerina.c2c.util.HttpsConfig;
 import io.ballerina.c2c.util.ListenerInfo;
 import io.ballerina.c2c.util.MutualSSLConfig;
 import io.ballerina.c2c.util.ProjectServiceInfo;
+import io.ballerina.c2c.util.ScheduledTask;
 import io.ballerina.c2c.util.SecureSocketConfig;
 import io.ballerina.c2c.util.ServiceInfo;
 import io.ballerina.c2c.util.Task;
@@ -102,8 +103,10 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
         if (projectServiceInfo.getTask().isPresent()) {
             Task task = projectServiceInfo.getTask().get();
             JobModel jobModel = new JobModel();
-            jobModel.setSchedule(task.getSchedule());
-
+            if (task instanceof ScheduledTask) {
+                jobModel.setSchedule(((ScheduledTask) task).getSchedule());                
+            }
+            
             String dockerHost = System.getenv(DOCKER_HOST);
             if (!KubernetesUtils.isBlank(dockerHost)) {
                 jobModel.setDockerHost(dockerHost);
