@@ -49,7 +49,7 @@ configurations {
 }
 
 dependencies {
-    implementation project(":c2c-util")
+    implementation project(":cloud-util")
     
     implementation group: 'io.fabric8', name: 'kubernetes-model-core', version: "${fabric8KubernetesClientVersion}"
     implementation group: 'io.fabric8', name: 'kubernetes-model-apps', version: "${fabric8KubernetesClientVersion}"
@@ -84,7 +84,7 @@ jar {
     dependsOn(shadowJar {
         project.configurations.implementation.canBeResolved = true
         configurations = [project.configurations.fatJar]
-        exclude 'c2c-extension'
+        exclude 'cloud-compiler-plugin'
         classifier = null
     })
 }

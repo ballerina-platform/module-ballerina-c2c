@@ -48,4 +48,4 @@ velocity.log*
 *Ballerina.lock
 examples/**/Dependencies.toml
 compiler-plugin-tests/**/Dependencies.toml
-c2c-tooling/bin/
+cloud-tooling/bin/

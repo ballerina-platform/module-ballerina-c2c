@@ -28,7 +28,7 @@ configurations {
 }
 
 dependencies {
-    implementation project(":c2c-util")
+    implementation project(":cloud-util")
     
     implementation "org.ballerinalang:language-server-commons:${ballerinaLangVersion}"
     implementation "org.ballerinalang:ballerina-tools-api:${ballerinaLangVersion}"
@@ -41,14 +41,14 @@ dependencies {
     implementation 'commons-io:commons-io:2.6'
     implementation 'com.google.code.gson:gson:2.8.9'
 
-    extraLibs project (":c2c-util")
+    extraLibs project (":cloud-util")
     configurations.compile.extendsFrom(configurations.extraLibs)
 }
 
 sourceSets {
     main {
         resources {
-            srcDir '../c2c-extension/src/main/resources'
+            srcDir '../compiler-plugin/src/main/resources'
         }
     }
 }
@@ -62,7 +62,7 @@ jar {
 task createArtifactZip(type: Zip) {
     dependsOn build
     from 'build/libs/'
-    archiveFileName = "c2c-tooling-${version}.zip"
+    archiveFileName = "cloud-tooling-${version}.zip"
     destinationDirectory = file("${projectDir}/build/zip")
 }
 

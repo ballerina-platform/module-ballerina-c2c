@@ -25,8 +25,8 @@ include ':checkstyle'
 include ':cloud-ballerina'
 include ':cloud-compiler-plugin'
 include ':cloud-compiler-plugin-tests'
-include(':c2c-tooling')
-include(':c2c-util')
+include(':cloud-tooling')
+include(':cloud-util')
 
 project(':checkstyle').projectDir = file("build-config${File.separator}checkstyle")
 project(':cloud-ballerina').projectDir = file('ballerina')

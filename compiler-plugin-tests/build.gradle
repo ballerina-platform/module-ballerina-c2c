@@ -25,9 +25,9 @@ configurations {
 
 dependencies {
     implementation project(":cloud-compiler-plugin")
-    implementation project(":c2c-tooling")
+    implementation project(":cloud-tooling")
 
-    testImplementation project(":c2c-util")
+    testImplementation project(":cloud-util")
     testImplementation "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
     testImplementation "com.github.docker-java:docker-java:${dockerJavaVersion}"
     testImplementation "io.fabric8:kubernetes-client:${fabric8KubernetesClientVersion}"
@@ -42,7 +42,7 @@ dependencies {
     testImplementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.12.0'
 
     extensionPlugin project(path: ":cloud-compiler-plugin", configuration: "shadow")
-    tooling project(path: ":c2c-tooling")
+    tooling project(path: ":cloud-tooling")
 }
 
 description = 'Ballerina - C2C Extension Tests'
@@ -51,7 +51,7 @@ task copyTooling {
     dependsOn configurations.tooling
     doLast {
         copy {
-            from file("${projectDir}/../c2c-tooling/build/libs/")
+            from file("${projectDir}/../cloud-tooling/build/libs/")
             into file("${project.rootDir}/target/ballerina-runtime/lib/tools/lang-server/lib/")
         }
     }
