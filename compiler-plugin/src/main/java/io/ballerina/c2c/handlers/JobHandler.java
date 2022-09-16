@@ -142,8 +142,7 @@ public class JobHandler extends AbstractArtifactHandler {
             generate(jobModel);
             //generate dockerfile and docker image
             dataHolder.setDockerModel(getDockerModel(jobModel));
-            OUT.println();
-            OUT.print("\t@kubernetes:Job \t\t\t - complete 1/1");
+            OUT.println("\t@kubernetes:Job");
         } catch (DockerGenException e) {
             Diagnostic diagnostic =
                     C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.DOCKER_FAILED, new NullLocation());

@@ -1,0 +1,4 @@
+[container.image]
+repository= "xlight05" # Container repository to host the container
+name="native-api" # Name of the container
+tag="sample2"  # Tag of the container

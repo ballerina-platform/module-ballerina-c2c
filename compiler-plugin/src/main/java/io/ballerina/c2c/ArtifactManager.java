@@ -61,13 +61,13 @@ public class ArtifactManager {
      * @param cloudType Value of cloud field in build option.
      * @throws KubernetesPluginException if an error occurs while generating artifacts
      */
-    public void createArtifacts(String cloudType) throws KubernetesPluginException {
+    public void createArtifacts(String cloudType, boolean isNative) throws KubernetesPluginException {
         if (cloudType.equals("k8s")) {
-            createKubernetesArtifacts();
+            createKubernetesArtifacts(isNative);
         } else if (cloudType.equals("docker")) {
-            createDockerArtifacts();
+            createDockerArtifacts(isNative);
         } else {
-            createChoreoArtifacts();
+            createChoreoArtifacts(isNative);
         }
     }
 
@@ -76,10 +76,10 @@ public class ArtifactManager {
      *
      * @throws KubernetesPluginException if an error occurs while generating artifacts
      */
-    public void createKubernetesArtifacts() throws KubernetesPluginException {
+    public void createKubernetesArtifacts(boolean isNative) throws KubernetesPluginException {
         // add default kubernetes instructions.
         setDefaultKubernetesInstructions();
-        OUT.println("\nGenerating artifacts...");
+        OUT.println("\nGenerating artifacts\n");
         if (kubernetesDataHolder.getJobModel() != null) {
             new CloudTomlResolver().resolveToml(kubernetesDataHolder.getJobModel());
             new JobHandler().createArtifacts();
@@ -91,17 +91,17 @@ public class ArtifactManager {
             new HPAHandler().createArtifacts();
             new SecretHandler().createArtifacts();
         }
-        new DockerHandler().createArtifacts();
+        new DockerHandler(isNative).createArtifacts();
         printInstructions();
     }
 
-    public void createDockerArtifacts() throws KubernetesPluginException {
-        OUT.println("\nGenerating artifacts...");
+    public void createDockerArtifacts(boolean isNative) throws KubernetesPluginException {
+        OUT.println("\nGenerating artifacts\n");
         DockerModel dockerModel = getDockerModel(false);
         kubernetesDataHolder.setDockerModel(dockerModel);
-        new DockerHandler().createArtifacts();
+        new DockerHandler(isNative).createArtifacts();
 
-        instructions.put("\tExecute the below command to run the generated Docker image: ",
+        instructions.put("Execute the below command to run the generated Docker image: ",
                 "\tdocker run -d " + generatePortInstruction(dockerModel.getPorts()) + dockerModel.getName());
         printInstructions();
     }
@@ -123,11 +123,11 @@ public class ArtifactManager {
         return KubernetesUtils.getDockerModel(deploymentModel);
     }
 
-    public void createChoreoArtifacts() throws KubernetesPluginException {
+    public void createChoreoArtifacts(boolean isNative) throws KubernetesPluginException {
         DockerModel dockerModel = getDockerModel(true);
         dockerModel.setBuildImage(false);
         kubernetesDataHolder.setDockerModel(dockerModel);
-        new DockerHandler().createArtifacts();
+        new DockerHandler(isNative).createArtifacts();
         new ChoreoHandler().createArtifacts();
     }
 
@@ -143,8 +143,6 @@ public class ArtifactManager {
     }
 
     private void printInstructions() {
-        KubernetesUtils.printInstruction("");
-        KubernetesUtils.printInstruction("");
         for (Map.Entry<String, String> instruction : instructions.entrySet()) {
             KubernetesUtils.printInstruction(instruction.getKey());
             KubernetesUtils.printInstruction(instruction.getValue());
@@ -172,10 +170,10 @@ public class ArtifactManager {
      * Set instructions for kubernetes and helm artifacts.
      */
     private void setDefaultKubernetesInstructions() {
-        instructions.put("\tExecute the below command to deploy the Kubernetes artifacts: ",
+        instructions.put("Execute the below command to deploy the Kubernetes artifacts: ",
                 "\tkubectl apply -f " + this.kubernetesDataHolder.getK8sArtifactOutputPath().toAbsolutePath());
         if (!kubernetesDataHolder.getServiceModelList().isEmpty()) {
-            instructions.put("\tExecute the below command to access service via NodePort: ",
+            instructions.put("Execute the below command to access service via NodePort: ",
                     "\tkubectl expose deployment " + this.kubernetesDataHolder.getDeploymentModel().getName() +
                             " --type=NodePort --name=" + kubernetesDataHolder.getDeploymentModel().getName()
                             .replace(KubernetesConstants.DEPLOYMENT_POSTFIX, "-svc-local"));

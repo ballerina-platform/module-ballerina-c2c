@@ -22,6 +22,8 @@ package io.ballerina.c2c;
  * Constants used in kubernetes extension.
  */
 public class KubernetesConstants {
+    public static final String LINE_SEPARATOR = System.lineSeparator();
+    
     public static final String ENABLE_DEBUG_LOGS = "BAL_KUBERNETES_DEBUG";
     public static final String KUBERNETES = "kubernetes";
     public static final String KUBERNETES_SVC_PROTOCOL = "TCP";

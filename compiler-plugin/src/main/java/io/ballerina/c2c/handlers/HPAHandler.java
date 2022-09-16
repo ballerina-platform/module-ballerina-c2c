@@ -101,8 +101,7 @@ public class HPAHandler extends AbstractArtifactHandler {
         }
         resolveToml(podAutoscalerModel);
         generate(podAutoscalerModel);
-        OUT.println();
-        OUT.print("\t@kubernetes:HPA \t\t\t - complete 1/1");
+        OUT.println("\t@kubernetes:HPA");
     }
 
     private boolean isHPAEnabled(PodAutoscalerModel podAutoscalerModel) {
