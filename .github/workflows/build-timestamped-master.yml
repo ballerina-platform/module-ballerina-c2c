@@ -32,6 +32,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.BALLERINA_BOT_TOKEN }}
           packageUser: ${{ secrets.BALLERINA_BOT_USERNAME }}
           packagePAT: ${{ secrets.BALLERINA_BOT_TOKEN }}
+          publishUser: ${{ secrets.BALLERINA_BOT_USERNAME }}
+          publishPAT: ${{ secrets.BALLERINA_BOT_TOKEN }}
         run: |
           set -e
           curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
