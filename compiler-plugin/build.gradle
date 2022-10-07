@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2022, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ configurations {
 }
 
 dependencies {
-    implementation project(":c2c-util")
+    implementation project(":cloud-util")
     
     implementation group: 'io.fabric8', name: 'kubernetes-model-core', version: "${fabric8KubernetesClientVersion}"
     implementation group: 'io.fabric8', name: 'kubernetes-model-apps', version: "${fabric8KubernetesClientVersion}"
@@ -75,7 +75,7 @@ dependencies {
     testImplementation group: 'org.slf4j', name: 'slf4j-log4j12', version: "${slf4jVersion}"
     testImplementation group: 'org.testng', name: 'testng', version: "${testngVersion}"
 
-    checkstyle project(":build-config:checkstyle")
+    checkstyle project(":checkstyle")
     checkstyle "com.puppycrawl.tools:checkstyle:${puppycrawlCheckstyleVersion}"
 }
 
@@ -84,7 +84,7 @@ jar {
     dependsOn(shadowJar {
         project.configurations.implementation.canBeResolved = true
         configurations = [project.configurations.fatJar]
-        exclude 'c2c-extension'
+        exclude 'cloud-compiler-plugin'
         classifier = null
     })
 }

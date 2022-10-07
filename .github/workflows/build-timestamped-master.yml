@@ -68,6 +68,6 @@ jobs:
            --for=condition=ready pod \
            --selector=app.kubernetes.io/component=controller \
            --timeout=90s
-          ./gradlew publish codeCoverageReport -PTravis --stacktrace --scan --console=plain --no-daemon
+          ./gradlew publish -PTravis --stacktrace --scan --console=plain --no-daemon
       - name: Generate Codecov Report
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2
