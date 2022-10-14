@@ -61,14 +61,8 @@ public class SecretHandler extends AbstractArtifactHandler {
 
     @Override
     public void createArtifacts() throws KubernetesPluginException {
-        //secret
-        int count = 0;
         Collection<SecretModel> secretModels = dataHolder.getSecretModelSet();
-        if (secretModels.size() > 0) {
-            OUT.println();
-        }
         for (SecretModel secretModel : secretModels) {
-            count++;
             if (!KubernetesUtils.isBlank(secretModel.getBallerinaConf())) {
                 if (secretModel.getData().size() != 1) {
                     Diagnostic diagnostic =
@@ -84,9 +78,8 @@ public class SecretHandler extends AbstractArtifactHandler {
                 dataHolder.setDeploymentModel(deploymentModel);
             }
             generate(secretModel);
-            OUT.print("\t@kubernetes:Secret \t\t\t - complete " + count + "/" + secretModels.size() + "\r");
         }
-
+        OUT.println("\t@kubernetes:Secret");
     }
 
 }

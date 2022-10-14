@@ -20,6 +20,7 @@ import io.ballerina.c2c.util.ListenerInfo;
 import io.ballerina.c2c.util.ProjectServiceInfo;
 import io.ballerina.c2c.util.SecureSocketConfig;
 import io.ballerina.c2c.util.ServiceInfo;
+import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.directory.BuildProject;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import org.testng.Assert;
@@ -197,7 +198,7 @@ public class ServiceExtractionTest {
         String keystore = clientInfo.getHttpsConfig().getMutualSSLConfig().get().getPath();
         Assert.assertEquals(keystore, "./security/ballerinaTruststore.p12");
     }
-    
+
     @Test
     public void testGraphQl() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "graphql");
@@ -247,6 +248,8 @@ public class ServiceExtractionTest {
         Path projectPath = Paths.get("src", "test", "resources", "service", "websubhub");
 
         BuildProject project = BuildProject.load(projectPath);
+        DiagnosticResult diagnosticResult = project.currentPackage().runCodeGenAndModifyPlugins();
+        Assert.assertEquals(diagnosticResult.errorCount(), 0);
         ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
 

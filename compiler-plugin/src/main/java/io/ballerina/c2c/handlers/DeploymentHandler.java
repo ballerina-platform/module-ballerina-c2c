@@ -267,9 +267,8 @@ public class DeploymentHandler extends AbstractArtifactHandler {
         }
         resolveDockerToml(deploymentModel);
         generate(deploymentModel);
-        OUT.println();
-        OUT.print("\t@kubernetes:Deployment \t\t\t - complete 1/1");
         dataHolder.setDockerModel(KubernetesUtils.getDockerModel(deploymentModel));
+        OUT.println("\t@kubernetes:Deployment");
     }
 }
 

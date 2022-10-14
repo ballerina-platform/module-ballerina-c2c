@@ -64,13 +64,8 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
     @Override
     public void createArtifacts() throws KubernetesPluginException {
         //Config Map
-        int count = 0;
         Collection<ConfigMapModel> configMapModels = dataHolder.getConfigMapModelSet();
-        if (configMapModels.size() > 0) {
-            OUT.println();
-        }
         for (ConfigMapModel configMapModel : configMapModels) {
-            count++;
             if (configMapModel.isBallerinaConf()) {
                 DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
                 EnvVar ballerinaConfEnv = new EnvVarBuilder()
@@ -81,7 +76,7 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
                 dataHolder.setDeploymentModel(deploymentModel);
             }
             generate(configMapModel);
-            OUT.print("\t@kubernetes:ConfigMap \t\t\t - complete " + count + "/" + configMapModels.size() + "\r");
+            OUT.println("\t@kubernetes:ConfigMap");
         }
     }
 

@@ -197,7 +197,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./base-image/Dockerfile
+          file: ./docker-images/base-image/Dockerfile
           push: true
           tags: |
             ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
@@ -208,7 +208,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./base-image/Dockerfile
+          file: ./docker-images/base-image/Dockerfile
           push: true
           tags: |
             ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
@@ -220,7 +220,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./base-image/Dockerfile
+          file: ./docker-images/base-image/Dockerfile
           push: true
           tags: |
             ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
@@ -234,7 +234,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./base-image/Dockerfile
+          file: ./docker-images/base-image/Dockerfile
           push: true
           tags: |
             ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}

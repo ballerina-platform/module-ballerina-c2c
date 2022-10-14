@@ -58,6 +58,7 @@ public class DockerModel {
     private Map<String, String> env;
     private Set<Path> dependencyJarPaths;
     private PackageID pkgId;
+    private Path fatJarPath;
 
     public DockerModel() {
         // Initialize with default values except for image name

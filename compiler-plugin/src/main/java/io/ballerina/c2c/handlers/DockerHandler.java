@@ -23,6 +23,7 @@ import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.util.C2CDiagnosticCodes;
 import io.ballerina.c2c.utils.DockerGenerator;
+import io.ballerina.c2c.utils.NativeDockerGenerator;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.ballerina.tools.diagnostics.DiagnosticFactory;
 import io.ballerina.tools.diagnostics.DiagnosticInfo;
@@ -32,13 +33,22 @@ import io.ballerina.tools.diagnostics.DiagnosticSeverity;
  * Wrapper handler for creating docker artifacts.
  */
 public class DockerHandler extends AbstractArtifactHandler {
+    private boolean isNative;
+
+    public DockerHandler(boolean isNative) {
+        this.isNative = isNative;
+    }
 
     @Override
     public void createArtifacts() throws KubernetesPluginException {
         try {
-            // Generate docker artifacts
-            DockerGenerator dockerArtifactHandler = new DockerGenerator(dataHolder.getDockerModel());
-            OUT.println();
+            DockerGenerator dockerArtifactHandler;
+            //
+            if (isNative) {
+                dockerArtifactHandler = new NativeDockerGenerator(dataHolder.getDockerModel());
+            } else {
+                dockerArtifactHandler = new DockerGenerator(dataHolder.getDockerModel());
+            }
             dockerArtifactHandler.createArtifacts(OUT, "\t@kubernetes:Docker \t\t\t", dataHolder.getJarPath(),
                     dataHolder.getDockerArtifactOutputPath());
         } catch (DockerGenException e) {

@@ -75,8 +75,6 @@ public class ServiceHandler extends AbstractArtifactHandler {
                     .withProtocol(KubernetesConstants.KUBERNETES_SVC_PROTOCOL)
                     .build();
             deploymentModel.addPort(containerPort);
-            OUT.println();
-            OUT.print("\t@kubernetes:Service \t\t\t - complete " + count + "/" + serviceModels.size() + "\r");
         }
 
         Service service = new ServiceBuilder()
@@ -109,8 +107,8 @@ public class ServiceHandler extends AbstractArtifactHandler {
 
     @Override
     public void createArtifacts() throws KubernetesPluginException {
-        // Service
         generate(dataHolder.getServiceModelList());
+        OUT.println("\t@kubernetes:Service");
     }
 
 }

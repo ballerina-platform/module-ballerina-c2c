@@ -21,6 +21,7 @@ import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.utils.KubernetesUtils;
+import io.ballerina.projects.BuildOptions;
 import io.ballerina.projects.CloudToml;
 import io.ballerina.projects.JBallerinaBackend;
 import io.ballerina.projects.JarLibrary;
@@ -81,13 +82,15 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             dataHolder.setSourceRoot(executablePath.get().getParent()
                     .getParent().getParent());
             codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage),
-                    path, compilerLifecycleEventContext.currentPackage().cloudToml(),
-                    compilerLifecycleEventContext.currentPackage().project().buildOptions().cloud());
+                    path, compilerLifecycleEventContext.currentPackage());
         });
     }
 
-    public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Optional<CloudToml> cloudToml,
-                                      String buildType) {
+    public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Package currentPackage) {
+        Optional<CloudToml> cloudToml = currentPackage.cloudToml();
+        BuildOptions buildOptions = currentPackage.project().buildOptions();
+        String buildType = buildOptions.cloud();
+        dataHolder.getDockerModel().setFatJarPath(executableJarFile);
         KubernetesContext.getInstance().setCurrentPackage(packageId);
         dataHolder.setPackageID(packageId);
         executableJarFile = executableJarFile.toAbsolutePath();
@@ -117,7 +120,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             try {
                 KubernetesUtils.deleteDirectory(kubernetesOutputPath);
                 artifactManager.populateDeploymentModel();
-                artifactManager.createArtifacts(buildType);
+                artifactManager.createArtifacts(buildType, buildOptions.nativeImage());
             } catch (KubernetesPluginException e) {
                 String errorMessage = "module [" + packageId + "] " + e.getMessage();
                 printError(errorMessage);

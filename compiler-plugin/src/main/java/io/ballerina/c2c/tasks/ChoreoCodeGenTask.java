@@ -101,7 +101,7 @@ public class ChoreoCodeGenTask implements CompilerLifecycleTask<CompilerLifecycl
             try {
                 KubernetesUtils.deleteDirectory(choreoOutputPath);
                 artifactManager.populateDeploymentModel();
-                artifactManager.createArtifacts(buildType);
+                artifactManager.createArtifacts(buildType, false);
             } catch (KubernetesPluginException e) {
                 String errorMessage = "module [" + packageId + "] " + e.getMessage();
                 printError(errorMessage);
