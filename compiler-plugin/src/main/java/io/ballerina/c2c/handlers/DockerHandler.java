@@ -47,7 +47,6 @@ public class DockerHandler extends AbstractArtifactHandler {
             if (isNative) {
                 dockerArtifactHandler = new NativeDockerGenerator(dataHolder.getDockerModel());
             } else {
-                // Generate docker artifacts
                 dockerArtifactHandler = new DockerGenerator(dataHolder.getDockerModel());
             }
             dockerArtifactHandler.createArtifacts(OUT, "\t@kubernetes:Docker \t\t\t", dataHolder.getJarPath(),
