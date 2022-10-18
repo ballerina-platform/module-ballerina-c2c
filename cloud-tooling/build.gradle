@@ -40,8 +40,10 @@ dependencies {
     implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.10.0'
     implementation 'commons-io:commons-io:2.6'
     implementation 'com.google.code.gson:gson:2.8.9'
-
-    extraLibs project (":cloud-util")
+    
+    extraLibs (project (":cloud-util"))  {
+        exclude group: "org.apache.commons", module: "commons-text"
+    }
     configurations.compile.extendsFrom(configurations.extraLibs)
 }
 
