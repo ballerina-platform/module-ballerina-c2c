@@ -15,4 +15,4 @@
 
 native-image -jar "$1" \
 --no-fallback \
--H:Name=output
+-H:Name="$2"

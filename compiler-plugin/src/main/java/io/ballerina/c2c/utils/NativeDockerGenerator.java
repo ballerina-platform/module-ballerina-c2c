@@ -75,24 +75,27 @@ public class NativeDockerGenerator extends DockerGenerator {
 
     private String generateMultiStageDockerfile() {
         String fatJarFileName = this.dockerModel.getFatJarPath().getFileName().toString();
+        String executableName = fatJarFileName.replaceFirst(".jar", "");
         StringBuilder dockerfileContent =
                 new StringBuilder().append("# Auto Generated Dockerfile").append(LINE_SEPARATOR).append("FROM ")
                         .append(DockerGenConstants.NATIVE_BUILDER_IMAGE).append(" as build").append(LINE_SEPARATOR)
                         .append(LINE_SEPARATOR).append("WORKDIR /app/build").append(LINE_SEPARATOR)
                         .append(LINE_SEPARATOR).append("COPY ").append(fatJarFileName).append(" .")
                         .append(LINE_SEPARATOR).append(LINE_SEPARATOR)
-                        .append("RUN sh build-native.sh ").append(fatJarFileName)
+                        .append("RUN sh build-native.sh ").append(fatJarFileName).append(" ").append(executableName)
                         .append(LINE_SEPARATOR).append(LINE_SEPARATOR).append("FROM ")
                         .append(DockerGenConstants.RUNTIME_BASE_IMAGE).append(LINE_SEPARATOR)
-                        .append(LINE_SEPARATOR).append("COPY --from=build /app/build/output /")
-                        .append(LINE_SEPARATOR).append(LINE_SEPARATOR);
+                        .append(LINE_SEPARATOR);
 
         appendUser(dockerfileContent);
         dockerfileContent.append("WORKDIR ").append("/home/ballerina").append(LINE_SEPARATOR);
         appendCommonCommands(dockerfileContent);
 
+        dockerfileContent.append("COPY --from=build /app/build/").append(executableName).append(" .")
+                .append(LINE_SEPARATOR).append(LINE_SEPARATOR);
+
         if (isBlank(this.dockerModel.getCmd())) {
-            dockerfileContent.append("CMD [\"/output\"]").append(LINE_SEPARATOR);
+            dockerfileContent.append("CMD [\"./").append(executableName).append("\"]").append(LINE_SEPARATOR);
         } else {
             dockerfileContent.append(this.dockerModel.getCmd());
         }
