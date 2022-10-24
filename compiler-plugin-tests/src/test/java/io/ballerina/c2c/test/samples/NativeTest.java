@@ -129,7 +129,7 @@ public class NativeTest extends SampleTest {
         Assert.assertEquals(ports.size(), 1);
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
-        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[/output]");
+        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[./hello]");
     }
 
     @Test(groups = {"integration"})
