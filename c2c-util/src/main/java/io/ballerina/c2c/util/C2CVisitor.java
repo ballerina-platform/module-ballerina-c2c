@@ -724,7 +724,7 @@ public class C2CVisitor extends NodeVisitor {
         if (expressionNode.kind() == SyntaxKind.REQUIRED_EXPRESSION) {
             diagnostics.add(C2CDiagnosticCodes
                     .createDiagnostic(C2CDiagnosticCodes.CONFIGURABLE_NO_DEFAULT,
-                            moduleVariableDeclarationNode.location()));
+                            moduleVariableDeclarationNode.location(), variableName));
             return Optional.of(0);
         }
 

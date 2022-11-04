@@ -34,7 +34,8 @@ public enum C2CDiagnosticCodes {
     PATH_CONTENT_READ_FAILED("C2C_001", "unable to read contents of the file `%s`", ERROR),
     FAILED_PORT_RETRIEVAL("C2C_002", "failed to retrieve port", WARNING),
     VALUE_STRING_ONLY_SUPPORTED("C2C_003", "https config extraction only supports basic string paths", WARNING),
-    CONFIGURABLE_NO_DEFAULT("C2C_005", "configurables with no default value is not supported", WARNING),
+    CONFIGURABLE_NO_DEFAULT("C2C_005", "default value is not specified for the configurable variable `%s`. cloud " +
+            "artifacts will not be generated for this variable", WARNING),
     CONFIGURABLE_OVERRIDE("C2C_006", "default value of configurable variable `%s` could be overridden in runtime",
             WARNING),
     DIRECTORY_DELETE_FAILED("C2C_007", "unable to delete directory: `%s`", WARNING),
