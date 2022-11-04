@@ -30,7 +30,7 @@ import static io.ballerina.tools.diagnostics.DiagnosticSeverity.WARNING;
 /**
  * {@code DiagnosticCodes} is used to hold diagnostic codes.
  */
-public enum C2CDiagnosticCodes {    
+public enum C2CDiagnosticCodes {
     PATH_CONTENT_READ_FAILED("C2C_001", "unable to read contents of the file `%s`", ERROR),
     FAILED_PORT_RETRIEVAL("C2C_002", "failed to retrieve port", WARNING),
     VALUE_STRING_ONLY_SUPPORTED("C2C_003", "https config extraction only supports basic string paths", WARNING),
