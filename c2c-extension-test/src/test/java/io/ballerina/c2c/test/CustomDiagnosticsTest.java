@@ -117,7 +117,8 @@ public class CustomDiagnosticsTest {
                 getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
         Assert.assertEquals(diagnostics.size(), 1);
         Assert.assertEquals(diagnostics.iterator().next().message(),
-                "default value is not specified for the configurable variable `port`. cloud artifacts will not be generated for this variable");
+                "default value is not specified for the configurable variable `port`. " +
+                        "cloud artifacts will not be generated for this variable");
     }
 
     @Test
