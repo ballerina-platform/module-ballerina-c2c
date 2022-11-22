@@ -64,7 +64,7 @@ public class NativeDockerGenerator extends DockerGenerator {
             }
             //check image build is enabled.
             if (this.dockerModel.isBuildImage()) {
-                outStream.println("Building the native image. This my take a while\n");
+                outStream.println("Building the native image. This may take a while\n");
                 buildImage(outputDir);
                 outStream.println();
             }
