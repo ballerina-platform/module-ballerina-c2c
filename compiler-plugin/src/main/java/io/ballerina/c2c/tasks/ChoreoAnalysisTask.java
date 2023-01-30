@@ -82,22 +82,24 @@ public class ChoreoAnalysisTask implements AnalysisTask<CompilationAnalysisConte
 
     private void addServices(List<ServiceInfo> serviceList) {
         for (ServiceInfo choreoServiceInfo : serviceList) {
-            ServiceModel serviceModel = new ServiceModel();
-            if (KubernetesUtils.isBlank(serviceModel.getName())) {
-                serviceModel.setName(getValidName(choreoServiceInfo.getServicePath() + SVC_POSTFIX));
-            }
+            List<ListenerInfo> listeners = choreoServiceInfo.getListeners();
+            for (ListenerInfo listener : listeners) {
+                ServiceModel serviceModel = new ServiceModel();
+                if (KubernetesUtils.isBlank(serviceModel.getName())) {
+                    serviceModel.setName(getValidName(choreoServiceInfo.getServicePath() + SVC_POSTFIX));
+                }
+                
+                int port = listener.getPort();
+                if (serviceModel.getPort() == -1) {
+                    serviceModel.setPort(port);
+                }
+                if (serviceModel.getTargetPort() == -1) {
+                    serviceModel.setTargetPort(port);
+                }
 
-            ListenerInfo listener = choreoServiceInfo.getListener();
-            int port = listener.getPort();
-            if (serviceModel.getPort() == -1) {
-                serviceModel.setPort(port);
+                serviceModel.setProtocol("http");
+                KubernetesContext.getInstance().getDataHolder().addServiceModel(serviceModel); 
             }
-            if (serviceModel.getTargetPort() == -1) {
-                serviceModel.setTargetPort(port);
-            }
-
-            serviceModel.setProtocol("http");
-            KubernetesContext.getInstance().getDataHolder().addServiceModel(serviceModel);
         }
     }
 

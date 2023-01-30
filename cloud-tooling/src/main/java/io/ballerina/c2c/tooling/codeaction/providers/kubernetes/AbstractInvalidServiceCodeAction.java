@@ -19,6 +19,7 @@ package io.ballerina.c2c.tooling.codeaction.providers.kubernetes;
 
 import io.ballerina.c2c.tooling.toml.Probe;
 import io.ballerina.c2c.tooling.toml.TomlSyntaxTreeUtil;
+import io.ballerina.c2c.util.ListenerInfo;
 import io.ballerina.c2c.util.ProjectServiceInfo;
 import io.ballerina.c2c.util.ServiceInfo;
 import io.ballerina.projects.Project;
@@ -53,33 +54,35 @@ public abstract class AbstractInvalidServiceCodeAction extends ProbeBasedDiagnos
         List<CodeAction> codeActionList = new ArrayList<>();
         // TODO: Listener Exists No attatched service -> Generate a service using the listener
         for (ServiceInfo service : serviceList) {
-            int port = service.getListener().getPort();
-            if (probe.getPort().getValue() == port) {
-                String servicePath = "/" + TomlSyntaxTreeUtil.trimResourcePath(service.getServicePath());
-                io.ballerina.toml.syntax.tree.Node node = probe.getPath().getNode();
-                Position startingPos = new Position(node.lineRange().startLine().line(),
-                        node.lineRange().startLine().offset());
-                Position endingPos = new Position(node.lineRange().endLine().line(),
-                        node.lineRange().endLine().offset());
+            for (ListenerInfo listener : service.getListeners()) {
+                int port = listener.getPort();
+                if (probe.getPort().getValue() == port) {
+                    String servicePath = "/" + TomlSyntaxTreeUtil.trimResourcePath(service.getServicePath());
+                    io.ballerina.toml.syntax.tree.Node node = probe.getPath().getNode();
+                    Position startingPos = new Position(node.lineRange().startLine().line(),
+                            node.lineRange().startLine().offset());
+                    Position endingPos = new Position(node.lineRange().endLine().line(),
+                            node.lineRange().endLine().offset());
 
-                CodeAction action = new CodeAction();
-                action.setKind(CodeActionKind.QuickFix);
+                    CodeAction action = new CodeAction();
+                    action.setKind(CodeActionKind.QuickFix);
 
-                TextEdit removeContent = new TextEdit(new Range(startingPos, endingPos), "");
-                TextEdit addContent = new TextEdit(new Range(startingPos, startingPos), servicePath);
-                List<TextEdit> edits = new ArrayList<>();
-                edits.add(removeContent);
-                edits.add(addContent);
+                    TextEdit removeContent = new TextEdit(new Range(startingPos, endingPos), "");
+                    TextEdit addContent = new TextEdit(new Range(startingPos, startingPos), servicePath);
+                    List<TextEdit> edits = new ArrayList<>();
+                    edits.add(removeContent);
+                    edits.add(addContent);
 
-                action.setEdit(new WorkspaceEdit(Collections.singletonList(Either.forLeft(
-                        new TextDocumentEdit(new VersionedTextDocumentIdentifier(ctx.fileUri(), null),
-                                edits)))));
-                action.setTitle("Modify service path");
-                List<Diagnostic> cursorDiagnostics = new ArrayList<>();
-                cursorDiagnostics.add(diagnostic);
-                action.setDiagnostics(cursorDiagnostics);
-                codeActionList.add(action);
-                break;
+                    action.setEdit(new WorkspaceEdit(Collections.singletonList(Either.forLeft(
+                            new TextDocumentEdit(new VersionedTextDocumentIdentifier(ctx.fileUri(), null),
+                                    edits)))));
+                    action.setTitle("Modify service path");
+                    List<Diagnostic> cursorDiagnostics = new ArrayList<>();
+                    cursorDiagnostics.add(diagnostic);
+                    action.setDiagnostics(cursorDiagnostics);
+                    codeActionList.add(action);
+                    break;
+                }
             }
         }
 

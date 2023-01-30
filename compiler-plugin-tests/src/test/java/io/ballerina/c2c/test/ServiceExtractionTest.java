@@ -49,7 +49,7 @@ public class ServiceExtractionTest {
         Assert.assertEquals(serviceList.size(), 1);
         ServiceInfo serviceInfo = serviceList.get(0);
         Assert.assertEquals(serviceInfo.getServicePath().trim(), "/helloWorld");
-        ListenerInfo listener = serviceInfo.getListener();
+        ListenerInfo listener = serviceInfo.getListeners().get(0);
         Assert.assertEquals(listener.getPort(), 9090);
     }
 
@@ -63,11 +63,11 @@ public class ServiceExtractionTest {
 
         Assert.assertEquals(serviceList.size(), 2);
         ServiceInfo serviceInfo = serviceList.get(0);
-        ListenerInfo listener = serviceInfo.getListener();
+        ListenerInfo listener = serviceInfo.getListeners().get(0);
         Assert.assertEquals(listener.getPort(), 8080);
 
         ServiceInfo serviceInfo1 = serviceList.get(1);
-        ListenerInfo listener1 = serviceInfo1.getListener();
+        ListenerInfo listener1 = serviceInfo1.getListeners().get(0);
         Assert.assertEquals(listener1.getPort(), 9090);
     }
 
@@ -82,15 +82,15 @@ public class ServiceExtractionTest {
 
         Assert.assertEquals(serviceList.size(), 3);
         ServiceInfo serviceInfo = serviceList.get(0);
-        ListenerInfo listener = serviceInfo.getListener();
+        ListenerInfo listener = serviceInfo.getListeners().get(0);
         Assert.assertEquals(listener.getPort(), 8080);
 
         ServiceInfo serviceInfo1 = serviceList.get(1);
-        ListenerInfo listener1 = serviceInfo1.getListener();
+        ListenerInfo listener1 = serviceInfo1.getListeners().get(0);
         Assert.assertEquals(listener1.getPort(), 9090);
 
         ServiceInfo serviceInfo2 = serviceList.get(2);
-        ListenerInfo listener2 = serviceInfo2.getListener();
+        ListenerInfo listener2 = serviceInfo2.getListeners().get(0);
         Assert.assertEquals(listener2.getPort(), 9091);
 
         Assert.assertEquals(diagnostics.size(), 1);
@@ -109,7 +109,7 @@ public class ServiceExtractionTest {
         Assert.assertEquals(serviceList.size(), 1);
         ServiceInfo serviceInfo = serviceList.get(0);
         Assert.assertEquals(serviceInfo.getServicePath().trim(), "/helloWorld");
-        ListenerInfo listener = serviceInfo.getListener();
+        ListenerInfo listener = serviceInfo.getListeners().get(0);
         Assert.assertEquals(listener.getPort(), 9090);
     }
 
@@ -124,7 +124,7 @@ public class ServiceExtractionTest {
         Assert.assertEquals(serviceList.size(), 1);
         ServiceInfo serviceInfo = serviceList.get(0);
         Assert.assertEquals(serviceInfo.getServicePath().trim(), "/helloWorld");
-        ListenerInfo listener = serviceInfo.getListener();
+        ListenerInfo listener = serviceInfo.getListeners().get(0);
         Assert.assertEquals(listener.getPort(), 9090);
     }
 
@@ -139,12 +139,12 @@ public class ServiceExtractionTest {
         Assert.assertEquals(serviceList.size(), 2);
         ServiceInfo helloService = serviceList.get(0);
         Assert.assertTrue(isExpectedService(helloService.getServicePath().trim()));
-        ListenerInfo helloListener = helloService.getListener();
+        ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9090);
 
         ServiceInfo probeService = serviceList.get(1);
         Assert.assertTrue(isExpectedService(probeService.getServicePath().trim()));
-        ListenerInfo probeListener = probeService.getListener();
+        ListenerInfo probeListener = probeService.getListeners().get(0);
         Assert.assertEquals(probeListener.getPort(), 9090);
     }
 
@@ -163,7 +163,7 @@ public class ServiceExtractionTest {
         Assert.assertEquals(serviceList.size(), 1);
         ServiceInfo helloService = serviceList.get(0);
         Assert.assertTrue(isExpectedService(helloService.getServicePath().trim()));
-        ListenerInfo helloListener = helloService.getListener();
+        ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9090);
         String keystore = helloListener.getConfig().get().getSecureSocketConfig().get().getCertFile();
         Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
@@ -210,7 +210,7 @@ public class ServiceExtractionTest {
         Assert.assertEquals(serviceList.size(), 1);
         ServiceInfo helloService = serviceList.get(0);
         Assert.assertEquals(helloService.getServicePath().trim(), "/graphql");
-        ListenerInfo helloListener = helloService.getListener();
+        ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9090);
     }
 
@@ -225,7 +225,7 @@ public class ServiceExtractionTest {
 //        Assert.assertEquals(serviceList.size(), 1);
 //        ServiceInfo helloService = serviceList.get(0);
 //        Assert.assertEquals(helloService.getServicePath().trim(), "/chat");
-//        ListenerInfo helloListener = helloService.getListener();
+//        ListenerInfo helloListener = helloService.getListeners().get(0);
 //        Assert.assertEquals(helloListener.getPort(), 9090);
 //    }
 
@@ -239,7 +239,7 @@ public class ServiceExtractionTest {
 
         Assert.assertEquals(serviceList.size(), 1);
         ServiceInfo helloService = serviceList.get(0);
-        ListenerInfo helloListener = helloService.getListener();
+        ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9090);
     }
 
@@ -255,7 +255,7 @@ public class ServiceExtractionTest {
 
         Assert.assertEquals(serviceList.size(), 1);
         ServiceInfo helloService = serviceList.get(0);
-        ListenerInfo helloListener = helloService.getListener();
+        ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9090);
     }
 
@@ -270,7 +270,7 @@ public class ServiceExtractionTest {
         Assert.assertEquals(serviceList.size(), 1);
         ServiceInfo helloService = serviceList.get(0);
         Assert.assertEquals(helloService.getServicePath().trim(), "/foo");
-        ListenerInfo helloListener = helloService.getListener();
+        ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9090);
         SecureSocketConfig config = helloListener.getConfig().orElseThrow().getSecureSocketConfig().orElseThrow();
         String certFile = config.getCertFile();
@@ -290,7 +290,7 @@ public class ServiceExtractionTest {
         Assert.assertEquals(serviceList.size(), 1);
         ServiceInfo helloService = serviceList.get(0);
         Assert.assertEquals(helloService.getServicePath().trim(), "/probe");
-        ListenerInfo helloListener = helloService.getListener();
+        ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9091);
 
         String keystore = helloListener.getConfig().get().getSecureSocketConfig().get().getCertFile();
@@ -310,7 +310,7 @@ public class ServiceExtractionTest {
         Assert.assertEquals(serviceList.size(), 1);
         ServiceInfo helloService = serviceList.get(0);
         Assert.assertEquals(helloService.getServicePath().trim(), "/hello");
-        ListenerInfo helloListener = helloService.getListener();
+        ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9095);
         String keystore = helloListener.getConfig().get().getSecureSocketConfig().get().getCertFile();
         Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
@@ -329,7 +329,7 @@ public class ServiceExtractionTest {
         Assert.assertEquals(serviceList.size(), 1);
         ServiceInfo helloService = serviceList.get(0);
         Assert.assertEquals(helloService.getServicePath().trim(), "/helloWorld");
-        ListenerInfo helloListener = helloService.getListener();
+        ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9090);
         String keystore = helloListener.getConfig().get().getSecureSocketConfig().get().getPath();
         Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
@@ -372,6 +372,18 @@ public class ServiceExtractionTest {
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
         Assert.assertEquals(serviceList.size(), 1);
         Assert.assertEquals(serviceList.get(0).getServicePath(), "/helloWorld");
-        Assert.assertEquals(serviceList.get(0).getListener().getPort(), 9090);
+        Assert.assertEquals(serviceList.get(0).getListeners().get(0).getPort(), 9090);
+    }
+
+    @Test
+    public void testMultiListener() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "multi-listener");
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+        Assert.assertEquals(serviceList.size(), 1);
+        Assert.assertEquals(serviceList.get(0).getServicePath(), "/");
+        Assert.assertEquals(serviceList.get(0).getListeners().get(0).getPort(), 9090);
+        Assert.assertEquals(serviceList.get(0).getListeners().get(1).getPort(), 9091);
     }
 }

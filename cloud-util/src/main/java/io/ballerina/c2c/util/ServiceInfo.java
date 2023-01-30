@@ -30,11 +30,11 @@ import java.util.List;
 public class ServiceInfo {
     private ServiceDeclarationNode node;
     private String servicePath;
-    private ListenerInfo listener;
+    private List<ListenerInfo> listeners;
     private List<ResourceInfo> resourceInfo;
 
-    public ServiceInfo(ListenerInfo listener, ServiceDeclarationNode node, String servicePath) {
-        this.listener = listener;
+    public ServiceInfo(List<ListenerInfo> listeners, ServiceDeclarationNode node, String servicePath) {
+        this.listeners = listeners;
         this.node = node;
         this.servicePath = servicePath;
         this.resourceInfo = new ArrayList<>();
@@ -46,10 +46,6 @@ public class ServiceInfo {
 
     public String getServicePath() {
         return servicePath;
-    }
-
-    public ListenerInfo getListener() {
-        return listener;
     }
 
     public List<ResourceInfo> getResourceInfo() {
@@ -64,10 +60,6 @@ public class ServiceInfo {
         this.servicePath = servicePath;
     }
 
-    public void setListener(ListenerInfo listener) {
-        this.listener = listener;
-    }
-
     public void setResourceInfo(List<ResourceInfo> resourceInfo) {
         this.resourceInfo = resourceInfo;
     }
@@ -76,11 +68,19 @@ public class ServiceInfo {
         this.resourceInfo.add(resourceInfo);
     }
 
+    public List<ListenerInfo> getListeners() {
+        return listeners;
+    }
+
+    public void setListeners(List<ListenerInfo> listeners) {
+        this.listeners = listeners;
+    }
+
     @Override
     public String toString() {
         return "ServiceInfo{" +
                 ", serviceName='" + servicePath + '\'' +
-                ", listener=" + listener +
+                ", listener=" + listeners +
                 ", resourceInfo=" + resourceInfo +
                 '}';
     }

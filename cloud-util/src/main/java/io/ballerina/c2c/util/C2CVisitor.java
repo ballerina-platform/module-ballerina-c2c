@@ -65,6 +65,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -302,48 +303,17 @@ public class C2CVisitor extends NodeVisitor {
             return;
         }
         String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
+        //TODO Handle multi
         TypeSymbol typeSymbol = typeSymbols.get(0);
         if (!isC2CNativelySupportedListener(typeSymbol)) {
             processCustomExposedAnnotatedListeners(typeSymbol, servicePath, serviceDeclarationNode);
             return;
         }
-
-        ListenerInfo listenerInfo = null;
-        ExpressionNode expressionNode = serviceDeclarationNode.expressions().get(0);
-        if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-            //External Listener
-            //on helloEP
-            SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
-            String listenerName = referenceNode.name().text();
-            Optional<ListenerInfo> httpsListener = this.getHttpsListener(listenerName);
-            if (httpsListener.isEmpty()) {
-                diagnostics.add(C2CDiagnosticCodes
-                        .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expressionNode.location()));
-                return;
-            }
-            listenerInfo = httpsListener.get();
-        } else {
-            //Inline Listener
-            ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
-            FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(0);
-            if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
-                ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
-                Optional<ListenerInfo> newListenerInfo = getListenerInfo(servicePath, expression);
-                if (newListenerInfo.isEmpty()) {
-                    return;
-                }
-                listenerInfo = newListenerInfo.get();
-            }
-
-            //Inline Http config
-            if (refNode.parenthesizedArgList().arguments().size() > 1) {
-                FunctionArgumentNode secondParamExpression = refNode.parenthesizedArgList().arguments().get(1);
-                Optional<HttpsConfig> config = extractKeyStores(secondParamExpression);
-                config.ifPresent(listenerInfo::setConfig);
-            }
+        List<ListenerInfo> listenerInfos = extractListeners(serviceDeclarationNode, servicePath);
+        if (listenerInfos.size() == 0) {
+            return;
         }
-        ServiceInfo
-                serviceInfo = new ServiceInfo(listenerInfo, serviceDeclarationNode, servicePath);
+        ServiceInfo serviceInfo = new ServiceInfo(listenerInfos, serviceDeclarationNode, servicePath);
         NodeList<Node> function = serviceDeclarationNode.members();
         for (Node node : function) {
             if (node.kind() == SyntaxKind.RESOURCE_ACCESSOR_DEFINITION) {
@@ -355,6 +325,50 @@ public class C2CVisitor extends NodeVisitor {
             this.visitSyntaxNode(node);
         }
         services.add(serviceInfo);
+    }
+    
+    private List<ListenerInfo> extractListeners(ServiceDeclarationNode serviceDeclarationNode, String servicePath) {
+        SeparatedNodeList<ExpressionNode> expressions = serviceDeclarationNode.expressions();
+        List<ListenerInfo> listeners = new ArrayList<>();
+        for (ExpressionNode expressionNode : expressions) {
+            ListenerInfo listenerInfo = null;
+            if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+                //External Listener
+                //on helloEP
+                SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
+                String listenerName = referenceNode.name().text();
+                Optional<ListenerInfo> httpsListener = this.getHttpsListener(listenerName);
+                if (httpsListener.isEmpty()) {
+                    diagnostics.add(C2CDiagnosticCodes
+                            .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expressionNode.location()));
+                    return Collections.emptyList();
+                }
+                listenerInfo = httpsListener.get();
+            } else {
+                //Inline Listener
+                ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
+                FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(0);
+                if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
+                    ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
+                    Optional<ListenerInfo> newListenerInfo = getListenerInfo(servicePath, expression);
+                    if (newListenerInfo.isEmpty()) {
+                        return Collections.emptyList();
+                    }
+                    listenerInfo = newListenerInfo.get();
+                }
+
+                //Inline Http config
+                if (refNode.parenthesizedArgList().arguments().size() > 1) {
+                    FunctionArgumentNode secondParamExpression = refNode.parenthesizedArgList().arguments().get(1);
+                    Optional<HttpsConfig> config = extractKeyStores(secondParamExpression);
+                    config.ifPresent(listenerInfo::setConfig);
+                }
+            }
+            if (listenerInfo != null) {
+                listeners.add(listenerInfo);
+            }
+        }
+        return listeners;
     }
 
     private Optional<ListenerInfo> extractListenerInitializer(String listenerName,
@@ -594,7 +608,9 @@ public class C2CVisitor extends NodeVisitor {
                                         parameterSymbol.location()));
                         continue;
                     }
-                    this.services.add(new ServiceInfo(listenerInfo.get(), serviceDeclarationNode, servicePath));
+                    this.services.add(new ServiceInfo(Collections.singletonList(listenerInfo.get()),
+                            serviceDeclarationNode, servicePath));
+                    //TODO fix me
                 }
             }
         }

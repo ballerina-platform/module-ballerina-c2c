@@ -87,36 +87,39 @@ public class TomlDiagnosticChecker {
 
         
         for (ServiceInfo serviceInfo : serviceList) {
-            int serviceListenerPort = serviceInfo.getListener().getPort();
-            if (serviceListenerPort == port) {
-                String serviceName = serviceInfo.getServicePath().trim();
-                if (!isValidServicePath(serviceName, path)) {
-                    Diagnostic diag = getTomlDiagnostic(pathNode.location(), "C2C003", "error.invalid" +
-                            ".service.path", DiagnosticSeverity.ERROR, "Invalid " + type.getValue() + " " +
-                            "Service Path");
-                    diagnosticInfos.add(diag);
-                    return diagnosticInfos;
-                }
+            List<ListenerInfo> listeners = serviceInfo.getListeners();
+            for (ListenerInfo listener : listeners) {
+                int serviceListenerPort = listener.getPort();
+                if (serviceListenerPort == port) {
+                    String serviceName = serviceInfo.getServicePath().trim();
+                    if (!isValidServicePath(serviceName, path)) {
+                        Diagnostic diag = getTomlDiagnostic(pathNode.location(), "C2C003", "error.invalid" +
+                                ".service.path", DiagnosticSeverity.ERROR, "Invalid " + type.getValue() + " " +
+                                "Service Path");
+                        diagnosticInfos.add(diag);
+                        return diagnosticInfos;
+                    }
 
-                boolean resourceFound = false;
-                List<ResourceInfo> resourceInfoList = serviceInfo.getResourceInfo();
-                for (ResourceInfo resourceInfo : resourceInfoList) {
-                    String balResourceName = trimResourcePath(resourceInfo.getPath());
-                    String resourcePath = trimResourcePath(trimResourcePath(serviceName) + "/" + balResourceName);
-                    if (balResourceName.equals(".")) {
-                        resourcePath = trimResourcePath(serviceName);
+                    boolean resourceFound = false;
+                    List<ResourceInfo> resourceInfoList = serviceInfo.getResourceInfo();
+                    for (ResourceInfo resourceInfo : resourceInfoList) {
+                        String balResourceName = trimResourcePath(resourceInfo.getPath());
+                        String resourcePath = trimResourcePath(trimResourcePath(serviceName) + "/" + balResourceName);
+                        if (balResourceName.equals(".")) {
+                            resourcePath = trimResourcePath(serviceName);
+                        }
+                        if (resourcePath.equals(trimResourcePath(path))) {
+                            resourceFound = true;
+                            break;
+                        }
                     }
-                    if (resourcePath.equals(trimResourcePath(path))) {
-                        resourceFound = true;
-                        break;
+                    if (!resourceFound) {
+                        Diagnostic diag = getTomlDiagnostic(pathNode.location(), "C2C004", "error.invalid" +
+                                        ".resource.path", DiagnosticSeverity.ERROR,
+                                "Invalid " + type.getValue() + " Resource Path");
+                        diagnosticInfos.add(diag);
                     }
-                }
-                if (!resourceFound) {
-                    Diagnostic diag = getTomlDiagnostic(pathNode.location(), "C2C004", "error.invalid" +
-                                    ".resource.path", DiagnosticSeverity.ERROR,
-                            "Invalid " + type.getValue() + " Resource Path");
-                    diagnosticInfos.add(diag);
-                }
+                }   
             }
         }
         return diagnosticInfos;
@@ -136,14 +139,18 @@ public class TomlDiagnosticChecker {
     }
 
     private boolean isListenerPortValid(long port, List<ServiceInfo> serviceInfo) {
+        boolean isValid = false;
         for (ServiceInfo service : serviceInfo) {
-            ListenerInfo listener = service.getListener();
-            int givenPort = listener.getPort();
-            if (givenPort == port) {
-                return true;
+            List<ListenerInfo> listeners = service.getListeners();
+            for (ListenerInfo listener : listeners) {
+                int givenPort = listener.getPort();
+                if (givenPort == port) {
+                    isValid = true;
+                    break;
+                }
             }
         }
-        return false;
+        return isValid;
     }
 
     private String trimResourcePath(String resourcePath) {
