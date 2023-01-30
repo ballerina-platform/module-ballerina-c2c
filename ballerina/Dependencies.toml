@@ -9,7 +9,7 @@ dependencies-toml-version = "2"
 [[package]]
 org = "ballerina"
 name = "cloud"
-version = "2.4.1"
+version = "2.4.2"
 modules = [
 	{org = "ballerina", packageName = "cloud", moduleName = "cloud"}
 ]
