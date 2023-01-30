@@ -386,4 +386,16 @@ public class ServiceExtractionTest {
         Assert.assertEquals(serviceList.get(0).getListeners().get(0).getPort(), 9090);
         Assert.assertEquals(serviceList.get(0).getListeners().get(1).getPort(), 9091);
     }
+
+    @Test
+    public void testMultiListenerExpose() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "multi-listener-expose");
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+        Assert.assertEquals(serviceList.size(), 1);
+        Assert.assertEquals(serviceList.get(0).getServicePath(), "/");
+        Assert.assertEquals(serviceList.get(0).getListeners().get(0).getPort(), 9090);
+        Assert.assertEquals(serviceList.get(0).getListeners().get(1).getPort(), 9091);
+    }
 }

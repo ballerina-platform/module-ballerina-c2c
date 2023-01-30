@@ -355,13 +355,13 @@ public class C2CVisitor extends NodeVisitor {
                         return Collections.emptyList();
                     }
                     listenerInfo = newListenerInfo.get();
-                }
-
-                //Inline Http config
-                if (refNode.parenthesizedArgList().arguments().size() > 1) {
-                    FunctionArgumentNode secondParamExpression = refNode.parenthesizedArgList().arguments().get(1);
-                    Optional<HttpsConfig> config = extractKeyStores(secondParamExpression);
-                    config.ifPresent(listenerInfo::setConfig);
+                    
+                    //Inline Http config
+                    if (refNode.parenthesizedArgList().arguments().size() > 1) {
+                        FunctionArgumentNode secondParamExpression = refNode.parenthesizedArgList().arguments().get(1);
+                        Optional<HttpsConfig> config = extractKeyStores(secondParamExpression);
+                        config.ifPresent(listenerInfo::setConfig);
+                    }
                 }
             }
             if (listenerInfo != null) {
