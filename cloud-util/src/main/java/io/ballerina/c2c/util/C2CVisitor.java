@@ -301,12 +301,10 @@ public class C2CVisitor extends NodeVisitor {
         List<TypeSymbol> typeSymbols = symbol.listenerTypes();
         if (typeSymbols.isEmpty()) {
             return;
-        }
+        }   
         String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
-        //TODO Handle multi
-        TypeSymbol typeSymbol = typeSymbols.get(0);
-        if (!isC2CNativelySupportedListener(typeSymbol)) {
-            processCustomExposedAnnotatedListeners(typeSymbol, servicePath, serviceDeclarationNode);
+        if (!isC2CNativelySupportedListener(typeSymbols)) {
+            processCustomExposedAnnotatedListeners(typeSymbols, servicePath, serviceDeclarationNode);
             return;
         }
         List<ListenerInfo> listenerInfos = extractListeners(serviceDeclarationNode, servicePath);
@@ -563,62 +561,65 @@ public class C2CVisitor extends NodeVisitor {
         }
     }
 
-    private void processCustomExposedAnnotatedListeners(TypeSymbol typeSymbol, String servicePath,
+    private void processCustomExposedAnnotatedListeners(List<TypeSymbol> typeSymbols, String servicePath,
                                                         ServiceDeclarationNode serviceDeclarationNode) {
-        if (typeSymbol.typeKind() != TypeDescKind.TYPE_REFERENCE) {
-            return;
-        }
-        Symbol typeDefinition = ((TypeReferenceTypeSymbol) typeSymbol).definition();
-        if (typeDefinition.kind() != SymbolKind.CLASS) {
-            return;
-        }
-        ClassSymbol classSymbol = (ClassSymbol) typeDefinition;
-        if (classSymbol.initMethod().isEmpty()) {
-            return;
-        }
-        // Get the init method of the custom listener because thats where the @cloud:Expose is at.
-        // Ex - public function init(@cloud:Expose int port, ListenerConfiguration config) {
-        MethodSymbol initSymbol = classSymbol.initMethod().get();
-        Optional<List<ParameterSymbol>> paramsList = initSymbol.typeDescriptor().params();
-        if (paramsList.isEmpty()) {
-            return;
-        }
-        List<ParameterSymbol> params = paramsList.get();
-        for (int i = 0, getSize = params.size(); i < getSize; i++) {
-            ParameterSymbol parameterSymbol = params.get(i);
-            for (AnnotationSymbol annotation : parameterSymbol.annotations()) {
-                Optional<ModuleSymbol> module = annotation.getModule();
-                if (module.isEmpty()) {
-                    continue;
-                }
-                ModuleSymbol moduleSymbol = module.get();
-                ModuleID id = moduleSymbol.id();
-                if (!id.moduleName().equals("cloud")) {
-                    continue;
-                }
-                if (id.orgName().equals("ballerina")) {
-                    //@cloud:Expose int port
-                    //This is a valid custom listener param for c2c. Next, we need to get the value passed to this 
-                    // param. We need to access the syntax tree to get the value as semantic api doesn't have values.
-                    Optional<ListenerInfo> listenerInfo =
-                            getPortValueFromSTForCustomListener(servicePath, serviceDeclarationNode, i);
-                    if (listenerInfo.isEmpty()) {
-                        diagnostics.add(C2CDiagnosticCodes
-                                .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
-                                        parameterSymbol.location()));
+        List<ListenerInfo> listenerInfos = new ArrayList<>();
+        for (int listenerIndex = 0; listenerIndex < typeSymbols.size(); listenerIndex++) {
+            TypeSymbol typeSymbol = typeSymbols.get(listenerIndex);
+            if (typeSymbol.typeKind() != TypeDescKind.TYPE_REFERENCE) {
+                return;
+            }
+            Symbol typeDefinition = ((TypeReferenceTypeSymbol) typeSymbol).definition();
+            if (typeDefinition.kind() != SymbolKind.CLASS) {
+                return;
+            }
+            ClassSymbol classSymbol = (ClassSymbol) typeDefinition;
+            if (classSymbol.initMethod().isEmpty()) {
+                return;
+            }
+            // Get the init method of the custom listener because thats where the @cloud:Expose is at.
+            // Ex - public function init(@cloud:Expose int port, ListenerConfiguration config) {
+            MethodSymbol initSymbol = classSymbol.initMethod().get();
+            Optional<List<ParameterSymbol>> paramsList = initSymbol.typeDescriptor().params();
+            if (paramsList.isEmpty()) {
+                return;
+            }
+            List<ParameterSymbol> params = paramsList.get();
+            for (int i = 0, getSize = params.size(); i < getSize; i++) {
+                ParameterSymbol parameterSymbol = params.get(i);
+                for (AnnotationSymbol annotation : parameterSymbol.annotations()) {
+                    Optional<ModuleSymbol> module = annotation.getModule();
+                    if (module.isEmpty()) {
                         continue;
                     }
-                    this.services.add(new ServiceInfo(Collections.singletonList(listenerInfo.get()),
-                            serviceDeclarationNode, servicePath));
-                    //TODO fix me
+                    ModuleSymbol moduleSymbol = module.get();
+                    ModuleID id = moduleSymbol.id();
+                    if (!id.moduleName().equals("cloud")) {
+                        continue;
+                    }
+                    if (id.orgName().equals("ballerina")) {
+                        //@cloud:Expose int port
+                        //This is a valid custom listener param for c2c. Next, we need to get the value passed to this 
+                        // param. We need to access the syntax tree to get the values.
+                        Optional<ListenerInfo> listenerInfo = getPortValueFromSTForCustomListener(servicePath,
+                                serviceDeclarationNode, i, listenerIndex);
+                        if (listenerInfo.isEmpty()) {
+                            diagnostics.add(C2CDiagnosticCodes
+                                    .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
+                                            parameterSymbol.location()));
+                            continue;
+                        }
+                        listenerInfos.add(listenerInfo.get());
+                    }
                 }
             }
         }
+        this.services.add(new ServiceInfo(listenerInfos, serviceDeclarationNode, servicePath));
     }
 
     private Optional<ListenerInfo> getPortValueFromSTForCustomListener(String path, ServiceDeclarationNode serviceNode,
-                                                                       int paramNo) {
-        ExpressionNode expressionNode = serviceNode.expressions().get(0);
+                                                                       int paramNo, int listenerIndex) {
+        ExpressionNode expressionNode = serviceNode.expressions().get(listenerIndex);
         if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
             //on listener
             SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
@@ -641,6 +642,15 @@ public class C2CVisitor extends NodeVisitor {
             }
         }
         return Optional.empty();
+    }
+
+    private boolean isC2CNativelySupportedListener(List<TypeSymbol> typeSymbols) {
+        for (TypeSymbol typeSymbol : typeSymbols) {
+            if (isC2CNativelySupportedListener(typeSymbol)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isC2CNativelySupportedListener(TypeSymbol typeSymbol) {
