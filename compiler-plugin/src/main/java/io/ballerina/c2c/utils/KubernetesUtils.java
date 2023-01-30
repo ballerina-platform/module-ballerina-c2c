@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import io.ballerina.c2c.DockerGenConstants;
 import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
@@ -274,6 +275,7 @@ public class KubernetesUtils {
                 copyFileModel.setTarget(TomlHelper.getString(entry, "target"));
                 copyFiles.add(copyFileModel);
             }
+            dockerModel.setThinJar(isThinJar(toml, dockerModel));
             try {
                 dockerModel.setCopyFiles(copyFiles);
             } catch (DockerGenException e) {
@@ -321,7 +323,6 @@ public class KubernetesUtils {
         return false;
     }
 
-
     public static <T> String asYaml(T object) throws KubernetesPluginException {
         try {
             return YAML_MAPPER.writeValueAsString(object);
@@ -330,5 +331,14 @@ public class KubernetesUtils {
                     e.getMessage(), DiagnosticSeverity.WARNING);
             throw new KubernetesPluginException(DiagnosticFactory.createDiagnostic(diagnosticInfo, new NullLocation()));
         }
+    }
+
+    public static boolean isThinJar(Toml ballerinaCloud, DockerModel dockerModel) {
+        if (!TomlHelper.getBoolean(ballerinaCloud, "settings.thinJar", true)) {
+            return false;
+        }
+
+        return dockerModel.getDependencyJarPaths().size() + dockerModel.getCopyFiles().size() +
+                dockerModel.getEnv().size() < DockerGenConstants.MAX_BALLERINA_LAYERS;
     }
 }
