@@ -18,6 +18,11 @@
           "description": "Build the Docker image while building the project",
           "type": "boolean",
           "default": true
+        },
+        "thinJar": {
+          "description": "Use the thin jars in the container",
+          "type": "boolean",
+          "default": true
         }
       }
     },
