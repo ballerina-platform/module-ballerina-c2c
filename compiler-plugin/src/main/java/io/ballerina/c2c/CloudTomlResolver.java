@@ -130,6 +130,7 @@ public class CloudTomlResolver {
         dataHolder.setSingleYaml(TomlHelper.getBoolean(ballerinaCloud, "settings.singleYAML", true));
         dataHolder.getDockerModel().setBuildImage(TomlHelper.getBoolean(ballerinaCloud,
                 "settings.buildImage", true));
+        dataHolder.getDockerModel().setThinJar(KubernetesUtils.isThinJar(ballerinaCloud, dataHolder.getDockerModel()));
     }
 
     private void resolveDeploymentToml(DeploymentModel deploymentModel, Toml ballerinaCloud) {

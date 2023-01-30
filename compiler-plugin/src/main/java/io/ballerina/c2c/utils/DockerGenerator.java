@@ -84,17 +84,23 @@ public class DockerGenerator {
 
     public void createArtifacts(PrintStream outStream, String logAppender, Path jarFilePath, Path outputDir)
             throws DockerGenException {
-        String dockerContent;
-        if (!isWindowsBuild()) {
-            dockerContent = generateThinJarDockerfile();
-        } else {
-            dockerContent = generateThinJarWindowsDockerfile();
-        }
-        copyNativeJars(outputDir);
         try {
-            DockerGenUtils.writeToFile(dockerContent, outputDir.resolve("Dockerfile"));
-            Path jarLocation = outputDir.resolve(DockerGenUtils.extractJarName(jarFilePath) + EXECUTABLE_JAR);
-            copyFileOrDirectory(jarFilePath, jarLocation);
+            if (!this.dockerModel.isThinJar()) {
+                DockerGenUtils.writeToFile(generateDockerfile(), outputDir.resolve("Dockerfile"));
+                copyFileOrDirectory(this.dockerModel.getFatJarPath(),
+                        outputDir.resolve(this.dockerModel.getFatJarPath().getFileName()));
+            } else {
+                String dockerContent;
+                if (!isWindowsBuild()) {
+                    dockerContent = generateDockerfile();
+                } else {
+                    dockerContent = generateThinJarWindowsDockerfile();
+                }
+                copyNativeJars(outputDir);
+                DockerGenUtils.writeToFile(dockerContent, outputDir.resolve("Dockerfile"));
+                Path jarLocation = outputDir.resolve(DockerGenUtils.extractJarName(jarFilePath) + EXECUTABLE_JAR);
+                copyFileOrDirectory(jarFilePath, jarLocation);
+            }
             for (CopyFileModel copyFileModel : this.dockerModel.getCopyFiles()) {
                 // Copy external files to docker folder
                 Path target = outputDir.resolve(Paths.get(copyFileModel.getSource()).getFileName());
@@ -103,10 +109,8 @@ public class DockerGenerator {
                     sourcePath = sourcePath.toAbsolutePath();
                 }
                 copyFileOrDirectory(sourcePath, target);
-
             }
             //check image build is enabled.
-            
             if (this.dockerModel.isBuildImage()) {
                 outStream.println("\nBuilding the docker image\n");
                 buildImage(outputDir);
@@ -142,7 +146,7 @@ public class DockerGenerator {
         ProcessBuilder pb = new ProcessBuilder("docker", "build", "--no-cache", "--force-rm", "-t",
                 this.dockerModel.getName(), dockerDir.toFile().toString());
         pb.inheritIO();
-        
+
         try {
             Process process = pb.start();
             int exitCode = process.waitFor();
@@ -166,46 +170,53 @@ public class DockerGenerator {
     }
 
     /**
-     * Generate Dockerfile content using thin jar.
+     * Generate Dockerfile content according to selected jar type.
      *
      * @return Dockerfile content as a string
      */
-    private String generateThinJarDockerfile() {
+    private String generateDockerfile() {
         StringBuilder dockerfileContent = new StringBuilder();
         dockerfileContent.append("# Auto Generated Dockerfile").append(LINE_SEPARATOR);
         dockerfileContent.append("FROM ").append(this.dockerModel.getBaseImage()).append(LINE_SEPARATOR);
         dockerfileContent.append(LINE_SEPARATOR);
         dockerfileContent.append("LABEL maintainer=\"dev@ballerina.io\"").append(LINE_SEPARATOR);
-        // Append Jar copy instructions without observability jar and executable jar
-        this.dockerModel.getDependencyJarPaths()
-                .stream()
-                .map(Path::getFileName)
-                .filter(path -> !(path.toString().endsWith("-observability-symbols.jar") ||
-                        path.toString().endsWith(dockerModel.getJarFileName())))
-                .collect(Collectors.toCollection(TreeSet::new))
-                .forEach(path -> {
+        if (this.dockerModel.isThinJar()) {
+            // Append Jar copy instructions without observability jar and executable jar
+            this.dockerModel.getDependencyJarPaths()
+                    .stream()
+                    .map(Path::getFileName)
+                    .filter(path -> !(path.toString().endsWith("-observability-symbols.jar") ||
+                            path.toString().endsWith(dockerModel.getJarFileName())))
+                    .collect(Collectors.toCollection(TreeSet::new))
+                    .forEach(path -> {
+                                dockerfileContent.append("COPY ")
+                                        .append(path)
+                                        .append(" ").append(getWorkDir())
+                                        .append("/jars/ ").append(LINE_SEPARATOR);
+                                //TODO: Remove once https://github.com/moby/moby/issues/37965 is fixed.
+                                boolean isCiBuild = "true".equals(System.getenv().get("CI_BUILD"));
+                                if (isCiBuild) {
+                                    dockerfileContent.append("RUN true ").append(LINE_SEPARATOR);
+                                }
+                            }
+                            );
+            // Append Jar copy for observability jar and executable jar
+            this.dockerModel.getDependencyJarPaths().forEach(path -> {
+                        if (path.toString().endsWith("observability-symbols.jar") ||
+                                path.toString().endsWith(dockerModel.getJarFileName())) {
                             dockerfileContent.append("COPY ")
-                                    .append(path)
+                                    .append(path.getFileName())
                                     .append(" ").append(getWorkDir())
                                     .append("/jars/ ").append(LINE_SEPARATOR);
-                            //TODO: Remove once https://github.com/moby/moby/issues/37965 is fixed.
-                            boolean isCiBuild = "true".equals(System.getenv().get("CI_BUILD"));
-                            if (isCiBuild) {
-                                dockerfileContent.append("RUN true ").append(LINE_SEPARATOR);
-                            }
                         }
-                        );
-        // Append Jar copy for observability jar and executable jar
-        this.dockerModel.getDependencyJarPaths().forEach(path -> {
-                    if (path.toString().endsWith("observability-symbols.jar") ||
-                            path.toString().endsWith(dockerModel.getJarFileName())) {
-                        dockerfileContent.append("COPY ")
-                                .append(path.getFileName())
-                                .append(" ").append(getWorkDir())
-                                .append("/jars/ ").append(LINE_SEPARATOR);
                     }
-                }
-                                                        );
+                                                            );
+        } else {
+            dockerfileContent.append("COPY ")
+                    .append(this.dockerModel.getFatJarPath().getFileName())
+                    .append(" ").append(getWorkDir())
+                    .append("/jars/ ").append(LINE_SEPARATOR);
+        }
         appendUser(dockerfileContent);
         dockerfileContent.append("WORKDIR ").append(getWorkDir()).append(LINE_SEPARATOR);
         appendCommonCommands(dockerfileContent);

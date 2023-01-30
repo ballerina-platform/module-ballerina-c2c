@@ -59,6 +59,7 @@ public class DockerModel {
     private Set<Path> dependencyJarPaths;
     private PackageID pkgId;
     private Path fatJarPath;
+    private boolean thinJar = true;
 
     public DockerModel() {
         // Initialize with default values except for image name

@@ -38,7 +38,7 @@ import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getDockerImage;
 /**
  * Settings test.
  */
-public class SettingsTest {
+public class SettingsMultiYAMLTest {
     private static final Path SOURCE_DIR_PATH = Paths.get("src", "test", "resources", "settings", "multi-yaml");
     private static final Path DOCKER_TARGET_PATH =
             SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
@@ -46,8 +46,7 @@ public class SettingsTest {
 
     @BeforeClass
     public void testMultipleYaml() throws IOException, InterruptedException {
-        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH)
-                , 0);
+        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH), 0);
         final Path artifactPath = SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello");
         Assert.assertTrue(Files.exists(artifactPath.resolve("hello_deployment.yaml")));
         Assert.assertTrue(Files.exists(artifactPath.resolve("hello_config_map.yaml")));
