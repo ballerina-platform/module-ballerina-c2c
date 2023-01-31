@@ -17,6 +17,7 @@
  */
 package io.ballerina.c2c.tasks;
 
+import io.ballerina.c2c.DockerGenConstants;
 import io.ballerina.c2c.diagnostics.TomlDiagnosticChecker;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.c2c.utils.TomlHelper;
@@ -69,15 +70,15 @@ public class CloudTomlAnalysisTask implements AnalysisTask<CompilationAnalysisCo
     private String getValidationSchema() {
         try {
             InputStream inputStream =
-                    getClass().getClassLoader().getResourceAsStream("c2c-schema.json");
+                    getClass().getClassLoader().getResourceAsStream(DockerGenConstants.SCHEMA_FILE_NAME);
             if (inputStream == null) {
-                throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
+                throw new MissingResourceException("Schema Not found", DockerGenConstants.SCHEMA_FILE_NAME, "");
             }
             StringWriter writer = new StringWriter();
             IOUtils.copy(inputStream, writer, StandardCharsets.UTF_8.name());
             return writer.toString();
         } catch (IOException e) {
-            throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
+            throw new MissingResourceException("Schema Not found", DockerGenConstants.SCHEMA_FILE_NAME, "");
         }
     }
 }

@@ -50,12 +50,21 @@ dependencies {
 sourceSets {
     main {
         resources {
-            srcDir '../compiler-plugin/src/main/resources'
+            srcDir 'build/schema/'
         }
     }
 }
 
+task buildForDocker(type: Copy){
+    from '../compiler-plugin/src/main/resources/c2c-schema.json'
+    into 'build/schema/'
+    rename { String fileName ->
+        fileName.replace("c2c-schema", "c2c-schema-tooling")
+    }
+}
+
 jar {
+    dependsOn buildForDocker
     from {
         configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
     }
