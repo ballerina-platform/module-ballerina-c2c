@@ -567,22 +567,22 @@ public class C2CVisitor extends NodeVisitor {
         for (int listenerIndex = 0; listenerIndex < typeSymbols.size(); listenerIndex++) {
             TypeSymbol typeSymbol = typeSymbols.get(listenerIndex);
             if (typeSymbol.typeKind() != TypeDescKind.TYPE_REFERENCE) {
-                return;
+                continue;
             }
             Symbol typeDefinition = ((TypeReferenceTypeSymbol) typeSymbol).definition();
             if (typeDefinition.kind() != SymbolKind.CLASS) {
-                return;
+                continue;
             }
             ClassSymbol classSymbol = (ClassSymbol) typeDefinition;
             if (classSymbol.initMethod().isEmpty()) {
-                return;
+                continue;
             }
             // Get the init method of the custom listener because thats where the @cloud:Expose is at.
             // Ex - public function init(@cloud:Expose int port, ListenerConfiguration config) {
             MethodSymbol initSymbol = classSymbol.initMethod().get();
             Optional<List<ParameterSymbol>> paramsList = initSymbol.typeDescriptor().params();
             if (paramsList.isEmpty()) {
-                return;
+                continue;
             }
             List<ParameterSymbol> params = paramsList.get();
             for (int i = 0, getSize = params.size(); i < getSize; i++) {
@@ -614,7 +614,9 @@ public class C2CVisitor extends NodeVisitor {
                 }
             }
         }
-        this.services.add(new ServiceInfo(listenerInfos, serviceDeclarationNode, servicePath));
+        if (!listenerInfos.isEmpty()) {
+            this.services.add(new ServiceInfo(listenerInfos, serviceDeclarationNode, servicePath));
+        }
     }
 
     private Optional<ListenerInfo> getPortValueFromSTForCustomListener(String path, ServiceDeclarationNode serviceNode,
