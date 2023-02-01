@@ -20,6 +20,7 @@ package io.ballerina.c2c.tooling.codeaction.providers.kubernetes;
 import io.ballerina.c2c.tooling.toml.CommonUtil;
 import io.ballerina.c2c.tooling.toml.Probe;
 import io.ballerina.c2c.tooling.toml.TomlSyntaxTreeUtil;
+import io.ballerina.c2c.util.ListenerInfo;
 import io.ballerina.c2c.util.ProjectServiceInfo;
 import io.ballerina.c2c.util.ServiceInfo;
 import io.ballerina.compiler.syntax.tree.Node;
@@ -57,28 +58,31 @@ public abstract class AbstractInvalidResourceCodeAction extends ProbeBasedDiagno
         List<CodeAction> codeActionList = new ArrayList<>();
         for (ServiceInfo service : serviceList) {
             String filePath = service.getNode().syntaxTree().filePath();
-            int port = service.getListener().getPort();
-            if (probe.getPort().getValue() == port) {
-                Path balFilePath = ctx.workspace().projectRoot(ctx.filePath()).resolve(filePath);
-                NodeList<Node> members = service.getNode().members();
-                Node lastResource = members.get(members.size() - 1);
-                Position position = new Position(lastResource.lineRange().endLine().line() + 1, 0);
 
-                CodeAction action = new CodeAction();
-                action.setKind(CodeActionKind.QuickFix);
-                String importText = generateProbeFunctionText(service, probe);
-                List<TextEdit> edits = Collections.singletonList(
-                        new TextEdit(new Range(position, position), importText));
-                action.setEdit(new WorkspaceEdit(Collections.singletonList(Either.forLeft(
-                        new TextDocumentEdit(
-                                new VersionedTextDocumentIdentifier(balFilePath.toUri().toString(), null),
-                                edits)))));
-                action.setTitle("Add Resource to Service");
-                List<Diagnostic> cursorDiagnostics = new ArrayList<>();
-                cursorDiagnostics.add(diagnostic);
-                action.setDiagnostics(cursorDiagnostics);
-                codeActionList.add(action);
-                break;
+            for (ListenerInfo listener : service.getListeners()) {
+                int port = listener.getPort();
+                if (probe.getPort().getValue() == port) {
+                    Path balFilePath = ctx.workspace().projectRoot(ctx.filePath()).resolve(filePath);
+                    NodeList<Node> members = service.getNode().members();
+                    Node lastResource = members.get(members.size() - 1);
+                    Position position = new Position(lastResource.lineRange().endLine().line() + 1, 0);
+
+                    CodeAction action = new CodeAction();
+                    action.setKind(CodeActionKind.QuickFix);
+                    String importText = generateProbeFunctionText(service, probe);
+                    List<TextEdit> edits = Collections.singletonList(
+                            new TextEdit(new Range(position, position), importText));
+                    action.setEdit(new WorkspaceEdit(Collections.singletonList(Either.forLeft(
+                            new TextDocumentEdit(
+                                    new VersionedTextDocumentIdentifier(balFilePath.toUri().toString(), null),
+                                    edits)))));
+                    action.setTitle("Add Resource to Service");
+                    List<Diagnostic> cursorDiagnostics = new ArrayList<>();
+                    cursorDiagnostics.add(diagnostic);
+                    action.setDiagnostics(cursorDiagnostics);
+                    codeActionList.add(action);
+                    break;
+                }
             }
         }
 

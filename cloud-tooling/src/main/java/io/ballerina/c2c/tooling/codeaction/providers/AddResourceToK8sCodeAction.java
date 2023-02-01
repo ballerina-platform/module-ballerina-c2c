@@ -17,6 +17,7 @@ package io.ballerina.c2c.tooling.codeaction.providers;
 
 import io.ballerina.c2c.tooling.toml.CommonUtil;
 import io.ballerina.c2c.tooling.toml.TomlSyntaxTreeUtil;
+import io.ballerina.c2c.util.ListenerInfo;
 import io.ballerina.c2c.util.ProjectServiceInfo;
 import io.ballerina.c2c.util.ServiceInfo;
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
@@ -96,11 +97,12 @@ public class AddResourceToK8sCodeAction implements RangeBasedCodeActionProvider 
 
             ServiceDeclarationNode serviceDeclarationNode = (ServiceDeclarationNode) functionDefinitionNode.parent();
             String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
-            int port = getPortOfService(project, servicePath);
-            if (port == 0) {
+            List<Integer> ports = getPortOfService(project, servicePath);
+            if (ports.isEmpty()) {
                 continue;
             }
-            String importText = generateProbeText(probe, port, servicePath, resourcePath);
+            // As only one probes are supported
+            String importText = generateProbeText(probe, ports.get(0), servicePath, resourcePath);
             int endLine = documentNode.members().get(documentNode.members().size() - 1).lineRange().endLine().line();
             Position position = new Position(endLine + 1, 0);
             List<TextEdit> edits = Collections.singletonList(
@@ -131,15 +133,19 @@ public class AddResourceToK8sCodeAction implements RangeBasedCodeActionProvider 
         return probs;
     }
 
-    private int getPortOfService(Project project, String servicePath) {
+    private List<Integer> getPortOfService(Project project, String servicePath) {
+        List<Integer> ports = new ArrayList<>();
         ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
         for (ServiceInfo serviceInfo : serviceList) {
             if (serviceInfo.getServicePath().equals(servicePath)) {
-                return serviceInfo.getListener().getPort();
+                List<ListenerInfo> listeners = serviceInfo.getListeners();
+                for (ListenerInfo listenerInfo : listeners) {
+                    ports.add(listenerInfo.getPort());
+                }
             }
         }
-        return 0;
+        return ports;
     }
 
     private String toAbsoluteServicePath(NodeList<Node> servicePathNodes) {

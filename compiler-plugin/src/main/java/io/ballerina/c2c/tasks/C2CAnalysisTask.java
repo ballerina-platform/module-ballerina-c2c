@@ -104,9 +104,9 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
             Task task = projectServiceInfo.getTask().get();
             JobModel jobModel = new JobModel();
             if (task instanceof ScheduledTask) {
-                jobModel.setSchedule(((ScheduledTask) task).getSchedule());                
+                jobModel.setSchedule(((ScheduledTask) task).getSchedule());
             }
-            
+
             String dockerHost = System.getenv(DOCKER_HOST);
             if (!KubernetesUtils.isBlank(dockerHost)) {
                 jobModel.setDockerHost(dockerHost);
@@ -147,30 +147,33 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
 
     private void addServices(List<ServiceInfo> serviceList) throws KubernetesPluginException {
         for (ServiceInfo serviceInfo : serviceList) {
-            ServiceModel serviceModel = new ServiceModel();
-            if (KubernetesUtils.isBlank(serviceModel.getName())) {
-                serviceModel.setName(getValidName(serviceInfo.getServicePath() + SVC_POSTFIX));
-            }
+            List<ListenerInfo> listeners = serviceInfo.getListeners();
+            for (ListenerInfo listener : listeners) {
+                ServiceModel serviceModel = new ServiceModel();
+                if (KubernetesUtils.isBlank(serviceModel.getName())) {
+                    serviceModel.setName(getValidName(serviceInfo.getServicePath() + SVC_POSTFIX));
+                }
 
-            ListenerInfo listener = serviceInfo.getListener();
-            int port = listener.getPort();
-            if (serviceModel.getPort() == -1) {
-                serviceModel.setPort(port);
-            }
-            if (serviceModel.getTargetPort() == -1) {
-                serviceModel.setTargetPort(port);
-            }
+                int port = listener.getPort();
+                if (serviceModel.getPort() == -1) {
+                    serviceModel.setPort(port);
+                }
+                if (serviceModel.getTargetPort() == -1) {
+                    serviceModel.setTargetPort(port);
+                }
 
-            serviceModel.setProtocol("http");
+                serviceModel.setProtocol("http");
 
-            if (listener.getConfig().isPresent() && listener.getConfig().get().getSecureSocketConfig().isPresent()) {
-                Set<SecretModel> secretModels = processSecureSocketConfig(listener);
-                KubernetesContext.getInstance().getDataHolder().addListenerSecret(listener.getName(), secretModels);
-                KubernetesContext.getInstance().getDataHolder().addSecrets(secretModels);
-                serviceModel.setProtocol("https");
+                if (listener.getConfig().isPresent() &&
+                        listener.getConfig().get().getSecureSocketConfig().isPresent()) {
+                    Set<SecretModel> secretModels = processSecureSocketConfig(listener);
+                    KubernetesContext.getInstance().getDataHolder().addListenerSecret(listener.getName(), secretModels);
+                    KubernetesContext.getInstance().getDataHolder().addSecrets(secretModels);
+                    serviceModel.setProtocol("https");
+                }
+
+                KubernetesContext.getInstance().getDataHolder().addServiceModel(serviceModel);
             }
-
-            KubernetesContext.getInstance().getDataHolder().addServiceModel(serviceModel);
         }
     }
 

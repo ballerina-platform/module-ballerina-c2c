@@ -65,6 +65,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -300,50 +301,17 @@ public class C2CVisitor extends NodeVisitor {
         List<TypeSymbol> typeSymbols = symbol.listenerTypes();
         if (typeSymbols.isEmpty()) {
             return;
-        }
+        }   
         String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
-        TypeSymbol typeSymbol = typeSymbols.get(0);
-        if (!isC2CNativelySupportedListener(typeSymbol)) {
-            processCustomExposedAnnotatedListeners(typeSymbol, servicePath, serviceDeclarationNode);
+        if (!isC2CNativelySupportedListener(typeSymbols)) {
+            processCustomExposedAnnotatedListeners(typeSymbols, servicePath, serviceDeclarationNode);
             return;
         }
-
-        ListenerInfo listenerInfo = null;
-        ExpressionNode expressionNode = serviceDeclarationNode.expressions().get(0);
-        if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-            //External Listener
-            //on helloEP
-            SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
-            String listenerName = referenceNode.name().text();
-            Optional<ListenerInfo> httpsListener = this.getHttpsListener(listenerName);
-            if (httpsListener.isEmpty()) {
-                diagnostics.add(C2CDiagnosticCodes
-                        .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expressionNode.location()));
-                return;
-            }
-            listenerInfo = httpsListener.get();
-        } else {
-            //Inline Listener
-            ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
-            FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(0);
-            if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
-                ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
-                Optional<ListenerInfo> newListenerInfo = getListenerInfo(servicePath, expression);
-                if (newListenerInfo.isEmpty()) {
-                    return;
-                }
-                listenerInfo = newListenerInfo.get();
-            }
-
-            //Inline Http config
-            if (refNode.parenthesizedArgList().arguments().size() > 1) {
-                FunctionArgumentNode secondParamExpression = refNode.parenthesizedArgList().arguments().get(1);
-                Optional<HttpsConfig> config = extractKeyStores(secondParamExpression);
-                config.ifPresent(listenerInfo::setConfig);
-            }
+        List<ListenerInfo> listenerInfos = extractListeners(serviceDeclarationNode, servicePath);
+        if (listenerInfos.size() == 0) {
+            return;
         }
-        ServiceInfo
-                serviceInfo = new ServiceInfo(listenerInfo, serviceDeclarationNode, servicePath);
+        ServiceInfo serviceInfo = new ServiceInfo(listenerInfos, serviceDeclarationNode, servicePath);
         NodeList<Node> function = serviceDeclarationNode.members();
         for (Node node : function) {
             if (node.kind() == SyntaxKind.RESOURCE_ACCESSOR_DEFINITION) {
@@ -355,6 +323,50 @@ public class C2CVisitor extends NodeVisitor {
             this.visitSyntaxNode(node);
         }
         services.add(serviceInfo);
+    }
+    
+    private List<ListenerInfo> extractListeners(ServiceDeclarationNode serviceDeclarationNode, String servicePath) {
+        SeparatedNodeList<ExpressionNode> expressions = serviceDeclarationNode.expressions();
+        List<ListenerInfo> listeners = new ArrayList<>();
+        for (ExpressionNode expressionNode : expressions) {
+            ListenerInfo listenerInfo = null;
+            if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+                //External Listener
+                //on helloEP
+                SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
+                String listenerName = referenceNode.name().text();
+                Optional<ListenerInfo> httpsListener = this.getHttpsListener(listenerName);
+                if (httpsListener.isEmpty()) {
+                    diagnostics.add(C2CDiagnosticCodes
+                            .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expressionNode.location()));
+                    return Collections.emptyList();
+                }
+                listenerInfo = httpsListener.get();
+            } else {
+                //Inline Listener
+                ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
+                FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(0);
+                if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
+                    ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
+                    Optional<ListenerInfo> newListenerInfo = getListenerInfo(servicePath, expression);
+                    if (newListenerInfo.isEmpty()) {
+                        return Collections.emptyList();
+                    }
+                    listenerInfo = newListenerInfo.get();
+                    
+                    //Inline Http config
+                    if (refNode.parenthesizedArgList().arguments().size() > 1) {
+                        FunctionArgumentNode secondParamExpression = refNode.parenthesizedArgList().arguments().get(1);
+                        Optional<HttpsConfig> config = extractKeyStores(secondParamExpression);
+                        config.ifPresent(listenerInfo::setConfig);
+                    }
+                }
+            }
+            if (listenerInfo != null) {
+                listeners.add(listenerInfo);
+            }
+        }
+        return listeners;
     }
 
     private Optional<ListenerInfo> extractListenerInitializer(String listenerName,
@@ -549,60 +561,67 @@ public class C2CVisitor extends NodeVisitor {
         }
     }
 
-    private void processCustomExposedAnnotatedListeners(TypeSymbol typeSymbol, String servicePath,
+    private void processCustomExposedAnnotatedListeners(List<TypeSymbol> typeSymbols, String servicePath,
                                                         ServiceDeclarationNode serviceDeclarationNode) {
-        if (typeSymbol.typeKind() != TypeDescKind.TYPE_REFERENCE) {
-            return;
-        }
-        Symbol typeDefinition = ((TypeReferenceTypeSymbol) typeSymbol).definition();
-        if (typeDefinition.kind() != SymbolKind.CLASS) {
-            return;
-        }
-        ClassSymbol classSymbol = (ClassSymbol) typeDefinition;
-        if (classSymbol.initMethod().isEmpty()) {
-            return;
-        }
-        // Get the init method of the custom listener because thats where the @cloud:Expose is at.
-        // Ex - public function init(@cloud:Expose int port, ListenerConfiguration config) {
-        MethodSymbol initSymbol = classSymbol.initMethod().get();
-        Optional<List<ParameterSymbol>> paramsList = initSymbol.typeDescriptor().params();
-        if (paramsList.isEmpty()) {
-            return;
-        }
-        List<ParameterSymbol> params = paramsList.get();
-        for (int i = 0, getSize = params.size(); i < getSize; i++) {
-            ParameterSymbol parameterSymbol = params.get(i);
-            for (AnnotationSymbol annotation : parameterSymbol.annotations()) {
-                Optional<ModuleSymbol> module = annotation.getModule();
-                if (module.isEmpty()) {
-                    continue;
-                }
-                ModuleSymbol moduleSymbol = module.get();
-                ModuleID id = moduleSymbol.id();
-                if (!id.moduleName().equals("cloud")) {
-                    continue;
-                }
-                if (id.orgName().equals("ballerina")) {
-                    //@cloud:Expose int port
-                    //This is a valid custom listener param for c2c. Next, we need to get the value passed to this 
-                    // param. We need to access the syntax tree to get the value as semantic api doesn't have values.
-                    Optional<ListenerInfo> listenerInfo =
-                            getPortValueFromSTForCustomListener(servicePath, serviceDeclarationNode, i);
-                    if (listenerInfo.isEmpty()) {
-                        diagnostics.add(C2CDiagnosticCodes
-                                .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
-                                        parameterSymbol.location()));
+        List<ListenerInfo> listenerInfos = new ArrayList<>();
+        for (int listenerIndex = 0; listenerIndex < typeSymbols.size(); listenerIndex++) {
+            TypeSymbol typeSymbol = typeSymbols.get(listenerIndex);
+            if (typeSymbol.typeKind() != TypeDescKind.TYPE_REFERENCE) {
+                continue;
+            }
+            Symbol typeDefinition = ((TypeReferenceTypeSymbol) typeSymbol).definition();
+            if (typeDefinition.kind() != SymbolKind.CLASS) {
+                continue;
+            }
+            ClassSymbol classSymbol = (ClassSymbol) typeDefinition;
+            if (classSymbol.initMethod().isEmpty()) {
+                continue;
+            }
+            // Get the init method of the custom listener because thats where the @cloud:Expose is at.
+            // Ex - public function init(@cloud:Expose int port, ListenerConfiguration config) {
+            MethodSymbol initSymbol = classSymbol.initMethod().get();
+            Optional<List<ParameterSymbol>> paramsList = initSymbol.typeDescriptor().params();
+            if (paramsList.isEmpty()) {
+                continue;
+            }
+            List<ParameterSymbol> params = paramsList.get();
+            for (int i = 0, getSize = params.size(); i < getSize; i++) {
+                ParameterSymbol parameterSymbol = params.get(i);
+                for (AnnotationSymbol annotation : parameterSymbol.annotations()) {
+                    Optional<ModuleSymbol> module = annotation.getModule();
+                    if (module.isEmpty()) {
                         continue;
                     }
-                    this.services.add(new ServiceInfo(listenerInfo.get(), serviceDeclarationNode, servicePath));
+                    ModuleSymbol moduleSymbol = module.get();
+                    ModuleID id = moduleSymbol.id();
+                    if (!id.moduleName().equals("cloud")) {
+                        continue;
+                    }
+                    if (id.orgName().equals("ballerina")) {
+                        //@cloud:Expose int port
+                        //This is a valid custom listener param for c2c. Next, we need to get the value passed to this 
+                        // param. We need to access the syntax tree to get the values.
+                        Optional<ListenerInfo> listenerInfo = getPortValueFromSTForCustomListener(servicePath,
+                                serviceDeclarationNode, i, listenerIndex);
+                        if (listenerInfo.isEmpty()) {
+                            diagnostics.add(C2CDiagnosticCodes
+                                    .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
+                                            parameterSymbol.location()));
+                            continue;
+                        }
+                        listenerInfos.add(listenerInfo.get());
+                    }
                 }
             }
+        }
+        if (!listenerInfos.isEmpty()) {
+            this.services.add(new ServiceInfo(listenerInfos, serviceDeclarationNode, servicePath));
         }
     }
 
     private Optional<ListenerInfo> getPortValueFromSTForCustomListener(String path, ServiceDeclarationNode serviceNode,
-                                                                       int paramNo) {
-        ExpressionNode expressionNode = serviceNode.expressions().get(0);
+                                                                       int paramNo, int listenerIndex) {
+        ExpressionNode expressionNode = serviceNode.expressions().get(listenerIndex);
         if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
             //on listener
             SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
@@ -625,6 +644,15 @@ public class C2CVisitor extends NodeVisitor {
             }
         }
         return Optional.empty();
+    }
+
+    private boolean isC2CNativelySupportedListener(List<TypeSymbol> typeSymbols) {
+        for (TypeSymbol typeSymbol : typeSymbols) {
+            if (isC2CNativelySupportedListener(typeSymbol)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isC2CNativelySupportedListener(TypeSymbol typeSymbol) {
