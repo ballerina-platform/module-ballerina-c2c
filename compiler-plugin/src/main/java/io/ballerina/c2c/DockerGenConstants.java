@@ -32,4 +32,8 @@ public class DockerGenConstants {
     
     public static final String NATIVE_BUILDER_IMAGE = "ballerina/native-builder:latest";
     public static final String RUNTIME_BASE_IMAGE = "debian:11-slim";
+    
+    public static final int MAX_BALLERINA_LAYERS = 110;
+    
+    public static final String SCHEMA_FILE_NAME = "c2c-schema.json";
 }

@@ -168,15 +168,15 @@ public class CreateCloudTomlExecutor implements LSCommandExecutor {
     private String getValidationSchema() {
         try {
             InputStream inputStream =
-                    getClass().getClassLoader().getResourceAsStream("c2c-schema.json");
+                    getClass().getClassLoader().getResourceAsStream(CommonUtil.SCHEMA_FILE_NAME);
             if (inputStream == null) {
-                throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
+                throw new MissingResourceException("Schema Not found", CommonUtil.SCHEMA_FILE_NAME, "");
             }
             StringWriter writer = new StringWriter();
             IOUtils.copy(inputStream, writer, StandardCharsets.UTF_8.name());
             return writer.toString();
         } catch (IOException e) {
-            throw new MissingResourceException("Schema Not found", "c2c-schema.json", "");
+            throw new MissingResourceException("Schema Not found", CommonUtil.SCHEMA_FILE_NAME, "");
         }
     }
 }

@@ -41,6 +41,7 @@ import java.util.Optional;
 public class CommonUtil {
 
     public static final String LINE_SEPARATOR = System.lineSeparator();
+    public static final String SCHEMA_FILE_NAME = "c2c-schema-tooling.json";
 
     /**
      * Returns a QuickFix Code action.

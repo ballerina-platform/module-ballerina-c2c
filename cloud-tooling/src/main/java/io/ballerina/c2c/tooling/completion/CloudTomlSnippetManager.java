@@ -18,6 +18,7 @@
 
 package io.ballerina.c2c.tooling.completion;
 
+import io.ballerina.c2c.tooling.toml.CommonUtil;
 import org.apache.commons.io.IOUtils;
 import org.ballerinalang.langserver.commons.LanguageServerContext;
 import org.ballerinalang.langserver.commons.toml.AbstractTomlSnippetManager;
@@ -55,7 +56,8 @@ public class CloudTomlSnippetManager extends AbstractTomlSnippetManager {
     @Override
     public String getValidationSchema() {
         try {
-            return IOUtils.resourceToString("c2c-schema.json", StandardCharsets.UTF_8, getClass().getClassLoader());
+            return IOUtils
+                    .resourceToString(CommonUtil.SCHEMA_FILE_NAME, StandardCharsets.UTF_8, getClass().getClassLoader());
         } catch (IOException e) {
             throw new RuntimeException("Schema Not found");
         }
