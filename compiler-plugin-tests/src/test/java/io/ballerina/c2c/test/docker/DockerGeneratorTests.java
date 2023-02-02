@@ -107,7 +107,7 @@ public class DockerGeneratorTests {
 
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
         Assert.assertTrue(dockerFileContent.contains("CMD java -Xdiag -cp \"hello.jar:jars/*\" " +
-                "'wso2/bal/1/$_init'"));
+                "'wso2.bal.1.$_init'"));
         Assert.assertTrue(dockerFileContent.contains("USER ballerina"));
     }
 
@@ -118,7 +118,7 @@ public class DockerGeneratorTests {
         Assert.assertEquals(Objects.requireNonNull(DockerTestUtils.getDockerImage(DOCKER_IMAGE).getConfig()
                 .getEnv()).length, 8);
         Assert.assertEquals(DockerTestUtils.getCommand(DOCKER_IMAGE).get(2), "java -Xdiag -cp \"hello.jar:jars/*\" " +
-                "'wso2/bal/1/$_init'");
+                "'wso2.bal.1.$_init'");
     }
 
     private Set<Path> getJarFilePaths() throws IOException {

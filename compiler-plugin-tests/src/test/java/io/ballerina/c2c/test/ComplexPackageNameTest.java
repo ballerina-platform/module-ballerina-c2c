@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package io.ballerina.c2c.test.samples;
+package io.ballerina.c2c.test;
 
 import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
@@ -24,6 +24,7 @@ import io.ballerina.c2c.test.utils.KubernetesTestUtils;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -36,32 +37,33 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
-import static io.ballerina.c2c.test.utils.KubernetesTestUtils.deployK8s;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getCommand;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getExposedPorts;
-import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
 
 /**
- * Test cases for sample 9.
+ * Test cases for verifying package with complex names.
  */
-public class Sample9Test extends SampleTest {
+public class ComplexPackageNameTest {
 
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("kubernetes-secrets-keystore-truststore");
+    private static final Path SOURCE_DIR_PATH = Paths.get("src", "test", "resources", "complex-package-name");
     private static final Path DOCKER_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
-    private static final Path KUBERNETES_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello");
-    private static final String DOCKER_IMAGE = "anuruddhal/hello-api:sample9";
+            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("testObservation_0.1.5");
+    private static final Path KUBERNETES_TARGET_PATH = SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES)
+            .resolve("testObservation_0.1.5");
+    private static final String DOCKER_IMAGE = "testobservation_0.1.5:latest";
     private Deployment deployment;
+    private Service service;
 
     @BeforeClass
     public void compileSample() throws IOException, InterruptedException {
-        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH), 0);
-        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello.yaml").toFile();
+        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH)
+                , 0);
+        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("testobservation_0.1.5.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
         KubernetesClient client = new DefaultKubernetesClient();
         List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
@@ -70,8 +72,9 @@ public class Sample9Test extends SampleTest {
                 case "Deployment":
                     deployment = (Deployment) data;
                     break;
-                case "ConfigMap":
                 case "Service":
+                    service = (Service) data;
+                    break;
                 case "Secret":
                 case "HorizontalPodAutoscaler":
                     break;
@@ -85,18 +88,29 @@ public class Sample9Test extends SampleTest {
     @Test
     public void validateDeployment() {
         Assert.assertNotNull(deployment);
-        Assert.assertEquals(deployment.getMetadata().getName(), "hello-deployment");
+        Assert.assertEquals(deployment.getMetadata().getName(), "testobservation-deployment");
         Assert.assertEquals(deployment.getSpec().getReplicas().intValue(), 1);
-        Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getVolumes().size(), 2);
         Assert.assertEquals(deployment.getMetadata().getLabels().get(KubernetesConstants
-                .KUBERNETES_SELECTOR_KEY), "hello");
+                .KUBERNETES_SELECTOR_KEY), "testobservation_0.1.5");
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         // Assert Containers
         Container container = deployment.getSpec().getTemplate().getSpec().getContainers().get(0);
-        Assert.assertEquals(container.getVolumeMounts().size(), 2);
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE);
         Assert.assertEquals(container.getPorts().size(), 1);
+    }
+
+    @Test
+    public void validateService() {
+        Assert.assertNotNull(service);
+        Assert.assertEquals(1, service.getMetadata().getLabels().size());
+        Assert.assertEquals("testobservation", service.getMetadata().getName());
+        Assert.assertEquals("ClusterIP", service.getSpec().getType());
+        Assert.assertEquals(1, service.getSpec().getPorts().size());
+        Assert.assertEquals(9090, service.getSpec().getPorts().get(0).getPort().intValue());
+        Assert.assertEquals(9090, service.getSpec().getPorts().get(0).getTargetPort().getIntVal().intValue());
+        Assert.assertEquals("TCP", service.getSpec().getPorts().get(0).getProtocol());
+        Assert.assertEquals("port-1-testobse", service.getSpec().getPorts().get(0).getName());
     }
 
     @Test
@@ -111,15 +125,9 @@ public class Sample9Test extends SampleTest {
         Assert.assertEquals(ports.size(), 1);
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
-        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[/bin/sh, -c, java -Xdiag -cp " +
-                "\"hello-hello-0.0.1.jar:jars/*\" 'hello.hello.0.$_init']");
-    }
-
-    @Test(groups = { "integration" })
-    public void deploySample() throws IOException, InterruptedException {
-        Assert.assertEquals(0, loadImage(DOCKER_IMAGE));
-        Assert.assertEquals(0, deployK8s(KUBERNETES_TARGET_PATH));
-        KubernetesTestUtils.deleteK8s(KUBERNETES_TARGET_PATH);
+        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(),
+                "[/bin/sh, -c, java -Xdiag -cp \"anjana-testObservation_0.1.5-0.1.0.jar:jars/*\" " +
+                        "'anjana.testObservation_0$00461$00465.0.$_init']");
     }
 
     @AfterClass

@@ -22,6 +22,7 @@ import io.ballerina.c2c.DockerGenConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
+import io.ballerina.projects.JarResolver;
 import org.ballerinalang.model.elements.PackageID;
 
 import java.io.IOException;
@@ -38,7 +39,6 @@ import static io.ballerina.c2c.KubernetesConstants.LINE_SEPARATOR;
 import static io.ballerina.c2c.utils.DockerGenUtils.copyFileOrDirectory;
 import static io.ballerina.c2c.utils.DockerGenUtils.isBlank;
 import static io.ballerina.c2c.utils.DockerGenUtils.printDebug;
-import static org.wso2.ballerinalang.compiler.bir.codegen.JvmConstants.FILE_NAME_PERIOD_SEPERATOR;
 import static org.wso2.ballerinalang.compiler.bir.codegen.JvmConstants.MODULE_INIT_CLASS_NAME;
 
 /**
@@ -57,29 +57,6 @@ public class DockerGenerator {
         dockerModel.setName(imageName);
 
         this.dockerModel = dockerModel;
-    }
-
-    private String getModuleLevelClassName(String orgName, String moduleName, String version) {
-        String className = MODULE_INIT_CLASS_NAME.replace(".", FILE_NAME_PERIOD_SEPERATOR);
-        // handle source file path start with '/'.
-
-        if (!moduleName.equals(".")) {
-            if (!version.equals("")) {
-                version = version.split("\\.")[0];
-                className = cleanupName(version) + "/" + className;
-            }
-            className = cleanupName(moduleName) + "/" + className;
-        }
-
-        if (!orgName.equalsIgnoreCase("$anon")) {
-            className = cleanupName(orgName) + "/" + className;
-        }
-
-        return "'" + className + "'";
-    }
-
-    private String cleanupName(String name) {
-        return name.replace(".", "_");
     }
 
     public void createArtifacts(PrintStream outStream, String logAppender, Path jarFilePath, Path outputDir)
@@ -222,8 +199,9 @@ public class DockerGenerator {
         appendCommonCommands(dockerfileContent);
         if (isBlank(this.dockerModel.getCmd())) {
             PackageID packageID = this.dockerModel.getPkgId();
-            final String mainClass = getModuleLevelClassName(packageID.orgName.value, packageID.name.value,
-                    packageID.version.value);
+            String mainClass = JarResolver.getQualifiedClassName(packageID.orgName.value, packageID.name.value,
+                    packageID.version.value, MODULE_INIT_CLASS_NAME);
+            mainClass = "'" + mainClass + "'";
             if (this.dockerModel.isEnableDebug()) {
                 dockerfileContent.append("CMD java -Xdiag -agentlib:jdwp=transport=dt_socket,server=y,suspend=n," +
                         "address='*:")
@@ -274,8 +252,9 @@ public class DockerGenerator {
         appendCommonCommands(dockerfileContent);
         if (isBlank(this.dockerModel.getCmd())) {
             PackageID packageID = this.dockerModel.getPkgId();
-            final String mainClass = getModuleLevelClassName(packageID.orgName.value, packageID.name.value,
-                    packageID.version.value);
+            String mainClass = JarResolver.getQualifiedClassName(packageID.orgName.value, packageID.name.value,
+                    packageID.version.value, MODULE_INIT_CLASS_NAME);
+            mainClass = "'" + mainClass + "'";
             if (this.dockerModel.isEnableDebug()) {
                 dockerfileContent.append("CMD java -Xdiag -agentlib:jdwp=transport=dt_socket,server=y,suspend=n," +
                         "address='*:").append(this.dockerModel.getDebugPort()).append("' -cp \"")

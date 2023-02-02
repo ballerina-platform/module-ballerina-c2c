@@ -72,6 +72,7 @@
             <class name="io.ballerina.c2c.test.choreo.PlainMainTest"/>
             <class name="io.ballerina.c2c.test.choreo.PlainServiceTest"/>
             <class name="io.ballerina.c2c.test.choreo.DiagnosticsTest"/>
+            <class name="io.ballerina.c2c.test.ComplexPackageNameTest"/>
         </classes>
     </test>
 </suite>

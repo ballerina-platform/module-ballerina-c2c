@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -76,7 +77,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                     descriptor.org().value() + "-" + descriptor.name().value() +
                             "-" + descriptor.version().value() + ".jar";
             String outputName = "$anon".equals(descriptor.org().value()) ? extractJarName(path.getFileName()) :
-                    descriptor.name().value();
+                    descriptor.name().value().toLowerCase(Locale.ROOT);
             dataHolder.setOutputName(outputName);
             addDependencyJars(compilerLifecycleEventContext.compilation(), executableJarName);
             dataHolder.setSourceRoot(executablePath.get().getParent()
