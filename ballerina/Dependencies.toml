@@ -14,4 +14,3 @@ modules = [
 	{org = "ballerina", packageName = "cloud", moduleName = "cloud"}
 ]
 
-
