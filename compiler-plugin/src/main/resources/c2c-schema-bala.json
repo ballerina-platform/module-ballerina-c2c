@@ -216,28 +216,20 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                  "key_ref": {
-                    "description": "Reference key of the secret",
+                  "file": {
+                    "description": "Path of the external TOML file",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "message": {
-                      "pattern": "`key_ref` should not be empty"
+                      "pattern": "`file` should not be empty"
                     }
                   },
                   "name": {
-                    "description": "Name of the secret if it is different from the key",
+                    "description": "Name field for the kubernetes secret",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "message": {
                       "pattern": "`name` should not be empty"
-                    }
-                  },
-                  "secret_name": {
-                    "description": "Name of the secret group",
-                    "type": "string",
-                    "pattern": "^(?!\\s*$).+",
-                    "message": {
-                      "pattern": "`secret_name` should not be empty"
                     }
                   }
                 }

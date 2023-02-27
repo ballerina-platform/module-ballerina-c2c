@@ -13,8 +13,18 @@ listener http:Listener helloWorldEP = new(9090, {
 
 configurable string users = ?;
 configurable string groups = ?;
+configurable MysqlConfig mysql = ?;
+
+type MysqlConfig record {
+    string host;
+    string user;
+};
 
 service /helloWorld on helloWorldEP {
+    function init() {
+        io:println(mysql);
+    }
+    
     resource function get config(http:Caller caller, http:Request request) returns @tainted error? {
         http:Response response = new;
         string payload = "Configuration: " + users + " " + groups;

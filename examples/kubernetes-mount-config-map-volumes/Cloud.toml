@@ -9,4 +9,8 @@ mount_path="/home/ballerina/data" # Path of the file in the container
 
 [[cloud.config.files]]
 file="./conf/Config.toml" # Path of the external file
-name="sample5-config-map" 
+name="sample5-config-map"
+
+[[cloud.config.secrets]]
+file="./mysql-secrets.toml"
+name="mysql-secrets"
