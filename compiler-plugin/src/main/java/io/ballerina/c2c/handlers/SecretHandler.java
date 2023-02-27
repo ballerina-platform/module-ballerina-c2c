@@ -26,11 +26,14 @@ import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.util.C2CDiagnosticCodes;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.tools.diagnostics.Diagnostic;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Generates kubernetes secret.
@@ -62,24 +65,52 @@ public class SecretHandler extends AbstractArtifactHandler {
     @Override
     public void createArtifacts() throws KubernetesPluginException {
         Collection<SecretModel> secretModels = dataHolder.getSecretModelSet();
+        StringBuilder configTomlEnv = new StringBuilder();
         for (SecretModel secretModel : secretModels) {
-            if (!KubernetesUtils.isBlank(secretModel.getBallerinaConf())) {
-                if (secretModel.getData().size() != 1) {
-                    Diagnostic diagnostic =
-                            C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.ONLY_ONE_BALLERINA_CONFIG_ALLOWED,
-                                    new NullLocation());
-                    throw new KubernetesPluginException(diagnostic);
-                }
+            if (secretModel.isBallerinaConf()) {
                 DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
-//                deploymentModel.setCommandArgs(" --b7a.config.file=${CONFIG_FILE}");
-//                EnvVarValueModel envVarValueModel = new EnvVarValueModel(secretModel.getMountPath() +
-//                        BALLERINA_CONF_FILE_NAME);
-//                deploymentModel.addEnv("CONFIG_FILE", envVarValueModel);
+                configTomlEnv.append(getBALConfigFiles(secretModel));
                 dataHolder.setDeploymentModel(deploymentModel);
             }
             generate(secretModel);
         }
+
+        if (configTomlEnv.length() > 0) {
+            DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
+            List<EnvVar> envVars = deploymentModel.getEnvVars();
+            if (isBalConfigFilesEnvExist(envVars)) {
+                for (EnvVar envVar : envVars) {
+                    if (envVar.getName().equals("BAL_CONFIG_FILES")) {
+                        String value = envVar.getValue() + configTomlEnv;
+                        envVar.setValue(value);
+                    }
+                }
+            } else {
+                EnvVar ballerinaConfEnv = new EnvVarBuilder()
+                        .withName("BAL_CONFIG_FILES")
+                        .withValue(configTomlEnv.toString())
+                        .build();
+                deploymentModel.addEnv(ballerinaConfEnv);
+            }
+            dataHolder.setDeploymentModel(deploymentModel);
+        }
         OUT.println("\t@kubernetes:Secret");
     }
 
+    private String getBALConfigFiles(SecretModel secretModel) {
+        StringBuilder configPaths = new StringBuilder();
+        for (String key : secretModel.getData().keySet()) {
+            configPaths.append(secretModel.getMountPath()).append(key).append(":");
+        }
+        return configPaths.toString();
+    }
+    
+    private boolean isBalConfigFilesEnvExist(List<EnvVar> envVars) {
+        for (EnvVar envVar : envVars) {
+            if (envVar.getName().equals("BAL_CONFIG_FILES")) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

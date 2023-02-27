@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2023, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package io.ballerina.c2c.test.samples;
+package io.ballerina.c2c.test;
 
 import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
@@ -43,34 +43,31 @@ import java.util.List;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
-import static io.ballerina.c2c.test.utils.KubernetesTestUtils.deployK8s;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getCommand;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getExposedPorts;
-import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
 
 /**
- * Test cases for sample 5.
+ * Test cases for Multiple Config files.
  */
-public class Sample5Test extends SampleTest {
+public class MixedConfigTest {
 
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("kubernetes-mount-config-map-volumes");
+    private static final Path SOURCE_DIR_PATH = Paths.get("src", "test", "resources", "mix-config-secret-map");
     private static final Path DOCKER_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
+            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("mix_configs");
     private static final Path KUBERNETES_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("hello");
-    private static final Path INGRESS_PATH =
-            Paths.get("src", "test", "resources", "sample5");
-    private static final String DOCKER_IMAGE = "anuruddhal/hello-api:sample5";
+            SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES).resolve("mix_configs");
+    private static final String DOCKER_IMAGE = "xlight05/complete-config:latest";
     private Deployment deployment;
     private ConfigMap ballerinaConf;
-    private ConfigMap dataMap;
-    private Secret secret;
+    private ConfigMap extraConf;
+
+    private Secret mysqlSecret;
+    private Secret extraSecret;
 
     @BeforeClass
     public void compileSample() throws IOException, InterruptedException {
-        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH)
-                , 0);
-        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("hello.yaml").toFile();
+        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH), 0);
+        File artifactYaml = KUBERNETES_TARGET_PATH.resolve("mix_configs.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
         KubernetesClient client = new DefaultKubernetesClient();
         List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
@@ -81,19 +78,26 @@ public class Sample5Test extends SampleTest {
                     break;
                 case "ConfigMap":
                     switch (data.getMetadata().getName()) {
-                        case "sample5-config-map":
+                        case "config-config-map":
                             ballerinaConf = (ConfigMap) data;
                             break;
-                        case "hello-data-txt":
-                            dataMap = (ConfigMap) data;
+                        case "extra-config-map":
+                            extraConf = (ConfigMap) data;
                             break;
                         default:
                             break;
                     }
                     break;
                 case "Secret":
-                    if (data.getMetadata().getName().equals("mysql-secrets")) {
-                        this.secret = (Secret) data;
+                    switch (data.getMetadata().getName()) {
+                        case "config-secret":
+                            mysqlSecret = (Secret) data;
+                            break;
+                        case "extra-secrets":
+                            extraSecret = (Secret) data;
+                            break;
+                        default:
+                            break;
                     }
                     break;
                 case "Service":
@@ -109,11 +113,11 @@ public class Sample5Test extends SampleTest {
     @Test
     public void validateDeployment() {
         Assert.assertNotNull(deployment);
-        Assert.assertEquals(deployment.getMetadata().getName(), "hello-deployment");
+        Assert.assertEquals(deployment.getMetadata().getName(), "mix-configs-deployment");
         Assert.assertEquals(deployment.getSpec().getReplicas().intValue(), 1);
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getVolumes().size(), 4);
         Assert.assertEquals(deployment.getMetadata().getLabels().get(KubernetesConstants
-                .KUBERNETES_SELECTOR_KEY), "hello");
+                .KUBERNETES_SELECTOR_KEY), "mix_configs");
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         // Assert Containers
@@ -125,27 +129,33 @@ public class Sample5Test extends SampleTest {
 
         // Validate config file
         Assert.assertEquals(container.getEnv().get(0).getName(), "BAL_CONFIG_FILES");
-        Assert.assertEquals(container.getEnv().get(0).getValue(), "/home/ballerina/conf/Config" +
-                ".toml:/home/ballerina/secrets/mysql-secrets.toml:");
+        Assert.assertEquals(container.getEnv().get(0).getValue(),
+                "/home/ballerina/conf/Config.toml:/home/ballerina/conf1/Config1.toml:" +
+                        "/home/ballerina/secrets1/additional-secrets.toml:/home/ballerina/secrets/mysql-secrets.toml:");
     }
 
-    @Test
-    public void validateSecret() {
-        // Assert ballerina.conf config map
-        Assert.assertNotNull(secret);
-        Assert.assertEquals(1, secret.getData().size());
-        String data = secret.getData().get("mysql-secrets.toml");
-        Assert.assertEquals(data, "W215c3FsXQpob3N0ID0gImxvY2FsaG9zdCIKdXNlciA9ICJ1c2VyIgo=");
-    }
     @Test
     public void validateConfigMap() {
         // Assert ballerina.conf config map
         Assert.assertNotNull(ballerinaConf);
         Assert.assertEquals(1, ballerinaConf.getData().size());
+        Assert.assertTrue(ballerinaConf.getData().containsKey("Config.toml"));
 
-        // Assert Data config map
-        Assert.assertNotNull(dataMap);
-        Assert.assertEquals(1, dataMap.getData().size());
+        Assert.assertNotNull(extraConf);
+        Assert.assertEquals(1, extraConf.getData().size());
+        Assert.assertTrue(extraConf.getData().containsKey("Config1.toml"));
+    }
+
+    @Test
+    public void validateSecretConfig() {
+        // Assert ballerina.conf config map
+        Assert.assertNotNull(extraSecret);
+        Assert.assertEquals(1, extraSecret.getData().size());
+        Assert.assertTrue(extraSecret.getData().containsKey("additional-secrets.toml"));
+
+        Assert.assertNotNull(mysqlSecret);
+        Assert.assertEquals(1, mysqlSecret.getData().size());
+        Assert.assertTrue(mysqlSecret.getData().containsKey("mysql-secrets.toml"));
     }
 
     @Test
@@ -161,26 +171,11 @@ public class Sample5Test extends SampleTest {
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
         Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[/bin/sh, -c, java -Xdiag -cp " +
-                "\"xlight-hello-0.0.1.jar:jars/*\" 'xlight.hello.0.$_init']");
-    }
-
-    @Test(groups = { "integration" })
-    public void deploySample() throws IOException, InterruptedException {
-        Assert.assertEquals(0, loadImage(DOCKER_IMAGE));
-        Assert.assertEquals(0, deployK8s(KUBERNETES_TARGET_PATH));
-        Assert.assertEquals(0, deployK8s(INGRESS_PATH));
-        Assert.assertTrue(KubernetesTestUtils.validateService(
-                "https://c2c.deployment.test/helloWorld/config",
-                "Configuration: john@ballerina.com,jane@ballerina.com apim,esb"));
-        Assert.assertTrue(KubernetesTestUtils.validateService(
-                "https://c2c.deployment.test/helloWorld/data",
-                "Data: Lorem ipsum dolor sit amet."));
-        KubernetesTestUtils.deleteK8s(KUBERNETES_TARGET_PATH);
-        KubernetesTestUtils.deleteK8s(INGRESS_PATH);
+                "\"anjana-mix_configs-0.1.0.jar:jars/*\" 'anjana.mix_configs.0.$_init']");
     }
 
     @AfterClass
-    public void cleanUp() throws KubernetesPluginException, IOException, InterruptedException {
+    public void cleanUp() throws KubernetesPluginException {
         KubernetesUtils.deleteDirectory(KUBERNETES_TARGET_PATH);
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
         KubernetesTestUtils.deleteDockerImage(DOCKER_IMAGE);
