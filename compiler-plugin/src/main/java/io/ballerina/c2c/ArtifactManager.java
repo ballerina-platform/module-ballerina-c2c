@@ -87,9 +87,9 @@ public class ArtifactManager {
             new CloudTomlResolver().resolveToml(kubernetesDataHolder.getDeploymentModel());
             new ServiceHandler().createArtifacts();
             new ConfigMapHandler().createArtifacts();
+            new SecretHandler().createArtifacts();
             new DeploymentHandler().createArtifacts();
             new HPAHandler().createArtifacts();
-            new SecretHandler().createArtifacts();
         }
         new DockerHandler(isNative).createArtifacts();
         printInstructions();

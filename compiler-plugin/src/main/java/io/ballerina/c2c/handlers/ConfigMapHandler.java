@@ -65,19 +65,24 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
     public void createArtifacts() throws KubernetesPluginException {
         //Config Map
         Collection<ConfigMapModel> configMapModels = dataHolder.getConfigMapModelSet();
+        StringBuilder configTomlEnv = new StringBuilder();
         for (ConfigMapModel configMapModel : configMapModels) {
             if (configMapModel.isBallerinaConf()) {
-                DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
-                EnvVar ballerinaConfEnv = new EnvVarBuilder()
-                        .withName("BAL_CONFIG_FILES")
-                        .withValue(getBALConfigFiles(configMapModel))
-                        .build();
-                deploymentModel.addEnv(ballerinaConfEnv);
-                dataHolder.setDeploymentModel(deploymentModel);
+                configTomlEnv.append(getBALConfigFiles(configMapModel));
             }
             generate(configMapModel);
-            OUT.println("\t@kubernetes:ConfigMap");
         }
+        
+        if (configTomlEnv.length() > 0) {
+            DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
+            EnvVar ballerinaConfEnv = new EnvVarBuilder()
+                    .withName("BAL_CONFIG_FILES")
+                    .withValue(configTomlEnv.toString())
+                    .build();
+            deploymentModel.addEnv(ballerinaConfEnv);
+            dataHolder.setDeploymentModel(deploymentModel);
+        }
+        OUT.println("\t@kubernetes:ConfigMap");
     }
 
     private String getBALConfigFiles(ConfigMapModel configMapModel) {
