@@ -47,7 +47,8 @@ public class KubernetesConstants {
     public static final String DOCKER_LATEST_TAG = ":latest";
     public static final String BALLERINA_HOME = "/home/ballerina";
     public static final String BALLERINA_RUNTIME = "/ballerina/runtime";
-    public static final String BALLERINA_CONF_MOUNT_PATH = "/home/ballerina/conf/";
+    public static final String BALLERINA_CONF_MOUNT_PATH = "/home/ballerina/conf";
+    public static final String BALLERINA_CONF_SECRETS_MOUNT_PATH = "/home/ballerina/secrets";
     public static final String BALLERINA_CONF_FILE_NAME = "Config.toml";
     public static final String DOCKER_HOST = "DOCKER_HOST";
     public static final String DOCKER_CERT_PATH = "DOCKER_CERT_PATH";
