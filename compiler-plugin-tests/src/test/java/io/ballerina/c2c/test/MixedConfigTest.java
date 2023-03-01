@@ -171,7 +171,7 @@ public class MixedConfigTest {
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
         Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[/bin/sh, -c, java -Xdiag -cp " +
-                "\"anjana-mix_configs-0.1.0.jar:jars/*\" 'anjana.mix_configs.0.$_init']");
+                "\"anjana-mix_configs-0.1.0.jar:jars/*\" 'anjana/mix_configs/0/$_init']");
     }
 
     @AfterClass
