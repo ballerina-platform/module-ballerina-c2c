@@ -23,6 +23,7 @@ import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.ConfigMapModel;
 import io.ballerina.c2c.models.DeploymentModel;
+import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.util.C2CDiagnosticCodes;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.tools.diagnostics.Diagnostic;
@@ -74,13 +75,19 @@ public class ConfigMapHandler extends AbstractArtifactHandler {
         }
         
         if (configTomlEnv.length() > 0) {
-            DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
             EnvVar ballerinaConfEnv = new EnvVarBuilder()
                     .withName("BAL_CONFIG_FILES")
                     .withValue(configTomlEnv.toString())
                     .build();
-            deploymentModel.addEnv(ballerinaConfEnv);
-            dataHolder.setDeploymentModel(deploymentModel);
+            if (dataHolder.getJobModel() == null) {
+                DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
+                deploymentModel.addEnv(ballerinaConfEnv);
+                dataHolder.setDeploymentModel(deploymentModel);
+            } else {
+                JobModel jobModel = dataHolder.getJobModel();
+                jobModel.addEnv(ballerinaConfEnv);
+                dataHolder.setJobModel(jobModel);
+            }
         }
         OUT.println("\t@kubernetes:ConfigMap");
     }
