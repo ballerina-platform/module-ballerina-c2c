@@ -19,10 +19,12 @@ import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
+import io.ballerina.c2c.models.ConfigMapModel;
 import io.ballerina.c2c.models.DockerModel;
 import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
+import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.util.C2CDiagnosticCodes;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.tools.diagnostics.Diagnostic;
@@ -30,12 +32,18 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
+import io.fabric8.kubernetes.api.model.Volume;
+import io.fabric8.kubernetes.api.model.VolumeBuilder;
+import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.CronJob;
 import io.fabric8.kubernetes.api.model.batch.v1.CronJobBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,6 +83,7 @@ public class JobHandler extends AbstractArtifactHandler {
                 .withName(jobModel.getName())
                 .withImage(jobModel.getImage())
                 .withEnv(jobModel.getEnvVars())
+                .withVolumeMounts(populateVolumeMounts())
                 .build();
     }
 
@@ -90,6 +99,7 @@ public class JobHandler extends AbstractArtifactHandler {
                 .withRestartPolicy(jobModel.getRestartPolicy())
                 .withContainers(generateContainer(jobModel))
                 .withImagePullSecrets(getImagePullSecrets(jobModel))
+                .withVolumes(populateVolume())
                 .endSpec()
                 .endTemplate()
                 .endSpec();
@@ -117,6 +127,7 @@ public class JobHandler extends AbstractArtifactHandler {
                 .withNewSpec()
                 .withRestartPolicy(jobModel.getRestartPolicy())
                 .withContainers(generateContainer(jobModel))
+                .withVolumes(populateVolume())
                 .endSpec()
                 .endTemplate()
                 .endSpec()
@@ -168,5 +179,68 @@ public class JobHandler extends AbstractArtifactHandler {
         dockerModel.setCopyFiles(jobModel.getCopyFiles());
         dockerModel.setPkgId(this.dataHolder.getPackageID());
         return dockerModel;
+    }
+
+    private List<VolumeMount> populateVolumeMounts() {
+        List<VolumeMount> volumeMounts = new ArrayList<>();
+        for (SecretModel secretModel : dataHolder.getSecretModelSet()) {
+            VolumeMount volumeMount = new VolumeMountBuilder()
+                    .withMountPath(secretModel.getMountPath())
+                    .withName(secretModel.getName() + "-volume")
+                    .withReadOnly(secretModel.isReadOnly())
+                    .build();
+            volumeMounts.add(volumeMount);
+        }
+        for (ConfigMapModel configMapModel : dataHolder.getConfigMapModelSet()) {
+            final String mountPath = configMapModel.getMountPath();
+            if (mountPath != null) {
+                VolumeMount volumeMount = new VolumeMountBuilder()
+                        .withMountPath(mountPath)
+                        .withName(configMapModel.getName() + "-volume")
+                        .withReadOnly(configMapModel.isReadOnly())
+                        .build();
+
+                if (KubernetesUtils.getExtension(mountPath).isPresent()) {
+                    // Add file mount as sub paths.
+                    final Path fileName = Paths.get(mountPath).getFileName();
+                    if (null != fileName) {
+                        volumeMount.setSubPath(fileName.toString());
+                    }
+                }
+                volumeMounts.add(volumeMount);
+            }
+        }
+        return volumeMounts;
+    }
+
+    private List<Volume> populateVolume() {
+        List<Volume> volumes = new ArrayList<>();
+        for (SecretModel secretModel : dataHolder.getSecretModelSet()) {
+            Volume volume = new VolumeBuilder()
+                    .withName(secretModel.getName() + "-volume")
+                    .withNewSecret()
+                    .withSecretName(secretModel.getName())
+                    .endSecret()
+                    .build();
+
+            if (secretModel.getDefaultMode() > 0) {
+                volume.getSecret().setDefaultMode(secretModel.getDefaultMode());
+            }
+            volumes.add(volume);
+        }
+        for (ConfigMapModel configMapModel : dataHolder.getConfigMapModelSet()) {
+            Volume volume = new VolumeBuilder()
+                    .withName(configMapModel.getName() + "-volume")
+                    .withNewConfigMap()
+                    .withName(configMapModel.getName())
+                    .endConfigMap()
+                    .build();
+
+            if (configMapModel.getDefaultMode() > 0) {
+                volume.getConfigMap().setDefaultMode(configMapModel.getDefaultMode());
+            }
+            volumes.add(volume);
+        }
+        return volumes;
     }
 }
