@@ -1,0 +1,17 @@
+[container.image]
+repository="xlight05"
+name="complete-config-job"
+
+[[cloud.config.files]]
+file="./Config.toml"
+
+[[cloud.config.files]]
+file="./Config1.toml"
+name="extra-config-map"
+
+[[cloud.config.secrets]]
+file="./mysql-secrets.toml"
+
+[[cloud.config.secrets]]
+file="./additional-secrets.toml"
+name="extra-secrets"

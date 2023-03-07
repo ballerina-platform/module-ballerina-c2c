@@ -73,7 +73,7 @@ public class CloudTomlResolver {
     public static final String CLOUD_DEPLOYMENT = "cloud.deployment.";
     KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
 
-    public void resolveToml(JobModel jobModel) {
+    public void resolveToml(JobModel jobModel) throws KubernetesPluginException {
         Toml ballerinaCloud = dataHolder.getBallerinaCloud();
         if (ballerinaCloud != null) {
             // Resolve Env
@@ -81,6 +81,16 @@ public class CloudTomlResolver {
 
             // Resolve settings
             resolveSettingsToml(ballerinaCloud);
+
+            // Config.toml files
+            resolveConfigMapToml(ballerinaCloud);
+            resolveConfigSecretToml(ballerinaCloud);
+
+            // Config files
+            resolveConfigFilesToml(jobModel, ballerinaCloud);
+
+            // Secret files
+            resolveSecretToml(jobModel, ballerinaCloud);
         }
     }
 
@@ -282,10 +292,10 @@ public class CloudTomlResolver {
         return KubernetesConstants.BALLERINA_CONF_MOUNT_PATH + confCount + "/";
     }
 
-    private void resolveSecretToml(DeploymentModel deploymentModel, Toml toml) throws KubernetesPluginException {
+    private void resolveSecretToml(KubernetesModel kubernetesModel, Toml toml) throws KubernetesPluginException {
         List<Toml> secrets = toml.getTables("cloud.secret.files");
         if (secrets.size() != 0) {
-            final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
+            final String deploymentName = kubernetesModel.getName().replace(DEPLOYMENT_POSTFIX, "");
 
             for (int i = 0, secretsSize = secrets.size(); i < secretsSize; i++) {
                 Toml secret = secrets.get(i);
@@ -312,10 +322,10 @@ public class CloudTomlResolver {
         return Optional.empty();
     }
 
-    public void resolveConfigFilesToml(DeploymentModel deploymentModel, Toml toml) throws KubernetesPluginException {
+    public void resolveConfigFilesToml(KubernetesModel kubernetesModel, Toml toml) throws KubernetesPluginException {
         List<Toml> configFiles = toml.getTables("cloud.config.maps");
         if (configFiles.size() != 0) {
-            final String deploymentName = deploymentModel.getName().replace(DEPLOYMENT_POSTFIX, "");
+            final String deploymentName = kubernetesModel.getName().replace(DEPLOYMENT_POSTFIX, "");
             for (Toml configFile : configFiles) {
                 Path path = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "file")));
                 Path mountPath = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "mount_path")));
