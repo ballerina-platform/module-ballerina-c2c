@@ -82,6 +82,8 @@ public class ArtifactManager {
         OUT.println("\nGenerating artifacts\n");
         if (kubernetesDataHolder.getJobModel() != null) {
             new CloudTomlResolver().resolveToml(kubernetesDataHolder.getJobModel());
+            new ConfigMapHandler().createArtifacts();
+            new SecretHandler().createArtifacts();
             new JobHandler().createArtifacts();
         } else {
             new CloudTomlResolver().resolveToml(kubernetesDataHolder.getDeploymentModel());

@@ -48,7 +48,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static io.ballerina.c2c.DockerGenConstants.REGISTRY_SEPARATOR;
 import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_FILE_POSTFIX;
@@ -78,7 +77,7 @@ public class DeploymentHandler extends AbstractArtifactHandler {
                         .withReadOnly(configMapModel.isReadOnly())
                         .build();
 
-                if (getExtension(mountPath).isPresent()) {
+                if (KubernetesUtils.getExtension(mountPath).isPresent()) {
                     // Add file mount as sub paths.
                     final Path fileName = Paths.get(mountPath).getFileName();
                     if (null != fileName) {
@@ -97,12 +96,6 @@ public class DeploymentHandler extends AbstractArtifactHandler {
             volumeMounts.add(volumeMount);
         }
         return volumeMounts;
-    }
-
-    private Optional<String> getExtension(String filename) {
-        return Optional.ofNullable(filename)
-                .filter(f -> f.contains("."))
-                .map(f -> f.substring(filename.lastIndexOf(".") + 1));
     }
 
     private Container generateContainer(DeploymentModel deploymentModel, List<ContainerPort> containerPorts) {
