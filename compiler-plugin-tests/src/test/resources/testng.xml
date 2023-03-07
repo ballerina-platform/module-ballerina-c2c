@@ -50,6 +50,7 @@
             <class name="io.ballerina.c2c.test.SettingsFatJarTest"/>
             <class name="io.ballerina.c2c.test.MultipleConfigTest"/>
             <class name="io.ballerina.c2c.test.MixedConfigTest"/>
+            <class name="io.ballerina.c2c.test.MixedConfigJobTest"/>
             <class name="io.ballerina.c2c.test.ServiceExtractionTest"/>
             <class name="io.ballerina.c2c.test.JobTest"/>
             <class name="io.ballerina.c2c.test.EnvTest"/>

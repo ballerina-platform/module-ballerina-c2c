@@ -54,6 +54,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -237,6 +238,12 @@ public class KubernetesUtils {
         return new PackageID(new Name(currentPackage.packageOrg().value()),
                 new Name(currentPackage.packageName().value()),
                 new Name(currentPackage.packageVersion().value().toString()));
+    }
+
+    public static Optional<String> getExtension(String filename) {
+        return Optional.ofNullable(filename)
+                .filter(f -> f.contains("."))
+                .map(f -> f.substring(filename.lastIndexOf(".") + 1));
     }
 
     public static void resolveDockerToml(KubernetesModel model) throws KubernetesPluginException {

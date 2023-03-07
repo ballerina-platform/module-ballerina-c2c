@@ -22,6 +22,7 @@ import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.DeploymentModel;
+import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.util.C2CDiagnosticCodes;
 import io.ballerina.c2c.utils.KubernetesUtils;
@@ -68,16 +69,20 @@ public class SecretHandler extends AbstractArtifactHandler {
         StringBuilder configTomlEnv = new StringBuilder();
         for (SecretModel secretModel : secretModels) {
             if (secretModel.isBallerinaConf()) {
-                DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
                 configTomlEnv.append(getBALConfigFiles(secretModel));
-                dataHolder.setDeploymentModel(deploymentModel);
             }
             generate(secretModel);
         }
 
         if (configTomlEnv.length() > 0) {
-            DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
-            List<EnvVar> envVars = deploymentModel.getEnvVars();
+            List<EnvVar> envVars;
+            JobModel jobModel = dataHolder.getJobModel();
+            if (jobModel == null) {
+                DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
+                envVars = deploymentModel.getEnvVars();
+            } else {
+                envVars = jobModel.getEnvVars();
+            }
             if (isBalConfigFilesEnvExist(envVars)) {
                 for (EnvVar envVar : envVars) {
                     if (envVar.getName().equals("BAL_CONFIG_FILES")) {
@@ -90,9 +95,15 @@ public class SecretHandler extends AbstractArtifactHandler {
                         .withName("BAL_CONFIG_FILES")
                         .withValue(configTomlEnv.toString())
                         .build();
-                deploymentModel.addEnv(ballerinaConfEnv);
+                if (jobModel == null) {
+                    DeploymentModel deploymentModel = dataHolder.getDeploymentModel();
+                    deploymentModel.addEnv(ballerinaConfEnv);
+                    dataHolder.setDeploymentModel(deploymentModel);
+                } else {
+                    jobModel.addEnv(ballerinaConfEnv);
+                    dataHolder.setJobModel(jobModel);
+                }
             }
-            dataHolder.setDeploymentModel(deploymentModel);
         }
         OUT.println("\t@kubernetes:Secret");
     }
