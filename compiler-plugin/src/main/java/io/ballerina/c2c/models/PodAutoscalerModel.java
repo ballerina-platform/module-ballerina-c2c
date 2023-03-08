@@ -32,6 +32,7 @@ public class PodAutoscalerModel extends KubernetesModel {
     private int minReplicas;
     private int maxReplicas;
     private int cpuPercentage;
+    private int memoryPercentage;
     private String deployment;
 
     public PodAutoscalerModel() {

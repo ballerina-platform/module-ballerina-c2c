@@ -28,10 +28,14 @@ import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.c2c.utils.TomlHelper;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.tools.diagnostics.Diagnostic;
-import io.fabric8.kubernetes.api.model.autoscaling.v1.HorizontalPodAutoscaler;
-import io.fabric8.kubernetes.api.model.autoscaling.v1.HorizontalPodAutoscalerBuilder;
+import io.fabric8.kubernetes.api.model.autoscaling.v2.HorizontalPodAutoscaler;
+import io.fabric8.kubernetes.api.model.autoscaling.v2.HorizontalPodAutoscalerBuilder;
+import io.fabric8.kubernetes.api.model.autoscaling.v2.MetricSpec;
+import io.fabric8.kubernetes.api.model.autoscaling.v2.MetricSpecBuilder;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Generates kubernetes Horizontal Pod Autoscaler from annotations.
@@ -39,6 +43,29 @@ import java.io.IOException;
 public class HPAHandler extends AbstractArtifactHandler {
 
     private void generate(PodAutoscalerModel podAutoscalerModel) throws KubernetesPluginException {
+        List<MetricSpec> metrics = new ArrayList<>();
+        metrics.add(new MetricSpecBuilder()
+                .withType("Resource")
+                .withNewResource()
+                .withName("cpu")
+                .withNewTarget()
+                .withType("Utilization")
+                .withAverageUtilization(podAutoscalerModel.getCpuPercentage())
+                .endTarget()
+                .endResource()
+                .build());
+        if (podAutoscalerModel.getMemoryPercentage() != 0) {
+            metrics.add(new MetricSpecBuilder()
+                    .withType("Resource")
+                    .withNewResource()
+                    .withName("memory")
+                    .withNewTarget()
+                    .withType("Utilization")
+                    .withAverageUtilization(podAutoscalerModel.getMemoryPercentage())
+                    .endTarget()
+                    .endResource()
+                    .build());
+        }
         HorizontalPodAutoscaler horizontalPodAutoscaler = new HorizontalPodAutoscalerBuilder()
                 .withNewMetadata()
                 .withName(podAutoscalerModel.getName())
@@ -48,7 +75,7 @@ public class HPAHandler extends AbstractArtifactHandler {
                 .withNewSpec()
                 .withMaxReplicas(podAutoscalerModel.getMaxReplicas())
                 .withMinReplicas(podAutoscalerModel.getMinReplicas())
-                .withTargetCPUUtilizationPercentage(podAutoscalerModel.getCpuPercentage())
+                .withMetrics(metrics)
                 .withNewScaleTargetRef("apps/v1", "Deployment", podAutoscalerModel.getDeployment())
                 .endSpec()
                 .build();
@@ -61,22 +88,22 @@ public class HPAHandler extends AbstractArtifactHandler {
             KubernetesUtils.writeToFile(hpaContent, outputFileName);
         } catch (IOException e) {
             Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.ARTIFACT_GEN_FAILED,
-                    new NullLocation(), "autoscaler" , podAutoscalerModel.getName());
+                    new NullLocation(), "autoscaler", podAutoscalerModel.getName());
             throw new KubernetesPluginException(diagnostic);
         }
     }
-
 
     private void resolveToml(PodAutoscalerModel hpa) {
         Toml ballerinaCloud = dataHolder.getBallerinaCloud();
         if (ballerinaCloud != null) {
             final String autoscaling = "cloud.deployment.autoscaling.";
             hpa.setMaxReplicas(Math.toIntExact(TomlHelper.getLong(ballerinaCloud, autoscaling + "max_replicas",
-                    (long) hpa.getMaxReplicas())));
+                    hpa.getMaxReplicas())));
             hpa.setMinReplicas(Math.toIntExact(TomlHelper.getLong(ballerinaCloud, autoscaling + "min_replicas",
-                    (long) hpa.getMinReplicas())));
+                    hpa.getMinReplicas())));
             hpa.setCpuPercentage(Math.toIntExact(TomlHelper.getLong(ballerinaCloud, autoscaling + "cpu",
-                    (long) hpa.getCpuPercentage())));
+                    hpa.getCpuPercentage())));
+            hpa.setMemoryPercentage(Math.toIntExact(TomlHelper.getLong(ballerinaCloud, autoscaling + "memory", 0)));
         }
     }
 

@@ -13,3 +13,4 @@ max_cpu="500m" # Maximum CPU allocated to the container
 min_replicas=2 # Minimum number of replicas of the container alive at a given time
 max_replicas=5 # Maximum number of replicas of the container alive at a given time
 cpu=50 # CPU utilization threshold for spawning a new instance
+memory=60 # Memory utilization threshold for spawning a new instance

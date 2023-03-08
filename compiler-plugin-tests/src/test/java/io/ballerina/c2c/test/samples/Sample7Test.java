@@ -27,8 +27,8 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -67,8 +67,8 @@ public class Sample7Test extends SampleTest {
                 , 0);
         File artifactYaml = KUBERNETES_TARGET_PATH.resolve("cafe.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
-        KubernetesClient client = new DefaultKubernetesClient();
-        List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
+        KubernetesClient client = new KubernetesClientBuilder().build();
+        List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).items();
         for (HasMetadata data : k8sItems) {
             switch (data.getKind()) {
                 case "Deployment":

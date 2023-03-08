@@ -26,9 +26,10 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.autoscaling.v1.HorizontalPodAutoscaler;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.api.model.autoscaling.v2.HorizontalPodAutoscaler;
+import io.fabric8.kubernetes.api.model.autoscaling.v2.MetricSpec;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -68,8 +69,8 @@ public class Sample3Test extends SampleTest {
                 , 0);
         File artifactYaml = KUBERNETES_TARGET_PATH.resolve("scaling.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
-        KubernetesClient client = new DefaultKubernetesClient();
-        List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
+        KubernetesClient client = new KubernetesClientBuilder().build();
+        List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).items();
         for (HasMetadata data : k8sItems) {
             switch (data.getKind()) {
                 case "Deployment":
@@ -130,7 +131,17 @@ public class Sample3Test extends SampleTest {
         Assert.assertEquals("scaling-hpa", hpa.getMetadata().getName());
         Assert.assertEquals(5, hpa.getSpec().getMaxReplicas().intValue());
         Assert.assertEquals(2, hpa.getSpec().getMinReplicas().intValue());
-        Assert.assertEquals(50, hpa.getSpec().getTargetCPUUtilizationPercentage().intValue());
+        MetricSpec metricSpec = hpa.getSpec().getMetrics().get(0);
+        Assert.assertEquals(metricSpec.getType(), "Resource");
+        Assert.assertEquals(metricSpec.getResource().getName(), "cpu");
+        Assert.assertEquals(metricSpec.getResource().getTarget().getAverageUtilization().intValue(), 50);
+        Assert.assertEquals(metricSpec.getResource().getTarget().getType(), "Utilization");
+
+        MetricSpec metricSpec1 = hpa.getSpec().getMetrics().get(1);
+        Assert.assertEquals(metricSpec1.getType(), "Resource");
+        Assert.assertEquals(metricSpec1.getResource().getName(), "memory");
+        Assert.assertEquals(metricSpec1.getResource().getTarget().getAverageUtilization().intValue(), 60);
+        Assert.assertEquals(metricSpec1.getResource().getTarget().getType(), "Utilization");
         Assert.assertEquals("Deployment", hpa.getSpec().getScaleTargetRef().getKind());
         Assert.assertEquals("scaling-deployment", hpa.getSpec().getScaleTargetRef().getName());
 
