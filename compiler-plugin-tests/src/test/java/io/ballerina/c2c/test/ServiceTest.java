@@ -19,8 +19,8 @@ import io.ballerina.c2c.test.utils.KubernetesTestUtils;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -46,8 +46,8 @@ public class ServiceTest {
         File artifactYaml = projectPath.resolve("target").resolve(KUBERNETES).resolve("internal").resolve("internal" +
                 ".yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
-        KubernetesClient client = new DefaultKubernetesClient();
-        List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
+        KubernetesClient client = new KubernetesClientBuilder().build();
+        List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).items();
         for (HasMetadata data : k8sItems) {
             if ("Service".equals(data.getKind())) {
                 Service service = (Service) data;
@@ -66,8 +66,8 @@ public class ServiceTest {
         File artifactYaml = projectPath.resolve("target").resolve(KUBERNETES).resolve("clientconfig").resolve(
                 "clientconfig.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
-        KubernetesClient client = new DefaultKubernetesClient();
-        List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
+        KubernetesClient client = new KubernetesClientBuilder().build();
+        List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).items();
         for (HasMetadata data : k8sItems) {
             if ("Secret".equals(data.getKind())) {
                 Secret secret = (Secret) data;
@@ -86,8 +86,8 @@ public class ServiceTest {
         File artifactYaml = projectPath.resolve("target").resolve(KUBERNETES).resolve("bar").resolve(
                 "bar.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
-        KubernetesClient client = new DefaultKubernetesClient();
-        List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).get();
+        KubernetesClient client = new KubernetesClientBuilder().build();
+        List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).items();
         for (HasMetadata data : k8sItems) {
             if ("Secret".equals(data.getKind())) {
                 Secret secret = (Secret) data;
