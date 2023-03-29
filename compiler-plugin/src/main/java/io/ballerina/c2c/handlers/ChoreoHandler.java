@@ -60,7 +60,7 @@ public class ChoreoHandler extends AbstractArtifactHandler {
         options.setPrettyFlow(true);
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         Path resolve = dataHolder.getChoreoArtifactOutputPath().resolve("choreo.yaml");
-        Representer representer = new Representer();
+        Representer representer = new Representer(new DumperOptions());
         representer.addClassTag(ChoreoModel.class, Tag.MAP);
         Yaml yaml = new Yaml(representer, options);
         //create required directories
