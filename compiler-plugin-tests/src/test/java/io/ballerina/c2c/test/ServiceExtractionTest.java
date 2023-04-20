@@ -93,9 +93,11 @@ public class ServiceExtractionTest {
         ListenerInfo listener2 = serviceInfo2.getListeners().get(0);
         Assert.assertEquals(listener2.getPort(), 9091);
 
-        Assert.assertEquals(diagnostics.size(), 1);
-        Diagnostic diagnostic = diagnostics.get(0);
-        Assert.assertEquals(diagnostic.message(), "failed to retrieve port");
+        Assert.assertEquals(diagnostics.size(), 2);
+        Assert.assertEquals(diagnostics.get(0).message(),
+                "failed to retrieve port. defaultable ports are not supported");
+        Assert.assertEquals(diagnostics.get(1).message(),
+                "failed to retrieve port. defaultable ports are not supported");
     }
 
     @Test
