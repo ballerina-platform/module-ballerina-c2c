@@ -53,6 +53,8 @@ public enum C2CDiagnosticCodes {
     PATH_CONTENT_READ_FAILED_WARN("C2C_006", "unable to read contents of the file `%s`", WARNING),
     FAILED_VARIABLE_RETRIEVAL("C2C_016", "unable to retrieve the value of variable `%s`", WARNING),
     INVALID_CONFIG_FILE_NAME_TAKEN("C2C_017", "duplicate file under the same config map", ERROR),
+    FAILED_DEFAULTABLE_PORT_RETRIEVAL("C2C_018", "failed to retrieve port. defaultable ports are " +
+            "not supported", WARNING),
     ;
 
     private final String code;
@@ -60,24 +62,29 @@ public enum C2CDiagnosticCodes {
     private final DiagnosticSeverity severity;
 
     C2CDiagnosticCodes(String code, String message, DiagnosticSeverity severity) {
+
         this.code = code;
         this.message = message;
         this.severity = severity;
     }
 
     public String getCode() {
+
         return code;
     }
 
     public String getMessage() {
+
         return message;
     }
 
     public DiagnosticSeverity getSeverity() {
+
         return severity;
     }
 
     public static Diagnostic createDiagnostic(C2CDiagnosticCodes diagnostic, Location location, Object... args) {
+
         DiagnosticInfo diagnosticInfo = new DiagnosticInfo(diagnostic.getCode(),
                 String.format(diagnostic.getMessage(), args), diagnostic.getSeverity());
         return DiagnosticFactory.createDiagnostic(diagnosticInfo, location);
