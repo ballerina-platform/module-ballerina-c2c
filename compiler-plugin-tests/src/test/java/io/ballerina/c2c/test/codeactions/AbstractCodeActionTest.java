@@ -64,16 +64,23 @@ public abstract class AbstractCodeActionTest {
 
     private final Path sourcesPath = new File(getClass().getClassLoader().getResource("codeaction").getFile()).toPath();
 
-    private static final WorkspaceManager workspaceManager
-            = new BallerinaWorkspaceManager(new LanguageServerContextImpl());
+    private WorkspaceManager workspaceManager = new BallerinaWorkspaceManager(new LanguageServerContextImpl());
     
-    private static final LanguageServerContext serverContext = new LanguageServerContextImpl();
+    private LanguageServerContext serverContext = new LanguageServerContextImpl();
 
     @BeforeClass
-    public void init() throws Exception {
+    public void setup() {
         this.serviceEndpoint = TestUtil.initializeLanguageSever();
+        this.workspaceManager = new BallerinaWorkspaceManager(new LanguageServerContextImpl());
+        this.serverContext = new LanguageServerContextImpl();
     }
 
+    @AfterClass
+    public void cleanUp() {
+        this.serverContext = null;
+        this.workspaceManager = null;
+        TestUtil.shutdownLanguageServer(this.serviceEndpoint);
+    }
     @Test(dataProvider = "codeaction-data-provider")
     public void test(String config, String source) throws IOException, WorkspaceDocumentException {
         String configJsonPath =
@@ -115,13 +122,24 @@ public abstract class AbstractCodeActionTest {
                     continue;
                 }
                 // Match edits
+                boolean invalid = false;
                 if (expected.get("edits") != null) {
-                    JsonArray actualEdit = right.get("edit").getAsJsonObject().get("documentChanges")
-                            .getAsJsonArray().get(0).getAsJsonObject().get("edits").getAsJsonArray();
-                    JsonArray expEdit = expected.get("edits").getAsJsonArray();
-                    if (!expEdit.equals(actualEdit)) {
-                        continue;
+                    JsonArray actualEditArray = right.get("edit").getAsJsonObject().get("documentChanges")
+                            .getAsJsonArray();
+                    for (JsonElement docChange : actualEditArray) {
+                        JsonElement edits = docChange.getAsJsonObject().get("edits");
+                        if (edits == null) {
+                            continue;
+                        }
+                        JsonArray actualEdit = edits.getAsJsonArray();
+                        JsonArray expEdit = expected.get("edits").getAsJsonArray();
+                        if (!expEdit.equals(actualEdit)) {
+                            invalid = true;
+                        }
                     }
+                }
+                if (invalid) {
+                    continue;
                 }
                 // Match args
                 if (expected.get("command") != null) {
@@ -168,11 +186,6 @@ public abstract class AbstractCodeActionTest {
                               "Cannot find expected Code Action for: " + expTitle + ", cursor at " + cursorStr);
         }
         TestUtil.closeDocument(this.serviceEndpoint, sourcePath);
-    }
-
-    @AfterClass
-    public void cleanupLanguageServer() {
-        TestUtil.shutdownLanguageServer(this.serviceEndpoint);
     }
 
     private JsonObject getResponseJson(String response) {
