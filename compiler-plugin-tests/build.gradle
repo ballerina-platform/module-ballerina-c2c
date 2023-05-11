@@ -58,8 +58,6 @@ task copyTooling {
 }
 
 test {
-    minHeapSize = "512m" // initial heap size
-    maxHeapSize = "800m" // maximum heap size
     dependsOn copyTooling
     useTestNG() {
         if (project.hasProperty('Travis')) {

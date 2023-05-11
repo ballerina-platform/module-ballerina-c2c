@@ -17,6 +17,7 @@
  */
 package io.ballerina.c2c.test.codeactions.diagnostic;
 
+import io.ballerina.c2c.test.codeactions.AbstractCodeActionTest;
 import org.testng.annotations.DataProvider;
 
 /**
@@ -24,7 +25,7 @@ import org.testng.annotations.DataProvider;
  *
  * @since 2.0.0
  */
-public class InvalidPort extends CodeActionTest {
+public class InvalidPort extends AbstractCodeActionTest {
 
     @DataProvider(name = "codeaction-data-provider")
     @Override
