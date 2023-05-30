@@ -34,6 +34,13 @@ service on new mod:TestListener ("test") {
     }
 }
 
+listener mod:TestListener modListener1 = new("test");
+//fails
+service on modListener1 {
+    remote function onEvent(json lead) returns error? {
+    }
+}
+
 http:Listener helloEP1 = new(9091);
 listener mod:TestListener modListener = new("test", helloEP1);
 

@@ -21,6 +21,7 @@ import io.ballerina.compiler.api.symbols.AnnotationSymbol;
 import io.ballerina.compiler.api.symbols.ClassSymbol;
 import io.ballerina.compiler.api.symbols.MethodSymbol;
 import io.ballerina.compiler.api.symbols.ModuleSymbol;
+import io.ballerina.compiler.api.symbols.ParameterKind;
 import io.ballerina.compiler.api.symbols.ParameterSymbol;
 import io.ballerina.compiler.api.symbols.ServiceDeclarationSymbol;
 import io.ballerina.compiler.api.symbols.Symbol;
@@ -372,17 +373,20 @@ public class C2CVisitor extends NodeVisitor {
     private Optional<ListenerInfo> extractListenerInitializer(String listenerName,
                                                               ImplicitNewExpressionNode initializerNode, int paramNo) {
         ParenthesizedArgList parenthesizedArgList = initializerNode.parenthesizedArgList().get();
-        if (parenthesizedArgList.arguments().size() == 0) {
+        SeparatedNodeList<FunctionArgumentNode> arguments = parenthesizedArgList.arguments();
+        if (arguments.size() == 0) {
             return Optional.empty();
         }
-        FunctionArgumentNode functionArgumentNode = parenthesizedArgList.arguments().get(paramNo);
-        ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
-        if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-            return getListenerInfo(listenerName, expression);
-        } else if (expression instanceof BasicLiteralNode) {
-            BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expression;
-            int port = Integer.parseInt(basicLiteralNode.literalToken().text());
-            return Optional.of(new ListenerInfo(listenerName, port));
+        if (arguments.size() > paramNo) {
+            FunctionArgumentNode functionArgumentNode = arguments.get(paramNo);
+            ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
+            if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+                return getListenerInfo(listenerName, expression);
+            } else if (expression instanceof BasicLiteralNode) {
+                BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expression;
+                int port = Integer.parseInt(basicLiteralNode.literalToken().text());
+                return Optional.of(new ListenerInfo(listenerName, port));
+            }
         }
         return Optional.empty();
     }
@@ -604,9 +608,15 @@ public class C2CVisitor extends NodeVisitor {
                         Optional<ListenerInfo> listenerInfo = getPortValueFromSTForCustomListener(servicePath,
                                 serviceDeclarationNode, i, listenerIndex);
                         if (listenerInfo.isEmpty()) {
-                            diagnostics.add(C2CDiagnosticCodes
-                                    .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
-                                            parameterSymbol.location()));
+                            if (parameterSymbol.paramKind() == ParameterKind.DEFAULTABLE) {
+                                diagnostics.add(C2CDiagnosticCodes
+                                        .createDiagnostic(C2CDiagnosticCodes.FAILED_DEFAULTABLE_PORT_RETRIEVAL,
+                                                parameterSymbol.location()));
+                            } else {
+                                diagnostics.add(C2CDiagnosticCodes
+                                        .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL,
+                                                parameterSymbol.location()));
+                            }
                             continue;
                         }
                         listenerInfos.add(listenerInfo.get());
