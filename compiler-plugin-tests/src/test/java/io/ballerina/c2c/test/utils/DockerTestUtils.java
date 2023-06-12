@@ -22,7 +22,9 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectImageResponse;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
-import com.github.dockerjava.core.DockerClientBuilder;
+import com.github.dockerjava.core.DockerClientConfig;
+import com.github.dockerjava.core.DockerClientImpl;
+import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +43,10 @@ public class DockerTestUtils {
     private static final Logger log = LoggerFactory.getLogger(DockerTestUtils.class);
 
     public static DockerClient getDockerClient() {
-        DefaultDockerClientConfig.Builder dockerClientConfig = DefaultDockerClientConfig.createDefaultConfigBuilder();
-        return DockerClientBuilder.getInstance(dockerClientConfig.build()).build();
+        DockerClientConfig standard = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
+        ApacheDockerHttpClient build = new ApacheDockerHttpClient.Builder().dockerHost(standard.getDockerHost())
+                .sslConfig(standard.getSSLConfig()).build();
+        return DockerClientImpl.getInstance(standard, build);
     }
 
     /**
