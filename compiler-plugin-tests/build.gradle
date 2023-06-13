@@ -30,6 +30,7 @@ dependencies {
     testImplementation project(":cloud-util")
     testImplementation "org.ballerinalang:ballerina-lang:${ballerinaLangVersion}"
     testImplementation "com.github.docker-java:docker-java:${dockerJavaVersion}"
+    testImplementation "com.github.docker-java:docker-java-transport-httpclient5:${dockerJavaVersion}"
     testImplementation "io.fabric8:kubernetes-client:${fabric8KubernetesClientVersion}"
     testImplementation "org.slf4j:slf4j-api:${slf4jVersion}"
     testImplementation "org.testng:testng:${testngVersion}"

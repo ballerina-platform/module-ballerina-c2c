@@ -22,7 +22,9 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectImageResponse;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
-import com.github.dockerjava.core.DockerClientBuilder;
+import com.github.dockerjava.core.DockerClientConfig;
+import com.github.dockerjava.core.DockerClientImpl;
+import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import io.ballerina.toml.semantic.diagnostics.TomlDiagnostic;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import io.fabric8.kubernetes.client.utils.Serialization;
@@ -62,7 +64,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -96,8 +97,10 @@ public class KubernetesTestUtils {
     }
 
     public static DockerClient getDockerClient() {
-        DefaultDockerClientConfig.Builder dockerClientConfig = DefaultDockerClientConfig.createDefaultConfigBuilder();
-        return DockerClientBuilder.getInstance(dockerClientConfig.build()).build();
+        DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
+        ApacheDockerHttpClient build = new ApacheDockerHttpClient.Builder().dockerHost(config.getDockerHost())
+                .sslConfig(config.getSSLConfig()).build();
+        return DockerClientImpl.getInstance(config, build);
     }
 
     /**
@@ -406,7 +409,7 @@ public class KubernetesTestUtils {
      */
     public static <T> T loadYaml(File file) throws IOException {
         FileInputStream fileInputStream = FileUtils.openInputStream(file);
-        return Serialization.unmarshal(fileInputStream, Collections.emptyMap());
+        return Serialization.unmarshal(fileInputStream, new HashMap<>());
     }
 
     public static List<Diagnostic> getC2CDiagnostics(Collection<Diagnostic> allDiagnostics) {
