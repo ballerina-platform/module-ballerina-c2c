@@ -60,6 +60,7 @@ public class DockerModel {
     private PackageID pkgId;
     private Path fatJarPath;
     private boolean thinJar = true;
+    private String graalvmBuildArgs;
 
     public DockerModel() {
         // Initialize with default values except for image name

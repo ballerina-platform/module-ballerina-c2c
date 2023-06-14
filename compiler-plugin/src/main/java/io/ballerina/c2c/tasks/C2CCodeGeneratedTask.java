@@ -92,6 +92,8 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
         BuildOptions buildOptions = currentPackage.project().buildOptions();
         String buildType = buildOptions.cloud();
         dataHolder.getDockerModel().setFatJarPath(executableJarFile);
+        String graalvmBuildArgs = buildOptions.graalVMBuildOptions();
+        dataHolder.getDockerModel().setGraalvmBuildArgs(graalvmBuildArgs);
         KubernetesContext.getInstance().setCurrentPackage(packageId);
         dataHolder.setPackageID(packageId);
         executableJarFile = executableJarFile.toAbsolutePath();
