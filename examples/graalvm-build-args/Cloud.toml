@@ -1,0 +1,7 @@
+[container.image]
+name = "build-arg"
+repository = "xlight05"
+tag = "1.0.0"
+
+[settings]
+buildImage = false

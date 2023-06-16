@@ -1,9 +1,10 @@
 [package]
 org = "hello"
-name = "hello"
+name= "native_args"
 version = "0.0.1"
 
 [build-options]
 observabilityIncluded = true
-cloud = "k8s"
+cloud = "docker"
 graalvm = true
+graalvmBuildOptions = "--static --libc=musl"

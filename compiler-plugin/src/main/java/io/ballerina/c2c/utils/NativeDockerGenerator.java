@@ -40,12 +40,14 @@ import static io.ballerina.c2c.utils.DockerGenUtils.isBlank;
 public class NativeDockerGenerator extends DockerGenerator {
 
     public NativeDockerGenerator(DockerModel dockerModel) {
+
         super(dockerModel);
     }
 
     @Override
     public void createArtifacts(PrintStream outStream, String logAppender, Path jarFilePath, Path outputDir)
             throws DockerGenException {
+
         String dockerContent = generateMultiStageDockerfile();
         try {
             DockerGenUtils.writeToFile(dockerContent, outputDir.resolve("Dockerfile"));
@@ -74,15 +76,21 @@ public class NativeDockerGenerator extends DockerGenerator {
     }
 
     private String generateMultiStageDockerfile() {
+
         String fatJarFileName = this.dockerModel.getFatJarPath().getFileName().toString();
         String executableName = fatJarFileName.replaceFirst(".jar", "");
+        StringBuilder nativeBuildScriptExec = new StringBuilder().append("RUN sh build-native.sh ").
+                append(fatJarFileName).append(" ").append(executableName);
+        if (!this.dockerModel.getGraalvmBuildArgs().equals("")) {
+            nativeBuildScriptExec.append(" '").append(this.dockerModel.getGraalvmBuildArgs()).append("'");
+        }
         StringBuilder dockerfileContent =
                 new StringBuilder().append("# Auto Generated Dockerfile").append(LINE_SEPARATOR).append("FROM ")
                         .append(DockerGenConstants.NATIVE_BUILDER_IMAGE).append(" as build").append(LINE_SEPARATOR)
                         .append(LINE_SEPARATOR).append("WORKDIR /app/build").append(LINE_SEPARATOR)
                         .append(LINE_SEPARATOR).append("COPY ").append(fatJarFileName).append(" .")
                         .append(LINE_SEPARATOR).append(LINE_SEPARATOR)
-                        .append("RUN sh build-native.sh ").append(fatJarFileName).append(" ").append(executableName)
+                        .append(nativeBuildScriptExec)
                         .append(LINE_SEPARATOR).append(LINE_SEPARATOR).append("FROM ")
                         .append(DockerGenConstants.RUNTIME_BASE_IMAGE).append(LINE_SEPARATOR)
                         .append(LINE_SEPARATOR);
@@ -109,6 +117,7 @@ public class NativeDockerGenerator extends DockerGenerator {
 
     @Override
     protected void appendUser(StringBuilder dockerfileContent) {
+
         dockerfileContent.append("RUN useradd -ms /bin/bash ballerina").append(LINE_SEPARATOR);
     }
 }

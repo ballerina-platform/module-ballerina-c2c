@@ -356,13 +356,29 @@ public class KubernetesTestUtils {
      */
     public static int compileBallerinaProject(Path sourceDirectory) throws InterruptedException,
             IOException {
+        return compileBallerinaProject(sourceDirectory, "");
+    }
+
+    /**
+     * Compile a ballerina project in a given directory.
+     *
+     * @param sourceDirectory Ballerina source directory
+     * @return Exit code
+     * @throws InterruptedException if an error occurs while compiling
+     * @throws IOException          if an error occurs while writing file
+     */
+    public static int compileBallerinaProject(Path sourceDirectory, String cloudFlag) throws InterruptedException,
+            IOException {
         Path dependenciesToml = Paths.get(sourceDirectory.toAbsolutePath().toString(), "Dependencies.toml");
         if (dependenciesToml.toFile().exists()) {
             log.warn("Deleting already existing Dependencies.toml file.");
             FileUtils.deleteQuietly(dependenciesToml.toFile());
         }
-
         ProcessBuilder pb = new ProcessBuilder(BALLERINA_COMMAND, BUILD);
+
+        if (!cloudFlag.equals("")) {
+            pb = new ProcessBuilder(BALLERINA_COMMAND, BUILD, "--cloud=" + cloudFlag);
+        }
 
         log.info(COMPILING + sourceDirectory.normalize());
         log.debug(EXECUTING_COMMAND + pb.command());
