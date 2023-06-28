@@ -92,11 +92,11 @@ public class NativeDockerGenerator extends DockerGenerator {
                         .append(LINE_SEPARATOR).append(LINE_SEPARATOR)
                         .append(nativeBuildScriptExec)
                         .append(LINE_SEPARATOR).append(LINE_SEPARATOR).append("FROM ")
-                        .append(DockerGenConstants.RUNTIME_BASE_IMAGE).append(LINE_SEPARATOR)
+                        .append(dockerModel.getBaseImage()).append(LINE_SEPARATOR)
                         .append(LINE_SEPARATOR);
 
         appendUser(dockerfileContent);
-        dockerfileContent.append("WORKDIR ").append("/home/ballerina").append(LINE_SEPARATOR);
+
         appendCommonCommands(dockerfileContent);
 
         dockerfileContent.append("COPY --from=build /app/build/").append(executableName).append(" .")
@@ -117,7 +117,9 @@ public class NativeDockerGenerator extends DockerGenerator {
 
     @Override
     protected void appendUser(StringBuilder dockerfileContent) {
-
-        dockerfileContent.append("RUN useradd -ms /bin/bash ballerina").append(LINE_SEPARATOR);
+        if (this.dockerModel.getBaseImage().equals(DockerGenConstants.NATIVE_RUNTIME_BASE_IMAGE)) {
+            dockerfileContent.append("RUN useradd -ms /bin/bash ballerina").append(LINE_SEPARATOR);
+        }
+        dockerfileContent.append("WORKDIR ").append("/home/ballerina").append(LINE_SEPARATOR);
     }
 }
