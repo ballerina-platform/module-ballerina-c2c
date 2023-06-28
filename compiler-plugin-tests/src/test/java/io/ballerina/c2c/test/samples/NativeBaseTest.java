@@ -37,31 +37,21 @@ import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 /**
  * Test cases for docker cloud option as a project.
  */
-public class NativeArgsTest {
+public class NativeBaseTest {
 
     protected static final Path SAMPLE_DIR = Paths.get(FilenameUtils.separatorsToSystem(
             System.getProperty("sampleDir")));
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("graalvm-build-args");
+    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("graalvm-base-image");
     private static final Path DOCKER_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("native_args");
-    @Test
-    public void validateDockerBuildOption() throws IOException, InterruptedException, KubernetesPluginException {
+            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("base_img");
+
+    @Test()
+    public void validateCustomBaseImage() throws IOException, InterruptedException, KubernetesPluginException {
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH), 0);
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
-        Assert.assertTrue(content.contains("--static"));
-        Assert.assertTrue(content.contains("FROM debian:11-slim"));
-        KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
-    }
-
-    @Test(dependsOnMethods = { "validateDockerBuildOption" })
-    public void validateK8sBuildOption() throws IOException, InterruptedException, KubernetesPluginException {
-        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH, "k8s"), 0);
-        File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
-        String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
-        Assert.assertTrue(dockerFile.exists());
-        Assert.assertTrue(content.contains("--static"));
+        Assert.assertTrue(content.contains("FROM alpine"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 }

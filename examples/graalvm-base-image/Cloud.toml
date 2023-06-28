@@ -1,0 +1,8 @@
+[container.image]
+name = "base-img"
+repository = "xlight05"
+tag = "1.0.0"
+base="alpine"
+
+[settings]
+buildImage = false
