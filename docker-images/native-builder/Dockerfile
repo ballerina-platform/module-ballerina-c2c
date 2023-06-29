@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ghcr.io/graalvm/native-image:ol8-java11-22.2.0
+FROM ghcr.io/graalvm/graalvm-ce:ol9-java17-22.3.2
 
 COPY build-native.sh build/

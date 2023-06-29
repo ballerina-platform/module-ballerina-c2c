@@ -213,7 +213,7 @@ public class DockerImageName {
      *
      * @return full name with the original registry and the original tag given (if any).
      */
-    public String getFullName() {
+    public final String getFullName() {
         return getFullName(null);
     }
     
