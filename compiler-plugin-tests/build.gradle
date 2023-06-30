@@ -38,6 +38,8 @@ dependencies {
     testImplementation "org.ballerinalang:language-server-commons:${ballerinaLangVersion}"
     testImplementation "org.ballerinalang:language-server-cli:${ballerinaLangVersion}"
     testImplementation "org.ballerinalang:ballerina-cli:${ballerinaLangVersion}"
+    testImplementation "org.ballerinalang:toml-parser:${ballerinaLangVersion}"
+    testImplementation "org.ballerinalang:ballerina-tools-api:${ballerinaLangVersion}"
 
     testImplementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.12.0'
     testImplementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.12.0'
@@ -84,9 +86,9 @@ jacocoTestReport {
     def classFiles = new File("${rootDir}/compiler-plugin/build/classes/java/main/io/ballerina/c2c")
     additionalClassDirs(classFiles)
     reports {
-        xml.enabled = true
-        html.enabled = true
-        csv.enabled = true
+        xml.required = true
+        html.required = true
+        csv.required = true
         xml.destination = new File("${buildDir}/reports/jacoco/report.xml")
         html.destination = new File("${buildDir}/reports/jacoco/report.html")
         csv.destination = new File("${buildDir}/reports/jacoco/report.csv")
@@ -101,3 +103,4 @@ tasks.withType(PublishToMavenLocal) {
     enabled = false
 }
 
+tasks.checkstyleTest.dependsOn(":checkstyle:downloadMultipleFiles")

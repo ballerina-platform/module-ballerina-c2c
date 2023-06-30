@@ -85,7 +85,7 @@ jar {
         project.configurations.implementation.canBeResolved = true
         configurations = [project.configurations.fatJar]
         exclude 'cloud-compiler-plugin'
-        classifier = null
+        archiveClassifier = null
     })
 }
 

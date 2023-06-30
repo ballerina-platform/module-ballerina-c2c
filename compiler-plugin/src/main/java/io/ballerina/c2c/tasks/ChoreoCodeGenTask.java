@@ -119,7 +119,7 @@ public class ChoreoCodeGenTask implements CompilerLifecycleTask<CompilerLifecycl
     }
 
     private void addDependencyJars(PackageCompilation compilation, String executableFatJar) {
-        JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilation, JvmTarget.JAVA_11);
+        JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilation, JvmTarget.JAVA_17);
         io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
 
         // Add dependency jar files to docker model.

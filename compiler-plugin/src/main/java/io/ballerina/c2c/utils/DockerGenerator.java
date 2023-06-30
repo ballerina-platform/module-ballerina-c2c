@@ -223,7 +223,7 @@ public class DockerGenerator {
     }
 
     protected void appendUser(StringBuilder dockerfileContent) {
-        if (this.dockerModel.getBaseImage().equals(DockerGenConstants.OPENJDK_11_JRE_SLIM_BASE)) {
+        if (this.dockerModel.getBaseImage().equals(DockerGenConstants.OPENJDK_17_JRE_SLIM_BASE)) {
             dockerfileContent.append("RUN addgroup troupe \\").append(LINE_SEPARATOR);
             dockerfileContent.append("    && adduser -S -s /bin/bash -g 'ballerina' -G troupe -D ballerina \\")
                     .append(LINE_SEPARATOR);
@@ -296,7 +296,7 @@ public class DockerGenerator {
             this.dockerModel.getPorts().forEach(port -> dockerfileContent.append(" ").append(port));
         }
         dockerfileContent.append(LINE_SEPARATOR);
-        if (this.dockerModel.getBaseImage().equals(DockerGenConstants.OPENJDK_11_JRE_SLIM_BASE)) {
+        if (this.dockerModel.getBaseImage().equals(DockerGenConstants.OPENJDK_17_JRE_SLIM_BASE)) {
             dockerfileContent.append("USER ballerina").append(LINE_SEPARATOR);
             dockerfileContent.append(LINE_SEPARATOR);
         }

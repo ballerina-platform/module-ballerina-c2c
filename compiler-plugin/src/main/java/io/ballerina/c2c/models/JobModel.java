@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import static io.ballerina.c2c.DockerGenConstants.OPENJDK_11_JRE_SLIM_BASE;
+import static io.ballerina.c2c.DockerGenConstants.OPENJDK_17_JRE_SLIM_BASE;
 
 /**
  * Job model class.
@@ -55,7 +55,7 @@ public class JobModel extends KubernetesModel {
         this.labels = new HashMap<>();
         this.copyFiles = new HashSet<>();
         this.restartPolicy = KubernetesConstants.RestartPolicy.OnFailure.name();
-        this.setBaseImage(OPENJDK_11_JRE_SLIM_BASE);
+        this.setBaseImage(OPENJDK_17_JRE_SLIM_BASE);
         this.buildImage = true;
         this.envVars = new ArrayList<>();
         this.activeDeadlineSeconds = 20;

@@ -44,7 +44,7 @@ dependencies {
     extraLibs (project (":cloud-util"))  {
         exclude group: "org.apache.commons", module: "commons-text"
     }
-    configurations.compile.extendsFrom(configurations.extraLibs)
+    configurations.implementation.extendsFrom(configurations.extraLibs)
 }
 
 sourceSets {
@@ -65,6 +65,7 @@ task buildForDocker(type: Copy){
 
 jar {
     dependsOn buildForDocker
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from {
         configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
     }
@@ -95,3 +96,6 @@ publishing {
         }
     }
 }
+
+tasks.processResources.dependsOn(":cloud-tooling:buildForDocker")
+tasks.jar.dependsOn(":cloud-util:jar")
