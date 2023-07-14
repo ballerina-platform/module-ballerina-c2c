@@ -61,6 +61,7 @@ task copyTooling {
 }
 
 test {
+    jvmArgs = ['--add-opens=java.base/java.util=ALL-UNNAMED']
     dependsOn copyTooling
     useTestNG() {
         if (project.hasProperty('Travis')) {

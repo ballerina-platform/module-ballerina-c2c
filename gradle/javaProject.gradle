@@ -38,7 +38,7 @@ tasks.withType(JavaCompile) {
 sourceCompatibility = JavaVersion.VERSION_17
 
 jacoco {
-    toolVersion = "0.8.6"
+    toolVersion = "0.8.10"
 }
 
 test {
