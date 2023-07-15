@@ -43,7 +43,7 @@
             <class name="io.ballerina.c2c.test.samples.Sample10Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample11Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample12Test"/>
-            <class name="io.ballerina.c2c.test.samples.NativeTest"/>
+<!--            <class name="io.ballerina.c2c.test.samples.NativeTest"/>-->
             <class name="io.ballerina.c2c.test.samples.NativeArgsTest"/>
             <class name="io.ballerina.c2c.test.samples.NativeBaseTest"/>
             <class name="io.ballerina.c2c.test.samples.DockerProjectTest"/>

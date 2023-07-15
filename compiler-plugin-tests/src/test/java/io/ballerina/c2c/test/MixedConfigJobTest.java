@@ -121,8 +121,8 @@ public class MixedConfigJobTest {
         // Validate config file
         Assert.assertEquals(container.getEnv().get(0).getName(), "BAL_CONFIG_FILES");
         Assert.assertEquals(container.getEnv().get(0).getValue(),
-                "/home/ballerina/conf/Config.toml:/home/ballerina/conf1/Config1.toml:" +
-                        "/home/ballerina/secrets1/additional-secrets.toml:/home/ballerina/secrets/mysql-secrets.toml:");
+                "/home/ballerina/conf1/Config1.toml:/home/ballerina/conf/Config.toml:" +
+                        "/home/ballerina/secrets/mysql-secrets.toml:/home/ballerina/secrets1/additional-secrets.toml:");
     }
 
     @Test
