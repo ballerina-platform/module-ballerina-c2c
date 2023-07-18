@@ -290,7 +290,7 @@
               "description": "Maximum memory allocated to the container",
               "type": "string",
               "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
-              "default": "256Mi"
+              "default": "512Mi"
             },
             "min_cpu": {
               "description": "Minimum CPU allocated to the container",

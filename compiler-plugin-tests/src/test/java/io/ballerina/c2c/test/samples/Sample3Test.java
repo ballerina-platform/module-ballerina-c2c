@@ -103,7 +103,7 @@ public class Sample3Test extends SampleTest {
         // Assert Containers
         Container container = deployment.getSpec().getTemplate().getSpec().getContainers().get(0);
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE);
-        Assert.assertEquals(container.getResources().getLimits().get("memory").toString(), "256Mi");
+        Assert.assertEquals(container.getResources().getLimits().get("memory").toString(), "512Mi");
         Assert.assertEquals(container.getResources().getLimits().get("cpu").toString(), "500m");
         Assert.assertEquals(container.getResources().getRequests().get("cpu").toString(), "200m");
         Assert.assertEquals(container.getResources().getRequests().get("memory").toString(), "100Mi");
