@@ -34,7 +34,7 @@ spec:
 ```toml
 [[cloud.deployment]]
 min_memory="100Mi" # Minimum memory allocated to the container
-max_memory="256Mi" # Maximum memory allocated to the container 
+max_memory="512Mi" # Maximum memory allocated to the container 
 min_cpu="200m" # Minimum CPU allocated to the container
 max_cpu="500m" # Maximum CPU allocated to the container
 ```
@@ -59,7 +59,7 @@ template:
         .
         resources:
           limits:
-            memory: "256Mi"
+            memory: "512Mi"
             cpu: "500m"
           requests:
             memory: "100Mi"

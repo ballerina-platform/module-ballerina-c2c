@@ -83,7 +83,7 @@ public class DeploymentModel extends KubernetesModel {
         this.registry = "";
         Map<String, Quantity> limit = new HashMap<>();
         limit.put("cpu", new Quantity("500m"));
-        limit.put("memory", new Quantity("256Mi"));
+        limit.put("memory", new Quantity("512Mi"));
         Map<String, Quantity> resource = new HashMap<>();
         resource.put("cpu", new Quantity("200m"));
         resource.put("memory", new Quantity("100Mi"));
