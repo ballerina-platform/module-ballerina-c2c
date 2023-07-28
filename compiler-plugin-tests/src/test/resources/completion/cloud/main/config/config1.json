@@ -63,6 +63,13 @@
             "insertText": "[[cloud.deployment.storage.volumes]]"
         },
         {
+            "label": "graalvm.builder",
+            "kind": "Snippet",
+            "detail": "Table",
+            "sortText": "C",
+            "insertText": "[graalvm.builder]"
+        },
+        {
             "label": "cmd",
             "kind": "Snippet",
             "detail": "String",

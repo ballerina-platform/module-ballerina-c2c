@@ -32,6 +32,11 @@
         <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
     </Match>
     <Match>
+        <Class name="io.ballerina.c2c.utils.KubernetesUtils"/>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    </Match>
+
+    <Match>
         <Class name="io.ballerina.c2c.utils.NativeDockerGenerator"/>
         <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
     </Match>

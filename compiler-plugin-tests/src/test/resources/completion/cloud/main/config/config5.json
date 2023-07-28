@@ -81,6 +81,13 @@
             "detail": "Table Array",
             "sortText": "C",
             "insertText": "[[cloud.secret.files]]"
+        },
+        {
+            "label": "graalvm.builder",
+            "kind": "Snippet",
+            "detail": "Table",
+            "sortText": "C",
+            "insertText": "[graalvm.builder]"
         }
     ]
 }

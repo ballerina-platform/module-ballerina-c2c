@@ -79,18 +79,13 @@ public class NativeDockerGenerator extends DockerGenerator {
 
         String fatJarFileName = this.dockerModel.getFatJarPath().getFileName().toString();
         String executableName = fatJarFileName.replaceFirst(".jar", "");
-        StringBuilder nativeBuildScriptExec = new StringBuilder().append("RUN sh build-native.sh ").
-                append(fatJarFileName).append(" ").append(executableName);
-        if (!this.dockerModel.getGraalvmBuildArgs().equals("")) {
-            nativeBuildScriptExec.append(" '").append(this.dockerModel.getGraalvmBuildArgs()).append("'");
-        }
         StringBuilder dockerfileContent =
                 new StringBuilder().append("# Auto Generated Dockerfile").append(LINE_SEPARATOR).append("FROM ")
-                        .append(DockerGenConstants.NATIVE_BUILDER_IMAGE).append(" as build").append(LINE_SEPARATOR)
+                        .append(dockerModel.getBuilderBase()).append(" as build").append(LINE_SEPARATOR)
                         .append(LINE_SEPARATOR).append("WORKDIR /app/build").append(LINE_SEPARATOR)
                         .append(LINE_SEPARATOR).append("COPY ").append(fatJarFileName).append(" .")
                         .append(LINE_SEPARATOR).append(LINE_SEPARATOR)
-                        .append(nativeBuildScriptExec)
+                        .append("RUN ").append(this.dockerModel.getBuilderCmd())
                         .append(LINE_SEPARATOR).append(LINE_SEPARATOR).append("FROM ")
                         .append(dockerModel.getBaseImage()).append(LINE_SEPARATOR)
                         .append(LINE_SEPARATOR);

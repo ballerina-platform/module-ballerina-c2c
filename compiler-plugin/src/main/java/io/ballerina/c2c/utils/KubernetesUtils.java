@@ -283,6 +283,19 @@ public class KubernetesUtils {
                 copyFiles.add(copyFileModel);
             }
             dockerModel.setThinJar(isThinJar(toml, dockerModel));
+            dockerModel.setBuilderBase(TomlHelper.getString(toml, "graalvm.builder.base",
+                    DockerGenConstants.NATIVE_BUILDER_IMAGE));
+
+            String fatJarFileName = dockerModel.getFatJarPath().getFileName().toString();
+            String executableName = fatJarFileName.replaceFirst(".jar", "");
+            StringBuilder defaultBuilderCmd = new StringBuilder().append("sh build-native.sh ").
+                    append(fatJarFileName).append(" ").append(executableName);
+            if (!dockerModel.getGraalvmBuildArgs().equals("")) {
+                defaultBuilderCmd.append(" '").append(dockerModel.getGraalvmBuildArgs()).append("'");
+            }
+
+            dockerModel.setBuilderCmd(TomlHelper.getString(toml, "graalvm.builder.buildCmd",
+                    defaultBuilderCmd.toString()));
             try {
                 dockerModel.setCopyFiles(copyFiles);
             } catch (DockerGenException e) {
