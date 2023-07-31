@@ -1,0 +1,10 @@
+[package]
+org = "hello"
+name= "custom_builder"
+version = "0.0.1"
+
+[build-options]
+observabilityIncluded = true
+cloud = "docker"
+graalvm = true
+graalvmBuildOptions = "--static --libc=musl"

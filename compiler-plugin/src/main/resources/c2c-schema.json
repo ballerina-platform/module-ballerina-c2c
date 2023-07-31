@@ -499,6 +499,38 @@
           }
         }
       }
+    },
+    "graalvm": {
+      "description": "Properties related to the graalvm builds",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "builder": {
+          "description": "Properties related to the builder image of the multistage build",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "base": {
+              "description": "base image of the builder image",
+              "type": "string",
+              "pattern": "^(?!\\s*$).+",
+              "default": "ballerina/native-builder:latest",
+              "message": {
+                "pattern": "`base` should not be empty"
+              }
+            },
+            "buildCmd": {
+              "description": "RUN statement to build the native image",
+              "type": "string",
+              "pattern": "^(?!\\s*$).+",
+              "default": "native-image -jar hello.jar hello",
+              "message": {
+                "pattern": "`buildCmd` should not be empty"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

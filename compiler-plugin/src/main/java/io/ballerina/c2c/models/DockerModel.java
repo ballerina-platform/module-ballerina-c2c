@@ -61,6 +61,9 @@ public class DockerModel {
     private Path fatJarPath;
     private boolean thinJar = true;
     private String graalvmBuildArgs;
+    private boolean isGraalVMBuild = false;
+    private String builderBase;
+    private String builderCmd;
 
     public DockerModel() {
         // Initialize with default values except for image name
@@ -70,10 +73,12 @@ public class DockerModel {
                 DockerGenConstants.OPENJDK_11_JRE_SLIM_BASE;
         this.enableDebug = false;
         this.debugPort = 5005;
-        externalFiles = new HashSet<>();
-        commandArg = "";
-        env = new HashMap<>();
-        dependencyJarPaths = new TreeSet<>();
+        this.externalFiles = new HashSet<>();
+        this.commandArg = "";
+        this.env = new HashMap<>();
+        this.dependencyJarPaths = new TreeSet<>();
+        this.builderBase = DockerGenConstants.NATIVE_BUILDER_IMAGE;
+        this.builderCmd = "";
     }
 
     public void addDependencyJarPaths(Set<Path> paths) {
