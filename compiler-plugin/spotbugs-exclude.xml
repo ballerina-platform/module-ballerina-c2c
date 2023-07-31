@@ -52,4 +52,7 @@
         <Class name="io.ballerina.c2c.handlers.DockerHandler"/>
         <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
     </Match>
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP, EI_EXPOSE_REP2, MS_EXPOSE_REP" />
+    </Match>
 </FindBugsFilter>

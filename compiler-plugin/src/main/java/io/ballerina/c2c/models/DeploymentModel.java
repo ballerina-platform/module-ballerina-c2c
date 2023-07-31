@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static io.ballerina.c2c.DockerGenConstants.OPENJDK_11_JRE_SLIM_BASE;
+import static io.ballerina.c2c.DockerGenConstants.OPENJDK_17_JRE_SLIM_BASE;
 
 /**
  * Kubernetes deployment annotations model class.
@@ -71,7 +71,7 @@ public class DeploymentModel extends KubernetesModel {
         this.replicas = 1;
         this.envVars = new ArrayList<>();
         this.buildImage = true;
-        this.baseImage = OPENJDK_11_JRE_SLIM_BASE;
+        this.baseImage = OPENJDK_17_JRE_SLIM_BASE;
         this.labels = new LinkedHashMap<>();
         this.nodeSelector = new LinkedHashMap<>();
         this.ports = new ArrayList<>();

@@ -144,7 +144,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
 
     private void addDependencyJars(PackageCompilation compilation, String executableFatJar) {
         JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilation,
-                JvmTarget.JAVA_11);
+                JvmTarget.JAVA_17);
         io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
 
         // Add dependency jar files to docker model.

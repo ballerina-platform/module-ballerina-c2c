@@ -16,33 +16,34 @@
  */
 
 plugins {
-    id "com.github.spotbugs" version "4.2.3"
-    id "com.github.johnrengelman.shadow" version "5.2.0"
-    id "de.undercouch.download" version "4.0.4"
+    id "com.github.spotbugs" version "5.0.14"
+    id "com.github.johnrengelman.shadow" version "8.1.1"
+    id "de.undercouch.download" version "5.4.0"
     id "net.researchgate.release" version "2.8.0"
+    id 'maven-publish'
 }
 
 ext.ballerinaLangVersion = project.ballerinaLangVersion
 ext.ballerinaSourceDirectory = "$buildDir/../src/main/ballerina"
-ext.dockerJavaVersion = "3.2.14"
-ext.fabric8KubernetesClientVersion = "6.4.1"
-ext.testngVersion = "6.14.3"
-ext.commomsIOVersion = "2.6"
+ext.dockerJavaVersion = "3.3.2"
+ext.fabric8KubernetesClientVersion = "6.7.2"
+ext.testngVersion = "7.6.1"
+ext.commomsIOVersion = "2.13.0"
 ext.commonsLoggingVersion = "1.2"
-ext.googleGsonVersion = "2.7"
-ext.slf4jVersion = "1.7.26"
+ext.googleGsonVersion = "2.10.1"
+ext.slf4jVersion = "2.0.7"
 
-ext.puppycrawlCheckstyleVersion = "8.18"
+ext.puppycrawlCheckstyleVersion= "10.12.0"
 
 ext.projectBuildSourceEncoding = "UTF-8"
 ext.projectReportingOutputEncoding = "UTF-8"
-ext.puppycrawlCheckstyleVersion = "8.18"
+ext.puppycrawlCheckstyleVersion = "10.12.0"
 ext.slf4jVersion = "1.7.26"
-ext.testngVersion = "6.14.3"
-ext.lombokVersion = "1.18.10"
-ext.commonIoVersion = "2.11.0"
-ext.jacksonYamlVersion = "2.13.2"
-ext.commonsCodecVersion = "1.15"
+ext.testngVersion = "7.6.1"
+ext.lombokVersion = "1.18.28"
+ext.commonIoVersion = "2.13.0"
+ext.jacksonYamlVersion = " 2.15.2"
+ext.commonsCodecVersion = "1.16.0"
 
 allprojects {
     group = project.group

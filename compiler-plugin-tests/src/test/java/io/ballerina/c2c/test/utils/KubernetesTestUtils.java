@@ -425,7 +425,7 @@ public class KubernetesTestUtils {
      */
     public static <T> T loadYaml(File file) throws IOException {
         FileInputStream fileInputStream = FileUtils.openInputStream(file);
-        return Serialization.unmarshal(fileInputStream, new HashMap<>());
+        return Serialization.unmarshal(fileInputStream);
     }
 
     public static List<Diagnostic> getC2CDiagnostics(Collection<Diagnostic> allDiagnostics) {

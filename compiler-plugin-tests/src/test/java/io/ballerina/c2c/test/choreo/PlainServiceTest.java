@@ -26,6 +26,7 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
@@ -62,7 +63,7 @@ public class PlainServiceTest {
     @Test
     public void validateChoreoYaml() throws IOException {
         String content = Files.readString(CHOREO_TARGET_PATH.resolve("choreo.yaml"), StandardCharsets.US_ASCII);
-        Yaml yaml = new Yaml(new Constructor(ChoreoModel.class));
+        Yaml yaml = new Yaml(new Constructor(ChoreoModel.class, new LoaderOptions()));
         ChoreoModel model = yaml.load(content);
         List<PortModel> ports = model.getPorts();
         Assert.assertEquals(ports.size(), 1);
