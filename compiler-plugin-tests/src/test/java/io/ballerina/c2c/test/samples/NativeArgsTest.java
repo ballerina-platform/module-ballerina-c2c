@@ -51,7 +51,7 @@ public class NativeArgsTest {
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
         Assert.assertTrue(content.contains("--static"));
-        Assert.assertTrue(content.contains("FROM debian:11-slim"));
+        Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 
