@@ -53,7 +53,7 @@ public class NativeBuilderConfigTest {
         Assert.assertTrue(content.contains("RUN sh build-native.sh custom_builder.jar custom_builder " +
                 "'--static --libc=musl'"));
         Assert.assertTrue(content.contains("FROM ballerina/musl-native-builder:2201.7.x as build"));
-        Assert.assertTrue(content.contains("FROM debian:11-slim"));
+        Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 
@@ -66,7 +66,7 @@ public class NativeBuilderConfigTest {
         Assert.assertTrue(content.contains("RUN sh build-native.sh custom_builder.jar custom_builder " +
                 "'--static --libc=musl'"));
         Assert.assertTrue(content.contains("FROM ballerina/musl-native-builder:2201.7.x as build"));
-        Assert.assertTrue(content.contains("FROM debian:11-slim"));
+        Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 }

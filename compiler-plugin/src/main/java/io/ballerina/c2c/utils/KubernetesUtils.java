@@ -250,13 +250,22 @@ public class KubernetesUtils {
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         final String containerImage = "container.image";
         Toml toml = dataHolder.getBallerinaCloud();
+        DockerModel dockerModel = dataHolder.getDockerModel();
+        dockerModel.setJarFileName(extractJarName(dataHolder.getJarPath()) + EXECUTABLE_JAR);
+
+        String fatJarFileName = dockerModel.getFatJarPath().getFileName().toString();
+        String executableName = fatJarFileName.replaceFirst(".jar", "");
+        StringBuilder defaultBuilderCmd = new StringBuilder().append("sh build-native.sh ").
+                append(fatJarFileName).append(" ").append(executableName);
+        if (!dockerModel.getGraalvmBuildArgs().equals("")) {
+            defaultBuilderCmd.append(" '").append(dockerModel.getGraalvmBuildArgs()).append("'");
+        }
+        dockerModel.setBuilderCmd(defaultBuilderCmd.toString());
         if (toml != null) {
-            DockerModel dockerModel = dataHolder.getDockerModel();
             dockerModel
                     .setRegistry(TomlHelper.getString(toml, containerImage + ".repository", null));
             dockerModel.setTag(TomlHelper.getString(toml, containerImage + ".tag", dockerModel.getTag()));
             dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", dockerModel.getBaseImage()));
-            dockerModel.setJarFileName(extractJarName(dataHolder.getJarPath()) + EXECUTABLE_JAR);
             dockerModel.setCmd(TomlHelper.getString(toml, containerImage + ".cmd", dockerModel.getCmd()));
             if (model instanceof DeploymentModel) {
 
@@ -285,14 +294,6 @@ public class KubernetesUtils {
             dockerModel.setThinJar(isThinJar(toml, dockerModel));
             dockerModel.setBuilderBase(TomlHelper.getString(toml, "graalvm.builder.base",
                     DockerGenConstants.NATIVE_BUILDER_IMAGE));
-
-            String fatJarFileName = dockerModel.getFatJarPath().getFileName().toString();
-            String executableName = fatJarFileName.replaceFirst(".jar", "");
-            StringBuilder defaultBuilderCmd = new StringBuilder().append("sh build-native.sh ").
-                    append(fatJarFileName).append(" ").append(executableName);
-            if (!dockerModel.getGraalvmBuildArgs().equals("")) {
-                defaultBuilderCmd.append(" '").append(dockerModel.getGraalvmBuildArgs()).append("'");
-            }
 
             dockerModel.setBuilderCmd(TomlHelper.getString(toml, "graalvm.builder.buildCmd",
                     defaultBuilderCmd.toString()));

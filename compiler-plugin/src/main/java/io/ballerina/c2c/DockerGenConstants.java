@@ -32,7 +32,7 @@ public class DockerGenConstants {
 
     public static final String NATIVE_BUILDER_TAG = "2201.7.x";
     public static final String NATIVE_BUILDER_IMAGE = "ballerina/native-builder:" + NATIVE_BUILDER_TAG;
-    public static final String NATIVE_RUNTIME_BASE_IMAGE = "debian:11-slim";
+    public static final String NATIVE_RUNTIME_BASE_IMAGE = "gcr.io/distroless/base";
     
     public static final int MAX_BALLERINA_LAYERS = 110;
     
