@@ -255,10 +255,17 @@ public class KubernetesUtils {
 
         String fatJarFileName = dockerModel.getFatJarPath().getFileName().toString();
         String executableName = fatJarFileName.replaceFirst(".jar", "");
-        StringBuilder defaultBuilderCmd = new StringBuilder().append("sh build-native.sh ").
-                append(fatJarFileName).append(" ").append(executableName);
+        StringBuilder defaultBuilderCmd = new StringBuilder().append("native-image ");
+        //TODO see if we need double quotes to name or jar
         if (!dockerModel.getGraalvmBuildArgs().equals("")) {
-            defaultBuilderCmd.append(" '").append(dockerModel.getGraalvmBuildArgs()).append("'");
+            defaultBuilderCmd.append(dockerModel.getGraalvmBuildArgs()).append(" ");
+        }
+        defaultBuilderCmd.append("-jar ").append(fatJarFileName).append(" -H:Name=")
+                .append(executableName).append(" --no-fallback");
+
+        //Avoid adding mostly static flag if --static flag is given
+        if (!dockerModel.getGraalvmBuildArgs().contains("--static")) {
+            defaultBuilderCmd.append(" -H:+StaticExecutableWithDynamicLibC");
         }
         dockerModel.setBuilderCmd(defaultBuilderCmd.toString());
         if (toml != null) {
