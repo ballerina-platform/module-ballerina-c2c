@@ -63,8 +63,8 @@ public class ServiceTest {
         Path projectPath = Paths.get("src", "test", "resources", "service", "client-truststore-modulelevel");
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(projectPath)
                 , 0);
-        File artifactYaml = projectPath.resolve("target").resolve(KUBERNETES).resolve("clientconfig").resolve(
-                "clientconfig.yaml").toFile();
+        File artifactYaml = projectPath.resolve("target").resolve(KUBERNETES).resolve("clientconfigmod").resolve(
+                "clientconfigmod.yaml").toFile();
         Assert.assertTrue(artifactYaml.exists());
         KubernetesClient client = new KubernetesClientBuilder().build();
         List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).items();
