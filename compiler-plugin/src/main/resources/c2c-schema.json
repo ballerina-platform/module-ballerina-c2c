@@ -514,7 +514,7 @@
               "description": "base image of the builder image",
               "type": "string",
               "pattern": "^(?!\\s*$).+",
-              "default": "ballerina/native-builder:latest",
+              "default": "ghcr.io/graalvm/native-image:ol8-java11-22.3.3",
               "message": {
                 "pattern": "`base` should not be empty"
               }

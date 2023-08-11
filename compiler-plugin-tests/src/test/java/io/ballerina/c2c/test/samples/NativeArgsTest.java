@@ -50,7 +50,8 @@ public class NativeArgsTest {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
-        Assert.assertTrue(content.contains("--static"));
+        Assert.assertTrue(content.contains("RUN native-image --gc=epsilon -jar native_args.jar " +
+                "-H:Name=native_args --no-fallback -H:+StaticExecutableWithDynamicLibC"));
         Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
@@ -61,7 +62,8 @@ public class NativeArgsTest {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
-        Assert.assertTrue(content.contains("--static"));
+        Assert.assertTrue(content.contains("RUN native-image --gc=epsilon -jar native_args.jar " +
+                "-H:Name=native_args --no-fallback -H:+StaticExecutableWithDynamicLibC"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 }
