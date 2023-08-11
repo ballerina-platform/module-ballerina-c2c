@@ -19,8 +19,6 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 description = 'Ballerina - Code2Cloud Extension Annotations'
 
-import org.apache.tools.ant.taskdefs.condition.Os
-
 buildscript {
     repositories {
         maven {
