@@ -52,7 +52,7 @@ public class NativeBaseTest {
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
         Assert.assertTrue(content.contains("FROM alpine"));
-        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image:ol8-java11-22.3.3 as build"));
+        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image-community:17-ol9 as build"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 }

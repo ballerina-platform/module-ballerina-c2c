@@ -514,7 +514,7 @@
               "description": "base image of the builder image",
               "type": "string",
               "pattern": "^(?!\\s*$).+",
-              "default": "ghcr.io/graalvm/native-image:ol8-java11-22.3.3",
+              "default": "ghcr.io/graalvm/native-image-community:17-ol9",
               "message": {
                 "pattern": "`base` should not be empty"
               }
