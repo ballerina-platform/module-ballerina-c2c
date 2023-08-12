@@ -36,6 +36,8 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -118,9 +120,14 @@ public class NativeTest extends SampleTest {
     }
 
     @Test
-    public void validateDockerfile() {
+    public void validateDockerfile() throws IOException {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         Assert.assertTrue(dockerFile.exists());
+        String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
+        Assert.assertTrue(content.contains("RUN native-image -jar hello.jar -H:Name=hello --no-fallback " +
+                "-H:+StaticExecutableWithDynamicLibC"));
+        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image:ol8-java11-22.3.3 as build"));
+        Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
     }
 
     @Test

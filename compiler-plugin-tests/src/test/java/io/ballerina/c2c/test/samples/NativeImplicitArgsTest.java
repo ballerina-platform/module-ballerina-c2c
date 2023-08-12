@@ -37,22 +37,36 @@ import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 /**
  * Test cases for docker cloud option as a project.
  */
-public class NativeBaseTest {
+public class NativeImplicitArgsTest {
 
     protected static final Path SAMPLE_DIR = Paths.get(FilenameUtils.separatorsToSystem(
             System.getProperty("sampleDir")));
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("graalvm-base-image");
+    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("graalvm-implicit-args");
     private static final Path DOCKER_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("base_img");
-
-    @Test()
-    public void validateCustomBaseImage() throws IOException, InterruptedException, KubernetesPluginException {
+            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("impl_args");
+    @Test
+    public void validateDockerBuildOption() throws IOException, InterruptedException, KubernetesPluginException {
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH), 0);
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
+        Assert.assertTrue(content.contains("RUN native-image --static --libc=musl -jar impl_args.jar " +
+                "-H:Name=impl_args --no-fallback"));
         Assert.assertTrue(content.contains("FROM alpine"));
-        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image:ol8-java11-22.3.3 as build"));
+        Assert.assertFalse(content.contains("-H:+StaticExecutableWithDynamicLibC"));
+        KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
+    }
+
+    @Test(dependsOnMethods = { "validateDockerBuildOption" })
+    public void validateK8sBuildOption() throws IOException, InterruptedException, KubernetesPluginException {
+        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH, "k8s"), 0);
+        File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
+        String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
+        Assert.assertTrue(dockerFile.exists());
+        Assert.assertTrue(content.contains("RUN native-image --static --libc=musl -jar impl_args.jar " +
+                "-H:Name=impl_args --no-fallback"));
+        Assert.assertFalse(content.contains("-H:+StaticExecutableWithDynamicLibC"));
+
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 }

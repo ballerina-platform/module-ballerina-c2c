@@ -50,10 +50,10 @@ public class NativeBuilderConfigTest {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
-        Assert.assertTrue(content.contains("RUN sh build-native.sh custom_builder.jar custom_builder " +
-                "'--static --libc=musl'"));
-        Assert.assertTrue(content.contains("FROM ballerina/musl-native-builder:2201.7.x as build"));
-        Assert.assertTrue(content.contains("FROM debian:11-slim"));
+        Assert.assertTrue(content.contains("RUN native-image -jar custom_builder.jar -H:Name=custom_builder " +
+                "--no-fallback --static --libc=musl"));
+        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image:muslib-ol8-java11-22.3.3 as build"));
+        Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 
@@ -63,10 +63,10 @@ public class NativeBuilderConfigTest {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
-        Assert.assertTrue(content.contains("RUN sh build-native.sh custom_builder.jar custom_builder " +
-                "'--static --libc=musl'"));
-        Assert.assertTrue(content.contains("FROM ballerina/musl-native-builder:2201.7.x as build"));
-        Assert.assertTrue(content.contains("FROM debian:11-slim"));
+        Assert.assertTrue(content.contains("RUN native-image -jar custom_builder.jar -H:Name=custom_builder " +
+                "--no-fallback --static --libc=musl"));
+        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image:muslib-ol8-java11-22.3.3 as build"));
+        Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 }
