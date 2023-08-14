@@ -69,8 +69,8 @@ public class DockerModel {
         // Initialize with default values except for image name
         this.tag = "latest";
         this.buildImage = true;
-        this.baseImage = windowsBuild ? DockerGenConstants.OPENJDK_17_JRE_WINDOWS_BASE_IMAGE :
-                DockerGenConstants.OPENJDK_17_JRE_SLIM_BASE;
+        this.baseImage = windowsBuild ? DockerGenConstants.JRE_WINDOWS_BASE_IMAGE :
+                DockerGenConstants.JRE_SLIM_BASE;
         this.enableDebug = false;
         this.debugPort = 5005;
         this.externalFiles = new HashSet<>();
