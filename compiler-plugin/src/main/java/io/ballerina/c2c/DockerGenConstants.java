@@ -27,14 +27,11 @@ public class DockerGenConstants {
     public static final String EXECUTABLE_JAR = ".jar";
     public static final String REGISTRY_SEPARATOR = "/";
     public static final String TAG_SEPARATOR = ":";
-    public static final String OPENJDK_17_JRE_SLIM_BASE = "ballerina/jvm-runtime:1.0";
-    public static final String OPENJDK_17_JRE_WINDOWS_BASE_IMAGE = "openjdk:17-windowsservercore";
-
-    public static final String NATIVE_BUILDER_TAG = "2201.7.x";
-    public static final String NATIVE_BUILDER_IMAGE = "ballerina/native-builder:" + NATIVE_BUILDER_TAG;
-    public static final String NATIVE_RUNTIME_BASE_IMAGE = "debian:11-slim";
-    
+    public static final String JRE_SLIM_BASE = "ballerina/jvm-runtime:2.0";
+    public static final String JRE_WINDOWS_BASE_IMAGE = "openjdk:17-windowsservercore";
+    public static final String NATIVE_BUILDER_IMAGE = "ghcr.io/graalvm/native-image-community:17-ol8";
+    public static final String NATIVE_RUNTIME_BASE_IMAGE = "gcr.io/distroless/base";
     public static final int MAX_BALLERINA_LAYERS = 110;
-    
+
     public static final String SCHEMA_FILE_NAME = "c2c-schema.json";
 }

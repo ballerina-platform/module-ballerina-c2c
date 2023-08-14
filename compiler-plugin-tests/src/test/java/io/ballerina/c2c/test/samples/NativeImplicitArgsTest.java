@@ -37,23 +37,23 @@ import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 /**
  * Test cases for docker cloud option as a project.
  */
-public class NativeBuilderConfigTest {
+public class NativeImplicitArgsTest {
 
     protected static final Path SAMPLE_DIR = Paths.get(FilenameUtils.separatorsToSystem(
             System.getProperty("sampleDir")));
-    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("graalvm-custom-builder");
+    private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("graalvm-implicit-args");
     private static final Path DOCKER_TARGET_PATH =
-            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("custom_builder");
+            SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("impl_args");
     @Test
     public void validateDockerBuildOption() throws IOException, InterruptedException, KubernetesPluginException {
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH), 0);
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
-        Assert.assertTrue(content.contains("RUN native-image -jar custom_builder.jar -H:Name=custom_builder " +
-                "--no-fallback --static --libc=musl"));
-        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image-community:17-muslib-ol8 as build"));
-        Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
+        Assert.assertTrue(content.contains("RUN native-image --static --libc=musl -jar impl_args.jar " +
+                "-H:Name=impl_args --no-fallback"));
+        Assert.assertTrue(content.contains("FROM alpine"));
+        Assert.assertFalse(content.contains("-H:+StaticExecutableWithDynamicLibC"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 
@@ -63,10 +63,10 @@ public class NativeBuilderConfigTest {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
-        Assert.assertTrue(content.contains("RUN native-image -jar custom_builder.jar -H:Name=custom_builder " +
-                "--no-fallback --static --libc=musl"));
-        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image-community:17-muslib-ol8 as build"));
-        Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
+        Assert.assertTrue(content.contains("RUN native-image --static --libc=musl -jar impl_args.jar " +
+                "-H:Name=impl_args --no-fallback"));
+        Assert.assertFalse(content.contains("-H:+StaticExecutableWithDynamicLibC"));
+
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 }

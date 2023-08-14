@@ -67,7 +67,7 @@
               "description": "Base container of the container image",
               "type": "string",
               "pattern": "^(?!\\s*$).+",
-              "default": "ballerina/jvm-runtime:1.0",
+              "default": "ballerina/jvm-runtime:2.0",
               "message": {
                 "pattern": "`base` should not be empty"
               }
@@ -514,7 +514,7 @@
               "description": "base image of the builder image",
               "type": "string",
               "pattern": "^(?!\\s*$).+",
-              "default": "ballerina/native-builder:latest",
+              "default": "ghcr.io/graalvm/native-image-community:17-ol8",
               "message": {
                 "pattern": "`base` should not be empty"
               }

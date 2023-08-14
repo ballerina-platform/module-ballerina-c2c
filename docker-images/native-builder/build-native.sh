@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-native-image -jar "$1" \
+native-image \
+-H:+StaticExecutableWithDynamicLibC \
+${3:+$(echo " $3")} \
+-jar "$1" \
 --no-fallback \
--H:Name="${2}" \
-${3:+$(echo " $3")}
+-H:Name="${2}"

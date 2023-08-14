@@ -42,6 +42,7 @@
             <class name="io.ballerina.c2c.test.samples.NativeArgsTest"/>
             <class name="io.ballerina.c2c.test.samples.NativeBaseTest"/>
             <class name="io.ballerina.c2c.test.samples.NativeBuilderConfigTest"/>
+            <class name="io.ballerina.c2c.test.samples.NativeImplicitArgsTest"/>
             <class name="io.ballerina.c2c.test.samples.DockerProjectTest"/>
             <class name="io.ballerina.c2c.test.samples.DockerSingleTest"/>
             <class name="io.ballerina.c2c.test.SettingsMultiYAMLTest"/>

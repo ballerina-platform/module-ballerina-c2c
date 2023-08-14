@@ -17,7 +17,6 @@
  */
 package io.ballerina.c2c.utils;
 
-import io.ballerina.c2c.DockerGenConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
@@ -112,9 +111,6 @@ public class NativeDockerGenerator extends DockerGenerator {
 
     @Override
     protected void appendUser(StringBuilder dockerfileContent) {
-        if (this.dockerModel.getBaseImage().equals(DockerGenConstants.NATIVE_RUNTIME_BASE_IMAGE)) {
-            dockerfileContent.append("RUN useradd -ms /bin/bash ballerina").append(LINE_SEPARATOR);
-        }
         dockerfileContent.append("WORKDIR ").append("/home/ballerina").append(LINE_SEPARATOR);
     }
 }
