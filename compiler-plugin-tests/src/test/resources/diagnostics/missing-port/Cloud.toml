@@ -12,3 +12,6 @@ max_cpu="0.75m"
 [cloud.deployment.probes.liveness]
 port = 9091
 path = "/helloWorld/readyz"
+
+[cloud.deployment.probes.readiness]
+path = "/helloWorld/readyz"

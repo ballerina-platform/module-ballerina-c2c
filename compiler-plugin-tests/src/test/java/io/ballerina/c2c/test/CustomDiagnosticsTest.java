@@ -83,8 +83,9 @@ public class CustomDiagnosticsTest {
         BuildProject project = BuildProject.load(projectPath);
         Collection<Diagnostic> diagnostics =
                 getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
-        Assert.assertEquals(diagnostics.size(), 2);
+        Assert.assertEquals(diagnostics.size(), 3);
         Iterator<Diagnostic> iterator = diagnostics.iterator();
+        Assert.assertEquals(iterator.next().message(), "Missing Readiness Probe Port");
         Assert.assertEquals(iterator.next().message(), "Invalid Liveness Probe Port");
         Assert.assertEquals(iterator.next().message(), "Invalid Liveness Probe Path");
     }

@@ -46,10 +46,12 @@ public class TomlDiagnosticChecker {
     private final Project project;
 
     public TomlDiagnosticChecker(Project project) {
+
         this.project = project;
     }
 
     public List<Diagnostic> validateTomlWithSource(Toml toml) {
+
         List<Diagnostic> diagnosticInfoList = new ArrayList<>();
         if (toml == null) {
             return Collections.emptyList();
@@ -65,9 +67,17 @@ public class TomlDiagnosticChecker {
     }
 
     private List<Diagnostic> validateProbe(ProjectServiceInfo projectServiceInfo, Toml probe, ProbeType type) {
+
         List<Diagnostic> diagnosticInfos = new ArrayList<>();
-        if (probe.get("port").isEmpty() || probe.get("path").isEmpty()) {
-            return Collections.emptyList();
+        TomlNodeLocation tableLocation = probe.rootNode().location();
+        if (probe.get("port").isEmpty()) {
+            Diagnostic portDiag = getTomlDiagnostic(tableLocation, "C2C005", "missing.probe.port",
+                    DiagnosticSeverity.ERROR, "Missing " + type.getValue() + " Port");
+            return Collections.singletonList(portDiag);
+        } else if (probe.get("path").isEmpty()) {
+            Diagnostic portDiag = getTomlDiagnostic(tableLocation, "C2C006", "missing.probe.path",
+                    DiagnosticSeverity.ERROR, "Missing " + type.getValue() + " Path");
+            return Collections.singletonList(portDiag);
         }
         TomlValueNode portNode = probe.get("port").get();
         TomlValueNode pathNode = probe.get("path").get();
@@ -85,7 +95,6 @@ public class TomlDiagnosticChecker {
             return diagnosticInfos;
         }
 
-        
         for (ServiceInfo serviceInfo : serviceList) {
             List<ListenerInfo> listeners = serviceInfo.getListeners();
             for (ListenerInfo listener : listeners) {
@@ -119,13 +128,14 @@ public class TomlDiagnosticChecker {
                                 "Invalid " + type.getValue() + " Resource Path");
                         diagnosticInfos.add(diag);
                     }
-                }   
+                }
             }
         }
         return diagnosticInfos;
     }
 
     private static boolean isValidServicePath(String servicePath, String tomlPath) {
+
         if (servicePath.equals("/")) {
             return true;
         }
@@ -139,6 +149,7 @@ public class TomlDiagnosticChecker {
     }
 
     private boolean isListenerPortValid(long port, List<ServiceInfo> serviceInfo) {
+
         boolean isValid = false;
         for (ServiceInfo service : serviceInfo) {
             List<ListenerInfo> listeners = service.getListeners();
@@ -154,6 +165,7 @@ public class TomlDiagnosticChecker {
     }
 
     private String trimResourcePath(String resourcePath) {
+
         resourcePath = resourcePath.trim();
         if (resourcePath.startsWith("/")) {
             resourcePath = resourcePath.substring(1);
@@ -166,6 +178,7 @@ public class TomlDiagnosticChecker {
 
     private TomlDiagnostic getTomlDiagnostic(TomlNodeLocation location, String code, String template,
                                              DiagnosticSeverity severity, String message) {
+
         io.ballerina.tools.diagnostics.DiagnosticInfo
                 diagnosticInfo = new io.ballerina.tools.diagnostics.DiagnosticInfo(code, template, severity);
         return new TomlDiagnostic(location, diagnosticInfo, message);
@@ -178,10 +191,12 @@ public class TomlDiagnosticChecker {
         private String value;
 
         ProbeType(String value) {
+
             this.value = value;
         }
 
         public String getValue() {
+
             return value;
         }
     }
