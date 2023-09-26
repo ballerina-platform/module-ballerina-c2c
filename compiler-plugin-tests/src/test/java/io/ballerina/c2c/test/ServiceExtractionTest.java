@@ -54,6 +54,17 @@ public class ServiceExtractionTest {
     }
 
     @Test
+    public void testVariableHttpServiceListenerDecl() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "listener-variable");
+
+        BuildProject project = BuildProject.load(projectPath);
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+
+        Assert.assertEquals(serviceList.size(), 1);
+    }
+
+    @Test
     public void testExposeOnListenerDeclaration() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "expose-on-listener");
 
