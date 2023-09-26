@@ -302,7 +302,7 @@ public class C2CVisitor extends NodeVisitor {
         List<TypeSymbol> typeSymbols = symbol.listenerTypes();
         if (typeSymbols.isEmpty()) {
             return;
-        }   
+        }
         String servicePath = toAbsoluteServicePath(serviceDeclarationNode.absoluteResourcePath());
         if (!isC2CNativelySupportedListener(typeSymbols)) {
             processCustomExposedAnnotatedListeners(typeSymbols, servicePath, serviceDeclarationNode);
@@ -325,7 +325,7 @@ public class C2CVisitor extends NodeVisitor {
         }
         services.add(serviceInfo);
     }
-    
+
     private List<ListenerInfo> extractListeners(ServiceDeclarationNode serviceDeclarationNode, String servicePath) {
         SeparatedNodeList<ExpressionNode> expressions = serviceDeclarationNode.expressions();
         List<ListenerInfo> listeners = new ArrayList<>();
@@ -344,6 +344,9 @@ public class C2CVisitor extends NodeVisitor {
                 }
                 listenerInfo = httpsListener.get();
             } else {
+                if (expressionNode.kind() != SyntaxKind.EXPLICIT_NEW_EXPRESSION) {
+                    return Collections.emptyList();
+                }
                 //Inline Listener
                 ExplicitNewExpressionNode refNode = (ExplicitNewExpressionNode) expressionNode;
                 FunctionArgumentNode functionArgumentNode = refNode.parenthesizedArgList().arguments().get(0);
@@ -354,7 +357,7 @@ public class C2CVisitor extends NodeVisitor {
                         return Collections.emptyList();
                     }
                     listenerInfo = newListenerInfo.get();
-                    
+
                     //Inline Http config
                     if (refNode.parenthesizedArgList().arguments().size() > 1) {
                         FunctionArgumentNode secondParamExpression = refNode.parenthesizedArgList().arguments().get(1);
