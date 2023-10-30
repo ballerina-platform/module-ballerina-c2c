@@ -1,0 +1,612 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "C2C Spec",
+    "description": "Schema for C2C Cloud file",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "settings": {
+        "description": "Settings related to artifacts generation",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "singleYAML": {
+            "description": "Generate a single YAML file with all the artifacts",
+            "type": "boolean"
+          },
+          "buildImage": {
+            "description": "Build the Docker image while building the project",
+            "type": "boolean",
+            "default": true
+          },
+          "thinJar": {
+            "description": "Use the thin jars in the container",
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "container": {
+        "description": "Properties related to the container",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "image": {
+            "description": "Properties related to the container image",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "description": "Name of the container image",
+                "type": "string",
+                "pattern": "[a-zA-Z0-9][a-zA-Z0-9_.-]+",
+                "default": "hello",
+                "message": {
+                  "pattern": "container names must start with an alphanumeric character and can then contain _ . or - in addition to alphanumeric for the rest of the characters"
+                }
+              },
+              "repository": {
+                "description": "Container repository to host the container",
+                "type": "string",
+                "pattern": "^(?!\\s*$).+",
+                "default": "ballerina",
+                "message": {
+                  "pattern": "`repository` should not be empty"
+                }
+              },
+              "tag": {
+                "description": "Tag of the container",
+                "type": "string",
+                "pattern": "^[\\w][\\w.-]{0,127}$",
+                "default": "latest",
+                "message": {
+                  "pattern": "`tag` should not be empty which has less than 127 characters"
+                }
+              },
+              "base": {
+                "description": "Base container of the container image",
+                "type": "string",
+                "pattern": "^(?!\\s*$).+",
+                "default": "ballerina/jvm-runtime:2.0",
+                "message": {
+                  "pattern": "`base` should not be empty"
+                }
+              },
+              "cmd": {
+                "description": "Instruction, which is executed when the container starts up",
+                "type": "string",
+                "pattern": "^(?!\\s*$).+",
+                "message": {
+                  "pattern": "`cmd` should not be empty"
+                }
+              },
+              "user": {
+                "description": "Sets the username to use when running the image",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "run_as": {
+                    "type": "string",
+                    "pattern": "^(?!\\s*$).+",
+                    "message": {
+                      "pattern": "`run_as` should not be empty"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "copy": {
+            "description": "Copy the files to the container image",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "files": {
+                "description": "Copy the files to the container image",
+                "type": "array",
+                "additionalProperties": false,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "sourceFile": {
+                      "description": "Path to the external file",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "default": "./data/data.txt",
+                      "message": {
+                        "pattern": "`sourceFile` should not be empty"
+                      }
+                    },
+                    "target": {
+                      "description": "Path of the file within the container",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "default": "/home/ballerina/data/data.txt",
+                      "message": {
+                        "pattern": "`target` should not be empty"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "cloud": {
+        "description": "Properties related to Kubernetes ",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "config": {
+            "description": "Properties related to the Kubernetes configurations",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "maps": {
+                "description": "External files required for the code",
+                "type": "array",
+                "additionalProperties": false,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "description": "Path of the external file",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "default": "resource/file.text",
+                      "message": {
+                        "pattern": "`file` should not be empty"
+                      }
+                    },
+                    "mount_path": {
+                      "description": "Path of the file in the container",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "default": "/home/ballerina/foo/file.conf",
+                      "message": {
+                        "pattern": "`mount_path` should not be empty"
+                      }
+                    }
+                  }
+                }
+              },
+              "envs": {
+                "description": "Environment variables required for the application",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "key_ref": {
+                      "description": "Key of the environment variable",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "default": "FOO",
+                      "message": {
+                        "pattern": "`key_ref` should not be empty"
+                      }
+                    },
+                    "name": {
+                      "description": "Name of the env if it is different from the key",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "default": "foo",
+                      "message": {
+                        "pattern": "`name` should not be empty"
+                      }
+                    },
+                    "config_name": {
+                      "description": "Name of the config config map",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "default": "module-foo",
+                      "message": {
+                        "pattern": "`config_name` should not be empty"
+                      }
+                    }
+                  }
+                }
+              },
+              "secrets": {
+                "description": "Secrets required for the application",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "file": {
+                      "description": "Path of the external TOML file",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "message": {
+                        "pattern": "`file` should not be empty"
+                      }
+                    },
+                    "name": {
+                      "description": "Name field for the kubernetes secret",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "message": {
+                        "pattern": "`name` should not be empty"
+                      }
+                    }
+                  }
+                }
+              },
+              "files": {
+                "description": "Config TOML files required for the code",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "file": {
+                      "description": "Path of the external TOML file",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "message": {
+                        "pattern": "`file` should not be empty"
+                      }
+                    },
+                    "name": {
+                      "description": "Name field for the configmap",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "message": {
+                        "pattern": "`name` should not be empty"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "deployment": {
+            "description": "Properties related to the deployment",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "internal_domain_name": {
+                "description": "Name of the internal domain (Kubernetes service name)",
+                "type": "string",
+                "pattern": "[a-z0-9]([-a-z0-9]*[a-z0-9])?",
+                "message": {
+                  "pattern": "The `internal_domain_name` must start with a lowercase alphanumeric character. It can contain a dash in the middle of the string"
+                }
+              },
+              "external_accessible": {
+                "description": "External accessibility of the deployment",
+                "type": "boolean"
+              },
+              "min_memory": {
+                "description": "Minimum memory allocated to the container",
+                "type": "string",
+                "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
+                "default": "100Mi"
+              },
+              "max_memory": {
+                "description": "Maximum memory allocated to the container",
+                "type": "string",
+                "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
+                "default": "512Mi"
+              },
+              "min_cpu": {
+                "description": "Minimum CPU allocated to the container",
+                "type": "string",
+                "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
+                "default": "200m"
+              },
+              "max_cpu": {
+                "description": "Maximum CPU allocated to the container",
+                "type": "string",
+                "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$",
+                "default": "500m"
+              },
+              "autoscaling": {
+                "description": "Matrices to auto-scale the container",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "enable": {
+                    "description": "Status of autoscaling",
+                    "type": "boolean"
+                  },
+                  "min_replicas": {
+                    "description": "Minimum number of replicas of the container alive at a given time",
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 1
+                  },
+                  "max_replicas": {
+                    "description": "Maximum number of replicas of the container alive at a given time",
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 2
+                  },
+                  "cpu": {
+                    "description": "CPU Utilization threshold for spawning a new instance",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100,
+                    "default": 50
+                  },
+                  "memory": {
+                    "description": "Memory utilization threshold for spawning a new instance",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                }
+              },
+              "probes": {
+                "description": "Properties related to Kubernetes probes such as readiness and liveness",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "readiness": {
+                    "description": "Probe to indicate whether the container is ready to respond to requests. No readiness probe will be generated if not specified",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "port": {
+                        "description": "Port of the readiness probe endpoint",
+                        "type": "integer",
+                        "minimum": 0,
+                        "default": 9091
+                      },
+                      "path": {
+                        "description": "Endpoint of the readiness probe",
+                        "type": "string",
+                        "pattern": "^(?!\\s*$).+",
+                        "default": "/probes/readyz"
+                      }
+                    }
+                  },
+                  "liveness": {
+                    "description": "Probe to indicate whether the container is running. No liveness probe will be generated if not specified",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "port": {
+                        "description": "Port of the liveness probe endpoint",
+                        "type": "integer",
+                        "minimum": 0,
+                        "default": 9091
+                      },
+                      "path": {
+                        "description": "Endpoint of the liveness probe",
+                        "type": "string",
+                        "pattern": "^(?!\\s*$).+",
+                        "default": "/probes/healthz"
+                      }
+                    }
+                  }
+                }
+              },
+              "storage": {
+                "description": "Properties related to storage",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "volumes": {
+                    "description": "Volume definitions of the application. No default volumes will be generated if not specified",
+                    "type": "array",
+                    "additionalProperties": false,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "description": "Name of the volume",
+                          "type": "string",
+                          "pattern": "^(?!\\s*$).+",
+                          "default": "volume1",
+                          "message": {
+                            "pattern": "`name` should not be empty"
+                          }
+                        },
+                        "local_path": {
+                          "description": "Path of the volume",
+                          "type": "string",
+                          "pattern": "^(?!\\s*$).+",
+                          "default": "files",
+                          "message": {
+                            "pattern": "`local_path` should not be empty"
+                          }
+                        },
+                        "size": {
+                          "description": "Maximum size of the volume",
+                          "type": "string",
+                          "pattern": "^(?!\\s*$).+",
+                          "default": "2Gi",
+                          "message": {
+                            "pattern": "`size` should not be empty"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "secret": {
+            "description": "Properties for secret volume mounting",
+            "type": "object",
+            "additionalItems": false,
+            "properties": {
+              "files": {
+                "description": "Properties to mount files as secret volumes",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "file": {
+                      "description": "External file path to mount as a secret volume",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "message": {
+                        "pattern": "`file` should not be empty"
+                      }
+                    },
+                    "mount_path": {
+                      "description": "Path of the file within the container",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "message": {
+                        "pattern": "`mount_path` should not be empty"
+                      }
+                    }
+                  }
+                }
+              },
+              "envs": {
+                "description": "Properties to mount environment variables as secrets",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "key_ref": {
+                      "description": "Name of the secret component in the cluster",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "message": {
+                        "pattern": "`key_ref` should not be empty"
+                      }
+                    },
+                    "name": {
+                      "description": "Name of the environment variable",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "message": {
+                        "pattern": "`name` should not be empty"
+                      }
+                    },
+                    "secret_name": {
+                      "description": "Name of the key in the secret component",
+                      "type": "string",
+                      "pattern": "^(?!\\s*$).+",
+                      "message": {
+                        "pattern": "`secret` should not be empty"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "graalvm": {
+        "description": "Properties related to the graalvm builds",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "builder": {
+            "description": "Properties related to the builder image of the multistage build",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "base": {
+                "description": "base image of the builder image",
+                "type": "string",
+                "pattern": "^(?!\\s*$).+",
+                "default": "ghcr.io/graalvm/native-image-community:17-ol8",
+                "message": {
+                  "pattern": "`base` should not be empty"
+                }
+              },
+              "buildCmd": {
+                "description": "RUN statement to build the native image",
+                "type": "string",
+                "pattern": "^(?!\\s*$).+",
+                "default": "native-image -jar hello.jar hello",
+                "message": {
+                  "pattern": "`buildCmd` should not be empty"
+                }
+              }
+            }
+          }
+        }
+      },
+      "docker": {
+        "description": "Docker-specific properties",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "image": {
+            "description": "Docker image name",
+            "type": "string"
+          },
+          "ports": {
+            "description": "Port mappings",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "host": {
+                  "description": "Host port",
+                  "type": "integer"
+                },
+                "container": {
+                  "description": "Container port",
+                  "type": "integer"
+                }
+              },
+              "required": ["host", "container"]
+            }
+          },
+          "volumes": {
+            "description": "Mounted volumes",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "environment": {
+            "description": "Environment variables for the Docker container",
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "network_mode": {
+            "description": "Docker network mode",
+            "type": "string",
+            "pattern": "^(?!\\s*$).+"
+          },
+          "healthcheck": {
+            "description": "Docker health check settings",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "test": {
+                "description": "Health check test command",
+                "type": "string",
+                "pattern": "^(?!\\s*$).+"
+              },
+              "interval": {
+                "description": "Health check interval",
+                "type": "string",
+                "pattern": "^(?!\\s*$).+"
+              },
+              "timeout": {
+                "description": "Health check timeout",
+                "type": "string",
+                "pattern": "^(?!\\s*$).+"
+              },
+              "retries": {
+                "description": "Number of health check retries",
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    
+    }
+  }
