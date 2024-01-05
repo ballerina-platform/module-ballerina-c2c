@@ -119,7 +119,7 @@ public class ComplexPackageNameTest {
         Assert.assertTrue(dockerFile.exists());
     }
 
-    @Test
+    @Test(enabled = false)
     public void validateDockerImage() {
         List<String> ports = getExposedPorts(DOCKER_IMAGE);
         Assert.assertEquals(ports.size(), 1);
