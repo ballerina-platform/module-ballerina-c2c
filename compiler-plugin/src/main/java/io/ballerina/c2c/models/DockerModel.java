@@ -63,6 +63,7 @@ public class DockerModel {
     private boolean isGraalVMBuild = false;
     private String builderBase;
     private String builderCmd;
+    private boolean isTest = false;
 
     public DockerModel() {
         // Initialize with default values except for image name
@@ -109,22 +110,32 @@ public class DockerModel {
         this.commandArg += commandArg;
     }
 
+    public void setIsTest(boolean isTest) {
+        this.isTest = isTest;
+    }
+
+    public boolean getIsTest() {
+        return this.isTest;
+    }
+
     public String getEntryPoint() {
         if (this.entryPoint == null) {
             return null;
         }
 
-        String configFile = "";
-        for (CopyFileModel externalFile : externalFiles) {
-            if (!externalFile.isBallerinaConf()) {
-                continue;
-            }
-            configFile = externalFile.getTarget();
-        }
+        return this.entryPoint;
 
-        return this.entryPoint
-                .replace("${APP}", this.jarFileName)
-                .replace("${CONFIG_FILE}", configFile);
+//        String configFile = "";
+//        for (CopyFileModel externalFile : externalFiles) {
+//            if (!externalFile.isBallerinaConf()) {
+//                continue;
+//            }
+//            configFile = externalFile.getTarget();
+//        }
+//
+//        return this.entryPoint
+//                .replace("${APP}", this.jarFileName)
+//                .replace("${CONFIG_FILE}", configFile);
     }
 
 }
