@@ -44,6 +44,7 @@ public class KubernetesDataHolder {
     private Set<ConfigMapModel> configMapModelSet;
     private JobModel jobModel;
     private Path jarPath;
+    private Path testSuiteJsonPath;
     private Path k8sArtifactOutputPath;
     private Path dockerArtifactOutputPath;
     private Path choreoArtifactOutputPath;
