@@ -59,6 +59,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -271,6 +273,10 @@ public class KubernetesUtils {
         DockerModel dockerModel = dataHolder.getDockerModel();
         dockerModel.setJarFileName(extractJarName(dataHolder.getJarPath()) + EXECUTABLE_JAR);
 
+        if(dockerModel.getFatJarPath() == null) {
+            return;
+        }
+
         String fatJarFileName = dockerModel.getFatJarPath().getFileName().toString();
         String executableName = fatJarFileName.replaceFirst(".jar", "");
         StringBuilder defaultBuilderCmd = new StringBuilder().append("native-image ");
@@ -433,5 +439,15 @@ public class KubernetesUtils {
                     C2CDiagnosticCodes.PATH_CONTENT_READ_FAILED, new NullLocation(), file.getAbsolutePath());
             throw new KubernetesPluginException(diagnostic);
         }
+    }
+
+    public static List<File> getTestJarFiles(File directory) {
+       File[] files = directory.listFiles();
+
+       if(files == null) {
+           return new ArrayList<>();
+       }
+
+       return Arrays.stream(files).toList();
     }
 }
