@@ -49,8 +49,19 @@ public class DockerHandler extends AbstractArtifactHandler {
             } else {
                 dockerArtifactHandler = new DockerGenerator(dataHolder.getDockerModel());
             }
-            dockerArtifactHandler.createArtifacts(OUT, "\t@kubernetes:Docker \t\t\t", dataHolder.getJarPath(),
-                    dataHolder.getDockerArtifactOutputPath());
+
+            if (dataHolder.getDockerModel().getIsTest()) {
+                dockerArtifactHandler.createTestArtifacts(OUT,
+                        "\t@kubernetes:Docker \t\t\t",
+                        dataHolder.getTestSuiteJsonPath(),
+                        dataHolder.getDockerArtifactOutputPath());
+            } else {
+                dockerArtifactHandler.createArtifacts(OUT,
+                        "\t@kubernetes:Docker \t\t\t",
+                        dataHolder.getJarPath(),
+                        dataHolder.getDockerArtifactOutputPath());
+            }
+
         } catch (DockerGenException e) {
             DiagnosticInfo diagnosticInfo = new DiagnosticInfo(C2CDiagnosticCodes.DOCKER_FAILED.getCode(),
                     e.getMessage(), DiagnosticSeverity.WARNING);
