@@ -53,6 +53,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -253,6 +256,10 @@ public class KubernetesUtils {
         DockerModel dockerModel = dataHolder.getDockerModel();
         dockerModel.setJarFileName(extractJarName(dataHolder.getJarPath()) + EXECUTABLE_JAR);
 
+        if(dockerModel.getFatJarPath() == null) {
+            return;
+        }
+
         String fatJarFileName = dockerModel.getFatJarPath().getFileName().toString();
         String executableName = fatJarFileName.replaceFirst(".jar", "");
         StringBuilder defaultBuilderCmd = new StringBuilder().append("native-image ");
@@ -368,5 +375,15 @@ public class KubernetesUtils {
 
         return dockerModel.getDependencyJarPaths().size() + dockerModel.getCopyFiles().size() +
                 dockerModel.getEnv().size() < DockerGenConstants.MAX_BALLERINA_LAYERS;
+    }
+
+    public static List<File> getTestJarFiles(File directory) {
+       File[] files = directory.listFiles();
+
+       if(files == null) {
+           return new ArrayList<>();
+       }
+
+       return Arrays.stream(files).toList();
     }
 }
