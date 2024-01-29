@@ -21,6 +21,7 @@ package io.ballerina.c2c.utils;
 
 import io.ballerina.c2c.DockerGenConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
+import io.ballerina.projects.util.ProjectConstants;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -188,5 +189,22 @@ public class DockerGenUtils {
         chArr[0] = Character.toLowerCase(chArr[0]);
     
         return new String(chArr);
+    }
+
+
+    public static boolean isWindowsBuild() {
+        return Boolean.parseBoolean(System.getenv(DockerGenConstants.ENABLE_WINDOWS_BUILD));
+    }
+
+    public static String getWorkDir() {
+        return isWindowsBuild() ? "C:\\ballerina\\home\\" : "/home/ballerina";
+    }
+
+    public static String getTestSuiteJsonCopiedDir() {
+        Path workDir = Path.of(getWorkDir());
+        Path testSuiteJsonCopiedDir = workDir.resolve(ProjectConstants.CACHES_DIR_NAME)
+                .resolve(ProjectConstants.TESTS_CACHE_DIR_NAME);
+
+        return testSuiteJsonCopiedDir.toString();
     }
 }
