@@ -52,6 +52,9 @@ public class DockerModel {
     private boolean isService;
     private String jarFileName;
     private Set<CopyFileModel> externalFiles;
+    private String classPath;
+    private Path testSuiteJsonPath;
+    private Path jacocoAgentJarPath;
     private String commandArg;
     private String entryPoint;
     private Map<String, String> env;
