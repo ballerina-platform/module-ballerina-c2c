@@ -187,6 +187,8 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 List<String> cmd = new ArrayList<>();
                 cmd.add("CMD");
                 cmd.addAll(TestUtils.getInitialCmdArgs("java", getWorkDir()));
+                cmd.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address='*:"
+                        + String.valueOf(this.dataHolder.getDockerModel().getDebugPort()) + "'");
                 cmd.add("-cp");
 //                Path testerinaRunTimeJar = getTesterinaRunTimeJar(currentPackage.moduleDependencyGraph()
 //                        .toTopologicallySortedList().get(0),currentPackage.getCompilation());

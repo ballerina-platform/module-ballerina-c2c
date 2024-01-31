@@ -72,7 +72,7 @@ public class DockerModel {
         this.buildImage = true;
         this.baseImage = windowsBuild ? DockerGenConstants.JRE_WINDOWS_BASE_IMAGE :
                 DockerGenConstants.JRE_SLIM_BASE;
-        this.enableDebug = false;
+        this.enableDebug = true;
         this.debugPort = 5005;
         this.externalFiles = new HashSet<>();
         this.commandArg = "";
