@@ -364,10 +364,18 @@ public class KubernetesUtils {
         dockerModel.setRegistry(deploymentModel.getRegistry());
         dockerModel.setName(dockerImage);
         dockerModel.setTag(imageTag);
-        dockerModel.setPorts(deploymentModel.getPorts().stream()
-                .map(ContainerPort::getContainerPort)
-                .collect(Collectors.toSet()));
-        dockerModel.setService(true);
+
+        if (!dockerModel.getIsTest()) {
+            dockerModel.setService(true);
+            dockerModel.setPorts(deploymentModel.getPorts().stream()
+                    .map(ContainerPort::getContainerPort)
+                    .collect(Collectors.toSet()));
+        }
+        else {
+            dockerModel.setService(false);
+            dockerModel.setPorts(Collections.emptySet());
+        }
+
         dockerModel.addCommandArg(deploymentModel.getCommandArgs());
         return dockerModel;
     }
