@@ -51,14 +51,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_POSTFIX;
@@ -341,10 +334,18 @@ public class KubernetesUtils {
         dockerModel.setRegistry(deploymentModel.getRegistry());
         dockerModel.setName(dockerImage);
         dockerModel.setTag(imageTag);
-        dockerModel.setPorts(deploymentModel.getPorts().stream()
-                .map(ContainerPort::getContainerPort)
-                .collect(Collectors.toSet()));
-        dockerModel.setService(true);
+
+        if (!dockerModel.getIsTest()) {
+            dockerModel.setService(true);
+            dockerModel.setPorts(deploymentModel.getPorts().stream()
+                    .map(ContainerPort::getContainerPort)
+                    .collect(Collectors.toSet()));
+        }
+        else {
+            dockerModel.setService(false);
+            dockerModel.setPorts(Collections.emptySet());
+        }
+
         dockerModel.addCommandArg(deploymentModel.getCommandArgs());
         return dockerModel;
     }
