@@ -53,6 +53,9 @@ public class DockerModel {
     private boolean isService;
     private String jarFileName;
     private Set<CopyFileModel> externalFiles;
+    private String classPath;
+    private Path testSuiteJsonPath;
+    private Path jacocoAgentJarPath;
     private String commandArg;
     private String cmd;
     private Map<String, String> env;
@@ -72,7 +75,7 @@ public class DockerModel {
         this.buildImage = true;
         this.baseImage = windowsBuild ? DockerGenConstants.JRE_WINDOWS_BASE_IMAGE :
                 DockerGenConstants.JRE_SLIM_BASE;
-        this.enableDebug = true;
+        this.enableDebug = false;
         this.debugPort = 5005;
         this.externalFiles = new HashSet<>();
         this.commandArg = "";
@@ -126,18 +129,6 @@ public class DockerModel {
         }
 
         return this.cmd;
-
-//        String configFile = "";
-//        for (CopyFileModel externalFile : externalFiles) {
-//            if (!externalFile.isBallerinaConf()) {
-//                continue;
-//            }
-//            configFile = externalFile.getTarget();
-//        }
-//
-//        return this.cmd
-//                .replace("${APP}", this.jarFileName)
-//                .replace("${CONFIG_FILE}", configFile);
     }
 
 }
