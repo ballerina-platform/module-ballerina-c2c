@@ -75,11 +75,11 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.StringJoiner;
 
 import static io.ballerina.c2c.KubernetesConstants.*;
 import static io.ballerina.c2c.utils.DockerGenUtils.extractJarName;
 import static io.ballerina.c2c.utils.DockerGenUtils.getWorkDir;
-import static io.ballerina.c2c.utils.DockerGenUtils.getTestSuiteJsonCopiedDir;
 import static io.ballerina.c2c.utils.KubernetesUtils.printError;
 import static io.ballerina.cli.launcher.LauncherUtils.createLauncherException;
 
@@ -160,6 +160,9 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 }
 
                 Map <String, TestSuite> testSuiteMap;
+                List<Path> classPaths = new ArrayList<>();
+                List<Path> moduleJarPaths = TestUtils.getModuleJarPaths(jBallerinaBackend, currentPackage);
+                moduleJarPaths = moduleJarPaths.stream().map(Path::getFileName).toList();
 
                 try (BufferedReader br = Files.newBufferedReader(jsonFilePath, StandardCharsets.UTF_8)) {
                     Gson gson = new Gson();
@@ -171,7 +174,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                             currentPackage.moduleDependencyGraph().toTopologicallySortedList()) {
                         //add the test execution dependencies
                         addTestDependencyJars(project, compilerLifecycleEventContext.compilation(),
-                                moduleDescriptor, testSuiteMap);
+                                moduleDescriptor, testSuiteMap, classPaths, moduleJarPaths);
                     }
                 }
                 catch (IOException e) {
@@ -181,69 +184,23 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 //now rewrite the json
                 TestUtils.writeToTestSuiteJson(testSuiteMap, testsCachePath);
 
-                dataHolder.setTestSuiteJsonPath(jsonFilePath);
+                dataHolder.getDockerModel().setTestSuiteJsonPath(jsonFilePath);
+                StringJoiner classPath = TestUtils.joinClassPaths(classPaths);
+                this.dataHolder.getDockerModel().setClassPath(classPath.toString());
 
                 //once rewritten, set the command line args for the BTestMain
                 List<String> cmd = new ArrayList<>();
-                cmd.add("CMD");
-                cmd.addAll(TestUtils.getInitialCmdArgs("java", getWorkDir()));
-                cmd.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address='*:"
-                        + String.valueOf(this.dataHolder.getDockerModel().getDebugPort()) + "'");
-                cmd.add("-cp");
-//                Path testerinaRunTimeJar = getTesterinaRunTimeJar(currentPackage.moduleDependencyGraph()
-//                        .toTopologicallySortedList().get(0),currentPackage.getCompilation());
-
-//                cmd.add("/jars/" + testerinaRunTimeJar.toString()); //path to jar file that has the main class
-                cmd.add("\"jars/*\""); //add all jar files
-                cmd.add(TesterinaConstants.TESTERINA_LAUNCHER_CLASS_NAME);
-                String cmdStr = String.join(" ", cmd);
-                this.dataHolder.getDockerModel().setCmd(cmdStr);
-
-                //add the arguments
-                cmd.clear();
+                String cmdStr;
 
                 //target directory is -> to load the test suite json (work directory is the target)
                 cmd.add(getWorkDir());
-                cmd.add(TestUtils.getJacocoAgentJarPath());
+                //TODO:: FIX JACOCO AGENT PATH
+                Path jacocoAgentJarPath = Path.of(TestUtils.getJacocoAgentJarPath());
+                cmd.add(getCopiedJarPath(jacocoAgentJarPath.getFileName()).toString());
+                this.dataHolder.getDockerModel().setJacocoAgentJarPath(jacocoAgentJarPath);
 
                 //get the other needed args from the uber jar
-                List<File> jarFiles = KubernetesUtils.getTestJarFiles(path.toFile());
-
-                //we only need one file
-                File jarFile = jarFiles.get(0);
-                //find the txt file that contains the args
-                try {
-                    JarFile jar = new JarFile(jarFile);
-
-                    JarEntry mainArgsFile = jar.getJarEntry(ProjectConstants.TEST_RUNTIME_MAIN_ARGS_FILE);
-
-                    if (mainArgsFile != null) {
-                        InputStream inputStream = jar.getInputStream(mainArgsFile);
-
-                        //read line by line to get the args
-                        BufferedReader reader = new BufferedReader(new java.io.InputStreamReader(inputStream));
-
-                        //read 7 lines to skip them (those args are unnecessary)
-                        for (int i = 0; i < 7; i++) {
-                            reader.readLine();
-                        }
-
-                        //add the remaining lines to the cmdArgs
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            //if a line is empty or blank, add it with double quotes
-                            if (line.isEmpty()) {
-                                cmd.add("\"" + line + "\"");
-                            }
-                            else {
-                                cmd.add(line);
-                            }
-                        }
-                    }
-
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                cmd.addAll(getCommandArgsFromJAR(path, this.dataHolder.getDockerModel()));
 
                 //convert the list to a string separated by spaces
                 cmdStr = String.join(" ", cmd);
@@ -291,6 +248,49 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
         }
 
 
+    }
+
+    private static List<String> getCommandArgsFromJAR(Path path, DockerModel dockerModel) {
+        List<String> cmd = new ArrayList<>();
+        List<File> jarFiles = KubernetesUtils.getTestJarFiles(path.toFile());
+
+        //we only need one file
+        File jarFile = jarFiles.get(0);
+        //find the txt file that contains the args
+        try {
+            JarFile jar = new JarFile(jarFile);
+
+            JarEntry mainArgsFile = jar.getJarEntry(ProjectConstants.TEST_RUNTIME_MAIN_ARGS_FILE);
+
+            if (mainArgsFile != null) {
+                InputStream inputStream = jar.getInputStream(mainArgsFile);
+
+                //read line by line to get the args
+                BufferedReader reader = new BufferedReader(new java.io.InputStreamReader(inputStream));
+
+                //read 7 lines to skip them (those args are unnecessary)
+                for (int i = 0; i < 7; i++) {
+                    reader.readLine();
+                }
+
+                //add the remaining lines to the cmdArgs
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    //if a line is empty or blank, add it with double quotes
+                    if (line.isEmpty()) {
+                        cmd.add("\"" + line + "\"");
+                    }
+                    else {
+                        cmd.add(line);
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return cmd;
     }
 
     public void codeGeneratedInternalForTest(PackageID packageID, Path testBasePath, Package currentPackage) {
@@ -419,7 +419,8 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
 
     private void addTestDependencyJars(Project project, PackageCompilation compilation,
                                        ModuleDescriptor moduleDescriptor,
-                                       Map <String, TestSuite> testSuiteMap) {
+                                       Map <String, TestSuite> testSuiteMap,
+                                       List<Path> classPaths, List<Path> moduleJarPaths) {
         JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilation,
                 JvmTarget.JAVA_17);
         io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
@@ -440,8 +441,12 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             Path jarFileName = jarPath.getFileName();
 
             //create a new path to reflect the following directory -> "/home/jars/{fileName}"
-            StringBuilder newPath = new StringBuilder();
-            jarPath = Path.of(newPath.append(getWorkDir()).append("/jars/").append(jarFileName.toString()).toString());
+            jarPath = getCopiedJarPath(jarFileName);
+
+            if(!moduleJarPaths.contains(jarFileName)) { //if the jar file is not a module jar
+                classPaths.add(jarPath);
+            }
+
             return jarPath;
         });
 
@@ -450,6 +455,13 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
         testSuiteMap.get(TestUtils.getResolvedModuleName(module, moduleDescriptor.name())).addTestExecutionDependencies(
                 pathStream.collect(Collectors.toCollection(ArrayList::new))
         );
+    }
+
+    private static Path getCopiedJarPath(Path jarFileName) {
+        Path jarPath;
+        StringBuilder newPath = new StringBuilder();
+        jarPath = Path.of(newPath.append(getWorkDir()).append("/jars/").append(jarFileName.toString()).toString());
+        return jarPath;
     }
 
     private void addDependencyJars(PackageCompilation compilation, String executableFatJar) {
