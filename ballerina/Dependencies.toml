@@ -10,7 +10,7 @@ distribution-version = "2201.9.0-SNAPSHOT-test-standalone-jar"
 [[package]]
 org = "ballerina"
 name = "cloud"
-version = "2.11.3"
+version = "2.11.31"
 modules = [
 	{org = "ballerina", packageName = "cloud", moduleName = "cloud"}
 ]
