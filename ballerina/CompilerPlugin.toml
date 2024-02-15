@@ -3,4 +3,4 @@ id = "code2cloud"
 class = "io.ballerina.c2c.C2CCompilerPlugin"
 
 [[dependency]]
-path = "../compiler-plugin/build/libs/cloud-compiler-plugin-2.11.3-SNAPSHOT1.jar"
+path = "../compiler-plugin/build/libs/cloud-compiler-plugin-2.11.33-SNAPSHOT.jar"
