@@ -50,7 +50,7 @@ public class DockerHandler extends AbstractArtifactHandler {
                 dockerArtifactHandler = new DockerGenerator(dataHolder.getDockerModel());
             }
 
-            if (dataHolder.getDockerModel().getIsTest()) {
+            if (dataHolder.getDockerModel().isTest()) {
                 dockerArtifactHandler.createTestArtifacts(OUT,
                         "\t@kubernetes:Docker \t\t\t",
                         dataHolder.getDockerArtifactOutputPath());

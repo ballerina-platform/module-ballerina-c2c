@@ -18,49 +18,40 @@ package io.ballerina.c2c.tasks;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
 import io.ballerina.c2c.ArtifactManager;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
-import io.ballerina.c2c.models.DockerModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.utils.KubernetesUtils;
 import io.ballerina.cli.launcher.LauncherUtils;
-import io.ballerina.cli.task.RunTestsTask;
+import io.ballerina.cli.utils.TestUtils;
 import io.ballerina.projects.ArtifactType;
 import io.ballerina.projects.BuildOptions;
 import io.ballerina.projects.CloudToml;
-import io.ballerina.projects.Module;
-import io.ballerina.projects.ModuleDescriptor;
-import io.ballerina.projects.PackageCompilation;
-import io.ballerina.projects.Project;
-import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.JBallerinaBackend;
 import io.ballerina.projects.JarLibrary;
-import io.ballerina.projects.JarResolver;
 import io.ballerina.projects.JvmTarget;
-import io.ballerina.projects.PackageDescriptor;
+import io.ballerina.projects.Module;
+import io.ballerina.projects.ModuleDescriptor;
 import io.ballerina.projects.Package;
+import io.ballerina.projects.PackageCompilation;
+import io.ballerina.projects.PackageDescriptor;
+import io.ballerina.projects.Project;
+import io.ballerina.projects.ProjectKind;
 import io.ballerina.projects.internal.model.Target;
 import io.ballerina.projects.plugins.CompilerLifecycleEventContext;
 import io.ballerina.projects.plugins.CompilerLifecycleTask;
 import io.ballerina.projects.util.ProjectConstants;
 import io.ballerina.toml.api.Toml;
-import io.ballerina.cli.utils.TestUtils;
 import org.ballerinalang.model.elements.PackageID;
-//import org.ballerinalang.testerina.core.TestProcessor;
-import org.ballerinalang.test.runtime.entity.Test;
 import org.ballerinalang.test.runtime.entity.TestSuite;
 import org.ballerinalang.test.runtime.util.TesterinaConstants;
-import org.ballerinalang.test.runtime.util.TesterinaUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -68,17 +59,19 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.StringJoiner;
 
-import static io.ballerina.c2c.KubernetesConstants.*;
+
+
+import static io.ballerina.c2c.KubernetesConstants.DOCKER;
+import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
 import static io.ballerina.c2c.utils.DockerGenUtils.extractJarName;
+import static io.ballerina.c2c.utils.DockerGenUtils.getTestSuiteJsonCopiedDir;
 import static io.ballerina.c2c.utils.DockerGenUtils.getWorkDir;
 import static io.ballerina.c2c.utils.KubernetesUtils.printError;
 import static io.ballerina.cli.launcher.LauncherUtils.createLauncherException;
@@ -124,15 +117,12 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage),
                         path, compilerLifecycleEventContext.currentPackage(), artifactType);
             });
-        }
-        else {
-            System.out.println("building for test cloud");
+        } else {
             JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilerLifecycleEventContext.compilation(),
                     JvmTarget.JAVA_17);
-            JarResolver jarResolver = jBallerinaBackend.jarResolver();
-            dataHolder.getDockerModel().setIsTest(true);
+            dataHolder.getDockerModel().setTest(true);
 
-            //executablePath is the base path of the test executable jars
+            //executablePath is the standalone testable jar
             executablePath.ifPresent(path -> {
                 //get the test suit json
                 Target target;
@@ -159,7 +149,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                     throw LauncherUtils.createLauncherException("error while finding the test suit json");
                 }
 
-                Map <String, TestSuite> testSuiteMap;
+                Map<String, TestSuite> testSuiteMap;
                 List<Path> classPaths = new ArrayList<>();
                 List<Path> moduleJarPaths = TestUtils.getModuleJarPaths(jBallerinaBackend, currentPackage);
                 moduleJarPaths = moduleJarPaths.stream().map(Path::getFileName).toList();
@@ -168,16 +158,15 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                     Gson gson = new Gson();
 
                     testSuiteMap = gson.fromJson(br,
-                            new TypeToken<Map<String, TestSuite>> () {}.getType());
+                            new TypeToken<Map<String, TestSuite>> () { }.getType());
 
-                    for(ModuleDescriptor moduleDescriptor :
+                    for (ModuleDescriptor moduleDescriptor :
                             currentPackage.moduleDependencyGraph().toTopologicallySortedList()) {
                         //add the test execution dependencies
                         addTestDependencyJars(project, compilerLifecycleEventContext.compilation(),
                                 moduleDescriptor, testSuiteMap, classPaths, moduleJarPaths);
                     }
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     throw LauncherUtils.createLauncherException("error while reading the test suit json");
                 }
 
@@ -189,29 +178,37 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 this.dataHolder.getDockerModel().setClassPath(classPath.toString());
 
                 //once rewritten, set the command line args for the BTestMain
-                List<String> cmd = new ArrayList<>();
+                List<String> cmd;
                 String cmdStr;
 
+                //read the mainArgs.txt and get the cmd args
+                Path mainArgsPath = path.getParent().resolve(ProjectConstants.TEST_RUNTIME_MAIN_ARGS_FILE);
+                try {
+                    cmd = Files.readAllLines(mainArgsPath);
+                } catch (IOException e) {
+                    throw LauncherUtils.createLauncherException("error while reading the mainArgs.txt");
+                }
+
+                //replace test suite json path [1], target [2], jacoco agent jar path [3]
+                cmd.set(1, Paths.get(getTestSuiteJsonCopiedDir())
+                        .resolve(TesterinaConstants.TESTERINA_TEST_SUITE).toString());
                 //target directory is -> to load the test suite json (work directory is the target)
-                cmd.add(getWorkDir());
-                //TODO:: FIX JACOCO AGENT PATH
+                cmd.set(2, getWorkDir());
+
                 Path jacocoAgentJarPath = Path.of(TestUtils.getJacocoAgentJarPath());
-                cmd.add(getCopiedJarPath(jacocoAgentJarPath.getFileName()).toString());
+                cmd.set(3, getCopiedJarPath(jacocoAgentJarPath.getFileName()).toString());
+                //TODO:: FIX JACOCO AGENT PATH
                 this.dataHolder.getDockerModel().setJacocoAgentJarPath(jacocoAgentJarPath);
 
-                //get the other needed args from the uber jar
-                cmd.addAll(getCommandArgsFromJAR(path, this.dataHolder.getDockerModel()));
-
-                //convert the list to a string separated by spaces
-                cmdStr = String.join(" ", cmd);
-                this.dataHolder.getDockerModel().addCommandArg(cmdStr);
+                this.dataHolder.getDockerModel().setTestRunTimeCmdArgs(cmd);
 
                 //set the output name
                 this.dataHolder.setOutputName(project.currentPackage()
                         .packageName().toString().toLowerCase(Locale.ROOT)  + "-" + TesterinaConstants.TESTABLE);
-
+                //set the source root
+                this.dataHolder.setSourceRoot(project.sourceRoot());
                 //finally create the internal code for the test executable
-                codeGeneratedInternalForTest(KubernetesUtils.getProjectID(currentPackage), path, currentPackage);
+                codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage), path, currentPackage, artifactType);
 
 
                 //get all the jar files in the path directory
@@ -250,108 +247,66 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
 
     }
 
-    private static List<String> getCommandArgsFromJAR(Path path, DockerModel dockerModel) {
-        List<String> cmd = new ArrayList<>();
-        List<File> jarFiles = KubernetesUtils.getTestJarFiles(path.toFile());
+//    public void codeGeneratedInternalForTest(PackageID packageID, Path testBasePath, Package currentPackage) {
+//        Optional<CloudToml> cloudToml = currentPackage.cloudToml();
+//        BuildOptions buildOptions = currentPackage.project().buildOptions();
+//        String buildType = buildOptions.cloud();
+//
+//        String graalvmBuildArgs = buildOptions.graalVMBuildOptions();
+//        dataHolder.getDockerModel().setGraalvmBuildArgs(graalvmBuildArgs);
+//        KubernetesContext.getInstance().setCurrentPackage(packageID);
+//        dataHolder.setPackageID(packageID);
+//
+//        //test base path is usually target/bin/tests
+//        if (null != testBasePath.getParent() && Files.exists(testBasePath.getParent())) {
+//            // artifacts location for a single bal file.
+//            Path kubernetesOutputPath = testBasePath.getParent().resolve(KUBERNETES);
+//            Path dockerOutputPath = testBasePath.getParent().resolve(DOCKER);
+//
+//            if (null != testBasePath.getParent().getParent().getParent() &&
+//                    Files.exists(testBasePath.getParent().getParent().getParent())) {
+//                // if executable came from a ballerina project
+//                Path projectRoot = testBasePath.getParent().getParent().getParent();
+//                if (Files.exists(projectRoot.resolve("Ballerina.toml"))) {
+//                    kubernetesOutputPath = projectRoot.resolve("target")
+//                            .resolve(KUBERNETES)
+//                            .resolve("test");
+//                    dockerOutputPath = projectRoot.resolve("target")
+//                            .resolve(DOCKER)
+//                            .resolve("test");
+//                    //Read and parse ballerina cloud
+//                    cloudToml.ifPresent(
+//                            kubernetesToml -> dataHolder.setBallerinaCloud(new Toml(kubernetesToml.tomlAstNode())));
+//                }
+//            }
+//
+//            dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
+//            dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
+//            ArtifactManager artifactManager = new ArtifactManager();
+//            try {
+//                KubernetesUtils.deleteDirectory(kubernetesOutputPath);
+//                artifactManager.populateDeploymentModel();
+//                artifactManager.createArtifacts(buildType, buildOptions.nativeImage());
+//            } catch (KubernetesPluginException e) {
+//                String errorMessage = "module [" + packageID + "] " + e.getMessage();
+//                printError(errorMessage);
+//                if (!e.isSkipPrintTrace()) {
+//                    pluginLog.error(errorMessage, e);
+//                }
+//                try {
+//                    KubernetesUtils.deleteDirectory(kubernetesOutputPath);
+//                } catch (KubernetesPluginException ignored) {
+//                    //ignored
+//                }
+//            }
+//        } else {
+//            printError("error in resolving Docker generation location.");
+//            pluginLog.error("error in resolving Docker generation location.");
+//        }
+//    }
 
-        //we only need one file
-        File jarFile = jarFiles.get(0);
-        //find the txt file that contains the args
-        try {
-            JarFile jar = new JarFile(jarFile);
-
-            JarEntry mainArgsFile = jar.getJarEntry(ProjectConstants.TEST_RUNTIME_MAIN_ARGS_FILE);
-
-            if (mainArgsFile != null) {
-                InputStream inputStream = jar.getInputStream(mainArgsFile);
-
-                //read line by line to get the args
-                BufferedReader reader = new BufferedReader(new java.io.InputStreamReader(inputStream));
-
-                //read 7 lines to skip them (those args are unnecessary)
-                for (int i = 0; i < 7; i++) {
-                    reader.readLine();
-                }
-
-                //add the remaining lines to the cmdArgs
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    //if a line is empty or blank, add it with double quotes
-                    if (line.isEmpty()) {
-                        cmd.add("\"" + line + "\"");
-                    }
-                    else {
-                        cmd.add(line);
-                    }
-                }
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return cmd;
-    }
-
-    public void codeGeneratedInternalForTest(PackageID packageID, Path testBasePath, Package currentPackage) {
-        Optional<CloudToml> cloudToml = currentPackage.cloudToml();
-        BuildOptions buildOptions = currentPackage.project().buildOptions();
-        String buildType = buildOptions.cloud();
-
-        String graalvmBuildArgs = buildOptions.graalVMBuildOptions();
-        dataHolder.getDockerModel().setGraalvmBuildArgs(graalvmBuildArgs);
-        KubernetesContext.getInstance().setCurrentPackage(packageID);
-        dataHolder.setPackageID(packageID);
-
-        //test base path is usually target/bin/tests
-        if (null != testBasePath.getParent() && Files.exists(testBasePath.getParent())) {
-            // artifacts location for a single bal file.
-            Path kubernetesOutputPath = testBasePath.getParent().resolve(KUBERNETES);
-            Path dockerOutputPath = testBasePath.getParent().resolve(DOCKER);
-
-            if (null != testBasePath.getParent().getParent().getParent() &&
-                    Files.exists(testBasePath.getParent().getParent().getParent())) {
-                // if executable came from a ballerina project
-                Path projectRoot = testBasePath.getParent().getParent().getParent();
-                if (Files.exists(projectRoot.resolve("Ballerina.toml"))) {
-                    kubernetesOutputPath = projectRoot.resolve("target")
-                            .resolve(KUBERNETES)
-                            .resolve("test");
-                    dockerOutputPath = projectRoot.resolve("target")
-                            .resolve(DOCKER)
-                            .resolve("test");
-                    //Read and parse ballerina cloud
-                    cloudToml.ifPresent(
-                            kubernetesToml -> dataHolder.setBallerinaCloud(new Toml(kubernetesToml.tomlAstNode())));
-                }
-            }
-
-            dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
-            dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
-            ArtifactManager artifactManager = new ArtifactManager();
-            try {
-                KubernetesUtils.deleteDirectory(kubernetesOutputPath);
-                artifactManager.populateDeploymentModel();
-                artifactManager.createArtifacts(buildType, buildOptions.nativeImage());
-            } catch (KubernetesPluginException e) {
-                String errorMessage = "module [" + packageID + "] " + e.getMessage();
-                printError(errorMessage);
-                if (!e.isSkipPrintTrace()) {
-                    pluginLog.error(errorMessage, e);
-                }
-                try {
-                    KubernetesUtils.deleteDirectory(kubernetesOutputPath);
-                } catch (KubernetesPluginException ignored) {
-                    //ignored
-                }
-            }
-        } else {
-            printError("error in resolving Docker generation location.");
-            pluginLog.error("error in resolving Docker generation location.");
-        }
-    }
-
-    public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Package currentPackage, ArtifactType artifactType) {
+    public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Package currentPackage,
+                                      ArtifactType artifactType) {
         Optional<CloudToml> cloudToml = currentPackage.cloudToml();
         BuildOptions buildOptions = currentPackage.project().buildOptions();
         String buildType = buildOptions.cloud();
@@ -370,16 +325,17 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 // if executable came from a ballerina project
                 Path projectRoot = executableJarFile.getParent().getParent().getParent();
                 if (Files.exists(projectRoot.resolve("Ballerina.toml"))) {
-                    if(artifactType == ArtifactType.TEST) {
+                    if (artifactType == ArtifactType.TEST) {
                         kubernetesOutputPath = projectRoot.resolve("target")
                                 .resolve(KUBERNETES)
-                                .resolve("test");
+                                .resolve("test")
+                                .resolve(extractJarName(executableJarFile));
                         dockerOutputPath = projectRoot.resolve("target")
                                 .resolve(DOCKER)
-                                .resolve("test");
+                                .resolve("test")
+                                .resolve(extractJarName(executableJarFile));
 
-                    }
-                    else {
+                    } else {
                         kubernetesOutputPath = projectRoot.resolve("target")
                                 .resolve(KUBERNETES)
                                 .resolve(extractJarName(executableJarFile));
@@ -419,13 +375,15 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
 
     private void addTestDependencyJars(Project project, PackageCompilation compilation,
                                        ModuleDescriptor moduleDescriptor,
-                                       Map <String, TestSuite> testSuiteMap,
+                                       Map<String, TestSuite> testSuiteMap,
                                        List<Path> classPaths, List<Path> moduleJarPaths) {
         JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilation,
                 JvmTarget.JAVA_17);
         io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
 
-        Collection<JarLibrary> dependencies = jarResolver.getJarFilePathsRequiredForTestExecution(moduleDescriptor.name());
+        Collection<JarLibrary> dependencies = jarResolver.getJarFilePathsRequiredForTestExecution(
+                moduleDescriptor.name()
+        );
 
         // Add dependency jar files to docker model.
         dataHolder.getDockerModel().addDependencyJarPaths(
@@ -443,7 +401,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             //create a new path to reflect the following directory -> "/home/jars/{fileName}"
             jarPath = getCopiedJarPath(jarFileName);
 
-            if(!moduleJarPaths.contains(jarFileName)) { //if the jar file is not a module jar
+            if (!moduleJarPaths.contains(jarFileName)) { //if the jar file is not a module jar
                 classPaths.add(jarPath);
             }
 
@@ -478,22 +436,5 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 .filter(jarLibrary -> jarLibrary.path().getFileName().toString().endsWith(executableFatJar))
                 .findFirst()
                 .ifPresent(jarLibrary -> dataHolder.setJarPath(jarLibrary.path()));
-    }
-
-
-    //to get the path to the jar file that has the BTestMain class
-    private Path getTesterinaRunTimeJar(ModuleDescriptor moduleDescriptor, PackageCompilation compilation) {
-        JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilation,
-                JvmTarget.JAVA_17);
-        JarResolver jarResolver = jBallerinaBackend.jarResolver();
-        Collection<JarLibrary> dependencies = jarResolver
-                .getJarFilePathsRequiredForTestExecution(moduleDescriptor.name());
-
-        Path runTimeJar = null;
-        runTimeJar = dependencies.stream().filter(dependency -> {
-            return dependency.path().toString().contains(TesterinaConstants.TEST_RUNTIME_JAR_PREFIX);
-        }).findFirst().get().path();
-
-        return runTimeJar;
     }
 }

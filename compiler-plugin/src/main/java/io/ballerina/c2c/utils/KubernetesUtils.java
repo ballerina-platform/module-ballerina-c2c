@@ -51,7 +51,15 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_POSTFIX;
@@ -249,10 +257,6 @@ public class KubernetesUtils {
         DockerModel dockerModel = dataHolder.getDockerModel();
         dockerModel.setJarFileName(extractJarName(dataHolder.getJarPath()) + EXECUTABLE_JAR);
 
-        if(dockerModel.getFatJarPath() == null) {
-            return;
-        }
-
         String fatJarFileName = dockerModel.getFatJarPath().getFileName().toString();
         String executableName = fatJarFileName.replaceFirst(".jar", "");
         StringBuilder defaultBuilderCmd = new StringBuilder().append("native-image ");
@@ -335,13 +339,12 @@ public class KubernetesUtils {
         dockerModel.setName(dockerImage);
         dockerModel.setTag(imageTag);
 
-        if (!dockerModel.getIsTest()) {
+        if (!dockerModel.isTest()) {
             dockerModel.setService(true);
             dockerModel.setPorts(deploymentModel.getPorts().stream()
                     .map(ContainerPort::getContainerPort)
                     .collect(Collectors.toSet()));
-        }
-        else {
+        } else {
             dockerModel.setService(false);
             dockerModel.setPorts(Collections.emptySet());
         }
@@ -381,7 +384,7 @@ public class KubernetesUtils {
     public static List<File> getTestJarFiles(File directory) {
        File[] files = directory.listFiles();
 
-       if(files == null) {
+       if (files == null) {
            return new ArrayList<>();
        }
 

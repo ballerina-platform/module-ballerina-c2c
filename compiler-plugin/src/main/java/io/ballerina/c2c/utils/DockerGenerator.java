@@ -22,22 +22,18 @@ import io.ballerina.c2c.DockerGenConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
-import io.ballerina.c2c.tasks.C2CCodeGeneratedTask;
 import io.ballerina.cli.utils.TestUtils;
 import io.ballerina.projects.JarResolver;
-import io.ballerina.projects.util.ProjectConstants;
 import org.ballerinalang.model.elements.PackageID;
 import org.ballerinalang.test.runtime.util.TesterinaConstants;
+import org.ballerinalang.test.runtime.util.TesterinaConstants.RunTimeArgs;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.TreeSet;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.DockerGenConstants.EXECUTABLE_JAR;
@@ -87,7 +83,7 @@ public class DockerGenerator {
                 copyNativeJars(outputDir);
                 DockerGenUtils.writeToFile(dockerContent, outputDir.resolve("Dockerfile"));
 
-                if (!this.dockerModel.getIsTest()) {
+                if (!this.dockerModel.isTest()) {
                     Path jarLocation = outputDir.resolve(DockerGenUtils.extractJarName(jarFilePath) + EXECUTABLE_JAR);
                     copyFileOrDirectory(jarFilePath, jarLocation);
                 }
@@ -114,8 +110,7 @@ public class DockerGenerator {
                 if (!isWindowsBuild()) {
                     dockerContent = generateTestDockerFile(this.dockerModel.getTestSuiteJsonPath(),
                             this.dockerModel.getJacocoAgentJarPath());
-                }
-                else {
+                } else {
                     dockerContent = generateTestThinJarWindowsDockerfile(
                             this.dockerModel.getTestSuiteJsonPath(), this.dockerModel.getJacocoAgentJarPath()
                     );
@@ -127,8 +122,7 @@ public class DockerGenerator {
                 //copy the jacoco agent jar
                 copyFileOrDirectory(this.dockerModel.getJacocoAgentJarPath(), outputDir);
                 DockerGenUtils.writeToFile(dockerContent, outputDir.resolve("Dockerfile"));
-            }
-            else {
+            } else {
                 //TODO: ADD THIS FUNCTIONALITY
             }
 
@@ -140,8 +134,7 @@ public class DockerGenerator {
                 buildImage(outputDir);
                 outStream.println();
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new DockerGenException("unable to write content to " + outputDir);
         }
     }
@@ -318,19 +311,27 @@ public class DockerGenerator {
         testDockerFileContent.append("WORKDIR ").append(getWorkDir()).append("/ ").append(LINE_SEPARATOR);
         appendCommonCommands(testDockerFileContent);
 
-        if(!isBlank(this.dockerModel.getCmd())) {
+        if (!isBlank(this.dockerModel.getCmd())) {
             testDockerFileContent.append(this.dockerModel.getCmd());
-        }
-        else {
+        } else {
             addDockerTestCMD(testDockerFileContent);
         }
 
         if (!isBlank(this.dockerModel.getCommandArg())) {
             testDockerFileContent.append(this.dockerModel.getCommandArg()).append(" ");
+        } else {
+            addDockerTestCMDArgs(testDockerFileContent);
         }
         testDockerFileContent.append(LINE_SEPARATOR);
 
         return testDockerFileContent.toString();
+    }
+
+    private void addDockerTestCMDArgs(StringBuilder testDockerFileContent) {
+        if (this.dockerModel.getTestRunTimeCmdArgs() != null) {
+            List<String> testRunTimeCmdArgs = this.dockerModel.getTestRunTimeCmdArgs();
+            testRunTimeCmdArgs.forEach(arg -> testDockerFileContent.append(arg).append(" "));
+        }
     }
 
     private void addDockerTestCMD(StringBuilder testDockerFileContent) {
@@ -342,6 +343,11 @@ public class DockerGenerator {
         if (this.dockerModel.isEnableDebug()) {
             testDockerFileContent.append("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:")
                     .append(this.dockerModel.getDebugPort()).append(" ");
+        }
+
+        //add jacoco agent command if coverage is enabled
+        if (Boolean.getBoolean(this.dockerModel.getTestRunTimeCmdArgs().get(RunTimeArgs.COVERAGE))) {
+            //TODO:: HOW TO IMPLEMENT THIS? AGENTCOMMAND RELIES ON PROPERTIES DEFINED IN RUNTESTSTASK
         }
 
         if (!isBlank(this.dockerModel.getClassPath())) {
@@ -443,7 +449,6 @@ public class DockerGenerator {
             dockerfileContent.append(this.dockerModel.getCmd());
         }
 
-        dockerfileContent.append(LINE_SEPARATOR);
         if (!isBlank(this.dockerModel.getCommandArg())) {
             dockerfileContent.append(this.dockerModel.getCommandArg());
         }
