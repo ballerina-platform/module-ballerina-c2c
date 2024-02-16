@@ -209,101 +209,11 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 this.dataHolder.setSourceRoot(project.sourceRoot());
                 //finally create the internal code for the test executable
                 codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage), path, currentPackage, artifactType);
-
-
-                //get all the jar files in the path directory
-//                List<File> jarFiles = KubernetesUtils.getTestJarFiles(path.toFile());
-//
-//                for (File jarFile: jarFiles) {
-//                    String executableJarName = jarFile.getName();
-//
-//                    DockerModel dockerModel = dataHolder.getDockerModel();
-//                    if(dockerModel.getCmd() == null) {
-//                        dockerModel.setCmd("CMD  java -jar jars/" + executableJarName);
-//                    }
-//                    else {
-//                        dockerModel.setCmd(dockerModel.getCmd() + " && \\\n"
-//                                + "java -jar jars/" + executableJarName);
-//                    }
-//                }
-//
-//                dataHolder.getDockerModel().addDependencyJarPaths(
-//                        jarFiles.stream()
-//                                .map(File::toPath)
-//                                .collect(Collectors.toSet())
-//                );
-//
-//
-//
-//                dataHolder.setOutputName("test");
-//                dataHolder.setSourceRoot(executablePath.get().getParent()
-//                        .getParent().getParent());
-//
-//                codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage),
-//                        path, compilerLifecycleEventContext.currentPackage(), artifactType);
             });
         }
 
 
     }
-
-//    public void codeGeneratedInternalForTest(PackageID packageID, Path testBasePath, Package currentPackage) {
-//        Optional<CloudToml> cloudToml = currentPackage.cloudToml();
-//        BuildOptions buildOptions = currentPackage.project().buildOptions();
-//        String buildType = buildOptions.cloud();
-//
-//        String graalvmBuildArgs = buildOptions.graalVMBuildOptions();
-//        dataHolder.getDockerModel().setGraalvmBuildArgs(graalvmBuildArgs);
-//        KubernetesContext.getInstance().setCurrentPackage(packageID);
-//        dataHolder.setPackageID(packageID);
-//
-//        //test base path is usually target/bin/tests
-//        if (null != testBasePath.getParent() && Files.exists(testBasePath.getParent())) {
-//            // artifacts location for a single bal file.
-//            Path kubernetesOutputPath = testBasePath.getParent().resolve(KUBERNETES);
-//            Path dockerOutputPath = testBasePath.getParent().resolve(DOCKER);
-//
-//            if (null != testBasePath.getParent().getParent().getParent() &&
-//                    Files.exists(testBasePath.getParent().getParent().getParent())) {
-//                // if executable came from a ballerina project
-//                Path projectRoot = testBasePath.getParent().getParent().getParent();
-//                if (Files.exists(projectRoot.resolve("Ballerina.toml"))) {
-//                    kubernetesOutputPath = projectRoot.resolve("target")
-//                            .resolve(KUBERNETES)
-//                            .resolve("test");
-//                    dockerOutputPath = projectRoot.resolve("target")
-//                            .resolve(DOCKER)
-//                            .resolve("test");
-//                    //Read and parse ballerina cloud
-//                    cloudToml.ifPresent(
-//                            kubernetesToml -> dataHolder.setBallerinaCloud(new Toml(kubernetesToml.tomlAstNode())));
-//                }
-//            }
-//
-//            dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
-//            dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
-//            ArtifactManager artifactManager = new ArtifactManager();
-//            try {
-//                KubernetesUtils.deleteDirectory(kubernetesOutputPath);
-//                artifactManager.populateDeploymentModel();
-//                artifactManager.createArtifacts(buildType, buildOptions.nativeImage());
-//            } catch (KubernetesPluginException e) {
-//                String errorMessage = "module [" + packageID + "] " + e.getMessage();
-//                printError(errorMessage);
-//                if (!e.isSkipPrintTrace()) {
-//                    pluginLog.error(errorMessage, e);
-//                }
-//                try {
-//                    KubernetesUtils.deleteDirectory(kubernetesOutputPath);
-//                } catch (KubernetesPluginException ignored) {
-//                    //ignored
-//                }
-//            }
-//        } else {
-//            printError("error in resolving Docker generation location.");
-//            pluginLog.error("error in resolving Docker generation location.");
-//        }
-//    }
 
     public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Package currentPackage,
                                       ArtifactType artifactType) {
@@ -323,7 +233,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             if (null != executableJarFile.getParent().getParent().getParent() &&
                     Files.exists(executableJarFile.getParent().getParent().getParent())) {
                 // if executable came from a ballerina project
-                Path projectRoot = executableJarFile.getParent().getParent().getParent();
+                Path projectRoot = currentPackage.project().sourceRoot();
                 if (Files.exists(projectRoot.resolve("Ballerina.toml"))) {
                     if (artifactType == ArtifactType.TEST) {
                         kubernetesOutputPath = projectRoot.resolve("target")
