@@ -263,6 +263,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             ArtifactManager artifactManager = new ArtifactManager();
             try {
                 KubernetesUtils.deleteDirectory(kubernetesOutputPath);
+                KubernetesUtils.deleteDirectory(dockerOutputPath);
                 artifactManager.populateDeploymentModel();
                 artifactManager.createArtifacts(buildType, buildOptions.nativeImage());
             } catch (KubernetesPluginException e) {
