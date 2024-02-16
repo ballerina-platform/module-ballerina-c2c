@@ -303,14 +303,23 @@ public class DockerGenerator {
                     .append(" ").append(getWorkDir())
                     .append("/jars/ ").append(LINE_SEPARATOR);
         } else {
-            testDockerFileContent.append("COPY ")
-                    .append(this.dockerModel.getFatJarPath().getFileName())
-                    .append(" ").append(getWorkDir())
-                    .append("/jars/ ").append(LINE_SEPARATOR);
+            if (!isWindowsBuild()) {
+                testDockerFileContent.append("COPY ")
+                        .append(this.dockerModel.getFatJarPath().getFileName())
+                        .append(" ").append(getWorkDir())
+                        .append("/jars/ ").append(LINE_SEPARATOR);
+            } else {
+                testDockerFileContent.append("COPY ")
+                        .append(this.dockerModel.getFatJarPath().getFileName())
+                        .append(" ").append(getWorkDir())
+                        .append("jars")
+                        .append(WINDOWS_SEPARATOR)
+                        .append(" ").append(LINE_SEPARATOR);
+            }
         }
 
         appendUser(testDockerFileContent);
-        testDockerFileContent.append("WORKDIR ").append(getWorkDir()).append("/ ").append(LINE_SEPARATOR);
+        testDockerFileContent.append("WORKDIR ").append(getWorkDir()).append(LINE_SEPARATOR);
         appendCommonCommands(testDockerFileContent);
 
         if (!isBlank(this.dockerModel.getCmd())) {
