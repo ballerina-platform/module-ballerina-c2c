@@ -44,9 +44,7 @@ import io.fabric8.kubernetes.api.model.ContainerPort;
 import org.ballerinalang.model.elements.PackageID;
 import org.wso2.ballerinalang.compiler.util.Name;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -390,4 +388,39 @@ public class KubernetesUtils {
 
        return Arrays.stream(files).toList();
     }
+
+    public static int runCommand(String command) throws RuntimeException {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            processBuilder.command("bash", "-c", command);
+            Process process = processBuilder.start();
+
+            // Get the output stream of the process
+            InputStream inputStream = process.getInputStream();
+            InputStream errorStream = process.getErrorStream();
+
+            // Handle output stream
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                }
+            }
+
+            // Handle error stream
+            try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream))) {
+                String errorLine;
+                while ((errorLine = errorReader.readLine()) != null) {
+                    System.err.println(errorLine);
+                }
+            }
+
+            // Wait for the process to finish
+            return process.waitFor();
+
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("Error running command: " + command, e);
+        }
+    }
+
 }

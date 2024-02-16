@@ -107,9 +107,20 @@ public class ArtifactManager {
         kubernetesDataHolder.setDockerModel(dockerModel);
         new DockerHandler(isNative).createArtifacts();
 
+        String dockerRunCommand = "docker run -d " + generatePortInstruction(dockerModel.getPorts())
+                + dockerModel.getName();
+
         instructions.put("Execute the below command to run the generated Docker image: ",
-                "\tdocker run -d " + generatePortInstruction(dockerModel.getPorts()) + dockerModel.getName());
+                "\t" + dockerRunCommand);
         printInstructions();
+
+        if (dockerModel.isTest()) { //if it is a test artifact, we also run the docker container
+            OUT.println("\nRunning the generated Docker image\n");
+
+            // Run the docker image
+            int status = KubernetesUtils.runCommand("docker run " + dockerModel.getName());
+            //since no ports are exposed in testing
+        }
     }
 
     private DockerModel getDockerModel(boolean isTomlSkipped) throws KubernetesPluginException {
