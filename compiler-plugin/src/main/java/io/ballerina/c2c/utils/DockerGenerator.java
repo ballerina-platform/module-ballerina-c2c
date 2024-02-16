@@ -37,9 +37,7 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import static io.ballerina.c2c.DockerGenConstants.EXECUTABLE_JAR;
-import static io.ballerina.c2c.DockerGenConstants.REGISTRY_SEPARATOR;
-import static io.ballerina.c2c.DockerGenConstants.TAG_SEPARATOR;
+import static io.ballerina.c2c.DockerGenConstants.*;
 import static io.ballerina.c2c.utils.DockerGenUtils.isWindowsBuild;
 import static io.ballerina.c2c.utils.DockerGenUtils.getWorkDir;
 import static io.ballerina.c2c.utils.DockerGenUtils.getTestSuiteJsonCopiedDir;
@@ -316,7 +314,7 @@ public class DockerGenerator {
         }
 
         appendUser(testDockerFileContent);
-        testDockerFileContent.append("WORKDIR ").append(getWorkDir()).append("/ ").append(LINE_SEPARATOR);
+        testDockerFileContent.append("WORKDIR ").append(getWorkDir()).append(LINE_SEPARATOR);
         appendCommonCommands(testDockerFileContent);
 
         if (!isBlank(this.dockerModel.getCmd())) {
