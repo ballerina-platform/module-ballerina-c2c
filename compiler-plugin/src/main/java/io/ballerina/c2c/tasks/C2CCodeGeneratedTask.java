@@ -274,6 +274,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 }
                 try {
                     KubernetesUtils.deleteDirectory(kubernetesOutputPath);
+                    KubernetesUtils.deleteDirectory(dockerOutputPath);
                 } catch (KubernetesPluginException ignored) {
                     //ignored
                 }
