@@ -34,4 +34,5 @@ public class DockerGenConstants {
     public static final int MAX_BALLERINA_LAYERS = 110;
 
     public static final String SCHEMA_FILE_NAME = "c2c-schema.json";
+    public static final String WINDOWS_SEPARATOR = "\\";
 }
