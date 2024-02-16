@@ -82,12 +82,8 @@ public class DockerGenerator {
                 }
                 copyNativeJars(outputDir);
                 DockerGenUtils.writeToFile(dockerContent, outputDir.resolve("Dockerfile"));
-
-                if (!this.dockerModel.isTest()) {
-                    Path jarLocation = outputDir.resolve(DockerGenUtils.extractJarName(jarFilePath) + EXECUTABLE_JAR);
-                    copyFileOrDirectory(jarFilePath, jarLocation);
-                }
-
+                Path jarLocation = outputDir.resolve(DockerGenUtils.extractJarName(jarFilePath) + EXECUTABLE_JAR);
+                copyFileOrDirectory(jarFilePath, jarLocation);
             }
             copyExternalFiles(outputDir);
             //check image build is enabled.
@@ -123,7 +119,10 @@ public class DockerGenerator {
                 copyFileOrDirectory(this.dockerModel.getJacocoAgentJarPath(), outputDir);
                 DockerGenUtils.writeToFile(dockerContent, outputDir.resolve("Dockerfile"));
             } else {
-                //TODO: ADD THIS FUNCTIONALITY
+                DockerGenUtils.writeToFile(generateTestDockerFile(this.dockerModel.getTestSuiteJsonPath(),
+                        this.dockerModel.getJacocoAgentJarPath()), outputDir.resolve("Dockerfile"));
+                copyFileOrDirectory(this.dockerModel.getFatJarPath(),
+                        outputDir.resolve(this.dockerModel.getFatJarPath().getFileName()));
             }
 
             copyExternalFiles(outputDir);
@@ -305,6 +304,11 @@ public class DockerGenerator {
                     .append(jacocoAgentJarPath.getFileName().toString())
                     .append(" ").append(getWorkDir())
                     .append("/jars/ ").append(LINE_SEPARATOR);
+        } else {
+            testDockerFileContent.append("COPY ")
+                    .append(this.dockerModel.getFatJarPath().getFileName())
+                    .append(" ").append(getWorkDir())
+                    .append("/jars/ ").append(LINE_SEPARATOR);
         }
 
         appendUser(testDockerFileContent);
@@ -330,7 +334,14 @@ public class DockerGenerator {
     private void addDockerTestCMDArgs(StringBuilder testDockerFileContent) {
         if (this.dockerModel.getTestRunTimeCmdArgs() != null) {
             List<String> testRunTimeCmdArgs = this.dockerModel.getTestRunTimeCmdArgs();
-            testRunTimeCmdArgs.forEach(arg -> testDockerFileContent.append(arg).append(" "));
+
+            if (!this.dockerModel.isThinJar()) {
+                testRunTimeCmdArgs.set(RunTimeArgs.IS_FAT_JAR_EXECUTION, "true");
+                testRunTimeCmdArgs.set(RunTimeArgs.TEST_SUITE_JSON_PATH, TestUtils.getJsonFilePathInFatJar("/")
+                );
+            }
+
+            testRunTimeCmdArgs.forEach(arg -> testDockerFileContent.append("\"").append(arg).append("\" "));
         }
     }
 
@@ -345,16 +356,24 @@ public class DockerGenerator {
                     .append(this.dockerModel.getDebugPort()).append(" ");
         }
 
-        //add jacoco agent command if coverage is enabled
-        if (Boolean.getBoolean(this.dockerModel.getTestRunTimeCmdArgs().get(RunTimeArgs.COVERAGE))) {
-            //TODO:: HOW TO IMPLEMENT THIS? AGENTCOMMAND RELIES ON PROPERTIES DEFINED IN RUNTESTSTASK
-        }
+        //we are not adding jacoco agent jar path
 
         if (!isBlank(this.dockerModel.getClassPath())) {
-            testDockerFileContent.append("-cp \"").append(this.dockerModel.getClassPath()).append("\" ");
+            if (this.dockerModel.isThinJar()) {
+                testDockerFileContent.append("-cp \"").append(this.dockerModel.getClassPath()).append("\" ");
+            }
         }
 
-        testDockerFileContent.append(TesterinaConstants.TESTERINA_LAUNCHER_CLASS_NAME).append(" ");
+        if (this.dockerModel.isThinJar()) {
+            testDockerFileContent.append(TesterinaConstants.TESTERINA_LAUNCHER_CLASS_NAME).append(" ");
+        } else {
+            //-jar <jar-file>
+            testDockerFileContent.append("-jar ")
+                    .append(getWorkDir())
+                    .append("/jars/")
+                    .append(this.dockerModel.getFatJarPath().getFileName())
+                    .append(" ");
+        }
     }
 
     protected void appendUser(StringBuilder dockerfileContent) {
