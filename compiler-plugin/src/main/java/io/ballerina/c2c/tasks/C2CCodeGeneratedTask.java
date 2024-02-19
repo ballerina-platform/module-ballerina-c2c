@@ -179,7 +179,6 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
 
                 //once rewritten, set the command line args for the BTestMain
                 List<String> cmd;
-                String cmdStr;
 
                 //read the mainArgs.txt and get the cmd args
                 Path mainArgsPath = path.getParent().resolve(ProjectConstants.TEST_RUNTIME_MAIN_ARGS_FILE);

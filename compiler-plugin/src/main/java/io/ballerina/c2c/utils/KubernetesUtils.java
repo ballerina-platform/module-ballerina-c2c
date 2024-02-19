@@ -48,7 +48,12 @@ import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import org.ballerinalang.model.elements.PackageID;
 import org.wso2.ballerinalang.compiler.util.Name;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -466,7 +471,7 @@ public class KubernetesUtils {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
+                    OUT.println(line);
                 }
             }
 
@@ -474,7 +479,7 @@ public class KubernetesUtils {
             try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream))) {
                 String errorLine;
                 while ((errorLine = errorReader.readLine()) != null) {
-                    System.err.println(errorLine);
+                    ERR.println(errorLine);
                 }
             }
 
