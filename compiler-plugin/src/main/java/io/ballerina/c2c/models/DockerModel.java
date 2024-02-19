@@ -203,7 +203,17 @@ public class DockerModel {
             return null;
         }
 
-        return this.cmd;
+        String configFile = "";
+        for (CopyFileModel externalFile : externalFiles) {
+            if (!externalFile.isBallerinaConf()) {
+                continue;
+            }
+            configFile = externalFile.getTarget();
+        }
+
+        return this.cmd
+                .replace("${APP}", this.jarFileName)
+                .replace("${CONFIG_FILE}", configFile);
     }
 
 }
