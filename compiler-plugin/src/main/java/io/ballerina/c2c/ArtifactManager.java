@@ -118,7 +118,7 @@ public class ArtifactManager {
             OUT.println("\nRunning the generated Docker image\n");
 
             // Run the docker image
-            int status = KubernetesUtils.runCommand("docker run " + dockerModel.getName());
+            KubernetesUtils.runCommand("docker run " + dockerModel.getName());
             //since no ports are exposed in testing
         }
     }
