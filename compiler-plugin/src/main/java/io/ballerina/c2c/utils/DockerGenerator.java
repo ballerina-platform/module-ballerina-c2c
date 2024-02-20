@@ -23,8 +23,10 @@ import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
+import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.cli.utils.TestUtils;
 import io.ballerina.projects.JarResolver;
+import io.ballerina.toml.api.Toml;
 import org.ballerinalang.model.elements.PackageID;
 import org.ballerinalang.test.runtime.util.TesterinaConstants;
 import org.ballerinalang.test.runtime.util.TesterinaConstants.RunTimeArgs;
@@ -41,6 +43,8 @@ import static io.ballerina.c2c.DockerGenConstants.EXECUTABLE_JAR;
 import static io.ballerina.c2c.DockerGenConstants.REGISTRY_SEPARATOR;
 import static io.ballerina.c2c.DockerGenConstants.TAG_SEPARATOR;
 import static io.ballerina.c2c.DockerGenConstants.WINDOWS_SEPARATOR;
+import static io.ballerina.c2c.utils.DockerGenUtils.addConfigTomls;
+import static io.ballerina.c2c.utils.DockerGenUtils.copyTestConfigFiles;
 import static io.ballerina.c2c.utils.DockerGenUtils.isWindowsBuild;
 import static io.ballerina.c2c.utils.DockerGenUtils.getWorkDir;
 import static io.ballerina.c2c.utils.DockerGenUtils.getTestSuiteJsonCopiedDir;
@@ -117,6 +121,7 @@ public class DockerGenerator {
                         outputDir.resolve(this.dockerModel.getFatJarPath().getFileName()));
             }
 
+            copyTestConfigFiles(outputDir, this.dockerModel);
             copyExternalFiles(outputDir);
 
             //check image build is enabled.
@@ -316,6 +321,8 @@ public class DockerGenerator {
                     .append("/jars/ ").append(LINE_SEPARATOR);
         }
 
+        addConfigTomls(testDockerFileContent, this.dockerModel, Paths.get(getWorkDir()));
+
         appendUser(testDockerFileContent);
         testDockerFileContent.append("WORKDIR ").append(getWorkDir()).append(LINE_SEPARATOR);
         appendCommonCommands(testDockerFileContent);
@@ -347,6 +354,26 @@ public class DockerGenerator {
             }
 
             testRunTimeCmdArgs.forEach(arg -> testDockerFileContent.append("\"").append(arg).append("\" "));
+
+            //add config toml values by traversing each config toml file
+//            if (this.dockerModel.getTestConfigPaths() != null) {
+//                this.dockerModel.getTestConfigPaths().forEach(testConfigPath -> {
+//                    try {
+//                        Toml toml = Toml.read(testConfigPath);
+//                        //get all the keys
+//                        toml.toMap().forEach((key, value) -> {
+//                            String appendingArg = "-C" + key + "=" + value;
+//
+//                            if (!testRunTimeCmdArgs.contains(appendingArg)) {
+//                                // give higher priority to the args passed via command line
+//                                testDockerFileContent.append(appendingArg).append(" ");
+//                            }
+//                        });
+//                    } catch (IOException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                });
+//            }
         }
     }
 
