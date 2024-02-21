@@ -124,6 +124,9 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
             final Optional<MutualSSLConfig> mutualSSLConfig = clientInfo.getHttpsConfig().getMutualSSLConfig();
             if (mutualSSLConfig.isPresent()) {
                 String sslCertPath = mutualSSLConfig.get().getPath();
+                if (KubernetesUtils.isBlank(sslCertPath)) {
+                    continue;
+                }
                 String sslCertPathContent = readSecretFile(sslCertPath);
                 SecretModel secretModel;
                 Optional<SecretModel> existing = getSecretByMountPathExists(getMountPath(sslCertPath));
@@ -216,7 +219,7 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
         if (secureSocketConfig.isPresent()) {
             String path = secureSocketConfig.get().getPath();
             final String validName = getValidName(listenerInfo.getName());
-            if (path != null && !"".equals(path)) {
+            if (!KubernetesUtils.isBlank(path)) {
                 String keyStoreContent = readSecretFile(path);
                 secretModel.setName(validName + "-secure-socket");
                 secretModel.setMountPath(getMountPath(path));
@@ -258,6 +261,9 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
         }
         if (mutualSSLConfig.isPresent()) {
             String sslCertPath = mutualSSLConfig.get().getPath();
+            if (KubernetesUtils.isBlank(sslCertPath)) {
+                return secrets;
+            }
             String sslCertPathContent = readSecretFile(sslCertPath);
             if (getMountPath(sslCertPath).equals(secretModel.getMountPath())) {
                 // Same mount path as key config add data to existing secret.
