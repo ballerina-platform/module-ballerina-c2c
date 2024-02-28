@@ -471,6 +471,12 @@ public class KubernetesUtils {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
+                    if (line.contains("Untagged")) {    // Skip the untagged image message
+                        continue;
+                    }
+                    if (line.contains("Deleted")) {     // Skip the deleted image message
+                        continue;
+                    }
                     OUT.println(line);
                 }
             }
@@ -489,6 +495,11 @@ public class KubernetesUtils {
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException("Error running command: " + command, e);
         }
+    }
+
+    public static int deleteDockerImage(String imageName) {
+        String command = "docker rmi " + imageName;
+        return runCommand(command);
     }
 
 }
