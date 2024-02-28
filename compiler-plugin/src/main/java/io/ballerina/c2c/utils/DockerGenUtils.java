@@ -20,7 +20,10 @@ package io.ballerina.c2c.utils;
 
 
 import io.ballerina.c2c.DockerGenConstants;
+import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
+import io.ballerina.c2c.models.DockerModel;
+import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.projects.util.ProjectConstants;
 import org.apache.commons.io.FileUtils;
 
@@ -31,6 +34,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
+
+import static io.ballerina.c2c.KubernetesConstants.LINE_SEPARATOR;
 
 /**
  * Util methods used for artifact generation.
@@ -141,7 +146,44 @@ public class DockerGenUtils {
             throw new DockerGenException("error while copying file/folder '" + source + "' to '" + destination + "'");
         }
     }
-    
+    /**
+     * Copy the test config files while maintaining the directory structure.
+     *
+     * @param outputDir   output root directory in the container
+     * @param dockerModel docker model
+     */
+    public static void copyTestConfigFiles(Path outputDir, DockerModel dockerModel) throws DockerGenException {
+        for (Path testConfigPath : dockerModel.getTestConfigPaths()) {
+            copyFileOrDirectory(testConfigPath, outputDir.resolve("config-files")
+                    .resolve(getFolderNameOfConfigFile(testConfigPath)).resolve(
+                    KubernetesConstants.BALLERINA_CONF_FILE_NAME)
+            );
+        }
+    }
+
+    public static void addConfigTomls(StringBuilder testDockerFileContent, DockerModel dockerModel, Path outputDir) {
+        String projectSourceRoot = KubernetesContext.getInstance().getDataHolder().getSourceRoot().toString();
+        for (Path testConfigPath : dockerModel.getTestConfigPaths()) {
+            String relativePath = testConfigPath.toString().replace(projectSourceRoot, "");
+            String[] split = relativePath.split("/");
+            Path target = outputDir;
+            for (int i = 0; i < split.length - 1; i++) { // -1 to exclude the file name
+                target = target.resolve(split[i]);
+            }
+            testDockerFileContent.append("COPY ")
+                    .append("config-files/").append(getFolderNameOfConfigFile(testConfigPath))
+                    .append("/")
+                    .append(KubernetesConstants.BALLERINA_CONF_FILE_NAME)
+                    .append(" ").append(target)
+                    .append("/")
+                    .append(LINE_SEPARATOR);
+        }
+    }
+
+    private static Path getFolderNameOfConfigFile(Path testConfigPath) {
+        return testConfigPath.getParent().getParent().getFileName();
+    }
+
     /**
      * Cleans error message getting rid of java class names.
      *
