@@ -50,16 +50,20 @@ configurations {
 
 dependencies {
     implementation project(":cloud-util")
+
+    implementation group: 'com.google.code.gson', name: 'gson', version: "${googleGsonVersion}"
     
     implementation group: 'io.fabric8', name: 'kubernetes-model-core', version: "${fabric8KubernetesClientVersion}"
     implementation group: 'io.fabric8', name: 'kubernetes-model-apps', version: "${fabric8KubernetesClientVersion}"
     implementation group: 'io.fabric8', name: 'kubernetes-model-autoscaling', version: "${fabric8KubernetesClientVersion}"
     implementation group: 'io.fabric8', name: 'kubernetes-model-batch', version: "${fabric8KubernetesClientVersion}"
 
+    implementation group: 'org.ballerinalang', name: 'ballerina-cli', version: "${ballerinaLangVersion}"
     implementation group: 'org.ballerinalang', name: 'ballerina-lang', version: "${ballerinaLangVersion}"
     implementation group: 'org.ballerinalang', name: 'ballerina-tools-api', version: "${ballerinaLangVersion}"
     implementation group: 'org.ballerinalang', name: 'ballerina-parser', version: "${ballerinaLangVersion}"
     implementation group: 'org.ballerinalang', name: 'toml-parser', version: "${ballerinaLangVersion}"
+    implementation group: 'org.ballerinalang', name: 'testerina-runtime', version: "${ballerinaLangVersion}"
 
     implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: "${slf4jVersion}"
     implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: "${jacksonYamlVersion}"

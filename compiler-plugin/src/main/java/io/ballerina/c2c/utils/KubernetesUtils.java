@@ -44,15 +44,22 @@ import io.fabric8.kubernetes.api.model.ContainerPort;
 import org.ballerinalang.model.elements.PackageID;
 import org.wso2.ballerinalang.compiler.util.Name;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -334,10 +341,17 @@ public class KubernetesUtils {
         dockerModel.setRegistry(deploymentModel.getRegistry());
         dockerModel.setName(dockerImage);
         dockerModel.setTag(imageTag);
-        dockerModel.setPorts(deploymentModel.getPorts().stream()
-                .map(ContainerPort::getContainerPort)
-                .collect(Collectors.toSet()));
-        dockerModel.setService(true);
+
+        if (!dockerModel.isTest()) {
+            dockerModel.setService(true);
+            dockerModel.setPorts(deploymentModel.getPorts().stream()
+                    .map(ContainerPort::getContainerPort)
+                    .collect(Collectors.toSet()));
+        } else {
+            dockerModel.setService(false);
+            dockerModel.setPorts(Collections.emptySet());
+        }
+
         dockerModel.addCommandArg(deploymentModel.getCommandArgs());
         return dockerModel;
     }
@@ -369,4 +383,60 @@ public class KubernetesUtils {
         return dockerModel.getDependencyJarPaths().size() + dockerModel.getCopyFiles().size() +
                 dockerModel.getEnv().size() < DockerGenConstants.MAX_BALLERINA_LAYERS;
     }
+
+    public static List<File> getTestJarFiles(File directory) {
+       File[] files = directory.listFiles();
+
+       if (files == null) {
+           return new ArrayList<>();
+       }
+
+       return Arrays.stream(files).toList();
+    }
+
+    public static int runCommand(String command) throws RuntimeException {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder();
+            processBuilder.command("bash", "-c", command);
+            Process process = processBuilder.start();
+
+            // Get the output stream of the process
+            InputStream inputStream = process.getInputStream();
+            InputStream errorStream = process.getErrorStream();
+
+            // Handle output stream
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.contains("Untagged")) {    // Skip the untagged image message
+                        continue;
+                    }
+                    if (line.contains("Deleted")) {     // Skip the deleted image message
+                        continue;
+                    }
+                    OUT.println(line);
+                }
+            }
+
+            // Handle error stream
+            try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream))) {
+                String errorLine;
+                while ((errorLine = errorReader.readLine()) != null) {
+                    ERR.println(errorLine);
+                }
+            }
+
+            // Wait for the process to finish
+            return process.waitFor();
+
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("Error running command: " + command, e);
+        }
+    }
+
+    public static int deleteDockerImage(String imageName) {
+        String command = "docker rmi " + imageName;
+        return runCommand(command);
+    }
+
 }

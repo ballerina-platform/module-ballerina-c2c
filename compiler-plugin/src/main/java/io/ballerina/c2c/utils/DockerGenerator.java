@@ -19,22 +19,35 @@
 package io.ballerina.c2c.utils;
 
 import io.ballerina.c2c.DockerGenConstants;
+import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
+import io.ballerina.c2c.models.KubernetesContext;
+import io.ballerina.cli.utils.TestUtils;
 import io.ballerina.projects.JarResolver;
+import io.ballerina.toml.api.Toml;
 import org.ballerinalang.model.elements.PackageID;
+import org.ballerinalang.test.runtime.util.TesterinaConstants;
+import org.ballerinalang.test.runtime.util.TesterinaConstants.RunTimeArgs;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import static io.ballerina.c2c.DockerGenConstants.EXECUTABLE_JAR;
 import static io.ballerina.c2c.DockerGenConstants.REGISTRY_SEPARATOR;
 import static io.ballerina.c2c.DockerGenConstants.TAG_SEPARATOR;
+import static io.ballerina.c2c.DockerGenConstants.WINDOWS_SEPARATOR;
+import static io.ballerina.c2c.utils.DockerGenUtils.addConfigTomls;
+import static io.ballerina.c2c.utils.DockerGenUtils.copyTestConfigFiles;
+import static io.ballerina.c2c.utils.DockerGenUtils.isWindowsBuild;
+import static io.ballerina.c2c.utils.DockerGenUtils.getWorkDir;
+import static io.ballerina.c2c.utils.DockerGenUtils.getTestSuiteJsonCopiedDir;
 import static io.ballerina.c2c.KubernetesConstants.LINE_SEPARATOR;
 import static io.ballerina.c2c.utils.DockerGenUtils.copyFileOrDirectory;
 import static io.ballerina.c2c.utils.DockerGenUtils.isBlank;
@@ -78,15 +91,7 @@ public class DockerGenerator {
                 Path jarLocation = outputDir.resolve(DockerGenUtils.extractJarName(jarFilePath) + EXECUTABLE_JAR);
                 copyFileOrDirectory(jarFilePath, jarLocation);
             }
-            for (CopyFileModel copyFileModel : this.dockerModel.getCopyFiles()) {
-                // Copy external files to docker folder
-                Path target = outputDir.resolve(Paths.get(copyFileModel.getSource()).getFileName());
-                Path sourcePath = Paths.get(copyFileModel.getSource());
-                if (!sourcePath.isAbsolute()) {
-                    sourcePath = sourcePath.toAbsolutePath();
-                }
-                copyFileOrDirectory(sourcePath, target);
-            }
+            copyExternalFiles(outputDir);
             //check image build is enabled.
             if (this.dockerModel.isBuildImage()) {
                 outStream.println("\nBuilding the docker image\n");
@@ -95,6 +100,60 @@ public class DockerGenerator {
             }
         } catch (IOException e) {
             throw new DockerGenException("unable to write content to " + outputDir);
+        }
+    }
+
+    public void createTestArtifacts(PrintStream outStream, String logAppender, Path outputDir)
+            throws  DockerGenException {
+
+        try {
+            if (this.dockerModel.isThinJar()) {
+                String dockerContent;
+                if (!isWindowsBuild()) {
+                    dockerContent = generateTestDockerFile(this.dockerModel.getTestSuiteJsonPath(),
+                            this.dockerModel.getJacocoAgentJarPath());
+                } else {
+                    dockerContent = generateTestThinJarWindowsDockerfile(
+                            this.dockerModel.getTestSuiteJsonPath(), this.dockerModel.getJacocoAgentJarPath()
+                    );
+                }
+                copyNativeJars(outputDir);
+                //copy the test suite json (to the  root directory (/home/ballerina/))
+                copyFileOrDirectory(this.dockerModel.getTestSuiteJsonPath(), outputDir);
+
+                //copy the jacoco agent jar
+                copyFileOrDirectory(this.dockerModel.getJacocoAgentJarPath(), outputDir);
+                DockerGenUtils.writeToFile(dockerContent, outputDir.resolve("Dockerfile"));
+            } else {
+                DockerGenUtils.writeToFile(generateTestDockerFile(this.dockerModel.getTestSuiteJsonPath(),
+                        this.dockerModel.getJacocoAgentJarPath()), outputDir.resolve("Dockerfile"));
+                copyFileOrDirectory(this.dockerModel.getFatJarPath(),
+                        outputDir.resolve(this.dockerModel.getFatJarPath().getFileName()));
+            }
+
+            copyTestConfigFiles(outputDir, this.dockerModel);
+            copyExternalFiles(outputDir);
+
+            //check image build is enabled.
+            if (this.dockerModel.isBuildImage()) {
+                outStream.println("\nBuilding the docker image\n");
+                buildImage(outputDir);
+                outStream.println();
+            }
+        } catch (IOException e) {
+            throw new DockerGenException("unable to write content to " + outputDir);
+        }
+    }
+
+    private void copyExternalFiles(Path outputDir) throws DockerGenException {
+        for (CopyFileModel copyFileModel : this.dockerModel.getCopyFiles()) {
+            // Copy external files to docker folder
+            Path target = outputDir.resolve(Paths.get(copyFileModel.getSource()).getFileName());
+            Path sourcePath = Paths.get(copyFileModel.getSource());
+            if (!sourcePath.isAbsolute()) {
+                sourcePath = sourcePath.toAbsolutePath();
+            }
+            copyFileOrDirectory(sourcePath, target);
         }
     }
 
@@ -153,10 +212,7 @@ public class DockerGenerator {
      */
     private String generateDockerfile() {
         StringBuilder dockerfileContent = new StringBuilder();
-        dockerfileContent.append("# Auto Generated Dockerfile").append(LINE_SEPARATOR);
-        dockerfileContent.append("FROM ").append(this.dockerModel.getBaseImage()).append(LINE_SEPARATOR);
-        dockerfileContent.append(LINE_SEPARATOR);
-        dockerfileContent.append("LABEL maintainer=\"dev@ballerina.io\"").append(LINE_SEPARATOR);
+        addInitialDockerContent(dockerfileContent);
         if (this.dockerModel.isThinJar()) {
             // Append Jar copy instructions without observability jar and executable jar
             this.dockerModel.getDependencyJarPaths()
@@ -222,6 +278,157 @@ public class DockerGenerator {
         return dockerfileContent.toString();
     }
 
+    private String generateTestDockerFile(Path testSuiteJsonPath, Path jacocoAgentJarPath) {
+        StringBuilder testDockerFileContent = new StringBuilder();
+        addInitialDockerContent(testDockerFileContent);
+
+        //copy test suite json and all the dependencies
+        if (this.dockerModel.isThinJar()) {
+            //copy the test suite json
+            testDockerFileContent.append("COPY ")
+                    .append(testSuiteJsonPath.getFileName().toString())
+                    .append(" ").append(getTestSuiteJsonCopiedDir()).append("/ ").append(LINE_SEPARATOR);
+                    //to the  root directory (/home/ballerina/)
+
+            new TreeSet<>(this.dockerModel.getDependencyJarPaths())
+                    .stream()
+                    .map(Path::getFileName)
+                    .forEach(path -> {
+                        testDockerFileContent.append("COPY ")
+                                        .append(path)
+                                        .append(" ").append(getWorkDir())
+                                        .append("/jars/ ").append(LINE_SEPARATOR);
+                                //TODO: Remove once https://github.com/moby/moby/issues/37965 is fixed.
+                                boolean isCiBuild = "true".equals(System.getenv().get("CI_BUILD"));
+                                if (isCiBuild) {
+                                    testDockerFileContent.append("RUN true ").append(LINE_SEPARATOR);
+                                }
+                            }
+                    );
+
+            //copy the jacoco agent jar path
+            testDockerFileContent.append("COPY ")
+                    .append(jacocoAgentJarPath.getFileName().toString())
+                    .append(" ").append(getWorkDir())
+                    .append("/jars/ ").append(LINE_SEPARATOR);
+        } else {
+            if (!isWindowsBuild()) {
+                testDockerFileContent.append("COPY ")
+                        .append(this.dockerModel.getFatJarPath().getFileName())
+                        .append(" ").append(getWorkDir())
+                        .append("/jars/ ").append(LINE_SEPARATOR);
+            } else {
+                testDockerFileContent.append("COPY ")
+                        .append(this.dockerModel.getFatJarPath().getFileName())
+                        .append(" ").append(getWorkDir())
+                        .append("jars")
+                        .append(WINDOWS_SEPARATOR)
+                        .append(" ").append(LINE_SEPARATOR);
+            }
+        }
+
+        addConfigTomls(testDockerFileContent, this.dockerModel, Paths.get(getWorkDir()));
+
+        appendUser(testDockerFileContent);
+        testDockerFileContent.append("WORKDIR ").append(getWorkDir()).append(LINE_SEPARATOR);
+        appendCommonCommands(testDockerFileContent);
+
+        if (!isBlank(this.dockerModel.getCmd())) {
+            testDockerFileContent.append(this.dockerModel.getCmd());
+        } else {
+            addDockerTestCMD(testDockerFileContent);
+        }
+
+        if (!isBlank(this.dockerModel.getCommandArg())) {
+            testDockerFileContent.append(this.dockerModel.getCommandArg()).append(" ");
+        } else {
+            addDockerTestCMDArgs(testDockerFileContent);
+        }
+        testDockerFileContent.append(LINE_SEPARATOR);
+
+        return testDockerFileContent.toString();
+    }
+
+    private void addDockerTestCMDArgs(StringBuilder testDockerFileContent) {
+        if (this.dockerModel.getTestRunTimeCmdArgs() != null) {
+            List<String> testRunTimeCmdArgs = this.dockerModel.getTestRunTimeCmdArgs();
+
+            if (!this.dockerModel.isThinJar()) {
+                testRunTimeCmdArgs.set(RunTimeArgs.IS_FAT_JAR_EXECUTION, "true");
+
+                if (isWindowsBuild()) {
+                    testRunTimeCmdArgs.set(RunTimeArgs.TEST_SUITE_JSON_PATH,
+                            TestUtils.getJsonFilePathInFatJar(WINDOWS_SEPARATOR));
+                } else {
+                    testRunTimeCmdArgs.set(RunTimeArgs.TEST_SUITE_JSON_PATH,
+                            TestUtils.getJsonFilePathInFatJar("/"));
+                }
+            }
+
+            testRunTimeCmdArgs.forEach(arg -> testDockerFileContent.append("\"").append(arg).append("\" "));
+
+            //add config toml values by traversing each config toml file
+//            if (this.dockerModel.getTestConfigPaths() != null) {
+//                this.dockerModel.getTestConfigPaths().forEach(testConfigPath -> {
+//                    try {
+//                        Toml toml = Toml.read(testConfigPath);
+//                        //get all the keys
+//                        toml.toMap().forEach((key, value) -> {
+//                            String appendingArg = "-C" + key + "=" + value;
+//
+//                            if (!testRunTimeCmdArgs.contains(appendingArg)) {
+//                                // give higher priority to the args passed via command line
+//                                testDockerFileContent.append(appendingArg).append(" ");
+//                            }
+//                        });
+//                    } catch (IOException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                });
+//            }
+        }
+    }
+
+    private void addDockerTestCMD(StringBuilder testDockerFileContent) {
+        testDockerFileContent.append("CMD ");
+        TestUtils.getInitialCmdArgs("java", getWorkDir()).stream().forEach(arg -> {
+            testDockerFileContent.append(arg).append(" ");
+        });
+
+        if (this.dockerModel.isEnableDebug()) {
+            testDockerFileContent.append("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:")
+                    .append(this.dockerModel.getDebugPort()).append(" ");
+        }
+
+        //we are not adding jacoco agent jar path
+
+        if (!isBlank(this.dockerModel.getClassPath())) {
+            if (this.dockerModel.isThinJar()) {
+                testDockerFileContent.append("-cp \"").append(this.dockerModel.getClassPath()).append("\" ");
+            }
+        }
+
+        if (this.dockerModel.isThinJar()) {
+            testDockerFileContent.append(TesterinaConstants.TESTERINA_LAUNCHER_CLASS_NAME).append(" ");
+        } else {
+            //-jar <jar-file>
+            if (!isWindowsBuild()) {
+                testDockerFileContent.append("-jar ")
+                        .append(getWorkDir())
+                        .append("/jars/")
+                        .append(this.dockerModel.getFatJarPath().getFileName())
+                        .append(" ");
+            } else {
+                testDockerFileContent.append("-jar ")
+                        .append(getWorkDir())
+                        .append("jars")
+                        .append(WINDOWS_SEPARATOR)
+                        .append(this.dockerModel.getFatJarPath().getFileName())
+                        .append(" ");
+            }
+        }
+    }
+
     protected void appendUser(StringBuilder dockerfileContent) {
         if (this.dockerModel.getBaseImage().equals(DockerGenConstants.JRE_SLIM_BASE)) {
             dockerfileContent.append("RUN addgroup troupe \\").append(LINE_SEPARATOR);
@@ -233,19 +440,23 @@ public class DockerGenerator {
         }
     }
 
-    private String generateThinJarWindowsDockerfile() {
-        final String separator = "\\";
-        StringBuilder dockerfileContent = new StringBuilder();
+    private void addInitialDockerContent(StringBuilder dockerfileContent) {
         dockerfileContent.append("# Auto Generated Dockerfile").append(LINE_SEPARATOR);
         dockerfileContent.append("FROM ").append(this.dockerModel.getBaseImage()).append(LINE_SEPARATOR);
         dockerfileContent.append(LINE_SEPARATOR);
         dockerfileContent.append("LABEL maintainer=\"dev@ballerina.io\"").append(LINE_SEPARATOR);
+    }
+
+    private String generateThinJarWindowsDockerfile() {
+        StringBuilder dockerfileContent = new StringBuilder();
+        addInitialDockerContent(dockerfileContent);
+
         dockerfileContent.append(LINE_SEPARATOR);
         dockerfileContent.append("WORKDIR ").append(getWorkDir()).append(LINE_SEPARATOR);
 
         for (Path path : this.dockerModel.getDependencyJarPaths()) {
             dockerfileContent.append("COPY ").append(path.getFileName()).append(getWorkDir())
-                    .append("jars").append(separator);
+                    .append("jars").append(WINDOWS_SEPARATOR);
             dockerfileContent.append(LINE_SEPARATOR);
         }
         dockerfileContent.append(LINE_SEPARATOR);
@@ -269,6 +480,43 @@ public class DockerGenerator {
         dockerfileContent.append(LINE_SEPARATOR);
         if (!isBlank(this.dockerModel.getCommandArg())) {
             dockerfileContent.append(this.dockerModel.getCommandArg());
+        }
+        dockerfileContent.append(LINE_SEPARATOR);
+
+        return dockerfileContent.toString();
+    }
+
+    private String generateTestThinJarWindowsDockerfile(Path testSuiteJsonPath, Path jacocoAgentJarPath) {
+        StringBuilder dockerfileContent = new StringBuilder();
+        addInitialDockerContent(dockerfileContent);
+
+        dockerfileContent.append(LINE_SEPARATOR);
+        dockerfileContent.append("WORKDIR ").append(getWorkDir()).append(LINE_SEPARATOR);
+
+        for (Path path : this.dockerModel.getDependencyJarPaths()) {
+            dockerfileContent.append("COPY ").append(path.getFileName()).append(getWorkDir())
+                    .append("jars").append(WINDOWS_SEPARATOR);
+            dockerfileContent.append(LINE_SEPARATOR);
+        }
+
+        //copy the test suite json
+        dockerfileContent.append("COPY ")
+                .append(testSuiteJsonPath.getFileName().toString())
+                .append(" ").append(getTestSuiteJsonCopiedDir()).append(WINDOWS_SEPARATOR).append(LINE_SEPARATOR);
+
+        addConfigTomls(dockerfileContent, this.dockerModel, Paths.get(getWorkDir()));
+        appendCommonCommands(dockerfileContent);
+
+        if (isBlank(this.dockerModel.getCmd())) {
+            addDockerTestCMD(dockerfileContent);
+        } else {
+            dockerfileContent.append(this.dockerModel.getCmd());
+        }
+
+        if (!isBlank(this.dockerModel.getCommandArg())) {
+            dockerfileContent.append(this.dockerModel.getCommandArg());
+        } else {
+            addDockerTestCMDArgs(dockerfileContent);
         }
         dockerfileContent.append(LINE_SEPARATOR);
 
@@ -300,13 +548,5 @@ public class DockerGenerator {
             dockerfileContent.append("USER ballerina").append(LINE_SEPARATOR);
             dockerfileContent.append(LINE_SEPARATOR);
         }
-    }
-
-    private boolean isWindowsBuild() {
-        return Boolean.parseBoolean(System.getenv(DockerGenConstants.ENABLE_WINDOWS_BUILD));
-    }
-
-    private String getWorkDir() {
-        return isWindowsBuild() ? "C:\\ballerina\\home\\" : "/home/ballerina";
     }
 }
