@@ -19,6 +19,7 @@ package io.ballerina.c2c.tasks;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import io.ballerina.c2c.ArtifactManager;
+import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
@@ -61,6 +62,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -176,6 +178,9 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 dataHolder.getDockerModel().setTestSuiteJsonPath(jsonFilePath);
                 StringJoiner classPath = TestUtils.joinClassPaths(classPaths);
                 this.dataHolder.getDockerModel().setClassPath(classPath.toString());
+                this.dataHolder.getDockerModel().setTestSuiteMap(testSuiteMap);
+                this.dataHolder.getDockerModel().setTarget(target);
+                this.dataHolder.getDockerModel().setTestConfigPaths(getTestConfigPaths(project));
 
                 //once rewritten, set the command line args for the BTestMain
                 List<String> cmd;
@@ -196,22 +201,38 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
 
                 Path jacocoAgentJarPath = Path.of(TestUtils.getJacocoAgentJarPath());
                 cmd.set(3, getCopiedJarPath(jacocoAgentJarPath.getFileName()).toString());
-                //TODO:: FIX JACOCO AGENT PATH
                 this.dataHolder.getDockerModel().setJacocoAgentJarPath(jacocoAgentJarPath);
-
                 this.dataHolder.getDockerModel().setTestRunTimeCmdArgs(cmd);
-
-                //set the output name
                 this.dataHolder.setOutputName(project.currentPackage()
                         .packageName().toString().toLowerCase(Locale.ROOT)  + "-" + TesterinaConstants.TESTABLE);
-                //set the source root
                 this.dataHolder.setSourceRoot(project.sourceRoot());
+
+                //copy all the config.toml files to the target directory
+
                 //finally create the internal code for the test executable
                 codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage), path, currentPackage, artifactType);
             });
         }
+    }
 
+    private List<Path> getTestConfigPaths(Project project) {
+        List<Path> paths = new ArrayList<>();
+        project.currentPackage().modules().forEach(module -> {
+            Path modulePath;
+            if (!Objects.equals(module.moduleName().toString(), project.currentPackage().packageName().toString())) {
+                modulePath = project.sourceRoot().resolve(ProjectConstants.MODULES_ROOT)
+                        .resolve(module.moduleName().moduleNamePart());
+            } else {
+                modulePath = project.sourceRoot();
+            }
 
+            Path testConfigPath = modulePath.resolve(ProjectConstants.TEST_DIR_NAME)
+                    .resolve(KubernetesConstants.BALLERINA_CONF_FILE_NAME);
+            if (Files.exists(testConfigPath)) {
+                paths.add(testConfigPath);
+            }
+        });
+        return paths;
     }
 
     public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Package currentPackage,
@@ -309,21 +330,22 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             //get the file name
             Path jarFileName = jarPath.getFileName();
 
-            //create a new path to reflect the following directory -> "/home/jars/{fileName}"
+            //create a new path to reflect the following directory -> "/home/ballerina/jars/{fileName}"
             jarPath = getCopiedJarPath(jarFileName);
-
             if (!moduleJarPaths.contains(jarFileName)) { //if the jar file is not a module jar
                 classPaths.add(jarPath);
             }
-
             return jarPath;
         });
 
         Module module = project.currentPackage().module(moduleDescriptor.name());
 
-        testSuiteMap.get(TestUtils.getResolvedModuleName(module, moduleDescriptor.name())).addTestExecutionDependencies(
-                pathStream.collect(Collectors.toCollection(ArrayList::new))
-        );
+        TestSuite suite = testSuiteMap.get(TestUtils.getResolvedModuleName(module, moduleDescriptor.name()));
+        if (suite != null) {
+            suite.addTestExecutionDependencies(
+                    pathStream.collect(Collectors.toCollection(ArrayList::new))
+            );
+        }
     }
 
     private static Path getCopiedJarPath(Path jarFileName) {
