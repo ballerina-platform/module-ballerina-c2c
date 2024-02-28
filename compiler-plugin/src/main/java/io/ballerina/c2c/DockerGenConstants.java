@@ -35,4 +35,5 @@ public class DockerGenConstants {
 
     public static final String SCHEMA_FILE_NAME = "c2c-schema.json";
     public static final String WINDOWS_SEPARATOR = "\\";
+    public static final String REFLECT_JSON_FILE = "reflect-config.json";
 }
