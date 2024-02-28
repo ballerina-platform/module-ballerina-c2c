@@ -428,4 +428,9 @@ public class KubernetesUtils {
         }
     }
 
+    public static int deleteDockerImage(String imageName) {
+        String command = "docker rmi " + imageName;
+        return runCommand(command);
+    }
+
 }
