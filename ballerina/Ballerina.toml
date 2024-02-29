@@ -5,7 +5,7 @@ version = "2.12.0"
 repository = "https://github.com/ballerina-platform/module-ballerina-c2c"
 license = ["Apache-2.0"]
 keywords = ["cloud", "kubernetes", "docker", "k8s", "c2c"]
-distribution = "2201.8.0"
+distribution = "2201.9.0"
 
 [platform.java17]
 graalvmCompatible = true
