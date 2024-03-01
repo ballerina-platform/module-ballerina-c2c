@@ -59,6 +59,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -136,7 +137,15 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                         cachesRoot = project.sourceRoot();
                         target = new Target(project.targetDir());
                     } else {
-                        cachesRoot = Files.createTempDirectory("ballerina-test-cache" + System.nanoTime());
+                        Path cacheRootFinder = Files.createTempDirectory("finder" + System.nanoTime());
+                        cacheRootFinder.toFile().deleteOnExit();
+                        // find the latest created temp directory that contains the prefix : ballerina-test-cache
+                        try (Stream<Path> paths = Files.list(cacheRootFinder.getParent())) {
+                            cachesRoot = paths.filter(Files::isDirectory)
+                                    .filter(path1 -> path1.getFileName().toString().contains("ballerina-test-cache"))
+                                    .max(Comparator.comparingLong(o -> o.toFile().lastModified()))
+                                    .orElse(cacheRootFinder);
+                        }
                         target = new Target(cachesRoot);
                     }
 
@@ -203,8 +212,14 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 cmd.set(3, getCopiedJarPath(jacocoAgentJarPath.getFileName()).toString());
                 this.dataHolder.getDockerModel().setJacocoAgentJarPath(jacocoAgentJarPath);
                 this.dataHolder.getDockerModel().setTestRunTimeCmdArgs(cmd);
-                this.dataHolder.setOutputName(project.currentPackage()
-                        .packageName().toString().toLowerCase(Locale.ROOT)  + "-" + TesterinaConstants.TESTABLE);
+                if (!project.kind().equals(ProjectKind.SINGLE_FILE_PROJECT)) {
+                    this.dataHolder.setOutputName(project.currentPackage()
+                            .packageName().toString().toLowerCase(Locale.ROOT)  + "-" + TesterinaConstants.TESTABLE);
+                } else {
+                    this.dataHolder.setOutputName(extractJarName(path.getFileName()) + "-" +
+                            TesterinaConstants.TESTABLE);
+                }
+
                 this.dataHolder.setSourceRoot(project.sourceRoot());
 
                 //copy all the config.toml files to the target directory
