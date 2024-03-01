@@ -19,14 +19,13 @@
 package io.ballerina.c2c.utils;
 
 import io.ballerina.c2c.DockerGenConstants;
-import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
 import io.ballerina.c2c.models.KubernetesContext;
+import io.ballerina.cli.utils.DebugUtils;
 import io.ballerina.cli.utils.TestUtils;
 import io.ballerina.projects.JarResolver;
-import io.ballerina.toml.api.Toml;
 import org.ballerinalang.model.elements.PackageID;
 import org.ballerinalang.test.runtime.util.TesterinaConstants;
 import org.ballerinalang.test.runtime.util.TesterinaConstants.RunTimeArgs;
@@ -108,7 +107,7 @@ public class DockerGenerator {
                 dockerContent = generateTestDockerFile(this.dockerModel.getTestSuiteJsonPath(),
                         this.dockerModel.getJacocoAgentJarPath());
                 copyNativeJars(outputDir);
-                //copy the test suite json (to the  root directory (/home/ballerina/))
+                //copy the test suite json
                 copyFileOrDirectory(this.dockerModel.getTestSuiteJsonPath(), outputDir);
 
                 //copy the jacoco agent jar
@@ -124,12 +123,9 @@ public class DockerGenerator {
             copyTestConfigFiles(outputDir, this.dockerModel);
             copyExternalFiles(outputDir);
 
-            //check image build is enabled.
-            if (this.dockerModel.isBuildImage()) {
-                outStream.println("\nBuilding the docker image\n");
-                buildImage(outputDir);
-                outStream.println();
-            }
+            outStream.println("\nBuilding the docker image\n");
+            buildImage(outputDir);
+            outStream.println();
         } catch (IOException e) {
             throw new DockerGenException("unable to write content to " + outputDir);
         }
@@ -320,8 +316,8 @@ public class DockerGenerator {
                     .append(" ").append(getWorkDir())
                     .append("/jars/ ").append(LINE_SEPARATOR);
         }
-
-        addConfigTomls(testDockerFileContent, this.dockerModel, Paths.get(getWorkDir()));
+        Path projectSourceRoot = this.dockerModel.getSourceRoot();
+        addConfigTomls(testDockerFileContent, this.dockerModel, Paths.get(getWorkDir()), projectSourceRoot.toString());
 
         appendUser(testDockerFileContent);
         testDockerFileContent.append("WORKDIR ").append(getWorkDir()).append(LINE_SEPARATOR);
@@ -354,26 +350,6 @@ public class DockerGenerator {
             }
 
             testRunTimeCmdArgs.forEach(arg -> testDockerFileContent.append("\"").append(arg).append("\" "));
-
-            //add config toml values by traversing each config toml file
-//            if (this.dockerModel.getTestConfigPaths() != null) {
-//                this.dockerModel.getTestConfigPaths().forEach(testConfigPath -> {
-//                    try {
-//                        Toml toml = Toml.read(testConfigPath);
-//                        //get all the keys
-//                        toml.toMap().forEach((key, value) -> {
-//                            String appendingArg = "-C" + key + "=" + value;
-//
-//                            if (!testRunTimeCmdArgs.contains(appendingArg)) {
-//                                // give higher priority to the args passed via command line
-//                                testDockerFileContent.append(appendingArg).append(" ");
-//                            }
-//                        });
-//                    } catch (IOException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                });
-//            }
         }
     }
 
@@ -386,6 +362,10 @@ public class DockerGenerator {
         if (this.dockerModel.isEnableDebug()) {
             testDockerFileContent.append("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:")
                     .append(this.dockerModel.getDebugPort()).append(" ");
+        } else {
+            if (DebugUtils.isInDebugMode()) {
+                testDockerFileContent.append(DebugUtils.getDebugArgs(System.err)).append(" ");
+            }
         }
 
         //we are not adding jacoco agent jar path
