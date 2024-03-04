@@ -167,11 +167,10 @@ public class JobHandler extends AbstractArtifactHandler {
         String dockerImage = jobModel.getImage();
         String imageTag = dockerImage.substring(dockerImage.lastIndexOf(":") + 1);
         dockerImage = dockerImage.substring(0, dockerImage.lastIndexOf(":"));
-        dockerModel.setBaseImage(jobModel.getBaseImage());
         dockerModel.setRegistry(jobModel.getRegistry());
         dockerModel.setName(dockerImage);
         dockerModel.setTag(imageTag);
-        dockerModel.setCmd(jobModel.getCmd());
+        dockerModel.setEntryPoint(jobModel.getEntryPoint());
         dockerModel.setJarFileName(extractJarName(this.dataHolder.getJarPath()) + KubernetesConstants.EXECUTABLE_JAR);
         dockerModel.setService(false);
         dockerModel.setBuildImage(jobModel.isBuildImage());

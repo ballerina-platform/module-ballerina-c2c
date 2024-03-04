@@ -272,8 +272,13 @@ public class KubernetesUtils {
             dockerModel
                     .setRegistry(TomlHelper.getString(toml, containerImage + ".repository", null));
             dockerModel.setTag(TomlHelper.getString(toml, containerImage + ".tag", dockerModel.getTag()));
-            dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", dockerModel.getBaseImage()));
-            dockerModel.setCmd(TomlHelper.getString(toml, containerImage + ".cmd", dockerModel.getCmd()));
+            String defaultBaseImage = DockerGenConstants.JRE_SLIM_BASE;
+            if (dockerModel.isGraalVMBuild()) {
+                defaultBaseImage = DockerGenConstants.NATIVE_RUNTIME_BASE_IMAGE;
+            }
+            dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", defaultBaseImage));
+            dockerModel.setEntryPoint(TomlHelper.getString(toml, containerImage + ".entrypoint",
+                    dockerModel.getEntryPoint()));
             if (model instanceof DeploymentModel) {
 
                 dockerModel.setName(TomlHelper.getString(toml, containerImage + ".name",

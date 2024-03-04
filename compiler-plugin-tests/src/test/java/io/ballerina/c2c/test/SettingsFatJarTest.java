@@ -57,8 +57,8 @@ public class SettingsFatJarTest {
         Assert.assertEquals(ports.size(), 1);
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
-        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[/bin/sh, -c, java -Xdiag " +
-                "-cp \"anjana-fat_jar-0.1.0.jar:jars/*\" 'anjana.fat_jar.0.$_init']");
+        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[java, -Xdiag, -cp," +
+                " anjana-fat_jar-0.1.0.jar:jars/*, anjana.fat_jar.0.$_init]");
     }
 
     @AfterClass

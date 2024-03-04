@@ -62,10 +62,6 @@ public class ArtifactManager {
      * @throws KubernetesPluginException if an error occurs while generating artifacts
      */
     public void createArtifacts(String cloudType, boolean isNative) throws KubernetesPluginException {
-        if (isNative) {
-            this.kubernetesDataHolder.getDockerModel().setBaseImage(DockerGenConstants.NATIVE_RUNTIME_BASE_IMAGE);
-        }
-
         if (cloudType.equals("k8s")) {
             createKubernetesArtifacts(isNative);
         } else if (cloudType.equals("docker")) {

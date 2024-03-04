@@ -137,11 +137,11 @@ public class KubernetesTestUtils {
      */
     public static List<String> getCommand(String imageName) {
         InspectImageResponse dockerImage = getDockerImage(imageName);
-        if (null == dockerImage.getConfig() || null == dockerImage.getConfig().getCmd()) {
+        if (null == dockerImage.getConfig() || null == dockerImage.getConfig().getEntrypoint()) {
             return new ArrayList<>();
         }
 
-        return Arrays.asList(dockerImage.getConfig().getCmd());
+        return Arrays.asList(dockerImage.getConfig().getEntrypoint());
     }
 
     /**

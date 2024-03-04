@@ -2,5 +2,5 @@
 repository= "anuruddhal" # optional default is local
 name="cmd" # optional
 tag="v1"  # default is latest
-cmd="CMD java -Xdiag -cp '${APP}:jars/*' '$_init' --b7a.http.accesslog.console=true"
+entrypoint="ENTRYPOINT [\"java\",\"-Xdiag\", \"-cp\", \"${APP}:jars/*\" \"$_init\" \"--b7a.http.accesslog.console=true\""
 base="ballerina/jre8:v1"

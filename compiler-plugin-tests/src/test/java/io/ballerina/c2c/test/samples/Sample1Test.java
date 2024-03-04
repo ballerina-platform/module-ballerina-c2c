@@ -113,7 +113,8 @@ public class Sample1Test extends SampleTest {
     public void validateDockerfile() throws IOException {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
-        Assert.assertTrue(dockerFileContent.contains("CMD java -Xdiag -cp \"hello_world.jar:jars/*\" '$_init'"));
+        Assert.assertTrue(dockerFileContent.contains("ENTRYPOINT [\"java\",\"-Xdiag\",\"-cp\"," +
+                "\"hello_world.jar:jars/*\",\"$_init\"]"));
         Assert.assertTrue(dockerFileContent.contains("USER ballerina"));
         Assert.assertTrue(dockerFile.exists());
     }

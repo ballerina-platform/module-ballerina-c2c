@@ -58,9 +58,9 @@ public class CmdTest {
         Assert.assertNotNull(imageInspect.getConfig());
         Assert.assertTrue(FileUtils.readFileToString(dockerFile, StandardCharsets.UTF_8)
                 .contains("FROM ballerina/jre8:v1"));
-        Assert.assertEquals(Arrays.toString(imageInspect.getConfig().getCmd()),
-                "[/bin/sh, -c, java -Xdiag -cp 'hello-hello-0.0.1.jar:jars/*' '$_init' --b7a.http.accesslog" +
-                        ".console=true]");
+        Assert.assertEquals(Arrays.toString(imageInspect.getConfig().getEntrypoint()),
+                "[/bin/sh, -c, [\"java\",\"-Xdiag\", \"-cp\", \"hello-hello-0.0.1.jar:jars/*\" \"$_init\" " +
+                        "\"--b7a.http.accesslog.console=true\"]");
     }
 
     @AfterClass

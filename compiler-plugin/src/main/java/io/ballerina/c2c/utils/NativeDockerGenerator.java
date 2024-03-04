@@ -96,10 +96,10 @@ public class NativeDockerGenerator extends DockerGenerator {
         dockerfileContent.append("COPY --from=build /app/build/").append(executableName).append(" .")
                 .append(LINE_SEPARATOR).append(LINE_SEPARATOR);
 
-        if (isBlank(this.dockerModel.getCmd())) {
-            dockerfileContent.append("CMD [\"./").append(executableName).append("\"]").append(LINE_SEPARATOR);
+        if (isBlank(this.dockerModel.getEntryPoint())) {
+            dockerfileContent.append("ENTRYPOINT [\"./").append(executableName).append("\"]").append(LINE_SEPARATOR);
         } else {
-            dockerfileContent.append(this.dockerModel.getCmd());
+            dockerfileContent.append(this.dockerModel.getEntryPoint());
         }
         if (!isBlank(this.dockerModel.getCommandArg())) {
             dockerfileContent.append(this.dockerModel.getCommandArg());

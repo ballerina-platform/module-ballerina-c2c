@@ -70,11 +70,11 @@
             "insertText": "[graalvm.builder]"
         },
         {
-            "label": "cmd",
+            "label": "entrypoint",
             "kind": "Snippet",
             "detail": "String",
             "sortText": "A",
-            "insertText": "cmd=\"${1:}\"",
+            "insertText": "entrypoint=\"${1:}\"",
             "insertTextFormat": "Snippet"
         },
         {

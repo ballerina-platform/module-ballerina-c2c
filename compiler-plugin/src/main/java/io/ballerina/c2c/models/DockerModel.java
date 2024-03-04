@@ -54,7 +54,7 @@ public class DockerModel {
     private String jarFileName;
     private Set<CopyFileModel> externalFiles;
     private String commandArg;
-    private String cmd;
+    private String entryPoint;
     private Map<String, String> env;
     private Set<Path> dependencyJarPaths;
     private PackageID pkgId;
@@ -111,8 +111,8 @@ public class DockerModel {
         this.commandArg += commandArg;
     }
 
-    public String getCmd() {
-        if (this.cmd == null) {
+    public String getEntryPoint() {
+        if (this.entryPoint == null) {
             return null;
         }
 
@@ -124,7 +124,7 @@ public class DockerModel {
             configFile = externalFile.getTarget();
         }
 
-        return this.cmd
+        return this.entryPoint
                 .replace("${APP}", this.jarFileName)
                 .replace("${CONFIG_FILE}", configFile);
     }
