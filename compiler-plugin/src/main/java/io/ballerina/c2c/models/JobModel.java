@@ -42,7 +42,7 @@ public class JobModel extends KubernetesModel {
     private boolean buildImage;
     private String dockerHost;
     private String baseImage;
-    private String cmd;
+    private String entryPoint;
     private String dockerCertPath;
     private Set<String> imagePullSecrets;
     private Set<CopyFileModel> copyFiles;

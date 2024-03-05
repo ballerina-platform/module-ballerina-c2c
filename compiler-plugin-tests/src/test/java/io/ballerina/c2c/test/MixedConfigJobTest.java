@@ -157,8 +157,8 @@ public class MixedConfigJobTest {
 
     @Test
     public void validateDockerImage() {
-        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[/bin/sh, -c, java -Xdiag -cp " +
-                "\"anjana-mix_configs_job-0.1.0.jar:jars/*\" 'anjana.mix_configs_job.0.$_init']");
+        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[java, -Xdiag, -cp," +
+                " anjana-mix_configs_job-0.1.0.jar:jars/*, anjana.mix_configs_job.0.$_init]");
     }
 
     @AfterClass

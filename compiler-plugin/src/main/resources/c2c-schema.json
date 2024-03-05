@@ -72,12 +72,12 @@
                 "pattern": "`base` should not be empty"
               }
             },
-            "cmd": {
+            "entrypoint": {
               "description": "Instruction, which is executed when the container starts up",
               "type": "string",
               "pattern": "^(?!\\s*$).+",
               "message": {
-                "pattern": "`cmd` should not be empty"
+                "pattern": "`entrypoint` should not be empty"
               }
             },
             "user": {
