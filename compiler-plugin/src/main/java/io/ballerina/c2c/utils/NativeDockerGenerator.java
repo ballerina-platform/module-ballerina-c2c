@@ -207,7 +207,7 @@ public class NativeDockerGenerator extends DockerGenerator {
 
         if (this.dockerModel.isTest()) {
             stringBuilder.append(" -H:IncludeResources=")
-                    .append(ProjectConstants.EXCLUDING_CLASSES_FILE)
+                    .append(ProjectConstants.EXCLUDED_CLASSES_FILE)
                     .append(" -H:IncludeResources=")
                     .append(TestUtils.getJsonFilePathInFatJar(File.separator))
                     .append(" -H:ReflectionConfigurationFiles=")

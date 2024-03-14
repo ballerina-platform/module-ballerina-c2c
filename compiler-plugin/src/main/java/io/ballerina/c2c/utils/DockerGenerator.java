@@ -24,6 +24,7 @@ import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
 import io.ballerina.c2c.models.KubernetesContext;
+import io.ballerina.cli.utils.DebugUtils;
 import io.ballerina.cli.utils.TestUtils;
 import io.ballerina.projects.JarResolver;
 import io.ballerina.toml.api.Toml;
@@ -118,7 +119,7 @@ public class DockerGenerator {
                     );
                 }
                 copyNativeJars(outputDir);
-                //copy the test suite json (to the  root directory (/home/ballerina/))
+                //copy the test suite json
                 copyFileOrDirectory(this.dockerModel.getTestSuiteJsonPath(), outputDir);
 
                 //copy the jacoco agent jar
@@ -366,26 +367,6 @@ public class DockerGenerator {
             }
 
             testRunTimeCmdArgs.forEach(arg -> testDockerFileContent.append("\"").append(arg).append("\" "));
-
-            //add config toml values by traversing each config toml file
-//            if (this.dockerModel.getTestConfigPaths() != null) {
-//                this.dockerModel.getTestConfigPaths().forEach(testConfigPath -> {
-//                    try {
-//                        Toml toml = Toml.read(testConfigPath);
-//                        //get all the keys
-//                        toml.toMap().forEach((key, value) -> {
-//                            String appendingArg = "-C" + key + "=" + value;
-//
-//                            if (!testRunTimeCmdArgs.contains(appendingArg)) {
-//                                // give higher priority to the args passed via command line
-//                                testDockerFileContent.append(appendingArg).append(" ");
-//                            }
-//                        });
-//                    } catch (IOException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                });
-//            }
         }
     }
 
@@ -398,6 +379,10 @@ public class DockerGenerator {
         if (this.dockerModel.isEnableDebug()) {
             testDockerFileContent.append("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:")
                     .append(this.dockerModel.getDebugPort()).append(" ");
+        } else {
+            if (DebugUtils.isInDebugMode()) {
+                testDockerFileContent.append(DebugUtils.getDebugArgs(System.err)).append(" ");
+            }
         }
 
         //we are not adding jacoco agent jar path

@@ -31,6 +31,7 @@ import io.ballerina.projects.BuildOptions;
 import io.ballerina.projects.CloudToml;
 import io.ballerina.projects.JBallerinaBackend;
 import io.ballerina.projects.JarLibrary;
+import io.ballerina.projects.JarResolver;
 import io.ballerina.projects.JvmTarget;
 import io.ballerina.projects.Module;
 import io.ballerina.projects.ModuleDescriptor;
@@ -121,13 +122,16 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                         path, compilerLifecycleEventContext.currentPackage(), artifactType);
             });
         } else {
+            if (cloud.equals("k8s")) {
+                // Do not support k8s for test
+                printError("k8s cloud build only supported for build");
+                pluginLog.error("k8s cloud build only supported for build");
+                return;
+            }
             JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilerLifecycleEventContext.compilation(),
                     JvmTarget.JAVA_17);
             dataHolder.getDockerModel().setTest(true);
-
-            //executablePath is the standalone testable jar
             executablePath.ifPresent(path -> {
-                //get the test suit json
                 Target target;
                 Path testsCachePath;
                 Path cachesRoot;
@@ -139,25 +143,34 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                     } else {
                         Path cacheRootFinder = Files.createTempDirectory("finder" + System.nanoTime());
                         cacheRootFinder.toFile().deleteOnExit();
-                        // find the latest created temp directory that contains the prefix : ballerina-test-cache
+                        // Find the latest created temp directory that contains the prefix : ballerina-test-cache
                         try (Stream<Path> paths = Files.list(cacheRootFinder.getParent())) {
                             cachesRoot = paths.filter(Files::isDirectory)
                                     .filter(path1 -> path1.getFileName().toString().contains("ballerina-test-cache"))
                                     .max(Comparator.comparingLong(o -> o.toFile().lastModified()))
                                     .orElse(cacheRootFinder);
+                            if (cachesRoot.equals(cacheRootFinder)) {
+                                printError("error while creating target directory");
+                                pluginLog.error("error while creating target directory");
+                                return;
+                            }
                         }
                         target = new Target(cachesRoot);
                     }
 
                     testsCachePath = target.getTestsCachePath();
                 } catch (IOException e) {
-                    throw createLauncherException("error while creating target directory: ", e);
+                    printError("error while creating target directory: " + e.getMessage());
+                    pluginLog.error("error while creating target directory: " + e.getMessage());
+                    return;
                 }
 
                 Path jsonFilePath = testsCachePath.resolve(TesterinaConstants.TESTERINA_TEST_SUITE);
 
                 if (!Files.exists(jsonFilePath)) {
-                    throw LauncherUtils.createLauncherException("error while finding the test suit json");
+                    printError("error while finding the test suit json");
+                    pluginLog.error("error while finding the test suit json");
+                    return;
                 }
 
                 Map<String, TestSuite> testSuiteMap;
@@ -173,43 +186,48 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
 
                     for (ModuleDescriptor moduleDescriptor :
                             currentPackage.moduleDependencyGraph().toTopologicallySortedList()) {
-                        //add the test execution dependencies
+                        // Add the test execution dependencies
                         addTestDependencyJars(project, compilerLifecycleEventContext.compilation(),
                                 moduleDescriptor, testSuiteMap, classPaths, moduleJarPaths);
                     }
                 } catch (IOException e) {
-                    throw LauncherUtils.createLauncherException("error while reading the test suit json");
+                    printError("error while reading the test suit json");
+                    pluginLog.error("error while reading the test suit json");
+                    return;
                 }
 
-                //now rewrite the json
+                // Rewrite the json
                 TestUtils.writeToTestSuiteJson(testSuiteMap, testsCachePath);
 
-                dataHolder.getDockerModel().setTestSuiteJsonPath(jsonFilePath);
                 StringJoiner classPath = TestUtils.joinClassPaths(classPaths);
+                this.dataHolder.getDockerModel().setTestSuiteJsonPath(jsonFilePath);
                 this.dataHolder.getDockerModel().setClassPath(classPath.toString());
                 this.dataHolder.getDockerModel().setTestSuiteMap(testSuiteMap);
                 this.dataHolder.getDockerModel().setTarget(target);
                 this.dataHolder.getDockerModel().setTestConfigPaths(getTestConfigPaths(project));
 
-                //once rewritten, set the command line args for the BTestMain
+                // Set the command line args for the BTestMain
                 List<String> cmd;
 
-                //read the mainArgs.txt and get the cmd args
+                // Read the mainArgs.txt and get the cmd args
                 Path mainArgsPath = path.getParent().resolve(ProjectConstants.TEST_RUNTIME_MAIN_ARGS_FILE);
                 try {
                     cmd = Files.readAllLines(mainArgsPath);
                 } catch (IOException e) {
-                    throw LauncherUtils.createLauncherException("error while reading the mainArgs.txt");
+                    printError("error while reading the mainArgs.txt");
+                    pluginLog.error("error while reading the mainArgs.txt");
+                    return;
                 }
 
-                //replace test suite json path [1], target [2], jacoco agent jar path [3]
-                cmd.set(1, Paths.get(getTestSuiteJsonCopiedDir())
+                // Replace test suite json path [1], target [2], jacoco agent jar path [3]
+                cmd.set(TesterinaConstants.RunTimeArgs.TEST_SUITE_JSON_PATH, Paths.get(getTestSuiteJsonCopiedDir())
                         .resolve(TesterinaConstants.TESTERINA_TEST_SUITE).toString());
-                //target directory is -> to load the test suite json (work directory is the target)
-                cmd.set(2, getWorkDir());
 
+                // Target directory is -> to load the test suite json (work directory is the target)
+                cmd.set(TesterinaConstants.RunTimeArgs.TARGET_DIR, getWorkDir());
                 Path jacocoAgentJarPath = Path.of(TestUtils.getJacocoAgentJarPath());
-                cmd.set(3, getCopiedJarPath(jacocoAgentJarPath.getFileName()).toString());
+                cmd.set(TesterinaConstants.RunTimeArgs.JACOCO_AGENT_PATH,
+                        getCopiedJarPath(jacocoAgentJarPath.getFileName()).toString());
                 this.dataHolder.getDockerModel().setJacocoAgentJarPath(jacocoAgentJarPath);
                 this.dataHolder.getDockerModel().setTestRunTimeCmdArgs(cmd);
                 if (!project.kind().equals(ProjectKind.SINGLE_FILE_PROJECT)) {
@@ -219,12 +237,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                     this.dataHolder.setOutputName(extractJarName(path.getFileName()) + "-" +
                             TesterinaConstants.TESTABLE);
                 }
-
                 this.dataHolder.setSourceRoot(project.sourceRoot());
-
-                //copy all the config.toml files to the target directory
-
-                //finally create the internal code for the test executable
                 codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage), path, currentPackage, artifactType);
             });
         }
@@ -326,7 +339,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                                        List<Path> classPaths, List<Path> moduleJarPaths) {
         JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilation,
                 JvmTarget.JAVA_17);
-        io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
+        JarResolver jarResolver = jBallerinaBackend.jarResolver();
 
         Collection<JarLibrary> dependencies = jarResolver.getJarFilePathsRequiredForTestExecution(
                 moduleDescriptor.name()
