@@ -34,6 +34,7 @@ import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.KubernetesModel;
 import io.ballerina.c2c.util.C2CDiagnosticCodes;
+import io.ballerina.cli.utils.DebugUtils;
 import io.ballerina.projects.Package;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.tools.diagnostics.Diagnostic;
@@ -394,10 +395,24 @@ public class KubernetesUtils {
        return Arrays.stream(files).toList();
     }
 
-    public static int runCommand(String command) throws RuntimeException {
+    public static void runCommand(String dockerImage) {
+        ProcessBuilder processBuilder;
+        if (DebugUtils.isInDebugMode()) {
+            String debugPort = System.getProperty("debug");
+            processBuilder = new ProcessBuilder("docker", "run", "--rm", "-p", debugPort + ":" + debugPort,
+                    dockerImage);
+        } else {
+            processBuilder = new ProcessBuilder("docker", "run", "--rm", dockerImage);
+        }
+        int exitCode = executeProcess(processBuilder);
+        if (exitCode != 0) {
+            printError("Error running the docker image: " + dockerImage);
+        }
+
+    }
+
+    private static int executeProcess(ProcessBuilder processBuilder) {
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder();
-            processBuilder.command("bash", "-c", command);
             Process process = processBuilder.start();
 
             // Get the output stream of the process
@@ -408,10 +423,7 @@ public class KubernetesUtils {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    if (line.contains("Untagged")) {    // Skip the untagged image message
-                        continue;
-                    }
-                    if (line.contains("Deleted")) {     // Skip the deleted image message
+                    if (line.contains("Untagged") || line.contains("Deleted")) {
                         continue;
                     }
                     OUT.println(line);
@@ -428,15 +440,18 @@ public class KubernetesUtils {
 
             // Wait for the process to finish
             return process.waitFor();
-
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Error running command: " + command, e);
+            printError("Error executing the process: " + processBuilder.command());
+            return -1;
         }
     }
 
-    public static int deleteDockerImage(String imageName) {
-        String command = "docker rmi " + imageName;
-        return runCommand(command);
+    public static void deleteDockerImage(String imageName) {
+        ProcessBuilder processBuilder = new ProcessBuilder("docker", "rmi", imageName);
+        int exitCode = executeProcess(processBuilder);
+        if (exitCode != 0) {
+            printError("Error deleting the docker image: " + imageName);
+        }
     }
 
 }

@@ -112,7 +112,7 @@ public class ArtifactManager {
         if (dockerModel.isTest()) { //if it is a test artifact, we also run the docker container
             OUT.println("\nRunning the generated Docker image\n");
             // Run the docker container and remove it after execution
-            KubernetesUtils.runCommand("docker run --rm " + dockerModel.getName());
+            KubernetesUtils.runCommand(dockerModel.getName());
             // Delete the docker image
             KubernetesUtils.deleteDockerImage(dockerModel.getName());
         } else {

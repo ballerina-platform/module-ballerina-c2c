@@ -19,15 +19,12 @@
 package io.ballerina.c2c.utils;
 
 import io.ballerina.c2c.DockerGenConstants;
-import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
-import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.cli.utils.DebugUtils;
 import io.ballerina.cli.utils.TestUtils;
 import io.ballerina.projects.JarResolver;
-import io.ballerina.toml.api.Toml;
 import org.ballerinalang.model.elements.PackageID;
 import org.ballerinalang.test.runtime.util.TesterinaConstants;
 import org.ballerinalang.test.runtime.util.TesterinaConstants.RunTimeArgs;
@@ -135,12 +132,9 @@ public class DockerGenerator {
             copyTestConfigFiles(outputDir, this.dockerModel);
             copyExternalFiles(outputDir);
 
-            //check image build is enabled.
-            if (this.dockerModel.isBuildImage()) {
-                outStream.println("\nBuilding the docker image\n");
-                buildImage(outputDir);
-                outStream.println();
-            }
+            outStream.println("\nBuilding the docker image\n");
+            buildImage(outputDir);
+            outStream.println();
         } catch (IOException e) {
             throw new DockerGenException("unable to write content to " + outputDir);
         }

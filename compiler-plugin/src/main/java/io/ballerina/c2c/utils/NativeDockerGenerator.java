@@ -138,12 +138,10 @@ public class NativeDockerGenerator extends DockerGenerator {
                 copyFileOrDirectory(sourcePath, copyTarget);
             }
             copyTestConfigFiles(outputDir, this.dockerModel);
-            //check image build is enabled.
-            if (this.dockerModel.isBuildImage()) {
-                outStream.println("Building the native image. This may take a while\n");
-                buildImage(outputDir);
-                outStream.println();
-            }
+
+            outStream.println("Building the native image. This may take a while\n");
+            buildImage(outputDir);
+            outStream.println();
         } catch (IOException e) {
             throw new DockerGenException("unable to write content to " + outputDir);
         }

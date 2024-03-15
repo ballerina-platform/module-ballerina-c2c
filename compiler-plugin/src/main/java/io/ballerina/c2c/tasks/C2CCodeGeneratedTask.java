@@ -24,9 +24,8 @@ import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.utils.KubernetesUtils;
-import io.ballerina.cli.launcher.LauncherUtils;
 import io.ballerina.cli.utils.TestUtils;
-import io.ballerina.projects.ArtifactType;
+import io.ballerina.projects.BalCommand;
 import io.ballerina.projects.BuildOptions;
 import io.ballerina.projects.CloudToml;
 import io.ballerina.projects.JBallerinaBackend;
@@ -60,7 +59,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -78,7 +76,6 @@ import static io.ballerina.c2c.utils.DockerGenUtils.extractJarName;
 import static io.ballerina.c2c.utils.DockerGenUtils.getTestSuiteJsonCopiedDir;
 import static io.ballerina.c2c.utils.DockerGenUtils.getWorkDir;
 import static io.ballerina.c2c.utils.KubernetesUtils.printError;
-import static io.ballerina.cli.launcher.LauncherUtils.createLauncherException;
 
 /*
     Code generated Task for c2c projects.
@@ -102,11 +99,11 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             return;
         }
 
-        ArtifactType artifactType = compilerLifecycleEventContext.artifactType();
+        BalCommand balCommand = compilerLifecycleEventContext.artifactType();   //TODO: better wording
         Optional<Path> executablePath = compilerLifecycleEventContext.getGeneratedArtifactPath();
         final Package currentPackage = compilerLifecycleEventContext.currentPackage();
 
-        if (artifactType == ArtifactType.BUILD) {
+        if (balCommand == BalCommand.BUILD) {
             PackageDescriptor descriptor = currentPackage.descriptor();
             executablePath.ifPresent(path -> {
                 String executableJarName = "$anon".equals(descriptor.org().value()) ? path.getFileName().toString() :
@@ -119,13 +116,13 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 dataHolder.setSourceRoot(executablePath.get().getParent()
                         .getParent().getParent());
                 codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage),
-                        path, compilerLifecycleEventContext.currentPackage(), artifactType);
+                        path, compilerLifecycleEventContext.currentPackage(), balCommand);
             });
         } else {
-            if (cloud.equals("k8s")) {
+            if (cloud.equals(KubernetesConstants.K8S)) {
                 // Do not support k8s for test
-                printError("k8s cloud build only supported for build");
-                pluginLog.error("k8s cloud build only supported for build");
+                printError(KubernetesConstants.K8S + " cloud build only supported for build");
+                pluginLog.error(KubernetesConstants.K8S + " cloud build only supported for build");
                 return;
             }
             JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilerLifecycleEventContext.compilation(),
@@ -137,26 +134,8 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 Path cachesRoot;
 
                 try {
-                    if (project.kind() == ProjectKind.BUILD_PROJECT) {
-                        cachesRoot = project.sourceRoot();
-                        target = new Target(project.targetDir());
-                    } else {
-                        Path cacheRootFinder = Files.createTempDirectory("finder" + System.nanoTime());
-                        cacheRootFinder.toFile().deleteOnExit();
-                        // Find the latest created temp directory that contains the prefix : ballerina-test-cache
-                        try (Stream<Path> paths = Files.list(cacheRootFinder.getParent())) {
-                            cachesRoot = paths.filter(Files::isDirectory)
-                                    .filter(path1 -> path1.getFileName().toString().contains("ballerina-test-cache"))
-                                    .max(Comparator.comparingLong(o -> o.toFile().lastModified()))
-                                    .orElse(cacheRootFinder);
-                            if (cachesRoot.equals(cacheRootFinder)) {
-                                printError("error while creating target directory");
-                                pluginLog.error("error while creating target directory");
-                                return;
-                            }
-                        }
-                        target = new Target(cachesRoot);
-                    }
+                    cachesRoot = project.sourceRoot();
+                    target = new Target(project.targetDir());
 
                     testsCachePath = target.getTestsCachePath();
                 } catch (IOException e) {
@@ -238,7 +217,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                             TesterinaConstants.TESTABLE);
                 }
                 this.dataHolder.setSourceRoot(project.sourceRoot());
-                codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage), path, currentPackage, artifactType);
+                codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage), path, currentPackage, balCommand);
             });
         }
     }
@@ -264,7 +243,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
     }
 
     public void codeGeneratedInternal(PackageID packageId, Path executableJarFile, Package currentPackage,
-                                      ArtifactType artifactType) {
+                                      BalCommand balCommand) {
         Optional<CloudToml> cloudToml = currentPackage.cloudToml();
         BuildOptions buildOptions = currentPackage.project().buildOptions();
         String buildType = buildOptions.cloud();
@@ -283,7 +262,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 // if executable came from a ballerina project
                 Path projectRoot = currentPackage.project().sourceRoot();
                 if (Files.exists(projectRoot.resolve("Ballerina.toml"))) {
-                    if (artifactType == ArtifactType.TEST) {
+                    if (balCommand == BalCommand.TEST) {
                         kubernetesOutputPath = projectRoot.resolve("target")
                                 .resolve(KUBERNETES)
                                 .resolve("test")

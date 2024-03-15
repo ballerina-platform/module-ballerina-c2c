@@ -20,7 +20,6 @@ package io.ballerina.c2c.models;
 
 import io.ballerina.c2c.DockerGenConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
-import io.ballerina.projects.Project;
 import io.ballerina.projects.internal.model.Target;
 import lombok.Getter;
 import lombok.Setter;
