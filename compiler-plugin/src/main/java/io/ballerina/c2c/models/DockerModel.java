@@ -24,7 +24,6 @@ import io.ballerina.projects.internal.model.Target;
 import lombok.Getter;
 import lombok.Setter;
 import org.ballerinalang.model.elements.PackageID;
-import org.ballerinalang.test.runtime.entity.TestSuite;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -77,9 +76,9 @@ public class DockerModel {
         private String classPath;
         private Path testSuiteJsonPath;
         private Path jacocoAgentJarPath;
-        private Map<String, TestSuite> testSuiteMap;
         private Target target;
         private List<Path> testConfigPaths;
+        private Path sourceRoot;
         private List<String> getTestRunTimeCmdArgs() {
             return testRunTimeCmdArgs;
         }
@@ -112,14 +111,6 @@ public class DockerModel {
             this.jacocoAgentJarPath = jacocoAgentJarPath;
         }
 
-        private Map<String, TestSuite> getTestSuiteMap() {
-            return testSuiteMap;
-        }
-
-        private void setTestSuiteMap(Map<String, TestSuite> testSuiteMap) {
-            this.testSuiteMap = testSuiteMap;
-        }
-
         private Target getTarget() {
             return this.target;
         }
@@ -134,6 +125,14 @@ public class DockerModel {
 
         private void setTestConfigPaths(List<Path> testConfigPaths) {
             this.testConfigPaths = testConfigPaths;
+        }
+
+        private Path getSourceRoot() {
+            return sourceRoot;
+        }
+
+        private void setSourceRoot(Path sourceRoot) {
+            this.sourceRoot = sourceRoot;
         }
     }
 
@@ -197,14 +196,6 @@ public class DockerModel {
         return this.testSpecificProps.getJacocoAgentJarPath();
     }
 
-    public void setTestSuiteMap(Map<String, TestSuite> testSuiteMap) {
-        this.testSpecificProps.setTestSuiteMap(testSuiteMap);
-    }
-
-    public Map<String, TestSuite> getTestSuiteMap() {
-        return this.testSpecificProps.getTestSuiteMap();
-    }
-
     public void setTarget(Target target) {
         this.testSpecificProps.setTarget(target);
     }
@@ -219,6 +210,14 @@ public class DockerModel {
 
     public List<Path> getTestConfigPaths() {
         return this.testSpecificProps.getTestConfigPaths();
+    }
+
+    public void setSourceRoot(Path sourceRoot) {
+        this.testSpecificProps.setSourceRoot(sourceRoot);
+    }
+
+    public Path getSourceRoot() {
+        return this.testSpecificProps.getSourceRoot();
     }
 
     public void addDependencyJarPaths(Set<Path> paths) {

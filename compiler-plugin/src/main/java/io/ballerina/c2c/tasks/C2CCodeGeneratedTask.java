@@ -99,7 +99,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             return;
         }
 
-        BalCommand balCommand = compilerLifecycleEventContext.artifactType();   //TODO: better wording
+        BalCommand balCommand = compilerLifecycleEventContext.balCommand();
         Optional<Path> executablePath = compilerLifecycleEventContext.getGeneratedArtifactPath();
         final Package currentPackage = compilerLifecycleEventContext.currentPackage();
 
@@ -131,12 +131,8 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             executablePath.ifPresent(path -> {
                 Target target;
                 Path testsCachePath;
-                Path cachesRoot;
-
                 try {
-                    cachesRoot = project.sourceRoot();
                     target = new Target(project.targetDir());
-
                     testsCachePath = target.getTestsCachePath();
                 } catch (IOException e) {
                     printError("error while creating target directory: " + e.getMessage());
@@ -145,7 +141,6 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 }
 
                 Path jsonFilePath = testsCachePath.resolve(TesterinaConstants.TESTERINA_TEST_SUITE);
-
                 if (!Files.exists(jsonFilePath)) {
                     printError("error while finding the test suit json");
                     pluginLog.error("error while finding the test suit json");
@@ -181,7 +176,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 StringJoiner classPath = TestUtils.joinClassPaths(classPaths);
                 this.dataHolder.getDockerModel().setTestSuiteJsonPath(jsonFilePath);
                 this.dataHolder.getDockerModel().setClassPath(classPath.toString());
-                this.dataHolder.getDockerModel().setTestSuiteMap(testSuiteMap);
+                this.dataHolder.getDockerModel().setSourceRoot(project.sourceRoot());
                 this.dataHolder.getDockerModel().setTarget(target);
                 this.dataHolder.getDockerModel().setTestConfigPaths(getTestConfigPaths(project));
 

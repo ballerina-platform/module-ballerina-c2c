@@ -22,6 +22,7 @@ import io.ballerina.c2c.DockerGenConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
+import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.cli.utils.DebugUtils;
 import io.ballerina.cli.utils.TestUtils;
 import io.ballerina.projects.JarResolver;
@@ -321,8 +322,8 @@ public class DockerGenerator {
                         .append(" ").append(LINE_SEPARATOR);
             }
         }
-
-        addConfigTomls(testDockerFileContent, this.dockerModel, Paths.get(getWorkDir()));
+        Path projectSourceRoot = this.dockerModel.getSourceRoot();
+        addConfigTomls(testDockerFileContent, this.dockerModel, Paths.get(getWorkDir()), projectSourceRoot.toString());
 
         appendUser(testDockerFileContent);
         testDockerFileContent.append("WORKDIR ").append(getWorkDir()).append(LINE_SEPARATOR);
@@ -482,8 +483,8 @@ public class DockerGenerator {
         dockerfileContent.append("COPY ")
                 .append(testSuiteJsonPath.getFileName().toString())
                 .append(" ").append(getTestSuiteJsonCopiedDir()).append(WINDOWS_SEPARATOR).append(LINE_SEPARATOR);
-
-        addConfigTomls(dockerfileContent, this.dockerModel, Paths.get(getWorkDir()));
+        Path projectSourceRoot = this.dockerModel.getSourceRoot();
+        addConfigTomls(dockerfileContent, this.dockerModel, Paths.get(getWorkDir()), projectSourceRoot.toString());
         appendCommonCommands(dockerfileContent);
 
         if (isBlank(this.dockerModel.getCmd())) {

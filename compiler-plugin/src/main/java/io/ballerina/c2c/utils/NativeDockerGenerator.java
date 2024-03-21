@@ -20,6 +20,7 @@ package io.ballerina.c2c.utils;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
+import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.cli.utils.TestUtils;
 import io.ballerina.projects.internal.model.Target;
 import io.ballerina.projects.util.ProjectConstants;
@@ -153,7 +154,8 @@ public class NativeDockerGenerator extends DockerGenerator {
         StringBuilder dockerfileContent = getInitialDockerContent(fatJarFileName);
         appendUser(dockerfileContent);
         appendCommonCommands(dockerfileContent);
-        addConfigTomls(dockerfileContent, this.dockerModel, Paths.get(getWorkDir()));
+        Path projectSourceRoot = this.dockerModel.getSourceRoot();
+        addConfigTomls(dockerfileContent, this.dockerModel, Paths.get(getWorkDir()), projectSourceRoot.toString());
         dockerfileContent.append("COPY --from=build /app/build/").append(executableName).append(" .")
                 .append(LINE_SEPARATOR).append(LINE_SEPARATOR);
 
