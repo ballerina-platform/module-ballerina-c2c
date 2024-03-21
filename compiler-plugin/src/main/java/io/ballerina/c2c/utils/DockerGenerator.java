@@ -70,11 +70,7 @@ public class DockerGenerator {
                         outputDir.resolve(this.dockerModel.getFatJarPath().getFileName()));
             } else {
                 String dockerContent;
-                if (!isWindowsBuild()) {
-                    dockerContent = generateDockerfile();
-                } else {
-                    dockerContent = generateThinJarWindowsDockerfile();
-                }
+                dockerContent = generateDockerfile();
                 copyNativeJars(outputDir);
                 DockerGenUtils.writeToFile(dockerContent, outputDir.resolve("Dockerfile"));
                 Path jarLocation = outputDir.resolve(DockerGenUtils.extractJarName(jarFilePath) + EXECUTABLE_JAR);
@@ -241,48 +237,6 @@ public class DockerGenerator {
         }
     }
 
-    private String generateThinJarWindowsDockerfile() {
-        final String separator = "\\";
-        StringBuilder dockerfileContent = new StringBuilder();
-        dockerfileContent.append("# Auto Generated Dockerfile").append(LINE_SEPARATOR);
-        dockerfileContent.append("FROM ").append(this.dockerModel.getBaseImage()).append(LINE_SEPARATOR);
-        dockerfileContent.append(LINE_SEPARATOR);
-        dockerfileContent.append("LABEL maintainer=\"dev@ballerina.io\"").append(LINE_SEPARATOR);
-        dockerfileContent.append(LINE_SEPARATOR);
-        dockerfileContent.append("WORKDIR ").append(getWorkDir()).append(LINE_SEPARATOR);
-
-        for (Path path : this.dockerModel.getDependencyJarPaths()) {
-            dockerfileContent.append("COPY ").append(path.getFileName()).append(getWorkDir())
-                    .append("jars").append(separator);
-            dockerfileContent.append(LINE_SEPARATOR);
-        }
-        dockerfileContent.append(LINE_SEPARATOR);
-        appendCommonCommands(dockerfileContent);
-        if (isBlank(this.dockerModel.getEntryPoint())) {
-            PackageID packageID = this.dockerModel.getPkgId();
-            String mainClass = JarResolver.getQualifiedClassName(packageID.orgName.value, packageID.name.value,
-                    packageID.version.value, MODULE_INIT_CLASS_NAME);
-            mainClass = "'" + mainClass + "'";
-            if (this.dockerModel.isEnableDebug()) {
-                dockerfileContent.append("CMD java -Xdiag -agentlib:jdwp=transport=dt_socket,server=y,suspend=n," +
-                        "address=*:").append(this.dockerModel.getDebugPort()).append(" -cp \"")
-                        .append(this.dockerModel.getJarFileName()).append(":jars/*\" ").append(mainClass);
-            } else {
-                dockerfileContent.append("CMD java -Xdiag -cp \"").append(this.dockerModel.getJarFileName())
-                        .append(":jars/*\" ").append(mainClass);
-            }
-        } else {
-            dockerfileContent.append(this.dockerModel.getEntryPoint());
-        }
-        dockerfileContent.append(LINE_SEPARATOR);
-        if (!isBlank(this.dockerModel.getCommandArg())) {
-            dockerfileContent.append(this.dockerModel.getCommandArg());
-        }
-        dockerfileContent.append(LINE_SEPARATOR);
-
-        return dockerfileContent.toString();
-    }
-
     protected void appendCommonCommands(StringBuilder dockerfileContent) {
         this.dockerModel.getEnv().forEach((key, value) -> dockerfileContent.append("ENV ").
                 append(key).append("=").append(value).append(LINE_SEPARATOR));
@@ -310,11 +264,7 @@ public class DockerGenerator {
         }
     }
 
-    private boolean isWindowsBuild() {
-        return Boolean.parseBoolean(System.getenv(DockerGenConstants.ENABLE_WINDOWS_BUILD));
-    }
-
     private String getWorkDir() {
-        return isWindowsBuild() ? "C:\\ballerina\\home\\" : "/home/ballerina";
+        return "/home/ballerina";
     }
 }
