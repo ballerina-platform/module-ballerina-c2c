@@ -29,22 +29,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static io.ballerina.c2c.KubernetesConstants.DOCKER;
-import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
-
 /**
  * Test cases for Docker CMD for ballerina cloud testing.
  */
-public class BalTestBasicCasesTest {
+public class BalTestCMDOptionsTests {
     private static final Path SOURCE_DIR_PATH = Paths.get("src", "test", "resources",
             "docker-cloud-test", "project-based-tests");
     private static final Path COMMAND_OUTPUTS = Paths.get("src", "test", "resources",
             "docker-cloud-test", "command-outputs");
-    private static final Path DOCKER_TARGET_PATH = SOURCE_DIR_PATH.resolve("target").resolve(DOCKER)
-            .resolve("hello");
-    private static final Path KUBERNETES_TARGET_PATH = SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES);
-    private static final String DOCKER_IMAGE_JOB = "anuruddhal/cmd:v1";
-
     private static Path cleaningUpDir = null;
 
     @Test
@@ -175,165 +167,52 @@ public class BalTestBasicCasesTest {
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagForProjectWithNoTests.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
-    @Test
-    public void testAssertions() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("assertions");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAssertions.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-
-    }
 
     @Test
-    public void testAssertDiffError() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("assertions-diff-error");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        System.out.println(actualOutcome);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAssertDiffError.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test
-    public void testAssertionErrorMessage() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("assertions-error-messages");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAssertionErrorMessage.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test
-    public void testAssertBehavioralTypes() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("assertions-behavioral-types");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAssertBehavioralTypes.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test
-    public void testAssertStructuralTypes() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("assertions-structural-types");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAssertStructuralTypes.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test
-    public void testAssertSequenceTypes() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("assertions-sequence-types");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAssertSequenceTypes.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test
-    public void testAnnotationAccess() throws IOException, InterruptedException {
-        String endString = " SEVERE {b7a.log.crash} - ";
-        String firstString = "We thank you for helping make us better.";
-        String endString2 = "********";
-        String firstString2 = "unnamed module of loader 'app')";
-        Path projectDir = SOURCE_DIR_PATH.resolve("annotation-access");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        actualOutcome = actualOutcome + "********";
+    public void testCloudFlagWithListGroupsForProjectWithNoGroups() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("project-with-no-groups");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[]{"--list-groups"});
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
         actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
-        actualOutcome = TestUtils.replaceVaryingString(firstString2, endString2, actualOutcome);
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAnnotationAccess.txt",
+        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithListGroupsForProjectWithNoGroups.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
 
     @Test
-    public void testJavaInterops() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("interops");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithListGroupsForProjectWithGroups() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("project-with-groups");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[]{"--list-groups"});
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testJavaInterops.txt",
+        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithListGroupsForProjectWithGroups.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
 
     @Test
-    public void testRuntimeApi() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("runtime-api-tests");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithSpecificGroups() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("project-with-groups");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[]{"--groups", "g1,g2"});
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testRuntimeApi.txt",
+        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithSpecificGroups.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
 
     @Test
-    public void testBeforeAfter() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("before-after");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithDisabledGroups() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("project-with-groups");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[]{"--disable-groups", "g1,g3"});
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testBeforeAfter.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test
-    public void testBeforeEachAfterEach() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("before-each-after-each");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testBeforeEachAfterEach.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test(dependsOnMethods = "testBeforeAfter")
-    public void testDependsOn() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("depends-on");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testDependsOn.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test(dependsOnMethods = "testDependsOn")
-    public void testAnnotations() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("annotations");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAnnotations.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test
-    public void testIsolatedFunctions() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("isolated-functions");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testIsolatedFunctions.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test
-    public void testIntersectionTypes() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("intersection-type-test");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testIntersectionTypes.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test
-    public void testAnydataType() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("anydata-type-test");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAnydataType.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test
-    public void testAsyncInvocation() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("async");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAsyncInvocation.txt",
+        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithDisabledGroups.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
 

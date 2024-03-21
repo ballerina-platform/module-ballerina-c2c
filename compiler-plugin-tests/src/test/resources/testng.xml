@@ -30,6 +30,7 @@
             <class name="io.ballerina.c2c.test.docker.DockerCMDTest"/>
             <class name="io.ballerina.c2c.test.docker.DockerInvalidCopyTest"/>
             <class name="io.ballerina.c2c.test.docker.DockerGeneratorWindowsTests"/>
+            <class name="io.ballerina.c2c.test.docker.testing.BalTestCMDOptionsTests"/>
             <class name="io.ballerina.c2c.test.samples.JobTest"/>
             <class name="io.ballerina.c2c.test.samples.Sample1Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample2Test"/>

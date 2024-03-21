@@ -85,10 +85,13 @@ public class KubernetesTestUtils {
             (System.getProperty("os.name").toLowerCase(Locale.getDefault())
                     .contains("win") ? "bal.bat" : "bal");
     private static final String BUILD = "build";
+    private static final String TEST = "test";
     private static final String EXECUTING_COMMAND = "Executing command: ";
     private static final String COMPILING = "Compiling: ";
     private static final String EXIT_CODE = "Exit code: ";
     private static final String KUBECTL = "kubectl";
+    private static final String GENERATING_ARTIFACTS = "Generating artifacts";
+    private static final String RUNNING_DOCKER_CONTAINER = "Running the generated Docker image";
 
     private static void logOutput(InputStream inputStream) throws IOException {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
@@ -392,6 +395,91 @@ public class KubernetesTestUtils {
         logOutput(process.getInputStream());
         logOutput(process.getErrorStream());
         return exitCode;
+    }
+
+    /**
+     * Compile a ballerina project in a given directory for the project tests
+     * @param sourceDirectory   Ballerina project directory
+     * @param testArgs        Arguments to be passed to the test command (--code-coverage, --test-report, etc.)
+     * @return  Output of the test command
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    public static String compileBallerinaProjectTests(Path sourceDirectory, String[] testArgs)
+            throws InterruptedException, IOException {
+        ProcessBuilder pb;
+        if (testArgs.length > 0) {
+            List<String> pbArgs = new ArrayList<>();
+            pbArgs.add(BALLERINA_COMMAND);
+            pbArgs.add(TEST);
+            pbArgs.add("--cloud=docker");
+            pbArgs.addAll(Arrays.asList(testArgs));
+            pb = new ProcessBuilder(pbArgs);
+        } else {
+            pb = new ProcessBuilder(BALLERINA_COMMAND, TEST, "--cloud=docker");
+        }
+        log.info(COMPILING + sourceDirectory.normalize());
+        log.debug(EXECUTING_COMMAND + pb.command());
+        pb.directory(sourceDirectory.toFile());
+        Map<String, String> environment = pb.environment();
+        addJavaAgents(environment);
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+        // Return the output
+        StringBuilder output = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            br.lines().forEach(line -> {
+                output.append(line).append("\n");
+            });
+        }
+
+        int exitCode = process.waitFor();
+        log.info(EXIT_CODE + exitCode);
+
+        return output.toString();
+    }
+
+    /**
+     * Compile a ballerina project in a given directory for the project tests
+     * @param sourceDirectory   Ballerina project directory
+     * @param cloudArg          Cloud flag to be passed to the test command (eg: "--cloud=docker")
+     * @param testArgs          Arguments to be passed to the test command (--code-coverage, --test-report, etc.)
+     * @return                  Output of the test command
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    public static String compileBallerinaProjectTests(Path sourceDirectory, String cloudArg, String[] testArgs)
+            throws InterruptedException, IOException {
+        ProcessBuilder pb;
+        if (testArgs.length > 0) {
+            List<String> pbArgs = new ArrayList<>();
+            pbArgs.add(BALLERINA_COMMAND);
+            pbArgs.add(TEST);
+            pbArgs.add(cloudArg);
+            pbArgs.addAll(Arrays.asList(testArgs));
+            pb = new ProcessBuilder(pbArgs);
+        } else {
+            pb = new ProcessBuilder(BALLERINA_COMMAND, TEST, cloudArg);
+        }
+        log.info(COMPILING + sourceDirectory.normalize());
+        log.debug(EXECUTING_COMMAND + pb.command());
+        pb.directory(sourceDirectory.toFile());
+        Map<String, String> environment = pb.environment();
+        addJavaAgents(environment);
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+        // Return the output
+        StringBuilder output = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            br.lines().forEach(line -> {
+                output.append(line).append("\n");
+            });
+        }
+
+        int exitCode = process.waitFor();
+        log.info(EXIT_CODE + exitCode);
+
+        return output.toString();
     }
 
     private static synchronized void addJavaAgents(Map<String, String> envProperties) {
