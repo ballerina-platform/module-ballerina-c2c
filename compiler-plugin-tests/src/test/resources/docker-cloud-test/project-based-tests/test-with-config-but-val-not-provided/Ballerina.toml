@@ -1,0 +1,4 @@
+[package]
+org = "cloud_tests"
+name = "test_with_config_but_val_not_provided"
+version = "0.0.0"

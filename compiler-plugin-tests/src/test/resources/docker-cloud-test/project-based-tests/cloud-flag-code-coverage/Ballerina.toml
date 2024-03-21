@@ -1,0 +1,4 @@
+[package]
+org = "cloud_tests"
+name = "cloud_flag_code_coverage"
+version = "0.0.0"

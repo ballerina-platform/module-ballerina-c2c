@@ -21,7 +21,6 @@ import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
-import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.cli.utils.TestUtils;
 import io.ballerina.projects.internal.model.Target;
 import io.ballerina.projects.util.ProjectConstants;

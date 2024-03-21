@@ -1,0 +1,12 @@
+[[container.copy.files]]
+sourceFile="tests/resources/data_file.csv"
+target="/home/ballerina/tests/resources/data_file.csv"
+
+
+[[container.copy.files]]
+sourceFile="tests/resources/text_file.txt"
+target="/home/ballerina/tests/resources/text_file.txt"
+
+[[container.copy.files]]
+sourceFile="modules/mod1/tests/resources/some_file.txt"
+target="/home/ballerina/modules/mod1/tests/resources/some_file.txt"

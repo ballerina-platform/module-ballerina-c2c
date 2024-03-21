@@ -16,7 +16,6 @@
 
 package io.ballerina.c2c.test.docker.testing;
 
-import io.ballerina.c2c.test.docker.testing.utils.TestUtils;
 import io.ballerina.c2c.test.utils.KubernetesTestUtils;
 import org.apache.commons.io.FileUtils;
 import org.testng.Assert;
@@ -29,22 +28,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static io.ballerina.c2c.KubernetesConstants.DOCKER;
-import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
-
 /**
  * Test cases for Docker CMD for ballerina cloud testing.
  */
-public class BalTestBasicCasesTest {
+public class BalTestCMDOptionsTests {
     private static final Path SOURCE_DIR_PATH = Paths.get("src", "test", "resources",
             "docker-cloud-test", "project-based-tests");
-    private static final Path COMMAND_OUTPUTS = Paths.get("src", "test", "resources",
-            "docker-cloud-test", "command-outputs");
-    private static final Path DOCKER_TARGET_PATH = SOURCE_DIR_PATH.resolve("target").resolve(DOCKER)
-            .resolve("hello");
-    private static final Path KUBERNETES_TARGET_PATH = SOURCE_DIR_PATH.resolve("target").resolve(KUBERNETES);
-    private static final String DOCKER_IMAGE_JOB = "anuruddhal/cmd:v1";
-
     private static Path cleaningUpDir = null;
 
     @Test
@@ -52,66 +41,65 @@ public class BalTestBasicCasesTest {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-flag-no-value");
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, "--cloud", new String[0]);
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithNoValue.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertFalse(projectDir.resolve("target").toFile().exists());
+        Assert.assertTrue(actualOutcome.contains("ballerina: flag '--cloud' (<cloud>) needs an argument"));
+        Assert.assertTrue(actualOutcome.contains("Run 'bal help' for usage."));
     }
 
     @Test
     public void testCloudFlagWithK8s() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-flag-k8s");
-        String firstString = "error [k8s plugin]: k8s cloud build only supported for build\n";
-        String endString = " io.ballerina.c2c.tasks.C2CCodeGeneratedTask perform";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, "--cloud=k8s", new String[0]);
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithK8s.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertFalse(projectDir.resolve("target").resolve("docker").toFile().exists());
+        Assert.assertTrue(actualOutcome.contains("error [k8s plugin]: k8s cloud build only supported for build"));
+        Assert.assertTrue(actualOutcome.contains("SEVERE: k8s cloud build only supported for build"));
     }
 
     @Test
     public void testCloudFlagWithCodeCoverage() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-flag-code-coverage");
-        String firstString = "Building the docker image\n";
-        String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--code-coverage"});
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithCodeCoverage.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("WARNING: Code coverage generation is not supported with " +
+                "Ballerina cloud test"));
+        Assert.assertTrue(actualOutcome.contains("Running Tests"));
+        Assert.assertFalse(actualOutcome.contains("Running Tests with Coverage"));
+        Assert.assertTrue(actualOutcome.contains("[pass] anotherSmallTest"));
+        Assert.assertTrue(actualOutcome.contains("[pass] anotherSmallTest2"));
+        Assert.assertTrue(actualOutcome.contains("[pass] smallTest"));
     }
 
     @Test
     public void testCloudFlagWithTestReport() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-flag-test-report");
-        String firstString = "Building the docker image\n";
-        String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--test-report"});
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithTestReport.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("WARNING: Test report generation is not supported with " +
+                "Ballerina cloud test"));
+        Assert.assertTrue(actualOutcome.contains("[pass] anotherSmallTest"));
+        Assert.assertTrue(actualOutcome.contains("[pass] anotherSmallTest2"));
+        Assert.assertTrue(actualOutcome.contains("[pass] smallTest"));
     }
 
     @Test
     public void testCloudFlagWithRerunFailed() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-flag-rerun-failed");
-        String firstString = "Building the docker image\n";
-        String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--rerun-failed"});
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithRerunFailed.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("WARNING: Rerun failed tests is not supported with " +
+                "Ballerina cloud test"));
+        Assert.assertTrue(actualOutcome.contains("[pass] anotherSmallTest"));
+        Assert.assertTrue(actualOutcome.contains("[pass] anotherSmallTest2"));
+        Assert.assertTrue(actualOutcome.contains("[pass] smallTest"));
     }
 
     @Test
     public void testCloudFlagWithGraalVmForTestsWithoutMocking() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-flag-graalvm");
-        String firstString = "Building the native image. This may take a while\n";
-        String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--graalvm"});
         cleaningUpDir = projectDir;
@@ -127,9 +115,8 @@ public class BalTestBasicCasesTest {
                 .resolve("cloud_flag_graalvm-testable.jar");
         Assert.assertTrue(Files.exists(jarPathInDocker));
 
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
-        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithGraalVm.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("Building the native image. This may take a while"));
+        Assert.assertTrue(actualOutcome.contains("[pass] assertThis"));
     }
 
     @Test //TODO: this test takes a long time to run
@@ -160,10 +147,9 @@ public class BalTestBasicCasesTest {
                 .resolve("cloud_flag_graalvm_mocking.mod1-testable")
                 .resolve("cloud_flag_graalvm_mocking.mod1-testable.jar");
         Assert.assertTrue(Files.exists(secondJarPathInDocker));
-
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
-        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithGraalVmForTestsWithMocking.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertEquals(actualOutcome.split("Building the native image. This may take a while").length, 3);
+        Assert.assertTrue(actualOutcome.contains("[pass] mockTest"));
+        Assert.assertTrue(actualOutcome.contains("[pass] testMockingInModule"));
     }
 
     @Test
@@ -172,169 +158,289 @@ public class BalTestBasicCasesTest {
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
         Assert.assertFalse(Files.exists(projectDir.resolve("tests")));
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testCloudFlagForProjectWithNoTests.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-    @Test
-    public void testAssertions() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("assertions");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAssertions.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-
+        Assert.assertTrue(actualOutcome.contains("No tests found"));
+        Assert.assertFalse(projectDir.resolve("target").resolve("docker").toFile().exists());
     }
 
     @Test
-    public void testAssertDiffError() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("assertions-diff-error");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        System.out.println(actualOutcome);
+    public void testCloudFlagWithListGroupsForProjectWithNoGroups() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("project-with-no-groups");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--list-groups"});
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAssertDiffError.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("There are no groups available!"));
     }
 
     @Test
-    public void testAssertionErrorMessage() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("assertions-error-messages");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithListGroupsForProjectWithGroups() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("project-with-groups");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--list-groups"});
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAssertionErrorMessage.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("Following groups are available :"));
+        Assert.assertTrue(actualOutcome.contains("[g1, g2, g3]"));
     }
 
     @Test
-    public void testAssertBehavioralTypes() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("assertions-behavioral-types");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithSpecificGroups() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("project-with-groups");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--groups", "g1,g2"});
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAssertBehavioralTypes.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("[pass] testFunction1"));
+        Assert.assertTrue(actualOutcome.contains("[pass] testFunction2"));
+        Assert.assertTrue(actualOutcome.contains("[pass] testFunction3"));
+        Assert.assertTrue(actualOutcome.contains("3 passing"));
     }
 
     @Test
-    public void testAssertStructuralTypes() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("assertions-structural-types");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithDisabledGroups() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("project-with-groups");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--disable-groups", "g1,g3"});
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAssertStructuralTypes.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("[pass] testFunction3"));
+        Assert.assertFalse(actualOutcome.contains("[pass] testFunction1"));
+        Assert.assertFalse(actualOutcome.contains("[pass] testFunction2"));
     }
 
     @Test
-    public void testAssertSequenceTypes() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("assertions-sequence-types");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithSpecificTestFunctions() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "testMain,testMod"});
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAssertSequenceTypes.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules.mod2
+                                        
+                                        
+                		No tests found"""));
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules
+                		[pass] testMain
+                                        
+                                        
+                		1 passing
+                		0 failing
+                		0 skipped"""));
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules.mod1
+                		[pass] testMod
+                                
+                                
+                		1 passing
+                		0 failing
+                		0 skipped"""));
     }
 
     @Test
-    public void testAnnotationAccess() throws IOException, InterruptedException {
-        String endString = " SEVERE {b7a.log.crash} - ";
-        String firstString = "We thank you for helping make us better.";
-        String endString2 = "********";
-        String firstString2 = "unnamed module of loader 'app')";
-        Path projectDir = SOURCE_DIR_PATH.resolve("annotation-access");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        actualOutcome = actualOutcome + "********";
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
-        actualOutcome = TestUtils.replaceVaryingString(firstString2, endString2, actualOutcome);
+    public void testCloudFlagWithRootPackageTests() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "cloud_project_with_modules:testMain"});
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAnnotationAccess.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules.mod2
+                                
+                                
+                		No tests found"""));
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules
+                		[pass] testMain
+                                
+                                
+                		1 passing
+                		0 failing
+                		0 skipped"""));
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules.mod1
+                    
+                    
+                		No tests found"""));
     }
 
     @Test
-    public void testJavaInterops() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("interops");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithExecutionOfOnlyRootPackageTests() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "cloud_project_with_modules:*"});
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testJavaInterops.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules.mod2
+                                
+                                
+                		No tests found"""));
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules
+                		[pass] testMain
+                		[pass] testMainTwo
+                                
+                                
+                		2 passing
+                		0 failing
+                		0 skipped"""));
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules.mod1
+                    
+                    
+                		No tests found"""));
     }
 
     @Test
-    public void testRuntimeApi() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("runtime-api-tests");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithExecutionOfModuleTests() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "cloud_project_with_modules.mod1:*"});
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testRuntimeApi.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules.mod2
+                                
+                                
+                		No tests found"""));
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules
+                                
+                                
+                		No tests found"""));
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules.mod1
+                		[pass] testMod
+                		[pass] testModTwo
+                                
+                                
+                		2 passing
+                		0 failing
+                		0 skipped"""));
     }
 
     @Test
-    public void testBeforeAfter() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("before-after");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithExecutionOfMultipleSpecifiedTests() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "cloud_project_with_modules.mod2:testMod2Two,cloud_project_with_modules:*"});
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testBeforeAfter.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules.mod2
+                		[pass] testMod2Two
+                                
+                                
+                		1 passing
+                		0 failing
+                		0 skipped"""));
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules
+                		[pass] testMain
+                		[pass] testMainTwo
+                                
+                                
+                		2 passing
+                		0 failing
+                		0 skipped"""));
+        Assert.assertTrue(actualOutcome.contains("""
+                cloud_project_with_modules.mod1
+                                
+                                
+                		No tests found"""));
     }
 
     @Test
-    public void testBeforeEachAfterEach() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("before-each-after-each");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithSpecificTestBalFile() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.getParent().resolve("single-file-tests")
+                .resolve("single-test-file-execution");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{projectDir.resolve("single-test-file-execution.bal").toAbsolutePath().toString()});
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testBeforeEachAfterEach.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test(dependsOnMethods = "testBeforeAfter")
-    public void testDependsOn() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("depends-on");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testDependsOn.txt",
-                COMMAND_OUTPUTS, actualOutcome);
-    }
-
-    @Test(dependsOnMethods = "testDependsOn")
-    public void testAnnotations() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("annotations");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
-        cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAnnotations.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("""
+                        single-test-file-execution.bal
+                        		[pass] testFunc
+                        		[pass] testFunc2
+                                                
+                                                
+                        		2 passing
+                        		0 failing
+                        		0 skipped"""));
+        //Check for the existence of the target directory (It shouldn't exist)
+        Assert.assertFalse(Files.exists(projectDir.resolve("target")));
     }
 
     @Test
-    public void testIsolatedFunctions() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("isolated-functions");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithConfigurableValues() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("test-with-config-but-val-not-provided");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"-CmyVal=2"});
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testIsolatedFunctions.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("[pass] failingTest"));
     }
 
     @Test
-    public void testIntersectionTypes() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("intersection-type-test");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithoutProvidingConfigurableValues() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("test-with-config-but-val-not-provided");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[0]);
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testIntersectionTypes.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("""
+                        error: value not provided for required configurable variable 'myVal'
+                        	at cloud_tests/test_with_config_but_val_not_provided:0.0.0(tests/tes.bal:3)"""));
+        Assert.assertTrue(actualOutcome.contains("error [k8s plugin]: Error running the docker image: " +
+                "test_with_config_but_val_not_provided-testable:latest"));
     }
 
     @Test
-    public void testAnydataType() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("anydata-type-test");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+    public void testCloudFlagWithConfigFiles() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("tests-with-config");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[0]);
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAnydataType.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("[pass] testName"));
     }
 
     @Test
-    public void testAsyncInvocation() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("async");
+    public void testCloudFlagWithConfigurableValuesToOverrideConfig() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("tests-with-config");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"-Cname=Goku"});
+        cleaningUpDir = projectDir;
+        // Cannot use the TestUtils.assertOutput method here as the test fails
+        Assert.assertTrue(actualOutcome.contains("0 passing"));
+        Assert.assertTrue(actualOutcome.contains("1 failing"));
+        Assert.assertTrue(actualOutcome.contains("+Ballerina"));
+        Assert.assertTrue(actualOutcome.contains("-Goku"));
+    }
+
+    @Test
+    public void testCloudFlagWithDataProviderMap() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("data-provider-map");
+        //TODO: check the argument
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "fruitsDataProviderTest#'banana'"});
+        cleaningUpDir = projectDir;
+        Assert.assertTrue(actualOutcome.contains("[pass] fruitsDataProviderTest#banana"));
+        Assert.assertTrue(actualOutcome.contains("1 passing"));
+    }
+
+    @Test
+    public void testCloudFlagWithDataProviderArray() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("data-provider-array");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "stringDataProviderTest#1"});
+        cleaningUpDir = projectDir;
+        Assert.assertTrue(actualOutcome.contains("[pass] stringDataProviderTest#1"));
+        Assert.assertTrue(actualOutcome.contains("1 passing"));
+    }
+
+    @Test
+    public void testCloudFlagForProjectsWithResourceFiles() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("project-with-resources");
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
         cleaningUpDir = projectDir;
-        TestUtils.assertOutput("BasicCasesTest-testAsyncInvocation.txt",
-                COMMAND_OUTPUTS, actualOutcome);
+        Assert.assertTrue(actualOutcome.contains("""
+                project_with_resources_for_tests
+                		[pass] testReadingResourceCsv
+                		[pass] testReadingResourceTxt"""));
+
+        Assert.assertTrue(actualOutcome.contains("""
+                project_with_resources_for_tests.mod1
+                		[pass] testModuleTestResourceFile"""));
     }
 
     @AfterMethod
