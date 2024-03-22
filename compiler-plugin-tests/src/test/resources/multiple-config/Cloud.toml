@@ -10,3 +10,11 @@ tag="v1"
     file="./conf/Config1.toml"
 [[cloud.config.files]]
     file="./conf/Config2.toml"
+
+[[cloud.secret.files]]
+file="resource/public.crt"
+mount_path="/home/ballerina/resource/public.crt"
+
+[[cloud.secret.files]]
+file="resource/private.key"
+mount_path="/home/ballerina/resource/private.key"

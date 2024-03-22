@@ -2,3 +2,11 @@
 repository="anuruddhal" # Container repository to host the container
 name="hello-api" # Name of the container image
 tag="sample9" # Tag of the container
+
+[[cloud.secret.files]]
+file="resource/ballerinaKeystore.p12"
+mount_path="/home/ballerina/resource/ballerinaKeystore.p12"
+
+[[cloud.secret.files]]
+file="resource/ballerinaKeystore.p12"
+mount_path="/home/ballerina/resource/ballerinaKeystore.p12"

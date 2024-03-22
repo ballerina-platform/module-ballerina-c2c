@@ -8,6 +8,14 @@ tag="v1"
 [[cloud.config.files]]
     file="./conf/Config.toml"
 
+[[cloud.secret.files]]
+file="resource/private.key"
+mount_path="/home/ballerina/resource/private.key"
+
+[[cloud.secret.files]]
+file="resource/public.crt"
+mount_path="/home/ballerina/resource/public.crt"
+
 [settings]
 singleYAML=false
 buildImage=false
