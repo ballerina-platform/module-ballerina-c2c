@@ -8,5 +8,5 @@ file="resource/ballerinaKeystore.p12"
 mount_path="/home/ballerina/resource/ballerinaKeystore.p12"
 
 [[cloud.secret.files]]
-file="resource/ballerinaKeystore.p12"
-mount_path="/home/ballerina/resource/ballerinaKeystore.p12"
+file="resource1/ballerinaKeystore.p12"
+mount_path="/home/ballerina/resource1/ballerinaKeystore.p12"
