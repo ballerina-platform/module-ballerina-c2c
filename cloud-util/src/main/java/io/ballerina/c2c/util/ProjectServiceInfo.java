@@ -41,7 +41,6 @@ import java.util.Optional;
 public class ProjectServiceInfo {
 
     private final List<ServiceInfo> serviceList;
-    private final List<ClientInfo> clientList;
     private Task task = null;
 
     public ProjectServiceInfo(Project project) {
@@ -50,7 +49,6 @@ public class ProjectServiceInfo {
 
     public ProjectServiceInfo(Project project, List<Diagnostic> diagnostics) {
         this.serviceList = new ArrayList<>();
-        this.clientList = new ArrayList<>();
         Package currentPackage = project.currentPackage();
         Iterable<Module> modules = currentPackage.modules();
         for (Module module : modules) {
@@ -74,7 +72,6 @@ public class ProjectServiceInfo {
                 C2CVisitor visitor = new C2CVisitor(moduleLevelVariables, semanticModel, diagnostics);
                 node.accept(visitor);
                 serviceList.addAll(visitor.getServices());
-                clientList.addAll(visitor.getClientInfos());
                 this.task = visitor.getTask();
             }
         }

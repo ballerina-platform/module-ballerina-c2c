@@ -111,14 +111,14 @@ public class Sample5Test extends SampleTest {
         Assert.assertNotNull(deployment);
         Assert.assertEquals(deployment.getMetadata().getName(), "hello-deployment");
         Assert.assertEquals(deployment.getSpec().getReplicas().intValue(), 1);
-        Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getVolumes().size(), 4);
+        Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getVolumes().size(), 5);
         Assert.assertEquals(deployment.getMetadata().getLabels().get(KubernetesConstants
                 .KUBERNETES_SELECTOR_KEY), "hello");
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         // Assert Containers
         Container container = deployment.getSpec().getTemplate().getSpec().getContainers().get(0);
-        Assert.assertEquals(container.getVolumeMounts().size(), 4);
+        Assert.assertEquals(container.getVolumeMounts().size(), 5);
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE);
         Assert.assertEquals(container.getPorts().size(), 1);
         Assert.assertEquals(container.getEnv().size(), 1);

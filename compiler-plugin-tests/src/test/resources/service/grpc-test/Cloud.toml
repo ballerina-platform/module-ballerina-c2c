@@ -1,0 +1,10 @@
+[[cloud.secret.files]]
+file="resources/public.crt"
+mount_path="/home/ballerina/resources/public.crt"
+
+[[cloud.secret.files]]
+file="resources/public.crt"
+mount_path="/home/ballerina/resources/public.crt"
+
+[settings]
+buildImage = false

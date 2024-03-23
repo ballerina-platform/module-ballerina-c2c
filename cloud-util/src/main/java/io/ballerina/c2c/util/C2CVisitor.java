@@ -32,8 +32,6 @@ import io.ballerina.compiler.api.symbols.TypeSymbol;
 import io.ballerina.compiler.api.symbols.UnionTypeSymbol;
 import io.ballerina.compiler.syntax.tree.AnnotationNode;
 import io.ballerina.compiler.syntax.tree.BasicLiteralNode;
-import io.ballerina.compiler.syntax.tree.CaptureBindingPatternNode;
-import io.ballerina.compiler.syntax.tree.CheckExpressionNode;
 import io.ballerina.compiler.syntax.tree.ExplicitNewExpressionNode;
 import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.FunctionArgumentNode;
@@ -44,7 +42,6 @@ import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingFieldNode;
 import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.ModuleVariableDeclarationNode;
-import io.ballerina.compiler.syntax.tree.NamedArgumentNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeVisitor;
@@ -59,8 +56,6 @@ import io.ballerina.compiler.syntax.tree.SyntaxKind;
 import io.ballerina.compiler.syntax.tree.Token;
 import io.ballerina.compiler.syntax.tree.TypeDescriptorNode;
 import io.ballerina.compiler.syntax.tree.TypedBindingPatternNode;
-import io.ballerina.compiler.syntax.tree.UnionTypeDescriptorNode;
-import io.ballerina.compiler.syntax.tree.VariableDeclarationNode;
 import io.ballerina.tools.diagnostics.Diagnostic;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -82,7 +77,6 @@ import java.util.Optional;
 public class C2CVisitor extends NodeVisitor {
 
     private final List<ServiceInfo> services = new ArrayList<>();
-    private final List<ClientInfo> clientInfos = new ArrayList<>();
     private final Map<String, Node> moduleLevelVariables;
     private final SemanticModel semanticModel;
     private final List<Diagnostic> diagnostics;
@@ -93,93 +87,6 @@ public class C2CVisitor extends NodeVisitor {
         this.moduleLevelVariables = moduleLevelVariables;
         this.semanticModel = semanticModel;
         this.diagnostics = diagnostics;
-    }
-
-    @Override
-    public void visit(ModuleVariableDeclarationNode moduleVariableDeclarationNode) {
-        // To Parse http:Client Config
-        //http:Client nettyEP = check new("https://netty:8688", {
-        //     secureSocket: {
-        //        cert: {
-        //            path: "./security/ballerinaTruststore.p12",
-        //            password: "ballerina"
-        //   }
-        // }
-        Optional<ExpressionNode> initializer = moduleVariableDeclarationNode.initializer();
-        if (initializer.isEmpty()) {
-            return; //Module level vars always needs to be initialized, validated by compiler
-        }
-        extractHttpClientConfig(moduleVariableDeclarationNode.typedBindingPattern(), initializer.get());
-    }
-
-    @Override
-    public void visit(VariableDeclarationNode variableDeclarationNode) {
-        // To Parse http:Client Config
-        //http:Client nettyEP = check new("https://netty:8688", {
-        //     secureSocket: {
-        //        cert: {
-        //            path: "./security/ballerinaTruststore.p12",
-        //            password: "ballerina"
-        //   }
-        // }
-        Optional<ExpressionNode> initializer = variableDeclarationNode.initializer();
-        if (initializer.isEmpty()) {
-            return;
-        }
-        extractHttpClientConfig(variableDeclarationNode.typedBindingPattern(), initializer.get());
-    }
-
-    private void extractHttpClientConfig(TypedBindingPatternNode typedBindingPatternNode, ExpressionNode initializer) {
-        TypeDescriptorNode typeDescriptorNode = typedBindingPatternNode.typeDescriptor();
-        if (!isSupportedClientVariable(typeDescriptorNode)) {
-            return;
-        }
-        ExpressionNode refNode;
-        if (initializer.kind() == SyntaxKind.CHECK_EXPRESSION) {
-            CheckExpressionNode checkedInit = (CheckExpressionNode) initializer;
-            refNode = checkedInit.expression();
-        } else {
-            refNode = initializer;
-        }
-        if (refNode.kind() != SyntaxKind.IMPLICIT_NEW_EXPRESSION) {
-            return;
-        }
-        ImplicitNewExpressionNode newExprInit = (ImplicitNewExpressionNode) refNode;
-        newExprInit.parenthesizedArgList().ifPresent(parenthesizedArgList -> {
-            SeparatedNodeList<FunctionArgumentNode> argList = parenthesizedArgList.arguments();
-            if (argList.size() <= 1) {
-                return;
-            }
-            Optional<HttpsConfig> config = extractKeyStores(argList.get(1));
-            config.ifPresent(httpsConfig -> {
-                String name = ((CaptureBindingPatternNode) typedBindingPatternNode.bindingPattern())
-                        .variableName().text();
-                clientInfos.add(new ClientInfo(name, httpsConfig));
-            });
-        });
-    }
-
-    private boolean isSupportedClientVariable(TypeDescriptorNode typeDescriptorNode) {
-        if (typeDescriptorNode.kind() == SyntaxKind.UNION_TYPE_DESC) {
-            UnionTypeDescriptorNode unionType = (UnionTypeDescriptorNode) typeDescriptorNode;
-            return isSupportedClientVariable(unionType.rightTypeDesc()) ||
-                    isSupportedClientVariable(unionType.leftTypeDesc());
-        }
-        if (typeDescriptorNode.kind() == SyntaxKind.QUALIFIED_NAME_REFERENCE) {
-            QualifiedNameReferenceNode qualified = (QualifiedNameReferenceNode) typeDescriptorNode;
-            Optional<Symbol> symbol = semanticModel.symbol(typeDescriptorNode);
-            if (symbol.isEmpty()) {
-                return false;
-            }
-            Optional<ModuleSymbol> module = symbol.get().getModule();
-            if (module.isEmpty()) {
-                return false;
-            }
-            ModuleID moduleId = module.get().id();
-            return "Client".equals(qualified.identifier().text()) && "ballerina".equals(moduleId.orgName()) &&
-                    "http".equals(moduleId.moduleName());
-        }
-        return false;
     }
 
     @Override
@@ -336,7 +243,7 @@ public class C2CVisitor extends NodeVisitor {
                 //on helloEP
                 SimpleNameReferenceNode referenceNode = (SimpleNameReferenceNode) expressionNode;
                 String listenerName = referenceNode.name().text();
-                Optional<ListenerInfo> httpsListener = this.getHttpsListener(listenerName);
+                Optional<ListenerInfo> httpsListener = this.getHttpListener(listenerName);
                 if (httpsListener.isEmpty()) {
                     diagnostics.add(C2CDiagnosticCodes
                             .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expressionNode.location()));
@@ -357,13 +264,6 @@ public class C2CVisitor extends NodeVisitor {
                         return Collections.emptyList();
                     }
                     listenerInfo = newListenerInfo.get();
-
-                    //Inline Http config
-                    if (refNode.parenthesizedArgList().arguments().size() > 1) {
-                        FunctionArgumentNode secondParamExpression = refNode.parenthesizedArgList().arguments().get(1);
-                        Optional<HttpsConfig> config = extractKeyStores(secondParamExpression);
-                        config.ifPresent(listenerInfo::setConfig);
-                    }
                 }
             }
             if (listenerInfo != null) {
@@ -394,152 +294,6 @@ public class C2CVisitor extends NodeVisitor {
         return Optional.empty();
     }
 
-    private Optional<HttpsConfig> extractKeyStores(FunctionArgumentNode functionArgumentNode) {
-        if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
-            PositionalArgumentNode positionalArgumentNode = (PositionalArgumentNode) functionArgumentNode;
-            if (positionalArgumentNode.expression().kind() == SyntaxKind.MAPPING_CONSTRUCTOR) {
-                return processFieldsInHttpConfig((MappingConstructorExpressionNode)
-                        positionalArgumentNode.expression());
-            } else if (positionalArgumentNode.expression().kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-                String varName = ((SimpleNameReferenceNode) positionalArgumentNode.expression()).name().text();
-                return getHttpsListenerConfig(varName);
-            }
-        } else if (functionArgumentNode.kind() == SyntaxKind.NAMED_ARG) {
-            NamedArgumentNode namedArgumentNode = (NamedArgumentNode) functionArgumentNode;
-            ExpressionNode expression = namedArgumentNode.expression();
-            if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-                String varName = ((SimpleNameReferenceNode) expression).name().text();
-                return getHttpsListenerConfig(varName);
-            } else if (expression.kind() == SyntaxKind.MAPPING_CONSTRUCTOR) {
-                return processSecureSocketValue((MappingConstructorExpressionNode) expression);
-            }
-        }
-        return Optional.empty();
-    }
-
-    private Optional<HttpsConfig> processFieldsInHttpConfig(MappingConstructorExpressionNode mapping) {
-        SeparatedNodeList<MappingFieldNode> fields = mapping.fields();
-        for (MappingFieldNode mappingFieldNode : fields) {
-            if (mappingFieldNode.kind() != SyntaxKind.SPECIFIC_FIELD) {
-                continue;
-            }
-            SpecificFieldNode specificFieldNode = (SpecificFieldNode) mappingFieldNode;
-            Node node = specificFieldNode.fieldName();
-            if (node.kind() == SyntaxKind.IDENTIFIER_TOKEN && ((IdentifierToken) node).text().equals("secureSocket")) {
-                if (specificFieldNode.valueExpr().isPresent() &&
-                        specificFieldNode.valueExpr().get().kind() == SyntaxKind.MAPPING_CONSTRUCTOR) {
-                    MappingConstructorExpressionNode mappingConstructorExpressionNode =
-                            (MappingConstructorExpressionNode) specificFieldNode.valueExpr().get();
-                    return (processSecureSocketValue(mappingConstructorExpressionNode));
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-    private Optional<HttpsConfig> processSecureSocketValue(MappingConstructorExpressionNode mappingConstructorNode) {
-        SeparatedNodeList<MappingFieldNode> socketChilds = mappingConstructorNode.fields();
-        HttpsConfig httpsConfig = new HttpsConfig();
-        for (MappingFieldNode child : socketChilds) {
-            if (child.kind() != SyntaxKind.SPECIFIC_FIELD) {
-                continue;
-            }
-            SpecificFieldNode specificField = (SpecificFieldNode) child;
-            String fieldName = getNameOfIdentifier(specificField.fieldName());
-            if ("key".equals(fieldName)) {
-                Optional<SecureSocketConfig>
-                        secureSocket = getSecureSocketConfig(specificField.valueExpr().get());
-                if (secureSocket.isEmpty()) {
-                    return Optional.empty();
-                }
-                httpsConfig.setSecureSocketConfig(secureSocket.get());
-            } else if ("mutualSsl".equals(fieldName)) {
-                Optional<MutualSSLConfig>
-                        mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
-                if (mutualSSLConfig.isEmpty()) {
-                    return Optional.empty();
-                }
-                httpsConfig.setMutualSSLConfig(mutualSSLConfig.get());
-            } else if ("cert".equals(fieldName)) {
-                Optional<MutualSSLConfig>
-                        mutualSSLConfig = getMutualSSLConfig(specificField.valueExpr().get());
-                if (mutualSSLConfig.isEmpty()) {
-                    return Optional.empty();
-                }
-                httpsConfig.setMutualSSLConfig(mutualSSLConfig.get());
-            }
-        }
-        return Optional.of(httpsConfig);
-    }
-
-    private Optional<MutualSSLConfig> getMutualSSLConfig(ExpressionNode expressionNode) {
-        MutualSSLConfig mutualSSLConfig = new MutualSSLConfig();
-        if (expressionNode.kind() == SyntaxKind.STRING_LITERAL) {
-            mutualSSLConfig.setPath(extractString(expressionNode));
-            return Optional.of(mutualSSLConfig);
-        }
-        if (expressionNode.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-            String name = ((SimpleNameReferenceNode) expressionNode).name().text();
-            diagnostics.add(C2CDiagnosticCodes
-                    .createDiagnostic(C2CDiagnosticCodes.FAILED_VARIABLE_RETRIEVAL, expressionNode.location(), name));
-            return Optional.empty();
-        }
-        MappingConstructorExpressionNode expressionNode1 = (MappingConstructorExpressionNode) expressionNode;
-        SeparatedNodeList<MappingFieldNode> fields = expressionNode1.fields();
-        for (MappingFieldNode field : fields) {
-            if (field.kind() != SyntaxKind.SPECIFIC_FIELD) {
-                continue;
-            }
-            SpecificFieldNode specificFieldNode = (SpecificFieldNode) field;
-            String nameOfIdentifier = getNameOfIdentifier(specificFieldNode.fieldName());
-            if ("cert".equals(nameOfIdentifier)) {
-                ExpressionNode certField = specificFieldNode.valueExpr().get();
-                if (certField.kind() == SyntaxKind.MAPPING_CONSTRUCTOR) {
-                    for (MappingFieldNode mappingFieldNode : ((MappingConstructorExpressionNode) certField).fields()) {
-                        if (mappingFieldNode.kind() != SyntaxKind.SPECIFIC_FIELD) {
-                            continue;
-                        }
-                        SpecificFieldNode certSpecificField = (SpecificFieldNode) mappingFieldNode;
-                        String fieldName = getNameOfIdentifier(certSpecificField.fieldName());
-                        if ("path".equals(fieldName)) {
-                            mutualSSLConfig.setPath(extractString(certSpecificField.valueExpr().get()));
-                        }
-                    }
-                } else {
-                    mutualSSLConfig.setPath(extractString(certField));
-                }
-            } else if ("path".equals(nameOfIdentifier)) {
-                mutualSSLConfig.setPath(extractString(specificFieldNode.valueExpr().get()));
-            }
-        }
-        return Optional.of(mutualSSLConfig);
-    }
-
-    private Optional<SecureSocketConfig> getSecureSocketConfig(ExpressionNode expressionNode) {
-        MappingConstructorExpressionNode expressionNode1 = (MappingConstructorExpressionNode) expressionNode;
-        SeparatedNodeList<MappingFieldNode> fields = expressionNode1.fields();
-        SecureSocketConfig secureSocketConfig = new SecureSocketConfig();
-        for (MappingFieldNode field : fields) {
-            if (field.kind() != SyntaxKind.SPECIFIC_FIELD) {
-                continue;
-            }
-            SpecificFieldNode specificFieldNode = (SpecificFieldNode) field;
-            String nameOfIdentifier = getNameOfIdentifier(specificFieldNode.fieldName());
-            if (("certFile").equals(nameOfIdentifier)) {
-                secureSocketConfig.setCertFile(extractString(specificFieldNode.valueExpr().get()));
-            } else if ("keyFile".equals(nameOfIdentifier)) {
-                secureSocketConfig.setKeyFile(extractString(specificFieldNode.valueExpr().get()));
-            } else if ("path".equals(nameOfIdentifier)) {
-                secureSocketConfig.setPath(extractString(specificFieldNode.valueExpr().get()));
-            }
-        }
-        if (secureSocketConfig.getPath() == null && secureSocketConfig.getCertFile() == null &&
-                secureSocketConfig.getKeyFile() == null) {
-            return Optional.empty();
-        }
-        return Optional.of(secureSocketConfig);
-    }
-
     private Optional<ListenerInfo> getListenerInfo(String path, ExpressionNode expression) {
         if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
             //on new http:Listener(port)
@@ -547,7 +301,7 @@ public class C2CVisitor extends NodeVisitor {
             String variableName = referenceNode.name().text();
             Optional<Integer> port = getPortNumberFromVariable(variableName);
             if (port.isEmpty()) {
-                Optional<ListenerInfo> httpsListener = this.getHttpsListener(variableName);
+                Optional<ListenerInfo> httpsListener = this.getHttpListener(variableName);
                 if (httpsListener.isEmpty()) {
                     diagnostics.add(C2CDiagnosticCodes
                             .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expression.location()));
@@ -718,16 +472,7 @@ public class C2CVisitor extends NodeVisitor {
         return absoluteServicePath.toString();
     }
 
-    private Optional<HttpsConfig> getHttpsListenerConfig(String variableName) {
-        Node node = this.moduleLevelVariables.get(variableName);
-        if (node == null || node.kind() != SyntaxKind.MAPPING_CONSTRUCTOR) {
-            return Optional.empty();
-        }
-        MappingConstructorExpressionNode initializer = (MappingConstructorExpressionNode) node;
-        return processFieldsInHttpConfig(initializer);
-    }
-
-    private Optional<ListenerInfo> getHttpsListener(String variableName) {
+    private Optional<ListenerInfo> getHttpListener(String variableName) {
         Node node = this.moduleLevelVariables.get(variableName);
         if (node == null || !(node.kind() == SyntaxKind.IMPLICIT_NEW_EXPRESSION)) {
             return Optional.empty();
@@ -738,12 +483,7 @@ public class C2CVisitor extends NodeVisitor {
         if (listenerInfo.isEmpty() || init.parenthesizedArgList().isEmpty()) {
             return listenerInfo;
         }
-        ParenthesizedArgList parenthesizedArgList = init.parenthesizedArgList().get();
         ListenerInfo listener = listenerInfo.get();
-        if (parenthesizedArgList.arguments().size() > 1) {
-            Optional<HttpsConfig> config = extractKeyStores(parenthesizedArgList.arguments().get(1));
-            config.ifPresent(listener::setConfig);
-        }
         return Optional.of(listener);
     }
 

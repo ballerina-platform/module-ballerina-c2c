@@ -20,7 +20,6 @@ package io.ballerina.c2c.util;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Optional;
 
 /**
  * Represents Listener information of a ballerina document.
@@ -32,14 +31,9 @@ import java.util.Optional;
 public class ListenerInfo {
     private String name;
     private int port;
-    private HttpsConfig config;
 
     public ListenerInfo(String name, int port) {
         this.name = name;
         this.port = port;
-    }
-
-    public Optional<HttpsConfig> getConfig() {
-        return Optional.ofNullable(config);
     }
 }

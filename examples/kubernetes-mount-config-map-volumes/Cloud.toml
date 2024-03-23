@@ -14,3 +14,11 @@ name="sample5-config-map"
 [[cloud.config.secrets]]
 file="./mysql-secrets.toml"
 name="mysql-secrets"
+
+[[cloud.secret.files]]
+file="resource/public.crt"
+mount_path="/home/ballerina/resource/public.crt"
+
+[[cloud.secret.files]]
+file="resource/private.key"
+mount_path="/home/ballerina/resource/private.key"
