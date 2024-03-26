@@ -216,6 +216,20 @@ public class BalTestCMDOptionsTests {
                 COMMAND_OUTPUTS, actualOutcome);
     }
 
+    @Test
+    public void testCloudFlagWithSpecificTestFunction() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.getParent().resolve("single-file-tests")
+                .resolve("single-test-execution");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "testFunc", "single-test-execution.bal"});
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
+        cleaningUpDir = projectDir;
+        TestUtils.assertOutput("SelectedFunctionTest-testCloudFlagWithSingleFunctionExecution.txt",
+                COMMAND_OUTPUTS, actualOutcome);
+    }
+
     @AfterMethod
     public void cleanUp() throws IOException, IllegalStateException {
         if (cleaningUpDir == null) {
