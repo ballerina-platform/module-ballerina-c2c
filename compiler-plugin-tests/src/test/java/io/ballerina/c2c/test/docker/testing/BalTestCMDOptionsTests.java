@@ -229,6 +229,74 @@ public class BalTestCMDOptionsTests {
                 COMMAND_OUTPUTS, actualOutcome);
     }
 
+    @Test
+    public void testCloudFlagWithRootPackageTests() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "cloud_project_with_modules:testMain"});
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
+        cleaningUpDir = projectDir;
+        TestUtils.assertOutput("SelectedFunctionTest-testCloudFlagWithRootPackageTests.txt",
+                COMMAND_OUTPUTS, actualOutcome);
+    }
+
+    @Test
+    public void testCloudFlagWithExecutionOfOnlyRootPackageTests() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "cloud_project_with_modules:*"});
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
+        cleaningUpDir = projectDir;
+        TestUtils.assertOutput("SelectedFunctionTest-testCloudFlagWithExecutionOfOnlyRootPackageTests.txt",
+                COMMAND_OUTPUTS, actualOutcome);
+    }
+
+    @Test
+    public void testCloudFlagWithExecutionOfModuleTests() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "cloud_project_with_modules.mod1:*"});
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
+        cleaningUpDir = projectDir;
+        TestUtils.assertOutput("SelectedFunctionTest-testCloudFlagWithExecutionOfModuleTests.txt",
+                COMMAND_OUTPUTS, actualOutcome);
+    }
+
+    @Test
+    public void testCloudFlagWithExecutionOfMultipleSpecifiedTests() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "cloud_project_with_modules.mod2:testMod2Two,cloud_project_with_modules:*"});
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
+        cleaningUpDir = projectDir;
+        TestUtils.assertOutput("SelectedFunctionTest-testCloudFlagWithExecutionOfMultipleSpecifiedTests.txt",
+                COMMAND_OUTPUTS, actualOutcome);
+    }
+
+    @Test
+    public void testCloudFlagWithSpecificTestBalFile() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.getParent().resolve("single-file-tests")
+                .resolve("single-test-file-execution");
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{projectDir.resolve("single-test-file-execution.bal").toAbsolutePath().toString()});
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
+        cleaningUpDir = projectDir;
+        TestUtils.assertOutput("SelectedFunctionTest-testCloudFlagWithSpecificTestBalFile.txt",
+                COMMAND_OUTPUTS, actualOutcome);
+        //Check for the existence of the target directory (It shouldn't exist)
+        Assert.assertFalse(Files.exists(projectDir.resolve("target")));
+    }
+
     @AfterMethod
     public void cleanUp() throws IOException, IllegalStateException {
         if (cleaningUpDir == null) {
