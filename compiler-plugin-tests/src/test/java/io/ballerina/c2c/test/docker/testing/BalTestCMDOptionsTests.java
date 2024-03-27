@@ -217,11 +217,10 @@ public class BalTestCMDOptionsTests {
     }
 
     @Test
-    public void testCloudFlagWithSpecificTestFunction() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.getParent().resolve("single-file-tests")
-                .resolve("single-test-execution");
+    public void testCloudFlagWithSpecificTestFunctions() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
-                new String[]{"--tests", "testFunc", "single-test-execution.bal"});
+                new String[]{"--tests", "testMain,testMod"});
         String firstString = "Building the docker image\n";
         String endString = "\nRunning the generated Docker image";
         actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
