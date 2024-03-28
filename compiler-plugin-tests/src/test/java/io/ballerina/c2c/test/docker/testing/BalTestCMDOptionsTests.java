@@ -297,6 +297,89 @@ public class BalTestCMDOptionsTests {
         Assert.assertFalse(Files.exists(projectDir.resolve("target")));
     }
 
+    @Test
+    public void testCloudFlagWithConfigurableValues() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("test-with-config-but-val-not-provided");
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"-CmyVal=2"});
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
+        cleaningUpDir = projectDir;
+        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithConfigurableValues.txt",
+                COMMAND_OUTPUTS, actualOutcome);
+    }
+
+    @Test
+    public void testCloudFlagWithoutProvidingConfigurableValues() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("test-with-config-but-val-not-provided");
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[0]);
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
+        cleaningUpDir = projectDir;
+        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithoutProvidingConfigurableValues.txt",
+                COMMAND_OUTPUTS, actualOutcome);
+    }
+
+    @Test
+    public void testCloudFlagWithConfigFiles() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("tests-with-config");
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[0]);
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
+        cleaningUpDir = projectDir;
+        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithConfigFiles.txt",
+                COMMAND_OUTPUTS, actualOutcome);
+    }
+
+    @Test
+    public void testCloudFlagWithConfigurableValuesToOverrideConfig() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("tests-with-config");
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"-Cname=Goku"});
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
+        cleaningUpDir = projectDir;
+
+        // Cannot use the TestUtils.assertOutput method here as the test fails
+        Assert.assertTrue(actualOutcome.contains("0 passing"));
+        Assert.assertTrue(actualOutcome.contains("1 failing"));
+        Assert.assertTrue(actualOutcome.contains("+Ballerina"));
+        Assert.assertTrue(actualOutcome.contains("-Goku"));
+    }
+
+    @Test
+    public void testCloudFlagWithDataProviderMap() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("data-provider-map");
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        //TODO: check the argument
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "fruitsDataProviderTest#'banana'"});
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
+        cleaningUpDir = projectDir;
+        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithDataProviderMap.txt",
+                COMMAND_OUTPUTS, actualOutcome);
+    }
+
+    @Test
+    public void testCloudFlagWithDataProviderArray() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("data-provider-array");
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--tests", "stringDataProviderTest#1"});
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
+        cleaningUpDir = projectDir;
+        TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithDataProviderArray.txt",
+                COMMAND_OUTPUTS, actualOutcome);
+    }
+
     @AfterMethod
     public void cleanUp() throws IOException, IllegalStateException {
         if (cleaningUpDir == null) {
