@@ -1,0 +1,43 @@
+Compiling source
+    cloud_tests/tests_with_config:0.0.0
+
+Generating artifacts
+
+
+Building the docker image
+*****
+Running the generated Docker image
+
+
+Running Tests
+
+    tests_with_config
+
+            [fail] testName:
+
+                error {ballerina/test:0}TestError ("Assertion Failed!
+
+                    expected: 'Ballerina'
+                    actual  : 'Goku'
+
+                    Diff    :
+
+                    --- actual
+                    +++ expected
+
+                     @@ -1,1 +1,1 @@
+
+                     -Goku
+                    +Ballerina
+                    ")
+                            callableName: createBallerinaError moduleName: ballerina.test.0 fileName: assert.bal lineNumber: 41
+                            callableName: assertEquals moduleName: ballerina.test.0 fileName: assert.bal lineNumber: 109
+                            callableName: testName moduleName: cloud_tests.tests_with_config$test.0.tests.mytest fileName: tests/mytest.bal lineNumber: 21
+                            callableName: testName$lambda0$ moduleName: cloud_tests.tests_with_config$test.0.tests.test_execute-generated_1 fileName: tests/test_execute-generated_1.bal lineNumber: 4
+
+
+
+            0 passing
+            1 failing
+            0 skipped
+error [k8s plugin]: Error running the docker image: tests_with_config-testable:latest

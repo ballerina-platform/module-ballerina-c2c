@@ -1,0 +1,21 @@
+Compiling source
+	single-test-file-execution.bal
+
+Generating artifacts
+
+
+Building the docker image
+*****
+Running the generated Docker image
+
+
+Running Tests
+
+	single-test-file-execution.bal
+		[pass] testFunc
+		[pass] testFunc2
+
+
+		2 passing
+		0 failing
+		0 skipped

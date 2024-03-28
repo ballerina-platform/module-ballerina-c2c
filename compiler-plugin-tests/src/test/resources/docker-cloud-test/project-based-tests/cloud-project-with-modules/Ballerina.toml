@@ -1,0 +1,4 @@
+[package]
+org = "cloud_tests"
+name = "cloud_project_with_modules"
+version = "0.0.0"

@@ -1,0 +1,20 @@
+Compiling source
+	cloud_tests/data_provider_array:0.0.0
+
+Generating artifacts
+
+
+Building the docker image
+*****
+Running the generated Docker image
+
+
+Running Tests
+
+	data_provider_array
+		[pass] stringDataProviderTest#1
+
+
+		1 passing
+		0 failing
+		0 skipped

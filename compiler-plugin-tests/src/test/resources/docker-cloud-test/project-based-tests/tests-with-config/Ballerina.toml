@@ -1,0 +1,4 @@
+[package]
+org = "cloud_tests"
+name = "tests_with_config"
+version = "0.0.0"

@@ -1,0 +1,20 @@
+Compiling source
+	cloud_tests/test_with_config_but_val_not_provided:0.0.0
+
+Generating artifacts
+
+
+Building the docker image
+*****
+Running the generated Docker image
+
+
+Running Tests
+
+	test_with_config_but_val_not_provided
+		[pass] failingTest
+
+
+		1 passing
+		0 failing
+		0 skipped

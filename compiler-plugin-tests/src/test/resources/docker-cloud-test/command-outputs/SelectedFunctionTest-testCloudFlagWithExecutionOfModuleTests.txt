@@ -1,0 +1,31 @@
+Compiling source
+	cloud_tests/cloud_project_with_modules:0.0.0
+
+Generating artifacts
+
+
+Building the docker image
+*****
+Running the generated Docker image
+
+
+Running Tests
+
+	cloud_project_with_modules.mod2
+
+
+		No tests found
+
+	cloud_project_with_modules
+
+
+		No tests found
+
+	cloud_project_with_modules.mod1
+		[pass] testMod
+		[pass] testModTwo
+
+
+		2 passing
+		0 failing
+		0 skipped

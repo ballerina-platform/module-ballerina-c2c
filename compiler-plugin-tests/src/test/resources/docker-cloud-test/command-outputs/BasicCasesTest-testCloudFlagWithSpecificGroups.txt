@@ -1,0 +1,22 @@
+Compiling source
+	cloud_tests/project_with_groups:0.0.0
+
+Generating artifacts
+
+
+Building the docker image
+*****
+Running the generated Docker image
+
+
+Running Tests
+
+	project_with_groups
+		[pass] testFunction1
+		[pass] testFunction2
+		[pass] testFunction3
+
+
+		3 passing
+		0 failing
+		0 skipped

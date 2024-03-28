@@ -1,0 +1,23 @@
+WARNING: Rerun failed tests is not supported with Ballerina cloud test
+Compiling source
+	cloud_tests/cloud_flag_rerun_failed:0.0.0
+
+Generating artifacts
+
+
+Building the docker image
+*****
+Running the generated Docker image
+
+
+Running Tests
+
+	cloud_flag_rerun_failed
+		[pass] anotherSmallTest
+		[pass] anotherSmallTest2
+		[pass] smallTest
+
+
+		3 passing
+		0 failing
+		0 skipped

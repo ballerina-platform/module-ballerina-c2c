@@ -1,0 +1,2 @@
+ballerina: flag '--cloud' (<cloud>) needs an argument
+Run 'bal help' for usage.

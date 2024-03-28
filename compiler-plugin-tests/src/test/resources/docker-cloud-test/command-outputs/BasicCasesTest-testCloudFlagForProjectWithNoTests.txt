@@ -1,0 +1,3 @@
+Compiling source
+	cloud_tests/project_with_no_tests:0.0.0
+	No tests found

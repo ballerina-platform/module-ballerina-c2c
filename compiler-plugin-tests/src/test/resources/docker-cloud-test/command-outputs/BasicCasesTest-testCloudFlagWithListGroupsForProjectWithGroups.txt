@@ -1,0 +1,16 @@
+Compiling source
+	cloud_tests/project_with_groups:0.0.0
+
+Generating artifacts
+
+
+Building the docker image
+*****
+Running the generated Docker image
+
+
+Running Tests
+
+	project_with_groups
+	Following groups are available :
+	[g1, g2, g3]

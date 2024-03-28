@@ -1,0 +1,5 @@
+Compiling source
+	cloud_tests/cloud_flag_k8s:0.0.0
+error [k8s plugin]: k8s cloud build only supported for build
+***** io.ballerina.c2c.tasks.C2CCodeGeneratedTask perform
+SEVERE: k8s cloud build only supported for build

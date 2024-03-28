@@ -1,0 +1,4 @@
+[package]
+org = "cloud_tests"
+name = "cloud_flag_k8s"
+version = "0.0.0"

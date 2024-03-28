@@ -1,0 +1,19 @@
+Compiling source
+	cloud_tests/cloud_flag_graalvm:0.0.0
+
+Generating artifacts
+
+Building the native image. This may take a while
+*****
+Running the generated Docker image
+
+
+Running Tests
+
+	cloud_flag_graalvm
+		[pass] assertThis
+
+
+		1 passing
+		0 failing
+		0 skipped
