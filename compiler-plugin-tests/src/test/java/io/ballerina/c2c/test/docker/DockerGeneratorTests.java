@@ -59,9 +59,9 @@ public class DockerGeneratorTests {
     private static final Path TEST_SOURCE_DIR_PATH = Paths.get("src", "test", "resources",
             "docker-cloud-test", "docker-gen-files");
     private static final String DOCKER_IMAGE = "anuruddhal/test-gen-image:v1";
+    private static final String DOCKER_TEST_IMAGE = "anuruddhal/test-gen-tests-image:v1";
     private final PrintStream out = System.out;
-    private Path cleaningUpDir;
-    private boolean shouldDeleteDockerImage = true;
+    private Path cleaningUpDir = null;
 
     @Test(expectedExceptions = DockerGenException.class,
             expectedExceptionsMessageRegExp = "given docker name 'dockerName:latest' is invalid: image name " +
@@ -117,10 +117,10 @@ public class DockerGeneratorTests {
         Assert.assertTrue(dockerFile.exists());
 
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
+        cleaningUpDir = outputDir;
         Assert.assertTrue(dockerFileContent.contains("CMD java -Xdiag -cp \"hello.jar:jars/*\" " +
                 "'wso2.bal.1.$_init'"));
         Assert.assertTrue(dockerFileContent.contains("USER ballerina"));
-        cleaningUpDir = outputDir.resolve("target");
     }
 
     @Test(dependsOnMethods = {"buildDockerImageTest"})
@@ -136,7 +136,7 @@ public class DockerGeneratorTests {
     @Test
     public void buildTestDockerImageTest() throws IOException, DockerGenException {
         DockerModel dockerModel = new DockerModel();
-        dockerModel.setName("test-gen-image");
+        dockerModel.setName("test-gen-tests-image");
         dockerModel.setRegistry("anuruddhal");
         dockerModel.setTag("v1");
         dockerModel.setJarFileName("hello.jar");
@@ -191,9 +191,8 @@ public class DockerGeneratorTests {
 
     @Test
     public void buildNativeTestDockerImageTest() throws IOException {
-        shouldDeleteDockerImage = false;    // Do not delete the image after the test Since the generation fails
         DockerModel dockerModel = new DockerModel();
-        dockerModel.setName("test-gen-image");
+        dockerModel.setName("test-gen-tests-image");
         dockerModel.setRegistry("anuruddhal");
         dockerModel.setTag("v1");
         dockerModel.setJarFileName("hello.jar");
@@ -279,16 +278,15 @@ public class DockerGeneratorTests {
 
     @AfterMethod
     public void cleanUp() throws IOException {
-        FileUtils.deleteDirectory(cleaningUpDir.toFile());
-        deleteDockerImage();
-    }
-
-    private void deleteDockerImage() {
-        if (shouldDeleteDockerImage) {
-            DockerTestUtils.deleteDockerImage(DOCKER_IMAGE);
-        } else {
-            shouldDeleteDockerImage = true; //for the next test
+        if (cleaningUpDir != null) {
+            FileUtils.deleteDirectory(cleaningUpDir.toFile());
+            cleaningUpDir = null;
         }
     }
 
+    @AfterClass
+    private void deleteDockerImage() {
+        DockerTestUtils.deleteDockerImage(DOCKER_IMAGE);
+        DockerTestUtils.deleteDockerImage(DOCKER_TEST_IMAGE);
+    }
 }
