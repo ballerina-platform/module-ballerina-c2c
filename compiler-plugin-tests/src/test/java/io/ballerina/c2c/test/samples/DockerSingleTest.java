@@ -32,7 +32,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
-import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getCommand;
+import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getEntryPoint;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getExposedPorts;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.loadImage;
 
@@ -62,7 +62,7 @@ public class DockerSingleTest extends SampleTest {
         Assert.assertEquals(ports.size(), 1);
         Assert.assertEquals(ports.get(0), "9096/tcp");
         // Validate ballerina.conf in run command
-        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(),
+        Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(),
                 "[java, -Xdiag, -cp, service.jar:jars/*, $_init]");
     }
 

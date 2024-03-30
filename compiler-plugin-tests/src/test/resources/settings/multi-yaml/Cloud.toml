@@ -10,7 +10,7 @@ tag="v1"
 
 [[cloud.secret.files]]
 file="./resource"
-mount_dir="/home/ballerina/resource"
+mount_dir="/home/ballerina/resource/"
 
 [settings]
 singleYAML=false

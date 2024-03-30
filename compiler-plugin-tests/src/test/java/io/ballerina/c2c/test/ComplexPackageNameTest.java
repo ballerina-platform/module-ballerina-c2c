@@ -42,7 +42,7 @@ import java.util.List;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
-import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getCommand;
+import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getEntryPoint;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getExposedPorts;
 
 /**
@@ -119,15 +119,15 @@ public class ComplexPackageNameTest {
         Assert.assertTrue(dockerFile.exists());
     }
 
-    @Test(enabled = false)
+    @Test
     public void validateDockerImage() {
         List<String> ports = getExposedPorts(DOCKER_IMAGE);
         Assert.assertEquals(ports.size(), 1);
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
-        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(),
-                "[/bin/sh, -c, java -Xdiag -cp \"anjana-testObservation_0.1.5-0.1.0.jar:jars/*\" " +
-                        "'anjana.testObservation_0$00461$00465.0.$_init']");
+        Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(),
+                "[java, -Xdiag, -cp, anjana-testObservation_0.1.5-0.1.0.jar:jars/*, " +
+                        "anjana.testObservation_0&00461&00465.0.$_init]");
     }
 
     @AfterClass

@@ -43,6 +43,8 @@ import io.ballerina.tools.diagnostics.DiagnosticFactory;
 import io.ballerina.tools.diagnostics.DiagnosticInfo;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import org.ballerinalang.model.elements.PackageID;
 import org.wso2.ballerinalang.compiler.util.Name;
 
@@ -53,8 +55,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -386,5 +391,46 @@ public class KubernetesUtils {
 
         return dockerModel.getDependencyJarPaths().size() + dockerModel.getCopyFiles().size() +
                 dockerModel.getEnv().size() < DockerGenConstants.MAX_BALLERINA_LAYERS;
+    }
+
+    public static List<VolumeMount> generateConfigMapVolumeMounts(Collection<ConfigMapModel> configMapModels) {
+        List<VolumeMount> volumeMounts = new ArrayList<>();
+        for (ConfigMapModel configMapModel : configMapModels) {
+            final String mountPath = configMapModel.getMountPath();
+            VolumeMountBuilder volumeMountBuilder = new VolumeMountBuilder()
+                    .withMountPath(mountPath)
+                    .withName(configMapModel.getName() + "-volume")
+                    .withReadOnly(configMapModel.isReadOnly());
+
+            if ((!configMapModel.isDir()) && (!configMapModel.isBallerinaConf())) {
+                volumeMountBuilder.withSubPath(KubernetesUtils.getFileNameOfConfigMap(configMapModel));
+            }
+            volumeMounts.add(volumeMountBuilder.build());
+        }
+        return volumeMounts;
+    }
+
+    public static List<VolumeMount> generateSecretVolumeMounts(Collection<SecretModel> secretModels) {
+        List<VolumeMount> volumeMounts = new ArrayList<>();
+        for (SecretModel secretModel : secretModels) {
+            VolumeMountBuilder volumeMountBuilder = new VolumeMountBuilder()
+                    .withMountPath(secretModel.getMountPath())
+                    .withName(secretModel.getName() + "-volume")
+                    .withReadOnly(secretModel.isReadOnly());
+            if ((!secretModel.isDir()) && (!secretModel.isBallerinaConf())) {
+                volumeMountBuilder.withSubPath(KubernetesUtils.getFileNameOfSecret(secretModel));
+            }
+            VolumeMount volumeMount = volumeMountBuilder.build();
+            volumeMounts.add(volumeMount);
+        }
+        return volumeMounts;
+    }
+
+    public static void validateFileExistence(File file) throws KubernetesPluginException {
+        if (!file.exists()) {
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(
+                    C2CDiagnosticCodes.PATH_CONTENT_READ_FAILED, new NullLocation(), file.getAbsolutePath());
+            throw new KubernetesPluginException(diagnostic);
+        }
     }
 }

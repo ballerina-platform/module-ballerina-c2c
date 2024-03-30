@@ -35,7 +35,6 @@ import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
-import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.CronJob;
 import io.fabric8.kubernetes.api.model.batch.v1.CronJobBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
@@ -46,6 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.ballerina.c2c.utils.DockerGenUtils.extractJarName;
+import static io.ballerina.c2c.utils.KubernetesUtils.generateConfigMapVolumeMounts;
 import static io.ballerina.c2c.utils.KubernetesUtils.resolveDockerToml;
 
 /**
@@ -180,30 +180,8 @@ public class JobHandler extends AbstractArtifactHandler {
 
     private List<VolumeMount> populateVolumeMounts() {
         List<VolumeMount> volumeMounts = new ArrayList<>();
-        for (SecretModel secretModel : dataHolder.getSecretModelSet()) {
-            VolumeMountBuilder volumeMountBuilder = new VolumeMountBuilder()
-                    .withMountPath(secretModel.getMountPath())
-                    .withName(secretModel.getName() + "-volume")
-                    .withReadOnly(secretModel.isReadOnly());
-
-            if ((!secretModel.isDir()) && (!secretModel.isBallerinaConf())) {
-                volumeMountBuilder.withSubPath(KubernetesUtils.getFileNameOfSecret(secretModel));
-            }
-
-            volumeMounts.add(volumeMountBuilder.build());
-        }
-        for (ConfigMapModel configMapModel : dataHolder.getConfigMapModelSet()) {
-            final String mountPath = configMapModel.getMountPath();
-            VolumeMountBuilder volumeMountBuilder = new VolumeMountBuilder()
-                    .withMountPath(mountPath)
-                    .withName(configMapModel.getName() + "-volume")
-                    .withReadOnly(configMapModel.isReadOnly());
-
-            if ((!configMapModel.isDir()) && (!configMapModel.isBallerinaConf())) {
-                volumeMountBuilder.withSubPath(KubernetesUtils.getFileNameOfConfigMap(configMapModel));
-            }
-            volumeMounts.add(volumeMountBuilder.build());
-        }
+        volumeMounts.addAll(KubernetesUtils.generateSecretVolumeMounts(dataHolder.getSecretModelSet()));
+        volumeMounts.addAll(generateConfigMapVolumeMounts(dataHolder.getConfigMapModelSet()));
         return volumeMounts;
     }
 

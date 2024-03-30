@@ -75,6 +75,7 @@ public class CloudTomlResolver {
     KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
 
     public void resolveToml(JobModel jobModel) throws KubernetesPluginException {
+
         Toml ballerinaCloud = dataHolder.getBallerinaCloud();
         if (ballerinaCloud != null) {
             // Resolve Env
@@ -96,6 +97,7 @@ public class CloudTomlResolver {
     }
 
     public void resolveToml(DeploymentModel deploymentModel) throws KubernetesPluginException {
+
         Toml ballerinaCloud = dataHolder.getBallerinaCloud();
         if (ballerinaCloud != null) {
             // Deployment configs
@@ -127,6 +129,7 @@ public class CloudTomlResolver {
     }
 
     private void resolveVolumes(DeploymentModel deploymentModel, Toml ballerinaCloud) {
+
         List<Toml> volumes = ballerinaCloud.getTables("cloud.deployment.storage.volumes");
         Set<PersistentVolumeClaimModel> persistentVolumeClaimModels = new HashSet<>();
         volumes.forEach(volume -> {
@@ -140,6 +143,7 @@ public class CloudTomlResolver {
     }
 
     private void resolveSettingsToml(Toml ballerinaCloud) {
+
         dataHolder.setSingleYaml(TomlHelper.getBoolean(ballerinaCloud, "settings.singleYAML", true));
         dataHolder.getDockerModel().setBuildImage(TomlHelper.getBoolean(ballerinaCloud,
                 "settings.buildImage", true));
@@ -147,6 +151,7 @@ public class CloudTomlResolver {
     }
 
     private void resolveDeploymentToml(DeploymentModel deploymentModel, Toml ballerinaCloud) {
+
         deploymentModel.setReplicas(Math.toIntExact(TomlHelper.getLong(ballerinaCloud, CLOUD_DEPLOYMENT + "replicas",
                 deploymentModel.getReplicas())));
         Optional<Toml> probeToml = ballerinaCloud.getTable(CLOUD_DEPLOYMENT + "probes.readiness");
@@ -158,6 +163,7 @@ public class CloudTomlResolver {
     }
 
     private void resolveEnvToml(KubernetesModel model, Toml ballerinaCloud) {
+
         List<Toml> envs = ballerinaCloud.getTables("cloud.config.envs");
         for (Toml env : envs) {
             EnvVar envVar = new EnvVarBuilder()
@@ -194,6 +200,7 @@ public class CloudTomlResolver {
     }
 
     private void resolveResourcesToml(DeploymentModel deploymentModel, Toml deploymentToml) {
+
         Map<String, Quantity> requests = deploymentModel.getResourceRequirements().getRequests();
         String minMemory = TomlHelper.getString(deploymentToml, CLOUD_DEPLOYMENT + KubernetesConstants.MIN_MEMORY);
         String minCPU = TomlHelper.getString(deploymentToml, CLOUD_DEPLOYMENT + "min_cpu");
@@ -217,7 +224,6 @@ public class CloudTomlResolver {
     }
 
     private void resolveConfigSecretToml(Toml toml) throws KubernetesPluginException {
-        //TODO change spec
         List<Toml> secrets = toml.getTables("cloud.config.secrets");
         for (int i = 0, secretsSize = secrets.size(); i < secretsSize; i++) {
             Toml secret = secrets.get(i);
@@ -226,7 +232,7 @@ public class CloudTomlResolver {
             String name = TomlHelper.getString(secret, "name", defaultValue);
             SecretModel secretModel = new SecretModel();
             secretModel.setName(name);
-            secretModel.setData(getDataForSecret(path.toString()));
+            secretModel.setData(getData(path.toString(), true));
             secretModel.setMountPath(getSecretMountPath(i));
             secretModel.setBallerinaConf(true);
             dataHolder.addSecrets(Collections.singleton(secretModel));
@@ -234,6 +240,7 @@ public class CloudTomlResolver {
     }
 
     private String getSecretMountPath(int secretCount) {
+
         if (secretCount == 0) {
             return KubernetesConstants.BALLERINA_CONF_SECRETS_MOUNT_PATH + "/";
         }
@@ -241,6 +248,7 @@ public class CloudTomlResolver {
     }
 
     private void resolveConfigMapToml(Toml toml) throws KubernetesPluginException {
+
         List<Toml> configFiles = toml.getTables("cloud.config.files");
         for (int i = 0, configFilesSize = configFiles.size(); i < configFilesSize; i++) {
             Toml configFile = configFiles.get(i);
@@ -289,6 +297,7 @@ public class CloudTomlResolver {
     }
 
     private String getConfMountPath(int confCount) {
+
         if (confCount == 0) {
             return KubernetesConstants.BALLERINA_CONF_MOUNT_PATH + "/";
         }
@@ -296,6 +305,7 @@ public class CloudTomlResolver {
     }
 
     private void resolveSecretToml(KubernetesModel kubernetesModel, Toml toml) throws KubernetesPluginException {
+
         List<Toml> secrets = toml.getTables("cloud.secret.files");
         if (secrets.size() != 0) {
             final String deploymentName = kubernetesModel.getName().replace(DEPLOYMENT_POSTFIX, "");
@@ -307,11 +317,7 @@ public class CloudTomlResolver {
                         getSecretMountPath(i))));
                 final Path fileName = validatePaths(path, mountPath);
                 File file = path.toFile();
-                if (!file.exists()) {
-                    Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(
-                            C2CDiagnosticCodes.PATH_CONTENT_READ_FAILED, new NullLocation(), path.toString());
-                    throw new KubernetesPluginException(diagnostic);
-                }
+                KubernetesUtils.validateFileExistence(file);
                 SecretModel secretModel = new SecretModel();
                 if (!mountPath.isAbsolute()) {
                     mountPath = Paths.get(BALLERINA_HOME, mountPath.toString());
@@ -325,7 +331,7 @@ public class CloudTomlResolver {
                 }
 
                 secretModel.setName(deploymentName + "-" + getValidName(fileName.toString()) + SECRET_POSTFIX + i);
-                secretModel.setData(getDataForSecret(path.toString()));
+                secretModel.setData(getData(path.toString(), true));
                 secretModel.setMountPath(mountPathSr);
                 dataHolder.addSecrets(Collections.singleton(secretModel));
             }
@@ -333,6 +339,7 @@ public class CloudTomlResolver {
     }
 
     private String getModifiedMountPath(String mountDir, String fileName) {
+
         if (mountDir.endsWith("/")) {
             return mountDir + fileName;
         } else {
@@ -341,6 +348,7 @@ public class CloudTomlResolver {
     }
 
     private Optional<ConfigMapModel> getConfigMapModel(String name) {
+
         Set<ConfigMapModel> configMapModelSet = dataHolder.getConfigMapModelSet();
         for (ConfigMapModel configMapModel : configMapModelSet) {
             if (configMapModel.getName().equals(name)) {
@@ -351,6 +359,7 @@ public class CloudTomlResolver {
     }
 
     public void resolveConfigFilesToml(KubernetesModel kubernetesModel, Toml toml) throws KubernetesPluginException {
+
         List<Toml> configFiles = toml.getTables("cloud.config.maps");
         if (configFiles.size() != 0) {
             final String deploymentName = kubernetesModel.getName().replace(DEPLOYMENT_POSTFIX, "");
@@ -364,11 +373,7 @@ public class CloudTomlResolver {
                     mountPath = Paths.get(BALLERINA_HOME, mountPath.toString());
                 }
                 File file = path.toFile();
-                if (!file.exists()) {
-                    Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(
-                            C2CDiagnosticCodes.PATH_CONTENT_READ_FAILED, new NullLocation(), path.toString());
-                    throw new KubernetesPluginException(diagnostic);
-                }
+                KubernetesUtils.validateFileExistence(file);
                 String mountPathSr = mountPath.toString();
                 if (file.isDirectory()) {
                     configMapModel.setDir(true);
@@ -376,7 +381,7 @@ public class CloudTomlResolver {
                     mountPathSr = getModifiedMountPath(mountPath.toString(), fileName.toString());
                 }
                 configMapModel.setName(deploymentName + "-" + getValidName(fileName.toString()) + "cfg" + i);
-                configMapModel.setData(getDataForConfigMap(path.toString()));
+                configMapModel.setData(getData(path.toString(), false));
                 configMapModel.setMountPath(mountPathSr);
                 configMapModel.setBallerinaConf(false);
                 dataHolder.addConfigMaps(Collections.singleton(configMapModel));
@@ -385,6 +390,7 @@ public class CloudTomlResolver {
     }
 
     private Path validatePaths(Path path, Path mountPath) throws KubernetesPluginException {
+
         final Path homePath = Paths.get(BALLERINA_HOME);
         final Path runtimePath = Paths.get(BALLERINA_RUNTIME);
         final Path confPath = Paths.get(BALLERINA_CONF_MOUNT_PATH);
@@ -418,35 +424,8 @@ public class CloudTomlResolver {
         return fileName;
     }
 
-    private Map<String, String> getDataForConfigMap(String path) throws KubernetesPluginException {
-        Map<String, String> dataMap = new HashMap<>();
-        Path dataFilePath = Paths.get(path);
-        if (!dataFilePath.isAbsolute()) {
-            dataFilePath = KubernetesContext.getInstance().getDataHolder().getSourceRoot().resolve(dataFilePath);
-        }
-        File file = dataFilePath.toFile();
-        if (!file.isDirectory()) {
-            String key = String.valueOf(dataFilePath.getFileName());
-            String content = new String(KubernetesUtils.readFileContent(dataFilePath), StandardCharsets.UTF_8);
-            dataMap.put(key, content);
-            return dataMap;
-        }
-        File[] files = file.listFiles();
-        if (files == null) {
-            return dataMap;
-        }
-        for (File f : files) {
-            if (f.isDirectory()) {
-                continue;
-            }
-            String key = f.getName();
-            String content = new String(KubernetesUtils.readFileContent(dataFilePath), StandardCharsets.UTF_8);
-            dataMap.put(key, content);
-        }
-        return dataMap;
-    }
+    private Map<String, String> getData(String path, boolean isSecret) throws KubernetesPluginException {
 
-    private Map<String, String> getDataForSecret(String path) throws KubernetesPluginException {
         Map<String, String> dataMap = new HashMap<>();
         Path dataFilePath = Paths.get(path);
         if (!dataFilePath.isAbsolute()) {
@@ -456,7 +435,7 @@ public class CloudTomlResolver {
         if (!file.isDirectory()) {
             // Read all files
             String key = String.valueOf(dataFilePath.getFileName());
-            String content = Base64.encodeBase64String(KubernetesUtils.readFileContent(dataFilePath));
+            String content = getContent(KubernetesUtils.readFileContent(dataFilePath), isSecret);
             dataMap.put(key, content);
             return dataMap;
         }
@@ -469,10 +448,18 @@ public class CloudTomlResolver {
                 continue;
             }
             String key = f.getName();
-            String content = Base64.encodeBase64String(KubernetesUtils.readFileContent(f.toPath()));
+            String content = getContent(KubernetesUtils.readFileContent(dataFilePath), isSecret);
             dataMap.put(key, content);
         }
         return dataMap;
+    }
+
+    private String getContent(byte[] content, boolean isSecret) {
+
+        if (isSecret) {
+            return Base64.encodeBase64String(content);
+        }
+        return new String(content, StandardCharsets.UTF_8);
     }
 
     private Probe resolveProbeToml(Toml probeToml) {

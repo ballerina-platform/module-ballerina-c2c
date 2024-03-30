@@ -135,7 +135,7 @@ public class KubernetesTestUtils {
      * @param imageName The docker image name.
      * @return The list of commands.
      */
-    public static List<String> getCommand(String imageName) {
+    public static List<String> getEntryPoint(String imageName) {
         InspectImageResponse dockerImage = getDockerImage(imageName);
         if (null == dockerImage.getConfig() || null == dockerImage.getConfig().getEntrypoint()) {
             return new ArrayList<>();

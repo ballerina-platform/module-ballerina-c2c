@@ -49,6 +49,7 @@ import java.util.List;
 
 import static io.ballerina.c2c.DockerGenConstants.REGISTRY_SEPARATOR;
 import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_FILE_POSTFIX;
+import static io.ballerina.c2c.utils.KubernetesUtils.generateConfigMapVolumeMounts;
 import static io.ballerina.c2c.utils.KubernetesUtils.resolveDockerToml;
 
 /**
@@ -58,29 +59,8 @@ public class DeploymentHandler extends AbstractArtifactHandler {
 
     private List<VolumeMount> populateVolumeMounts(DeploymentModel deploymentModel) {
         List<VolumeMount> volumeMounts = new ArrayList<>();
-        for (SecretModel secretModel : deploymentModel.getSecretModels()) {
-            VolumeMountBuilder volumeMountBuilder = new VolumeMountBuilder()
-                    .withMountPath(secretModel.getMountPath())
-                    .withName(secretModel.getName() + "-volume")
-                    .withReadOnly(secretModel.isReadOnly());
-            if ((!secretModel.isDir()) && (!secretModel.isBallerinaConf())) {
-                volumeMountBuilder.withSubPath(KubernetesUtils.getFileNameOfSecret(secretModel));
-            }
-            VolumeMount volumeMount = volumeMountBuilder.build();
-            volumeMounts.add(volumeMount);
-        }
-        for (ConfigMapModel configMapModel : deploymentModel.getConfigMapModels()) {
-            final String mountPath = configMapModel.getMountPath();
-            VolumeMountBuilder volumeMountBuilder = new VolumeMountBuilder()
-                    .withMountPath(mountPath)
-                    .withName(configMapModel.getName() + "-volume")
-                    .withReadOnly(configMapModel.isReadOnly());
-
-            if ((!configMapModel.isDir()) && (!configMapModel.isBallerinaConf())) {
-                volumeMountBuilder.withSubPath(KubernetesUtils.getFileNameOfConfigMap(configMapModel));
-            }
-            volumeMounts.add(volumeMountBuilder.build());
-        }
+        volumeMounts.addAll(KubernetesUtils.generateSecretVolumeMounts(deploymentModel.getSecretModels()));
+        volumeMounts.addAll(generateConfigMapVolumeMounts(deploymentModel.getConfigMapModels()));
         for (PersistentVolumeClaimModel volumeClaimModel : deploymentModel.getVolumeClaimModels()) {
             VolumeMount volumeMount = new VolumeMountBuilder()
                     .withMountPath(volumeClaimModel.getMountPath())

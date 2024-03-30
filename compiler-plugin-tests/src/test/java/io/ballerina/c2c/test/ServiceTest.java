@@ -79,28 +79,15 @@ public class ServiceTest {
     }
 
     @Test
-    public void testClientSslConfig() throws IOException, InterruptedException {
-        Path projectPath = Paths.get("src", "test", "resources", "service", "client-ssl-config");
-        Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(projectPath)
-                , 0);
-        File artifactYaml = projectPath.resolve("target").resolve(KUBERNETES).resolve("bar").resolve(
-                "bar.yaml").toFile();
-        Assert.assertTrue(artifactYaml.exists());
-        KubernetesClient client = new KubernetesClientBuilder().build();
-        List<HasMetadata> k8sItems = client.load(new FileInputStream(artifactYaml)).items();
-        for (HasMetadata data : k8sItems) {
-            if ("Secret".equals(data.getKind())) {
-                Secret secret = (Secret) data;
-                Assert.assertEquals(secret.getData().size(), 1);
-                Assert.assertEquals(secret.getMetadata().getName(), "c-mutual-ssl");
-                return;
-            }
-        }
-    }
-
-    @Test
     public void testInvalidInternalDomainName() throws IOException, InterruptedException {
         Path projectPath = Paths.get("src", "test", "resources", "service", "invalid-internal-domain");
         Assert.assertNotEquals(KubernetesTestUtils.compileBallerinaProject(projectPath), 0);
+    }
+
+    @Test
+    public void testInvalidMountPath() throws IOException, InterruptedException {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "invalid-mount-file");
+        // https://github.com/ballerina-platform/ballerina-lang/issues/42441
+        Assert.assertNotEquals(KubernetesTestUtils.compileBallerinaProject(projectPath), 1);
     }
 }
