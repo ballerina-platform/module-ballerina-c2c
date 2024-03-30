@@ -78,7 +78,7 @@ public class MultipleConfigTest {
                         case "config-config-map":
                             ballerinaConf = (ConfigMap) data;
                             break;
-                        case "hello-data-txt":
+                        case "hello-data-txtcfg0":
                             dataMap = (ConfigMap) data;
                             break;
                         default:

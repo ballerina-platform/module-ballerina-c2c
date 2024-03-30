@@ -26,6 +26,7 @@ import io.ballerina.c2c.DockerGenConstants;
 import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
+import io.ballerina.c2c.models.ConfigMapModel;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.DockerModel;
@@ -33,6 +34,7 @@ import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.KubernetesModel;
+import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.util.C2CDiagnosticCodes;
 import io.ballerina.projects.Package;
 import io.ballerina.toml.api.Toml;
@@ -54,6 +56,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -244,6 +247,16 @@ public class KubernetesUtils {
         return Optional.ofNullable(filename)
                 .filter(f -> f.contains("."))
                 .map(f -> f.substring(filename.lastIndexOf(".") + 1));
+    }
+
+    public static String getFileNameOfSecret(SecretModel secretModel) {
+        Map<String, String> data = secretModel.getData();
+        return data.keySet().iterator().next();
+    }
+
+    public static String getFileNameOfConfigMap(ConfigMapModel configMapModel) {
+        Map<String, String> data = configMapModel.getData();
+        return data.keySet().iterator().next();
     }
 
     public static void resolveDockerToml(KubernetesModel model) throws KubernetesPluginException {

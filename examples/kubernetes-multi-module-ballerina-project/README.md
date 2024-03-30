@@ -10,11 +10,12 @@ This segment shows how a c2c segment is mapped into cloud element.
 ```toml
 [[cloud.config.maps]]
 file="./menus/tea.json" # Path of the external file 
-mount_path="/home/ballerina/menus/tea.json" # Path of the file in the container
+mount_dir="/home/ballerina/menus" # Dir of the file in the container
 
 [[cloud.config.maps]]
 file="./menus/coffe.json" # Path of the external file 
-mount_path="/home/ballerina/menus/coffe.json" # Path of the file in the container
+mount_dir="/home/ballerina/menus" # Dir of the file in the container
+
 ```
 
 2. Kubernetes YAML file segment
@@ -65,22 +66,21 @@ spec:
           .
           .
         volumeMounts:
-        - mountPath: "/home/ballerina/menus/tea.json"
-          name: "cafe-tea-json-volume"
-          readOnly: true
-          subPath: "tea.json"
-        - mountPath: "/home/ballerina/menus/coffe.json"
-          name: "cafe-coffe-json-volume"
-          readOnly: true
-          subPath: "coffe.json"
-      nodeSelector: {}
+          - mountPath: "/home/ballerina/menus/tea.json"
+            name: "cafe-tea-jsoncfg0-volume"
+            readOnly: true
+            subPath: "tea.json"
+          - mountPath: "/home/ballerina/menus/coffe.json"
+            name: "cafe-coffe-jsoncfg1-volume"
+            readOnly: true
+            subPath: "coffe.json"
       volumes:
-      - configMap:
-          name: "cafe-tea-json"
-        name: "cafe-tea-json-volume"
-      - configMap:
-          name: "cafe-coffe-json"
-        name: "cafe-coffe-json-volume"
+        - configMap:
+            name: "cafe-tea-jsoncfg0"
+          name: "cafe-tea-jsoncfg0-volume"
+        - configMap:
+            name: "cafe-coffe-jsoncfg1"
+          name: "cafe-coffe-jsoncfg1-volume"
 ```
 	  
   ConfigMap `volumes` are created and are mounted as `volumeMounts` in the container.

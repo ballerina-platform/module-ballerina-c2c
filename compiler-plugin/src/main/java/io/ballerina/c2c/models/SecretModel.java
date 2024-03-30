@@ -33,8 +33,10 @@ public class SecretModel extends KubernetesModel {
     private boolean readOnly;
     private boolean isBallerinaConf;
     private int defaultMode;
+    private boolean dir;
 
     public SecretModel() {
         this.readOnly = true;
+        this.dir = false;
     }
 }

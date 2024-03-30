@@ -6,8 +6,8 @@ tag="1.0.0"  # Tag of the container
 
 [[cloud.config.maps]]
     file="./menus/tea.json" # Path of the external file 
-    mount_path="/home/ballerina/menus/tea.json" # Path of the file in the container
+    mount_dir="/home/ballerina/menus" # Path of the file in the container
 
 [[cloud.config.maps]]
     file="./menus/coffe.json" # Path of the external file 
-    mount_path="/home/ballerina/menus/coffe.json" # Path of the file in the container
+    mount_dir="/home/ballerina/menus" # Path of the file in the container

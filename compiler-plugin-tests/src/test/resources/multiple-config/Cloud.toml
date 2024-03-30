@@ -5,7 +5,7 @@ tag="v1"
 
 [[cloud.config.maps]]
     file="./conf/data.txt"
-    mount_path="/home/ballerina/data"
+    mount_dir="/home/ballerina/data"
 [[cloud.config.files]]
     file="./conf/Config1.toml"
 [[cloud.config.files]]
@@ -13,8 +13,8 @@ tag="v1"
 
 [[cloud.secret.files]]
 file="resource/public.crt"
-mount_path="/home/ballerina/resource/public.crt"
+mount_dir="/home/ballerina/resource"
 
 [[cloud.secret.files]]
 file="resource/private.key"
-mount_path="/home/ballerina/resource/private.key"
+mount_dir="/home/ballerina/resource"

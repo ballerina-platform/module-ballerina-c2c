@@ -7,11 +7,11 @@ This segment shows how a c2c segment is mapped into cloud element.
 1. ```Cloud.toml``` segment
 ```toml
 [[cloud.secret.files]]
-file="./conf/data.txt" # External file path to mount as a secret volume
-mount_path="/home/ballerina/data" # Path of the file within the container
+file="./data/data.txt" # Path to the secret file
+mount_dir="./data" # Path of the file within the container
 
-[[cloud.secret.files]]
-file="./conf/Config.toml" # External file path to mount as a secret volume
+[[cloud.config.secrets]]
+file="./data/Config.toml" # Path to the secret Config.toml
 
 ```
 2. Kubernetes YAML file segment
@@ -19,18 +19,17 @@ file="./conf/Config.toml" # External file path to mount as a secret volume
 apiVersion: "v1"
 kind: "Secret"
 metadata:
-  name: "hello-data-txt"
+  name: "config-secret"
 data:
-  data.txt: "TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQu"
+  Config.toml: "W2hlbGxvLmhlbGxvXQpncmVldGluZyA9ICJoZWxsbyIK"
 ---
 apiVersion: "v1"
 kind: "Secret"
 metadata:
-  name: "hello-ballerina-conf-secret"
+  name: "hello-data-txt-secret0"
 data:
-  Config.toml: "W2hlbGxvLmhlbGxvXQp1c2VycyA9ICJqb2huQGJhbGxlcmluYS5jb20samFuZUBiYWxsZXJpbmEuY29tIgpncm91cHMgPSAiYXBpbSxlc2IiCg=="
-
-
+  data.txt: "TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQu"
+---
 ```
    A kubernetes `Secret` component is created with the content of files.
 
@@ -54,21 +53,21 @@ spec:
       .
       .
       .
-        volumeMounts:
-        - mountPath: "/home/ballerina/data"
-          name: "hello-data-txt-volume"
-          readOnly: true
-        - mountPath: "/home/ballerina/conf/"
-          name: "hello-ballerina-conf-secret-volume"
-          readOnly: false
-      nodeSelector: {}
+      volumeMounts:
+      - mountPath: "/home/ballerina/secrets/"
+        name: "config-secret-volume"
+        readOnly: true
+      - mountPath: "/home/ballerina/./data/data.txt"
+        name: "hello-data-txt-secret0-volume"
+        readOnly: true
+        subPath: "data.txt"
       volumes:
-      - name: "hello-data-txt-volume"
-        secret:
-          secretName: "hello-data-txt"
-      - name: "hello-ballerina-conf-secret-volume"
-        secret:
-          secretName: "hello-ballerina-conf-secret"
+        - name: "config-secret-volume"
+          secret:
+            secretName: "config-secret"
+        - name: "hello-data-txt-secret0-volume"
+          secret:
+            secretName: "hello-data-txt-secret0"
 ```
 
    `volume` and `volumeMount` are used to mount the secret to the container.

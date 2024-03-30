@@ -42,8 +42,6 @@ import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -183,31 +181,28 @@ public class JobHandler extends AbstractArtifactHandler {
     private List<VolumeMount> populateVolumeMounts() {
         List<VolumeMount> volumeMounts = new ArrayList<>();
         for (SecretModel secretModel : dataHolder.getSecretModelSet()) {
-            VolumeMount volumeMount = new VolumeMountBuilder()
+            VolumeMountBuilder volumeMountBuilder = new VolumeMountBuilder()
                     .withMountPath(secretModel.getMountPath())
                     .withName(secretModel.getName() + "-volume")
-                    .withReadOnly(secretModel.isReadOnly())
-                    .build();
-            volumeMounts.add(volumeMount);
+                    .withReadOnly(secretModel.isReadOnly());
+
+            if ((!secretModel.isDir()) && (!secretModel.isBallerinaConf())) {
+                volumeMountBuilder.withSubPath(KubernetesUtils.getFileNameOfSecret(secretModel));
+            }
+
+            volumeMounts.add(volumeMountBuilder.build());
         }
         for (ConfigMapModel configMapModel : dataHolder.getConfigMapModelSet()) {
             final String mountPath = configMapModel.getMountPath();
-            if (mountPath != null) {
-                VolumeMount volumeMount = new VolumeMountBuilder()
-                        .withMountPath(mountPath)
-                        .withName(configMapModel.getName() + "-volume")
-                        .withReadOnly(configMapModel.isReadOnly())
-                        .build();
+            VolumeMountBuilder volumeMountBuilder = new VolumeMountBuilder()
+                    .withMountPath(mountPath)
+                    .withName(configMapModel.getName() + "-volume")
+                    .withReadOnly(configMapModel.isReadOnly());
 
-                if (KubernetesUtils.getExtension(mountPath).isPresent()) {
-                    // Add file mount as sub paths.
-                    final Path fileName = Paths.get(mountPath).getFileName();
-                    if (null != fileName) {
-                        volumeMount.setSubPath(fileName.toString());
-                    }
-                }
-                volumeMounts.add(volumeMount);
+            if ((!configMapModel.isDir()) && (!configMapModel.isBallerinaConf())) {
+                volumeMountBuilder.withSubPath(KubernetesUtils.getFileNameOfConfigMap(configMapModel));
             }
+            volumeMounts.add(volumeMountBuilder.build());
         }
         return volumeMounts;
     }

@@ -42,6 +42,7 @@ import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
 import org.apache.commons.codec.binary.Base64;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -216,6 +217,7 @@ public class CloudTomlResolver {
     }
 
     private void resolveConfigSecretToml(Toml toml) throws KubernetesPluginException {
+        //TODO change spec
         List<Toml> secrets = toml.getTables("cloud.config.secrets");
         for (int i = 0, secretsSize = secrets.size(); i < secretsSize; i++) {
             Toml secret = secrets.get(i);
@@ -270,6 +272,7 @@ public class CloudTomlResolver {
                 configMapModel.setData(dataMap);
                 configMapModel.setBallerinaConf(true);
                 configMapModel.setReadOnly(false);
+                configMapModel.setDir(false);
                 dataHolder.addConfigMaps(Collections.singleton(configMapModel));
             } else {
                 ConfigMapModel existingConfigMap = configMap.get();
@@ -300,15 +303,40 @@ public class CloudTomlResolver {
             for (int i = 0, secretsSize = secrets.size(); i < secretsSize; i++) {
                 Toml secret = secrets.get(i);
                 Path path = Paths.get(Objects.requireNonNull(TomlHelper.getString(secret, "file")));
-                Path mountPath = Paths.get(Objects.requireNonNull(TomlHelper.getString(secret, "mount_path",
+                Path mountPath = Paths.get(Objects.requireNonNull(TomlHelper.getString(secret, "mount_dir",
                         getSecretMountPath(i))));
                 final Path fileName = validatePaths(path, mountPath);
+                File file = path.toFile();
+                if (!file.exists()) {
+                    Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(
+                            C2CDiagnosticCodes.PATH_CONTENT_READ_FAILED, new NullLocation(), path.toString());
+                    throw new KubernetesPluginException(diagnostic);
+                }
                 SecretModel secretModel = new SecretModel();
-                secretModel.setName(deploymentName + "-" + getValidName(fileName.toString()));
+                if (!mountPath.isAbsolute()) {
+                    mountPath = Paths.get(BALLERINA_HOME, mountPath.toString());
+                }
+
+                String mountPathSr = mountPath.toString();
+                if (file.isDirectory()) {
+                    secretModel.setDir(true);
+                } else {
+                    mountPathSr = getModifiedMountPath(mountPath.toString(), fileName.toString());
+                }
+
+                secretModel.setName(deploymentName + "-" + getValidName(fileName.toString()) + SECRET_POSTFIX + i);
                 secretModel.setData(getDataForSecret(path.toString()));
-                secretModel.setMountPath(mountPath.toString());
+                secretModel.setMountPath(mountPathSr);
                 dataHolder.addSecrets(Collections.singleton(secretModel));
             }
+        }
+    }
+
+    private String getModifiedMountPath(String mountDir, String fileName) {
+        if (mountDir.endsWith("/")) {
+            return mountDir + fileName;
+        } else {
+            return mountDir + "/" + fileName;
         }
     }
 
@@ -326,14 +354,30 @@ public class CloudTomlResolver {
         List<Toml> configFiles = toml.getTables("cloud.config.maps");
         if (configFiles.size() != 0) {
             final String deploymentName = kubernetesModel.getName().replace(DEPLOYMENT_POSTFIX, "");
-            for (Toml configFile : configFiles) {
+            for (int i = 0; i < configFiles.size(); i++) {
+                Toml configFile = configFiles.get(i);
                 Path path = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "file")));
-                Path mountPath = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "mount_path")));
+                Path mountPath = Paths.get(Objects.requireNonNull(TomlHelper.getString(configFile, "mount_dir")));
                 final Path fileName = validatePaths(path, mountPath);
                 ConfigMapModel configMapModel = new ConfigMapModel();
-                configMapModel.setName(deploymentName + "-" + getValidName(fileName.toString()));
+                if (!mountPath.isAbsolute()) {
+                    mountPath = Paths.get(BALLERINA_HOME, mountPath.toString());
+                }
+                File file = path.toFile();
+                if (!file.exists()) {
+                    Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(
+                            C2CDiagnosticCodes.PATH_CONTENT_READ_FAILED, new NullLocation(), path.toString());
+                    throw new KubernetesPluginException(diagnostic);
+                }
+                String mountPathSr = mountPath.toString();
+                if (file.isDirectory()) {
+                    configMapModel.setDir(true);
+                } else {
+                    mountPathSr = getModifiedMountPath(mountPath.toString(), fileName.toString());
+                }
+                configMapModel.setName(deploymentName + "-" + getValidName(fileName.toString()) + "cfg" + i);
                 configMapModel.setData(getDataForConfigMap(path.toString()));
-                configMapModel.setMountPath(mountPath.toString());
+                configMapModel.setMountPath(mountPathSr);
                 configMapModel.setBallerinaConf(false);
                 dataHolder.addConfigMaps(Collections.singleton(configMapModel));
             }
@@ -380,9 +424,25 @@ public class CloudTomlResolver {
         if (!dataFilePath.isAbsolute()) {
             dataFilePath = KubernetesContext.getInstance().getDataHolder().getSourceRoot().resolve(dataFilePath);
         }
-        String key = String.valueOf(dataFilePath.getFileName());
-        String content = new String(KubernetesUtils.readFileContent(dataFilePath), StandardCharsets.UTF_8);
-        dataMap.put(key, content);
+        File file = dataFilePath.toFile();
+        if (!file.isDirectory()) {
+            String key = String.valueOf(dataFilePath.getFileName());
+            String content = new String(KubernetesUtils.readFileContent(dataFilePath), StandardCharsets.UTF_8);
+            dataMap.put(key, content);
+            return dataMap;
+        }
+        File[] files = file.listFiles();
+        if (files == null) {
+            return dataMap;
+        }
+        for (File f : files) {
+            if (f.isDirectory()) {
+                continue;
+            }
+            String key = f.getName();
+            String content = new String(KubernetesUtils.readFileContent(dataFilePath), StandardCharsets.UTF_8);
+            dataMap.put(key, content);
+        }
         return dataMap;
     }
 
@@ -392,9 +452,26 @@ public class CloudTomlResolver {
         if (!dataFilePath.isAbsolute()) {
             dataFilePath = KubernetesContext.getInstance().getDataHolder().getSourceRoot().resolve(dataFilePath);
         }
-        String key = String.valueOf(dataFilePath.getFileName());
-        String content = Base64.encodeBase64String(KubernetesUtils.readFileContent(dataFilePath));
-        dataMap.put(key, content);
+        File file = dataFilePath.toFile();
+        if (!file.isDirectory()) {
+            // Read all files
+            String key = String.valueOf(dataFilePath.getFileName());
+            String content = Base64.encodeBase64String(KubernetesUtils.readFileContent(dataFilePath));
+            dataMap.put(key, content);
+            return dataMap;
+        }
+        File[] files = file.listFiles();
+        if (files == null) {
+            return dataMap;
+        }
+        for (File f : files) {
+            if (f.isDirectory()) {
+                continue;
+            }
+            String key = f.getName();
+            String content = Base64.encodeBase64String(KubernetesUtils.readFileContent(f.toPath()));
+            dataMap.put(key, content);
+        }
         return dataMap;
     }
 
