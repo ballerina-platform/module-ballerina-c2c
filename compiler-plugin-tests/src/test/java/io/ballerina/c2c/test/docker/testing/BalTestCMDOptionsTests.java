@@ -54,8 +54,8 @@ public class BalTestCMDOptionsTests {
         String firstString = "error [k8s plugin]: k8s cloud build only supported for build\n";
         String endString = " io.ballerina.c2c.tasks.C2CCodeGeneratedTask perform";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, "--cloud=k8s", new String[0]);
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithK8s.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -67,8 +67,8 @@ public class BalTestCMDOptionsTests {
         String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--code-coverage"});
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithCodeCoverage.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -80,8 +80,8 @@ public class BalTestCMDOptionsTests {
         String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--test-report"});
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithTestReport.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -93,8 +93,8 @@ public class BalTestCMDOptionsTests {
         String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--rerun-failed"});
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithRerunFailed.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -172,10 +172,10 @@ public class BalTestCMDOptionsTests {
     public void testCloudFlagWithListGroupsForProjectWithNoGroups() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("project-with-no-groups");
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[]{"--list-groups"});
+        cleaningUpDir = projectDir;
         String firstString = "Building the docker image\n";
         String endString = "\nRunning the generated Docker image";
         actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
-        cleaningUpDir = projectDir;
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithListGroupsForProjectWithNoGroups.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -184,10 +184,10 @@ public class BalTestCMDOptionsTests {
     public void testCloudFlagWithListGroupsForProjectWithGroups() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("project-with-groups");
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[]{"--list-groups"});
+        cleaningUpDir = projectDir;
         String firstString = "Building the docker image\n";
         String endString = "\nRunning the generated Docker image";
         actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
-        cleaningUpDir = projectDir;
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithListGroupsForProjectWithGroups.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -195,11 +195,12 @@ public class BalTestCMDOptionsTests {
     @Test
     public void testCloudFlagWithSpecificGroups() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("project-with-groups");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[]{"--groups", "g1,g2"});
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--groups", "g1,g2"});
+        cleaningUpDir = projectDir;
         String firstString = "Building the docker image\n";
         String endString = "\nRunning the generated Docker image";
         actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
-        cleaningUpDir = projectDir;
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithSpecificGroups.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -207,11 +208,12 @@ public class BalTestCMDOptionsTests {
     @Test
     public void testCloudFlagWithDisabledGroups() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("project-with-groups");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[]{"--disable-groups", "g1,g3"});
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                new String[]{"--disable-groups", "g1,g3"});
+        cleaningUpDir = projectDir;
         String firstString = "Building the docker image\n";
         String endString = "\nRunning the generated Docker image";
         actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
-        cleaningUpDir = projectDir;
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithDisabledGroups.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -221,10 +223,10 @@ public class BalTestCMDOptionsTests {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--tests", "testMain,testMod"});
+        cleaningUpDir = projectDir;
         String firstString = "Building the docker image\n";
         String endString = "\nRunning the generated Docker image";
         actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
-        cleaningUpDir = projectDir;
         TestUtils.assertOutput("SelectedFunctionTest-testCloudFlagWithSingleFunctionExecution.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -234,10 +236,10 @@ public class BalTestCMDOptionsTests {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--tests", "cloud_project_with_modules:testMain"});
+        cleaningUpDir = projectDir;
         String firstString = "Building the docker image\n";
         String endString = "\nRunning the generated Docker image";
         actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
-        cleaningUpDir = projectDir;
         TestUtils.assertOutput("SelectedFunctionTest-testCloudFlagWithRootPackageTests.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -247,10 +249,10 @@ public class BalTestCMDOptionsTests {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--tests", "cloud_project_with_modules:*"});
+        cleaningUpDir = projectDir;
         String firstString = "Building the docker image\n";
         String endString = "\nRunning the generated Docker image";
         actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
-        cleaningUpDir = projectDir;
         TestUtils.assertOutput("SelectedFunctionTest-testCloudFlagWithExecutionOfOnlyRootPackageTests.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -260,10 +262,10 @@ public class BalTestCMDOptionsTests {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--tests", "cloud_project_with_modules.mod1:*"});
+        cleaningUpDir = projectDir;
         String firstString = "Building the docker image\n";
         String endString = "\nRunning the generated Docker image";
         actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
-        cleaningUpDir = projectDir;
         TestUtils.assertOutput("SelectedFunctionTest-testCloudFlagWithExecutionOfModuleTests.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -273,10 +275,10 @@ public class BalTestCMDOptionsTests {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-project-with-modules");
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--tests", "cloud_project_with_modules.mod2:testMod2Two,cloud_project_with_modules:*"});
+        cleaningUpDir = projectDir;
         String firstString = "Building the docker image\n";
         String endString = "\nRunning the generated Docker image";
         actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
-        cleaningUpDir = projectDir;
         TestUtils.assertOutput("SelectedFunctionTest-testCloudFlagWithExecutionOfMultipleSpecifiedTests.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -289,8 +291,8 @@ public class BalTestCMDOptionsTests {
         String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{projectDir.resolve("single-test-file-execution.bal").toAbsolutePath().toString()});
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         TestUtils.assertOutput("SelectedFunctionTest-testCloudFlagWithSpecificTestBalFile.txt",
                 COMMAND_OUTPUTS, actualOutcome);
         //Check for the existence of the target directory (It shouldn't exist)
@@ -304,8 +306,8 @@ public class BalTestCMDOptionsTests {
         String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"-CmyVal=2"});
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithConfigurableValues.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -317,8 +319,8 @@ public class BalTestCMDOptionsTests {
         String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[0]);
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithoutProvidingConfigurableValues.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -330,8 +332,8 @@ public class BalTestCMDOptionsTests {
         String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[0]);
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithConfigFiles.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -343,8 +345,8 @@ public class BalTestCMDOptionsTests {
         String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"-Cname=Goku"});
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
 
         // Cannot use the TestUtils.assertOutput method here as the test fails
         Assert.assertTrue(actualOutcome.contains("0 passing"));
@@ -361,8 +363,8 @@ public class BalTestCMDOptionsTests {
         //TODO: check the argument
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--tests", "fruitsDataProviderTest#'banana'"});
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithDataProviderMap.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
@@ -374,8 +376,8 @@ public class BalTestCMDOptionsTests {
         String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--tests", "stringDataProviderTest#1"});
-        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         cleaningUpDir = projectDir;
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
         TestUtils.assertOutput("BasicCasesTest-testCloudFlagWithDataProviderArray.txt",
                 COMMAND_OUTPUTS, actualOutcome);
     }
