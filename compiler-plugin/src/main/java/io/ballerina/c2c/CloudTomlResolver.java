@@ -448,7 +448,7 @@ public class CloudTomlResolver {
                 continue;
             }
             String key = f.getName();
-            String content = getContent(KubernetesUtils.readFileContent(dataFilePath), isSecret);
+            String content = getContent(KubernetesUtils.readFileContent(f.toPath()), isSecret);
             dataMap.put(key, content);
         }
         return dataMap;
