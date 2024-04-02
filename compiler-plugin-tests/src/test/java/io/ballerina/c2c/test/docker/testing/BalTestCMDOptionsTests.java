@@ -382,6 +382,18 @@ public class BalTestCMDOptionsTests {
                 COMMAND_OUTPUTS, actualOutcome);
     }
 
+    @Test
+    public void testCloudFlagForProjectsWithResourceFiles() throws IOException, InterruptedException {
+        Path projectDir = SOURCE_DIR_PATH.resolve("project-with-resources");
+        String firstString = "Building the docker image\n";
+        String endString = "\nRunning the generated Docker image";
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
+        cleaningUpDir = projectDir;
+        actualOutcome = TestUtils.replaceVaryingString(firstString, endString, actualOutcome);
+        TestUtils.assertOutput("BasicCasesTest-testCloudFlagForProjectsWithResourceFiles.txt",
+                COMMAND_OUTPUTS, actualOutcome);
+    }
+
     @AfterMethod
     public void cleanUp() throws IOException, IllegalStateException {
         if (cleaningUpDir == null) {

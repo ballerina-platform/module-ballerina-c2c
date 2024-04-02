@@ -1,0 +1,1 @@
+hello from module test resource file
