@@ -23,9 +23,19 @@ listener http:Listener helloWorldEP = new(9090, {
 });
 
 ```
-   Above `secureSocket`,`mutualSsl` components can be mapped to the Kubernetes `Secret` componenet without explicitly being mentioned in `Cloud.toml`. This behavoiur is applicable to other SSL related stuffs.
-   
-2. Kubernetes YAML file segment
+
+2. Cloud.toml
+```toml
+[[cloud.secret.files]]
+file="resource/ballerinaKeystore.p12"
+mount_dir="/home/ballerina/resource
+
+[[cloud.secret.files]]
+file="resource1/ballerinaKeystore.p12"
+mount_dir="/home/ballerina/resource1"
+
+```
+3. Kubernetes YAML file segment
 ```yaml
 apiVersion: "v1"
 kind: "Secret"

@@ -41,7 +41,7 @@ import java.util.List;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
-import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getCommand;
+import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getEntryPoint;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getExposedPorts;
 
 /**
@@ -118,7 +118,7 @@ public class Sample11Test extends SampleTest {
         Assert.assertEquals(ports.size(), 1);
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
-        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[java, -Xdiag, -cp, " +
+        Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(), "[java, -Xdiag, -cp, " +
                 "hello-hello-0.0.1.jar:jars/*, hello.hello.0.$_init]");
     }
 

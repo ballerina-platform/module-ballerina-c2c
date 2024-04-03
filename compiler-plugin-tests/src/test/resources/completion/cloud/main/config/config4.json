@@ -20,11 +20,11 @@
             "insertText": "[settings]"
         },
         {
-            "label": "mount_path",
+            "label": "mount_dir",
             "kind": "Snippet",
             "detail": "String",
             "sortText": "A",
-            "insertText": "mount_path=\"${1:}\"",
+            "insertText": "mount_dir=\"${1:}\"",
             "insertTextFormat": "Snippet"
         },
         {

@@ -1,0 +1,6 @@
+[[cloud.secret.files]]
+file="./resources"
+mount_dir="/home/ballerina/resources"
+
+[settings]
+buildImage = false

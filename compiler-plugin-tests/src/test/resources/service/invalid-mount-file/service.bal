@@ -15,21 +15,9 @@
 // under the License.
 
 import ballerina/http;
-import ballerina/log;
 
-http:Client c = check new ("https://localhost:9091",
-    secureSocket = {
-        cert: "./resources/public.crt"
-    }
-);
-
-service /helloWorld on new http:Listener(9090) {
-    isolated resource function get sayHello(http:Caller caller, http:Request request) {
-        http:Response response = new;
-        response.setTextPayload("Hello, World from service helloWorld ! ");
-        var responseResult = caller->respond(response);
-        if (responseResult is error) {
-            log:printError("error responding back to client.", 'error = responseResult);
-        }
+service http:Service /probe on new http:Listener(9091) {
+    resource function get readyz (http:Caller caller) returns error? {
+        check caller->respond("Resource is Ready");
     }
 }

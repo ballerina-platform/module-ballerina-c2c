@@ -42,7 +42,7 @@ import java.util.List;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
-import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getCommand;
+import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getEntryPoint;
 
 /**
  * Test cases for Multiple Config files.
@@ -121,7 +121,7 @@ public class MixedConfigJobTest {
         // Validate config file
         Assert.assertEquals(container.getEnv().get(0).getName(), "BAL_CONFIG_FILES");
         Assert.assertEquals(container.getEnv().get(0).getValue(),
-                "/home/ballerina/conf1/Config1.toml:/home/ballerina/conf/Config.toml:" +
+                "/home/ballerina/conf/Config.toml:/home/ballerina/conf1/Config1.toml:" +
                         "/home/ballerina/secrets/mysql-secrets.toml:/home/ballerina/secrets1/additional-secrets.toml:");
     }
 
@@ -157,7 +157,7 @@ public class MixedConfigJobTest {
 
     @Test
     public void validateDockerImage() {
-        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[java, -Xdiag, -cp," +
+        Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(), "[java, -Xdiag, -cp," +
                 " anjana-mix_configs_job-0.1.0.jar:jars/*, anjana.mix_configs_job.0.$_init]");
     }
 

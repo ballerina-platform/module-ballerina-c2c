@@ -17,6 +17,7 @@
  */
 package io.ballerina.c2c.utils;
 
+import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
@@ -111,6 +112,6 @@ public class NativeDockerGenerator extends DockerGenerator {
 
     @Override
     protected void appendUser(StringBuilder dockerfileContent) {
-        dockerfileContent.append("WORKDIR ").append("/home/ballerina").append(LINE_SEPARATOR);
+        dockerfileContent.append("WORKDIR ").append(KubernetesConstants.BALLERINA_HOME).append(LINE_SEPARATOR);
     }
 }

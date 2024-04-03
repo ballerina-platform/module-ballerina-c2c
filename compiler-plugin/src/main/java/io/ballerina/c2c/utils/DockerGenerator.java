@@ -19,6 +19,7 @@
 package io.ballerina.c2c.utils;
 
 import io.ballerina.c2c.DockerGenConstants;
+import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
@@ -265,6 +266,6 @@ public class DockerGenerator {
     }
 
     private String getWorkDir() {
-        return "/home/ballerina";
+        return KubernetesConstants.BALLERINA_HOME;
     }
 }

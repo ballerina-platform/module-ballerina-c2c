@@ -1,0 +1,11 @@
+[container.image]
+repository= "anuruddhal" # optional default is local
+name="hello-api" # optional
+tag="sample111"  # default is latest
+
+[[cloud.config.maps]]
+file = "./resource"
+mount_dir = "./resource"
+
+[settings]
+buildImage = false
