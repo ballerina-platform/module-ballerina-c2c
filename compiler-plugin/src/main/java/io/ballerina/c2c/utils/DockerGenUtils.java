@@ -232,13 +232,8 @@ public class DockerGenUtils {
         return new String(chArr);
     }
 
-
-    public static boolean isWindowsBuild() {
-        return Boolean.parseBoolean(System.getenv(DockerGenConstants.ENABLE_WINDOWS_BUILD));
-    }
-
     public static String getWorkDir() {
-        return isWindowsBuild() ? "C:\\ballerina\\home\\" : "/home/ballerina";
+        return "/home/ballerina";
     }
 
     public static String getTestSuiteJsonCopiedDir() {
