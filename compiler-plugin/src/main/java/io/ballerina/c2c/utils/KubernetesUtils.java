@@ -286,14 +286,15 @@ public class KubernetesUtils {
             defaultBuilderCmd.append(" -H:+StaticExecutableWithDynamicLibC");
         }
         dockerModel.setBuilderCmd(defaultBuilderCmd.toString());
+        String defaultBaseImage = DockerGenConstants.JRE_SLIM_BASE;
+        if (dockerModel.isGraalVMBuild()) {
+            defaultBaseImage = DockerGenConstants.NATIVE_RUNTIME_BASE_IMAGE;
+        }
+        dockerModel.setBaseImage(defaultBaseImage);
         if (toml != null) {
             dockerModel
                     .setRegistry(TomlHelper.getString(toml, containerImage + ".repository", null));
             dockerModel.setTag(TomlHelper.getString(toml, containerImage + ".tag", dockerModel.getTag()));
-            String defaultBaseImage = DockerGenConstants.JRE_SLIM_BASE;
-            if (dockerModel.isGraalVMBuild()) {
-                defaultBaseImage = DockerGenConstants.NATIVE_RUNTIME_BASE_IMAGE;
-            }
             dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", defaultBaseImage));
             dockerModel.setEntryPoint(TomlHelper.getString(toml, containerImage + ".entrypoint",
                     dockerModel.getEntryPoint()));

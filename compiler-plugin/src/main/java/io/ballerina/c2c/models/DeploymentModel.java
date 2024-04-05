@@ -17,7 +17,6 @@
  */
 package io.ballerina.c2c.models;
 
-import io.ballerina.c2c.DockerGenConstants;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -48,7 +47,6 @@ public class DeploymentModel extends KubernetesModel {
     private String namespace;
     private String image;
     private boolean buildImage;
-    private String baseImage;
     private String dockerHost;
     private String dockerCertPath;
     private List<ContainerPort> ports;
@@ -70,7 +68,6 @@ public class DeploymentModel extends KubernetesModel {
         this.replicas = 1;
         this.envVars = new ArrayList<>();
         this.buildImage = true;
-        this.baseImage = DockerGenConstants.JRE_SLIM_BASE;
         this.labels = new LinkedHashMap<>();
         this.nodeSelector = new LinkedHashMap<>();
         this.ports = new ArrayList<>();
