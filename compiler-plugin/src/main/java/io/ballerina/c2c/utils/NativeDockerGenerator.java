@@ -17,6 +17,7 @@
  */
 package io.ballerina.c2c.utils;
 
+import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
@@ -98,10 +99,10 @@ public class NativeDockerGenerator extends DockerGenerator {
         dockerfileContent.append("COPY --from=build /app/build/").append(executableName).append(" .")
                 .append(LINE_SEPARATOR).append(LINE_SEPARATOR);
 
-        if (isBlank(this.dockerModel.getCmd())) {
-            dockerfileContent.append("CMD [\"./").append(executableName).append("\"]").append(LINE_SEPARATOR);
+        if (isBlank(this.dockerModel.getEntryPoint())) {
+            dockerfileContent.append("ENTRYPOINT [\"./").append(executableName).append("\"]").append(LINE_SEPARATOR);
         } else {
-            dockerfileContent.append(this.dockerModel.getCmd());
+            dockerfileContent.append(this.dockerModel.getEntryPoint());
         }
         if (!isBlank(this.dockerModel.getCommandArg())) {
             dockerfileContent.append(this.dockerModel.getCommandArg());
@@ -113,7 +114,7 @@ public class NativeDockerGenerator extends DockerGenerator {
 
     @Override
     protected void appendUser(StringBuilder dockerfileContent) {
-        dockerfileContent.append("WORKDIR ").append("/home/ballerina").append(LINE_SEPARATOR);
+        dockerfileContent.append("WORKDIR ").append(KubernetesConstants.BALLERINA_HOME).append(LINE_SEPARATOR);
     }
 
     @Override

@@ -44,13 +44,12 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 import static io.ballerina.c2c.DockerGenConstants.REGISTRY_SEPARATOR;
 import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_FILE_POSTFIX;
+import static io.ballerina.c2c.utils.KubernetesUtils.generateConfigMapVolumeMounts;
 import static io.ballerina.c2c.utils.KubernetesUtils.resolveDockerToml;
 
 /**
@@ -60,33 +59,8 @@ public class DeploymentHandler extends AbstractArtifactHandler {
 
     private List<VolumeMount> populateVolumeMounts(DeploymentModel deploymentModel) {
         List<VolumeMount> volumeMounts = new ArrayList<>();
-        for (SecretModel secretModel : deploymentModel.getSecretModels()) {
-            VolumeMount volumeMount = new VolumeMountBuilder()
-                    .withMountPath(secretModel.getMountPath())
-                    .withName(secretModel.getName() + "-volume")
-                    .withReadOnly(secretModel.isReadOnly())
-                    .build();
-            volumeMounts.add(volumeMount);
-        }
-        for (ConfigMapModel configMapModel : deploymentModel.getConfigMapModels()) {
-            final String mountPath = configMapModel.getMountPath();
-            if (mountPath != null) {
-                VolumeMount volumeMount = new VolumeMountBuilder()
-                        .withMountPath(mountPath)
-                        .withName(configMapModel.getName() + "-volume")
-                        .withReadOnly(configMapModel.isReadOnly())
-                        .build();
-
-                if (KubernetesUtils.getExtension(mountPath).isPresent()) {
-                    // Add file mount as sub paths.
-                    final Path fileName = Paths.get(mountPath).getFileName();
-                    if (null != fileName) {
-                        volumeMount.setSubPath(fileName.toString());
-                    }
-                }
-                volumeMounts.add(volumeMount);
-            }
-        }
+        volumeMounts.addAll(KubernetesUtils.generateSecretVolumeMounts(deploymentModel.getSecretModels()));
+        volumeMounts.addAll(generateConfigMapVolumeMounts(deploymentModel.getConfigMapModels()));
         for (PersistentVolumeClaimModel volumeClaimModel : deploymentModel.getVolumeClaimModels()) {
             VolumeMount volumeMount = new VolumeMountBuilder()
                     .withMountPath(volumeClaimModel.getMountPath())

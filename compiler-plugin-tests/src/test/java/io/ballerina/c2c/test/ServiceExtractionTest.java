@@ -15,10 +15,8 @@
  */
 package io.ballerina.c2c.test;
 
-import io.ballerina.c2c.util.ClientInfo;
 import io.ballerina.c2c.util.ListenerInfo;
 import io.ballerina.c2c.util.ProjectServiceInfo;
-import io.ballerina.c2c.util.SecureSocketConfig;
 import io.ballerina.c2c.util.ServiceInfo;
 import io.ballerina.projects.DiagnosticResult;
 import io.ballerina.projects.directory.BuildProject;
@@ -178,38 +176,6 @@ public class ServiceExtractionTest {
         Assert.assertTrue(isExpectedService(helloService.getServicePath().trim()));
         ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9090);
-        String keystore = helloListener.getConfig().get().getSecureSocketConfig().get().getCertFile();
-        Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
-    }
-
-    @Test
-    public void testClientTrustStoreModuleLevel() {
-        Path projectPath = Paths.get("src", "test", "resources", "service", "client-truststore-modulelevel");
-
-        BuildProject project = BuildProject.load(projectPath);
-        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
-        List<ClientInfo> clientList = projectServiceInfo.getClientList();
-
-        Assert.assertEquals(clientList.size(), 1);
-        ClientInfo clientInfo = clientList.get(0);
-        Assert.assertEquals(clientInfo.getName(), "nettyEP");
-        String keystore = clientInfo.getHttpsConfig().getMutualSSLConfig().get().getPath();
-        Assert.assertEquals(keystore, "./security/ballerinaTruststore.p12");
-    }
-
-    @Test
-    public void testClientTrustStoreBody() {
-        Path projectPath = Paths.get("src", "test", "resources", "service", "client-truststore-body");
-
-        BuildProject project = BuildProject.load(projectPath);
-        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
-        List<ClientInfo> clientList = projectServiceInfo.getClientList();
-
-        Assert.assertEquals(clientList.size(), 1);
-        ClientInfo clientInfo = clientList.get(0);
-        Assert.assertEquals(clientInfo.getName(), "nettyEP");
-        String keystore = clientInfo.getHttpsConfig().getMutualSSLConfig().get().getPath();
-        Assert.assertEquals(keystore, "./security/ballerinaTruststore.p12");
     }
 
     @Test
@@ -285,11 +251,6 @@ public class ServiceExtractionTest {
         Assert.assertEquals(helloService.getServicePath().trim(), "/foo");
         ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9090);
-        SecureSocketConfig config = helloListener.getConfig().orElseThrow().getSecureSocketConfig().orElseThrow();
-        String certFile = config.getCertFile();
-        String keyFile = config.getKeyFile();
-        Assert.assertEquals(certFile, "./resource/public.crt");
-        Assert.assertEquals(keyFile, "./resource/private.key");
     }
 
     @Test
@@ -305,11 +266,6 @@ public class ServiceExtractionTest {
         Assert.assertEquals(helloService.getServicePath().trim(), "/probe");
         ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9091);
-
-        String keystore = helloListener.getConfig().get().getSecureSocketConfig().get().getCertFile();
-        Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
-        String certPath = helloListener.getConfig().get().getSecureSocketConfig().get().getKeyFile();
-        Assert.assertEquals(certPath, "ballerina");
     }
 
     @Test
@@ -325,10 +281,6 @@ public class ServiceExtractionTest {
         Assert.assertEquals(helloService.getServicePath().trim(), "/hello");
         ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9095);
-        String keystore = helloListener.getConfig().get().getSecureSocketConfig().get().getCertFile();
-        Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
-        String certPath = helloListener.getConfig().get().getMutualSSLConfig().get().getPath();
-        Assert.assertEquals(certPath, "/path/to/public.crt");
     }
 
     @Test
@@ -344,8 +296,6 @@ public class ServiceExtractionTest {
         Assert.assertEquals(helloService.getServicePath().trim(), "/helloWorld");
         ListenerInfo helloListener = helloService.getListeners().get(0);
         Assert.assertEquals(helloListener.getPort(), 9090);
-        String keystore = helloListener.getConfig().get().getSecureSocketConfig().get().getPath();
-        Assert.assertEquals(keystore, "./security/ballerinaKeystore.p12");
     }
 
     @Test
@@ -366,15 +316,6 @@ public class ServiceExtractionTest {
         ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
         Assert.assertEquals(serviceList.size(), 0);
-    }
-
-    @Test
-    public void testClientWithoutTrustStore() {
-        Path projectPath = Paths.get("src", "test", "resources", "service", "client-no-truststore");
-        BuildProject project = BuildProject.load(projectPath);
-        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project);
-        List<ClientInfo> clientList = projectServiceInfo.getClientList();
-        Assert.assertEquals(clientList.size(), 0);
     }
 
     @Test

@@ -24,10 +24,8 @@ import org.ballerinalang.model.elements.PackageID;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -39,7 +37,6 @@ public class KubernetesDataHolder {
     private DockerModel dockerModel;
     private PodAutoscalerModel podAutoscalerModel;
     private List<ServiceModel> serviceModelList;
-    private Map<String, Set<SecretModel>> bListenerToSecretMap;
     private Set<SecretModel> secretModelSet;
     private Set<ConfigMapModel> configMapModelSet;
     private JobModel jobModel;
@@ -56,17 +53,12 @@ public class KubernetesDataHolder {
 
     KubernetesDataHolder() {
         this.serviceModelList = new ArrayList<>();
-        this.bListenerToSecretMap = new HashMap<>();
         this.secretModelSet = new HashSet<>();
         this.configMapModelSet = new HashSet<>();
         this.deploymentModel = new DeploymentModel();
         this.dockerModel = new DockerModel();
         this.ballerinaCloud = null;
         this.singleYaml = true;
-    }
-
-    public void addListenerSecret(String listenerName, Set<SecretModel> secretModel) {
-        this.bListenerToSecretMap.put(listenerName, secretModel);
     }
 
     public void addSecrets(Set<SecretModel> secrets) {

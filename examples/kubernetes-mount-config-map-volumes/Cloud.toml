@@ -4,13 +4,17 @@ name="hello-api" # Name of the container image
 tag="sample5" # Tag of the container 
 
 [[cloud.config.maps]]
-file="./conf/data.txt" # Path of the external file
-mount_path="/home/ballerina/data" # Path of the file in the container 
+file="./data/data.txt" # Path of the external file
+mount_dir="./data" # Dir of the file in the container
 
 [[cloud.config.files]]
-file="./conf/Config.toml" # Path of the external file
+file="./data/Config.toml" # Path of the external file
 name="sample5-config-map"
 
 [[cloud.config.secrets]]
 file="./mysql-secrets.toml"
 name="mysql-secrets"
+
+[[cloud.secret.files]]
+file="./resource"
+mount_dir="./resource"

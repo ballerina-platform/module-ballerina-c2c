@@ -76,10 +76,10 @@ public class Sample7Test extends SampleTest {
                     break;
                 case "ConfigMap":
                     switch (data.getMetadata().getName()) {
-                        case "cafe-tea-json":
+                        case "cafe-tea-jsoncfg0":
                             teaMenuConf = (ConfigMap) data;
                             break;
-                        case "cafe-coffe-json":
+                        case "cafe-coffe-jsoncfg1":
                             coffeMenuConf = (ConfigMap) data;
                             break;
                         default:

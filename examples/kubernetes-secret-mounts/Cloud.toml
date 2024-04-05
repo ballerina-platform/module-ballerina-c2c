@@ -4,8 +4,8 @@ name="hello-api" # Name of the container image
 tag="sample12" # Tag of the container
 
 [[cloud.secret.files]]
-file="./conf/data.txt" # External file path to mount as a secret volume
-mount_path="/home/ballerina/data" # Path of the file within the container
+file="./data/data.txt" # Path to the secret file
+mount_dir="./data" # Path of the file within the container
 
-[[cloud.secret.files]]
-file="./conf/Config.toml" # External file path to mount as a secret volume
+[[cloud.config.secrets]]
+file="./data/Config.toml" # Path to the secret Config.toml

@@ -26,6 +26,7 @@ import io.ballerina.c2c.DockerGenConstants;
 import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
+import io.ballerina.c2c.models.ConfigMapModel;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.DockerModel;
@@ -33,6 +34,7 @@ import io.ballerina.c2c.models.JobModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.KubernetesModel;
+import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.util.C2CDiagnosticCodes;
 import io.ballerina.cli.utils.DebugUtils;
 import io.ballerina.projects.Package;
@@ -42,6 +44,8 @@ import io.ballerina.tools.diagnostics.DiagnosticFactory;
 import io.ballerina.tools.diagnostics.DiagnosticInfo;
 import io.ballerina.tools.diagnostics.DiagnosticSeverity;
 import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import org.ballerinalang.model.elements.PackageID;
 import org.wso2.ballerinalang.compiler.util.Name;
 
@@ -58,10 +62,12 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -254,6 +260,16 @@ public class KubernetesUtils {
                 .map(f -> f.substring(filename.lastIndexOf(".") + 1));
     }
 
+    public static String getFileNameOfSecret(SecretModel secretModel) {
+        Map<String, String> data = secretModel.getData();
+        return data.keySet().iterator().next();
+    }
+
+    public static String getFileNameOfConfigMap(ConfigMapModel configMapModel) {
+        Map<String, String> data = configMapModel.getData();
+        return data.keySet().iterator().next();
+    }
+
     public static void resolveDockerToml(KubernetesModel model) throws KubernetesPluginException {
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         final String containerImage = "container.image";
@@ -280,8 +296,13 @@ public class KubernetesUtils {
             dockerModel
                     .setRegistry(TomlHelper.getString(toml, containerImage + ".repository", null));
             dockerModel.setTag(TomlHelper.getString(toml, containerImage + ".tag", dockerModel.getTag()));
-            dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", dockerModel.getBaseImage()));
-            dockerModel.setCmd(TomlHelper.getString(toml, containerImage + ".cmd", dockerModel.getCmd()));
+            String defaultBaseImage = DockerGenConstants.JRE_SLIM_BASE;
+            if (dockerModel.isGraalVMBuild()) {
+                defaultBaseImage = DockerGenConstants.NATIVE_RUNTIME_BASE_IMAGE;
+            }
+            dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", defaultBaseImage));
+            dockerModel.setEntryPoint(TomlHelper.getString(toml, containerImage + ".entrypoint",
+                    dockerModel.getEntryPoint()));
             if (model instanceof DeploymentModel) {
 
                 dockerModel.setName(TomlHelper.getString(toml, containerImage + ".name",
@@ -383,6 +404,47 @@ public class KubernetesUtils {
 
         return dockerModel.getDependencyJarPaths().size() + dockerModel.getCopyFiles().size() +
                 dockerModel.getEnv().size() < DockerGenConstants.MAX_BALLERINA_LAYERS;
+    }
+
+    public static List<VolumeMount> generateConfigMapVolumeMounts(Collection<ConfigMapModel> configMapModels) {
+        List<VolumeMount> volumeMounts = new ArrayList<>();
+        for (ConfigMapModel configMapModel : configMapModels) {
+            final String mountPath = configMapModel.getMountPath();
+            VolumeMountBuilder volumeMountBuilder = new VolumeMountBuilder()
+                    .withMountPath(mountPath)
+                    .withName(configMapModel.getName() + "-volume")
+                    .withReadOnly(configMapModel.isReadOnly());
+
+            if ((!configMapModel.isDir()) && (!configMapModel.isBallerinaConf())) {
+                volumeMountBuilder.withSubPath(KubernetesUtils.getFileNameOfConfigMap(configMapModel));
+            }
+            volumeMounts.add(volumeMountBuilder.build());
+        }
+        return volumeMounts;
+    }
+
+    public static List<VolumeMount> generateSecretVolumeMounts(Collection<SecretModel> secretModels) {
+        List<VolumeMount> volumeMounts = new ArrayList<>();
+        for (SecretModel secretModel : secretModels) {
+            VolumeMountBuilder volumeMountBuilder = new VolumeMountBuilder()
+                    .withMountPath(secretModel.getMountPath())
+                    .withName(secretModel.getName() + "-volume")
+                    .withReadOnly(secretModel.isReadOnly());
+            if ((!secretModel.isDir()) && (!secretModel.isBallerinaConf())) {
+                volumeMountBuilder.withSubPath(KubernetesUtils.getFileNameOfSecret(secretModel));
+            }
+            VolumeMount volumeMount = volumeMountBuilder.build();
+            volumeMounts.add(volumeMount);
+        }
+        return volumeMounts;
+    }
+
+    public static void validateFileExistence(File file) throws KubernetesPluginException {
+        if (!file.exists()) {
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(
+                    C2CDiagnosticCodes.PATH_CONTENT_READ_FAILED, new NullLocation(), file.getAbsolutePath());
+            throw new KubernetesPluginException(diagnostic);
+        }
     }
 
     public static List<File> getTestJarFiles(File directory) {

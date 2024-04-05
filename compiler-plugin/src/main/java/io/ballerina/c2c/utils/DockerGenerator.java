@@ -19,6 +19,7 @@
 package io.ballerina.c2c.utils;
 
 import io.ballerina.c2c.DockerGenConstants;
+import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -78,11 +80,7 @@ public class DockerGenerator {
                         outputDir.resolve(this.dockerModel.getFatJarPath().getFileName()));
             } else {
                 String dockerContent;
-                if (!isWindowsBuild()) {
-                    dockerContent = generateDockerfile();
-                } else {
-                    dockerContent = generateThinJarWindowsDockerfile();
-                }
+                dockerContent = generateDockerfile();
                 copyNativeJars(outputDir);
                 DockerGenUtils.writeToFile(dockerContent, outputDir.resolve("Dockerfile"));
                 Path jarLocation = outputDir.resolve(DockerGenUtils.extractJarName(jarFilePath) + EXECUTABLE_JAR);
@@ -234,22 +232,23 @@ public class DockerGenerator {
         appendUser(dockerfileContent);
         dockerfileContent.append("WORKDIR ").append(getWorkDir()).append(LINE_SEPARATOR);
         appendCommonCommands(dockerfileContent);
-        if (isBlank(this.dockerModel.getCmd())) {
+        if (isBlank(this.dockerModel.getEntryPoint())) {
             PackageID packageID = this.dockerModel.getPkgId();
             String mainClass = JarResolver.getQualifiedClassName(packageID.orgName.value, packageID.name.value,
                     packageID.version.value, MODULE_INIT_CLASS_NAME);
-            mainClass = "'" + mainClass + "'";
+            List<String> args = new ArrayList<>();
+            args.add("java");
+            args.add("-Xdiag");
             if (this.dockerModel.isEnableDebug()) {
-                dockerfileContent.append("CMD java -Xdiag -agentlib:jdwp=transport=dt_socket,server=y,suspend=n," +
-                        "address='*:")
-                        .append(this.dockerModel.getDebugPort()).append("' -cp \"")
-                        .append(this.dockerModel.getJarFileName()).append(":jars/*\" ").append(mainClass);
-            } else {
-                dockerfileContent.append("CMD java -Xdiag -cp \"").append(this.dockerModel.getJarFileName())
-                        .append(":jars/*\" ").append(mainClass);
+                args.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" +
+                        this.dockerModel.getDebugPort());
             }
+            args.add("-cp");
+            args.add(this.dockerModel.getJarFileName() + ":jars/*");
+            args.add(mainClass);
+            dockerfileContent.append(entryPointArgBuilder(args));
         } else {
-            dockerfileContent.append(this.dockerModel.getCmd());
+            dockerfileContent.append(this.dockerModel.getEntryPoint());
         }
         if (!isBlank(this.dockerModel.getCommandArg())) {
             dockerfileContent.append(this.dockerModel.getCommandArg());
@@ -257,6 +256,11 @@ public class DockerGenerator {
         dockerfileContent.append(LINE_SEPARATOR);
 
         return dockerfileContent.toString();
+    }
+
+    private String entryPointArgBuilder(List<String> args) {
+        return "ENTRYPOINT " +
+                "[" + String.join(",", args.stream().map(s -> "\"" + s + "\"").toArray(String[]::new)) + "]";
     }
 
     private String generateTestDockerFile(Path testSuiteJsonPath, Path jacocoAgentJarPath) {
@@ -359,45 +363,6 @@ public class DockerGenerator {
         dockerfileContent.append("LABEL maintainer=\"dev@ballerina.io\"").append(LINE_SEPARATOR);
     }
 
-    private String generateThinJarWindowsDockerfile() {
-        StringBuilder dockerfileContent = new StringBuilder();
-        addInitialDockerContent(dockerfileContent);
-
-        dockerfileContent.append(LINE_SEPARATOR);
-        dockerfileContent.append("WORKDIR ").append(getWorkDir()).append(LINE_SEPARATOR);
-
-        for (Path path : this.dockerModel.getDependencyJarPaths()) {
-            dockerfileContent.append("COPY ").append(path.getFileName()).append(getWorkDir())
-                    .append("jars").append(WINDOWS_SEPARATOR);
-            dockerfileContent.append(LINE_SEPARATOR);
-        }
-        dockerfileContent.append(LINE_SEPARATOR);
-        appendCommonCommands(dockerfileContent);
-        if (isBlank(this.dockerModel.getCmd())) {
-            PackageID packageID = this.dockerModel.getPkgId();
-            String mainClass = JarResolver.getQualifiedClassName(packageID.orgName.value, packageID.name.value,
-                    packageID.version.value, MODULE_INIT_CLASS_NAME);
-            mainClass = "'" + mainClass + "'";
-            if (this.dockerModel.isEnableDebug()) {
-                dockerfileContent.append("CMD java -Xdiag -agentlib:jdwp=transport=dt_socket,server=y,suspend=n," +
-                        "address='*:").append(this.dockerModel.getDebugPort()).append("' -cp \"")
-                        .append(this.dockerModel.getJarFileName()).append(":jars/*\" ").append(mainClass);
-            } else {
-                dockerfileContent.append("CMD java -Xdiag -cp \"").append(this.dockerModel.getJarFileName())
-                        .append(":jars/*\" ").append(mainClass);
-            }
-        } else {
-            dockerfileContent.append(this.dockerModel.getCmd());
-        }
-        dockerfileContent.append(LINE_SEPARATOR);
-        if (!isBlank(this.dockerModel.getCommandArg())) {
-            dockerfileContent.append(this.dockerModel.getCommandArg());
-        }
-        dockerfileContent.append(LINE_SEPARATOR);
-
-        return dockerfileContent.toString();
-    }
-
     protected void appendCommonCommands(StringBuilder dockerfileContent) {
         this.dockerModel.getEnv().forEach((key, value) -> dockerfileContent.append("ENV ").
                 append(key).append("=").append(value).append(LINE_SEPARATOR));
@@ -415,7 +380,7 @@ public class DockerGenerator {
         dockerfileContent.append(LINE_SEPARATOR);
 
         if (this.dockerModel.isService() && this.dockerModel.getPorts().size() > 0) {
-            dockerfileContent.append("EXPOSE ");
+            dockerfileContent.append("EXPOSE");
             this.dockerModel.getPorts().forEach(port -> dockerfileContent.append(" ").append(port));
         }
         dockerfileContent.append(LINE_SEPARATOR);

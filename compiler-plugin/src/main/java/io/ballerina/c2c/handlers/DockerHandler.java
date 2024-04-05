@@ -43,7 +43,6 @@ public class DockerHandler extends AbstractArtifactHandler {
     public void createArtifacts() throws KubernetesPluginException {
         try {
             DockerGenerator dockerArtifactHandler;
-            //
             if (isNative) {
                 dockerArtifactHandler = new NativeDockerGenerator(dataHolder.getDockerModel());
             } else {

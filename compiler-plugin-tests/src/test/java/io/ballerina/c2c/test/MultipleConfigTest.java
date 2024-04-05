@@ -42,7 +42,7 @@ import java.util.List;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
-import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getCommand;
+import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getEntryPoint;
 import static io.ballerina.c2c.test.utils.KubernetesTestUtils.getExposedPorts;
 
 /**
@@ -78,7 +78,7 @@ public class MultipleConfigTest {
                         case "config-config-map":
                             ballerinaConf = (ConfigMap) data;
                             break;
-                        case "hello-data-txt":
+                        case "hello-data-txtcfg0":
                             dataMap = (ConfigMap) data;
                             break;
                         default:
@@ -101,14 +101,14 @@ public class MultipleConfigTest {
         Assert.assertNotNull(deployment);
         Assert.assertEquals(deployment.getMetadata().getName(), "hello-deployment");
         Assert.assertEquals(deployment.getSpec().getReplicas().intValue(), 1);
-        Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getVolumes().size(), 3);
+        Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getVolumes().size(), 4);
         Assert.assertEquals(deployment.getMetadata().getLabels().get(KubernetesConstants
                 .KUBERNETES_SELECTOR_KEY), "hello");
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().size(), 1);
 
         // Assert Containers
         Container container = deployment.getSpec().getTemplate().getSpec().getContainers().get(0);
-        Assert.assertEquals(container.getVolumeMounts().size(), 3);
+        Assert.assertEquals(container.getVolumeMounts().size(), 4);
         Assert.assertEquals(container.getImage(), DOCKER_IMAGE);
         Assert.assertEquals(container.getPorts().size(), 1);
         Assert.assertEquals(container.getEnv().size(), 1);
@@ -144,8 +144,8 @@ public class MultipleConfigTest {
         Assert.assertEquals(ports.size(), 1);
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
-        Assert.assertEquals(getCommand(DOCKER_IMAGE).toString(), "[/bin/sh, -c, java -Xdiag -cp " +
-                "\"hello-hello-0.0.1.jar:jars/*\" 'hello.hello.0.$_init']");
+        Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(), "[java, -Xdiag, -cp, " +
+                "hello-hello-0.0.1.jar:jars/*, hello.hello.0.$_init]");
     }
 
     @AfterClass

@@ -136,24 +136,6 @@ public class CustomDiagnosticsTest {
     }
 
     @Test
-    public void testInvalidSSLConfigValue() {
-        Path projectPath = Paths.get("src", "test", "resources", "service", "invalid-ssl-config");
-        BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics =
-                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
-        Assert.assertEquals(diagnostics.size(), 2);
-        Iterator<Diagnostic> iterator = diagnostics.iterator();
-        Diagnostic diagnostic = iterator.next();
-        Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.WARNING);
-        Assert.assertEquals(diagnostic.message(),
-                "unable to read contents of the file `ballerina`");
-        diagnostic = iterator.next();
-        Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.WARNING);
-        Assert.assertEquals(diagnostic.message(),
-                "https config extraction only supports basic string paths");
-    }
-
-    @Test
     public void testFailedPortRetrieval() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "failed-port-retrieval");
         BuildProject project = BuildProject.load(projectPath);
@@ -167,29 +149,12 @@ public class CustomDiagnosticsTest {
     }
 
     @Test
-    public void testFailedGrpcSSL() {
-        Path projectPath = Paths.get("src", "test", "resources", "service", "grpc-ssl-key-config-neg");
+    public void testGrpc() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "grpc-test");
         BuildProject project = BuildProject.load(projectPath);
         Collection<Diagnostic> diagnostics =
                 getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
-        Assert.assertEquals(diagnostics.size(), 2);
-        Iterator<Diagnostic> iterator = diagnostics.iterator();
-        Diagnostic diagnostic = iterator.next();
-        Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.WARNING);
-        Assert.assertEquals(diagnostic.message(), "https config extraction only supports basic string paths");
-    }
-
-    @Test
-    public void testFailedPortRetrievalVarRef() {
-        Path projectPath = Paths.get("src", "test", "resources", "service", "client-ssl-config-neg");
-        BuildProject project = BuildProject.load(projectPath);
-        Collection<Diagnostic> diagnostics =
-                getC2CDiagnostics(project.currentPackage().getCompilation().diagnosticResult().diagnostics());
-        Assert.assertEquals(diagnostics.size(), 1);
-        Iterator<Diagnostic> iterator = diagnostics.iterator();
-        Diagnostic diagnostic = iterator.next();
-        Assert.assertEquals(diagnostic.diagnosticInfo().severity(), DiagnosticSeverity.WARNING);
-        Assert.assertEquals(diagnostic.message(), "unable to retrieve the value of variable `certPath`");
+        Assert.assertEquals(diagnostics.size(), 0);
     }
 
     @Test

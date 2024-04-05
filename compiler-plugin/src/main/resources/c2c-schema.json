@@ -72,12 +72,12 @@
                 "pattern": "`base` should not be empty"
               }
             },
-            "cmd": {
+            "entrypoint": {
               "description": "Instruction, which is executed when the container starts up",
               "type": "string",
               "pattern": "^(?!\\s*$).+",
               "message": {
-                "pattern": "`cmd` should not be empty"
+                "pattern": "`entrypoint` should not be empty"
               }
             },
             "user": {
@@ -155,18 +155,18 @@
                     "description": "Path of the external file",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "resource/file.text",
+                    "default": "resource/file.txt",
                     "message": {
                       "pattern": "`file` should not be empty"
                     }
                   },
-                  "mount_path": {
-                    "description": "Path of the file in the container",
+                  "mount_dir": {
+                    "description": "Directory of the file within the container",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
-                    "default": "/home/ballerina/foo/file.conf",
+                    "default": "/home/ballerina/resource",
                     "message": {
-                      "pattern": "`mount_path` should not be empty"
+                      "pattern": "`mount_dir` should not be empty"
                     }
                   }
                 }
@@ -451,12 +451,12 @@
                       "pattern": "`file` should not be empty"
                     }
                   },
-                  "mount_path": {
-                    "description": "Path of the file within the container",
+                  "mount_dir": {
+                    "description": "Directory of the file within the container",
                     "type": "string",
                     "pattern": "^(?!\\s*$).+",
                     "message": {
-                      "pattern": "`mount_path` should not be empty"
+                      "pattern": "`mount_dir` should not be empty"
                     }
                   }
                 }

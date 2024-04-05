@@ -247,6 +247,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
         dataHolder.getDockerModel().setGraalvmBuildArgs(graalvmBuildArgs);
         KubernetesContext.getInstance().setCurrentPackage(packageId);
         dataHolder.setPackageID(packageId);
+        dataHolder.getDockerModel().setGraalVMBuild(buildOptions.nativeImage());
         executableJarFile = executableJarFile.toAbsolutePath();
         if (null != executableJarFile.getParent() && Files.exists(executableJarFile.getParent())) {
             // artifacts location for a single bal file.

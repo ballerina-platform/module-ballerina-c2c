@@ -5,12 +5,12 @@
 
 [ballerina]
 dependencies-toml-version = "2"
-distribution-version = "2201.9.0-SNAPSHOT-emit-cloud"
+distribution-version = "2201.9.0-20240201-152800-3c3df044"
 
 [[package]]
 org = "ballerina"
 name = "cloud"
-version = "2.11.3"
+version = "3.0.0"
 modules = [
 	{org = "ballerina", packageName = "cloud", moduleName = "cloud"}
 ]

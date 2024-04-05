@@ -43,6 +43,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -118,8 +119,8 @@ public class DockerGeneratorTests {
 
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
         cleaningUpDir = outputDir;
-        Assert.assertTrue(dockerFileContent.contains("CMD java -Xdiag -cp \"hello.jar:jars/*\" " +
-                "'wso2.bal.1.$_init'"));
+        Assert.assertTrue(dockerFileContent.contains("ENTRYPOINT [\"java\",\"-Xdiag\"," +
+                "\"-cp\",\"hello.jar:jars/*\",\"wso2.bal.1.$_init\"]"));
         Assert.assertTrue(dockerFileContent.contains("USER ballerina"));
     }
 
@@ -129,8 +130,8 @@ public class DockerGeneratorTests {
         Assert.assertEquals(DockerTestUtils.getExposedPorts(DOCKER_IMAGE).size(), 1);
         Assert.assertEquals(Objects.requireNonNull(DockerTestUtils.getDockerImage(DOCKER_IMAGE).getConfig()
                 .getEnv()).length, 8);
-        Assert.assertEquals(DockerTestUtils.getCommand(DOCKER_IMAGE).get(2), "java -Xdiag -cp \"hello.jar:jars/*\" " +
-                "'wso2.bal.1.$_init'");
+        Assert.assertEquals(DockerTestUtils.getEntryPoint(DOCKER_IMAGE), Arrays.asList("java", "-Xdiag",
+                "-cp", "hello.jar:jars/*", "wso2.bal.1.$_init"));
     }
 
     @Test

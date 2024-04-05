@@ -42,8 +42,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 public class DockerModel {
-    private final boolean windowsBuild =
-            Boolean.parseBoolean(System.getenv(DockerGenConstants.ENABLE_WINDOWS_BUILD));
+
     private String name;
     private String registry;
     private String tag;
@@ -57,7 +56,7 @@ public class DockerModel {
     private Set<CopyFileModel> externalFiles;
 
     private String commandArg;
-    private String cmd;
+    private String entryPoint;
     private Map<String, String> env;
     private Set<Path> dependencyJarPaths;
     private PackageID pkgId;
@@ -140,8 +139,7 @@ public class DockerModel {
         // Initialize with default values except for image name
         this.tag = "latest";
         this.buildImage = true;
-        this.baseImage = windowsBuild ? DockerGenConstants.JRE_WINDOWS_BASE_IMAGE :
-                DockerGenConstants.JRE_SLIM_BASE;
+        this.baseImage = DockerGenConstants.JRE_SLIM_BASE;
         this.enableDebug = false;
         this.debugPort = 5005;
         this.externalFiles = new HashSet<>();
@@ -250,8 +248,8 @@ public class DockerModel {
         this.commandArg += commandArg;
     }
 
-    public String getCmd() {
-        if (this.cmd == null) {
+    public String getEntryPoint() {
+        if (this.entryPoint == null) {
             return null;
         }
 
@@ -263,7 +261,7 @@ public class DockerModel {
             configFile = externalFile.getTarget();
         }
 
-        return this.cmd
+        return this.entryPoint
                 .replace("${APP}", this.jarFileName)
                 .replace("${CONFIG_FILE}", configFile);
     }
