@@ -19,7 +19,6 @@
 package io.ballerina.c2c.utils;
 
 import io.ballerina.c2c.DockerGenConstants;
-import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
@@ -41,10 +40,8 @@ import java.util.stream.Collectors;
 import static io.ballerina.c2c.DockerGenConstants.EXECUTABLE_JAR;
 import static io.ballerina.c2c.DockerGenConstants.REGISTRY_SEPARATOR;
 import static io.ballerina.c2c.DockerGenConstants.TAG_SEPARATOR;
-import static io.ballerina.c2c.DockerGenConstants.WINDOWS_SEPARATOR;
 import static io.ballerina.c2c.utils.DockerGenUtils.addConfigTomls;
 import static io.ballerina.c2c.utils.DockerGenUtils.copyTestConfigFiles;
-import static io.ballerina.c2c.utils.DockerGenUtils.isWindowsBuild;
 import static io.ballerina.c2c.utils.DockerGenUtils.getWorkDir;
 import static io.ballerina.c2c.utils.DockerGenUtils.getTestSuiteJsonCopiedDir;
 import static io.ballerina.c2c.KubernetesConstants.LINE_SEPARATOR;
@@ -301,10 +298,10 @@ public class DockerGenerator {
         testDockerFileContent.append("WORKDIR ").append(getWorkDir()).append(LINE_SEPARATOR);
         appendCommonCommands(testDockerFileContent);
 
-        if (!isBlank(this.dockerModel.getCmd())) {
-            testDockerFileContent.append(this.dockerModel.getCmd());
+        if (!isBlank(this.dockerModel.getEntryPoint())) {
+            testDockerFileContent.append(this.dockerModel.getEntryPoint()).append(LINE_SEPARATOR);
         } else {
-            addDockerTestCMD(testDockerFileContent);
+            addDockerTestEntryPoint(testDockerFileContent);
         }
 
         if (!isBlank(this.dockerModel.getCommandArg())) {
@@ -320,29 +317,34 @@ public class DockerGenerator {
     private void addDockerTestCMDArgs(StringBuilder testDockerFileContent) {
         if (this.dockerModel.getTestRunTimeCmdArgs() != null) {
             List<String> testRunTimeCmdArgs = this.dockerModel.getTestRunTimeCmdArgs();
-            testRunTimeCmdArgs.forEach(arg -> testDockerFileContent.append("\"").append(arg).append("\" "));
+            testDockerFileContent.append(LINE_SEPARATOR);
+            testDockerFileContent.append(buildCMDArgs(testRunTimeCmdArgs));
         }
     }
 
-    private void addDockerTestCMD(StringBuilder testDockerFileContent) {
-        testDockerFileContent.append("CMD ");
-        TestUtils.getInitialCmdArgs("java", getWorkDir()).stream().forEach(arg -> {
-            testDockerFileContent.append(arg).append(" ");
-        });
+    protected String buildCMDArgs(List<String> args) {
+        return "CMD " +
+                "[" + String.join(",", args.stream().map(s -> "\"" + s + "\"").toArray(String[]::new)) + "]";
+    }
+
+    private void addDockerTestEntryPoint(StringBuilder testDockerFileContent) {
+        ArrayList<String> args = new ArrayList<>(TestUtils.getInitialCmdArgs("java", getWorkDir()));
 
         if (this.dockerModel.isEnableDebug()) {
-            testDockerFileContent.append("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:")
-                    .append(this.dockerModel.getDebugPort()).append(" ");
+            args.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" +
+                    this.dockerModel.getDebugPort());
         } else {
             if (DebugUtils.isInDebugMode()) {
-                testDockerFileContent.append(DebugUtils.getDebugArgs(System.err)).append(" ");
+                args.add(DebugUtils.getDebugArgs(System.err));
             }
         }
 
         if (!isBlank(this.dockerModel.getClassPath())) {
-            testDockerFileContent.append("-cp \"").append(this.dockerModel.getClassPath()).append("\" ");
+            args.add("-cp");
+            args.add(this.dockerModel.getClassPath());
         }
-        testDockerFileContent.append(TesterinaConstants.TESTERINA_LAUNCHER_CLASS_NAME).append(" ");
+        args.add(TesterinaConstants.TESTERINA_LAUNCHER_CLASS_NAME);
+        testDockerFileContent.append(entryPointArgBuilder(args));
     }
 
     protected void appendUser(StringBuilder dockerfileContent) {
