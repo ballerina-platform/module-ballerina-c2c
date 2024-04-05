@@ -122,8 +122,6 @@ public class BalTestCMDOptionsTests {
     @Test //TODO: this test takes a long time to run
     public void testCloudFlagWithGraalVmForTestsWithMocking() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-flag-graalvm-mocking");
-        String firstString = "Building the native image. This may take a while\n";
-        String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--graalvm"});
         cleaningUpDir = projectDir;
