@@ -447,16 +447,6 @@ public class KubernetesUtils {
         }
     }
 
-    public static List<File> getTestJarFiles(File directory) {
-       File[] files = directory.listFiles();
-
-       if (files == null) {
-           return new ArrayList<>();
-       }
-
-       return Arrays.stream(files).toList();
-    }
-
     public static void runCommand(String dockerImage) {
         ProcessBuilder processBuilder;
         if (DebugUtils.isInDebugMode()) {
