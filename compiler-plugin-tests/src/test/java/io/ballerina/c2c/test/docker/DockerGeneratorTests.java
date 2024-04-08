@@ -171,7 +171,7 @@ public class DockerGeneratorTests {
         cleaningUpDir = TEST_SOURCE_DIR_PATH.resolve("target").resolve("docker");
         Assert.assertTrue(dockerFile.exists());
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
-        String copyJsonSuite = "COPY test_suit.json /home/ballerina/cache/tests_cache/";
+        String copyJsonSuite = "COPY test_suit.json /home/ballerina/target/cache/tests_cache/";
         Assert.assertTrue(dockerFileContent.contains(copyJsonSuite));
         String copyJacocoAgent = "COPY jacocoagent.jar /home/ballerina/jars/";
         Assert.assertTrue(dockerFileContent.contains(copyJacocoAgent));
@@ -276,7 +276,7 @@ public class DockerGeneratorTests {
         return configFiles;
     }
 
-    private Set<Path> getTestJarFilePaths() throws IOException{
+    private Set<Path> getTestJarFilePaths() throws IOException {
         return Files.list(TEST_SOURCE_DIR_PATH.resolve("jars")).collect(Collectors.toSet());
     }
 
