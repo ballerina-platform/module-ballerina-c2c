@@ -148,7 +148,7 @@ public class NativeDockerGenerator extends DockerGenerator {
         }
     }
 
-    private String generateTestMultiStageDockerfile() {
+    private String generateTestMultiStageDockerfile() throws DockerGenException {
         String fatJarFileName = this.dockerModel.getFatJarPath().getFileName().toString();
         String executableName = fatJarFileName.replaceFirst(".jar", "");
         StringBuilder dockerfileContent = getInitialDockerContent(fatJarFileName);

@@ -33,6 +33,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 
 import static io.ballerina.c2c.KubernetesConstants.LINE_SEPARATOR;
 
@@ -154,14 +156,22 @@ public class DockerGenUtils {
     public static void copyTestConfigFiles(Path outputDir, DockerModel dockerModel) throws DockerGenException {
         for (Path testConfigPath : dockerModel.getTestConfigPaths()) {
             copyFileOrDirectory(testConfigPath, outputDir.resolve("config-files")
-                    .resolve(getModuleNameOfConfigFile(testConfigPath)).resolve(
+                    .resolve(Objects.requireNonNull(getModuleNameOfConfigFile(testConfigPath))).resolve(
                     KubernetesConstants.BALLERINA_CONF_FILE_NAME)
             );
         }
     }
 
+    /**
+     * Add the test config files to the Dockerfile.
+     * @param testDockerFileContent Dockerfile content
+     * @param dockerModel           Docker model
+     * @param outputDir             output directory
+     * @param projectSourceRoot     Project source root to find all the test config files
+     * @throws DockerGenException   If an error occurs when adding the test config files
+     */
     public static void addConfigTomls(StringBuilder testDockerFileContent, DockerModel dockerModel, Path outputDir,
-                                      String projectSourceRoot) {
+                                      String projectSourceRoot) throws DockerGenException {
         for (Path testConfigPath : dockerModel.getTestConfigPaths()) {
             String relativePath = testConfigPath.toString().replace(projectSourceRoot, "");
             String[] split = relativePath.split("/");
@@ -169,8 +179,12 @@ public class DockerGenUtils {
             for (int i = 0; i < split.length - 1; i++) { // -1 to exclude the file name
                 target = target.resolve(split[i]);
             }
+            Path moduleName = getModuleNameOfConfigFile(testConfigPath);
+            if (moduleName == null) {
+                throw new DockerGenException("module name not found for the config file: " + testConfigPath);
+            }
             testDockerFileContent.append("COPY ")
-                    .append("config-files/").append(getModuleNameOfConfigFile(testConfigPath))
+                    .append("config-files/").append(moduleName)
                     .append("/")
                     .append(KubernetesConstants.BALLERINA_CONF_FILE_NAME)
                     .append(" ").append(target)
@@ -180,7 +194,16 @@ public class DockerGenUtils {
     }
 
     private static Path getModuleNameOfConfigFile(Path testConfigPath) {
-        return testConfigPath.getParent().getParent().getFileName();
+        Path parent = testConfigPath.getParent();
+        if (parent == null) {
+            return null;
+        }
+        Path grandParent = parent.getParent();
+        if (grandParent == null) {
+            return null;
+        }
+        Optional<Path> moduleName = Optional.ofNullable(grandParent.getFileName());
+        return moduleName.orElse(null);
     }
 
     /**
@@ -232,15 +255,31 @@ public class DockerGenUtils {
         return new String(chArr);
     }
 
+    /**
+     * Get the working directory inside the container.
+     * @return  The working directory inside the container
+     */
     public static String getWorkDir() {
         return "/home/ballerina";
     }
 
-    public static String getTestSuiteJsonCopiedDir() {
+    /**
+     * Get the target directory inside the container.
+     * @return  The target directory inside the container
+     */
+    public static String getTargetDir() {
         Path workDir = Path.of(getWorkDir());
-        Path testSuiteJsonCopiedDir = workDir.resolve(ProjectConstants.CACHES_DIR_NAME)
-                .resolve(ProjectConstants.TESTS_CACHE_DIR_NAME);
+        return workDir.resolve(ProjectConstants.TARGET_DIR_NAME).toString();
+    }
 
+    /**
+     * Get the directory where the test suite json file is copied.
+     * @return  The directory where the test suite json files are copied
+     */
+    public static String getTestSuiteJsonCopiedDir() {
+        Path targetDir = Path.of(getTargetDir());
+        Path testSuiteJsonCopiedDir = targetDir.resolve(ProjectConstants.CACHES_DIR_NAME)
+                .resolve(ProjectConstants.TESTS_CACHE_DIR_NAME);
         return testSuiteJsonCopiedDir.toString();
     }
 }

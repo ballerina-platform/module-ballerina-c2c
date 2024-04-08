@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -260,16 +261,19 @@ public class DockerGenerator {
                 "[" + String.join(",", args.stream().map(s -> "\"" + s + "\"").toArray(String[]::new)) + "]";
     }
 
-    private String generateTestDockerFile(Path testSuiteJsonPath, Path jacocoAgentJarPath) {
+    private String generateTestDockerFile(Path testSuiteJsonPath, Path jacocoAgentJarPath) throws DockerGenException {
         StringBuilder testDockerFileContent = new StringBuilder();
         addInitialDockerContent(testDockerFileContent);
 
         //copy the test suite json
-        testDockerFileContent.append("COPY ")
-                .append(testSuiteJsonPath.getFileName().toString())
-                .append(" ").append(getTestSuiteJsonCopiedDir()).append("/ ").append(LINE_SEPARATOR);
-                //to the  root directory (/home/ballerina/)
-
+        testDockerFileContent.append("COPY ");
+        Optional<Path> testSuiteJsonPathOptional = Optional.ofNullable(testSuiteJsonPath.getFileName());
+        if (testSuiteJsonPathOptional.isPresent()) {
+            testDockerFileContent.append(testSuiteJsonPathOptional.get())
+                    .append(" ").append(getTestSuiteJsonCopiedDir()).append("/ ").append(LINE_SEPARATOR);
+        } else {
+            throw new DockerGenException("Test suite json path is not provided");
+        }
         new TreeSet<>(this.dockerModel.getDependencyJarPaths())
                 .stream()
                 .map(Path::getFileName)
@@ -287,10 +291,16 @@ public class DockerGenerator {
                 );
 
         //copy the jacoco agent jar path
-        testDockerFileContent.append("COPY ")
-                .append(jacocoAgentJarPath.getFileName().toString())
-                .append(" ").append(getWorkDir())
-                .append("/jars/ ").append(LINE_SEPARATOR);
+        testDockerFileContent.append("COPY ");
+        Optional<Path> jacocoAgentJarPathOptional = Optional.ofNullable(jacocoAgentJarPath.getFileName());
+        if (jacocoAgentJarPathOptional.isPresent()) {
+            testDockerFileContent.append(jacocoAgentJarPathOptional.get())
+                    .append(" ").append(getWorkDir())
+                    .append("/jars/ ").append(LINE_SEPARATOR);
+        } else {
+            throw new DockerGenException("Jacoco agent jar path is not provided");
+        }
+
         Path projectSourceRoot = this.dockerModel.getSourceRoot();
         addConfigTomls(testDockerFileContent, this.dockerModel, Paths.get(getWorkDir()), projectSourceRoot.toString());
 
