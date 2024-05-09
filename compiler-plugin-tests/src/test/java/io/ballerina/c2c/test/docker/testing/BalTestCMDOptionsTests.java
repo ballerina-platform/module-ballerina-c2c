@@ -49,7 +49,8 @@ public class BalTestCMDOptionsTests {
     @Test
     public void testCloudFlagWithK8s() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-flag-k8s");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, "--cloud=k8s", new String[0]);
+        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
+                "--cloud=k8s", new String[0]);
         cleaningUpDir = projectDir;
         Assert.assertFalse(projectDir.resolve("target").resolve("docker").toFile().exists());
         Assert.assertTrue(actualOutcome.contains("error [k8s plugin]: k8s cloud build only supported for build"));
@@ -122,8 +123,6 @@ public class BalTestCMDOptionsTests {
     @Test //TODO: this test takes a long time to run
     public void testCloudFlagWithGraalVmForTestsWithMocking() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-flag-graalvm-mocking");
-        String firstString = "Building the native image. This may take a while\n";
-        String endString = "\nRunning the generated Docker image";
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--graalvm"});
         cleaningUpDir = projectDir;
@@ -210,27 +209,14 @@ public class BalTestCMDOptionsTests {
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--tests", "testMain,testMod"});
         cleaningUpDir = projectDir;
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules.mod2
-                                        
-                                        
-                		No tests found"""));
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules
-                		[pass] testMain
-                                        
-                                        
-                		1 passing
-                		0 failing
-                		0 skipped"""));
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules.mod1
-                		[pass] testMod
-                                
-                                
-                		1 passing
-                		0 failing
-                		0 skipped"""));
+        String regexMod2 = "cloud_project_with_modules\\.mod2\\s+No tests found";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexMod2 + ".*"));
+        String regexCloudProject = "cloud_project_with_modules\\s+\\[pass\\] testMain\\s+1" +
+                " passing\\s+0 failing\\s+0 skipped";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexCloudProject + ".*"));
+        String regexMod1 = "cloud_project_with_modules\\.mod1\\s+\\[pass\\] testMod\\s+1" +
+                " passing\\s+0 failing\\s+0 skipped";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexMod1 + ".*"));
     }
 
     @Test
@@ -239,24 +225,13 @@ public class BalTestCMDOptionsTests {
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--tests", "cloud_project_with_modules:testMain"});
         cleaningUpDir = projectDir;
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules.mod2
-                                
-                                
-                		No tests found"""));
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules
-                		[pass] testMain
-                                
-                                
-                		1 passing
-                		0 failing
-                		0 skipped"""));
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules.mod1
-                    
-                    
-                		No tests found"""));
+        String regexMod2 = "cloud_project_with_modules\\.mod2\\s+No tests found";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexMod2 + ".*"));
+        String regexCloudProject = "cloud_project_with_modules\\s+\\[pass\\] testMain\\s+1 passing\\s+" +
+                "0 failing\\s+0 skipped";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexCloudProject + ".*"));
+        String regexMod1 = "cloud_project_with_modules\\.mod1\\s+No tests found";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexMod1 + ".*"));
     }
 
     @Test
@@ -265,25 +240,13 @@ public class BalTestCMDOptionsTests {
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--tests", "cloud_project_with_modules:*"});
         cleaningUpDir = projectDir;
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules.mod2
-                                
-                                
-                		No tests found"""));
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules
-                		[pass] testMain
-                		[pass] testMainTwo
-                                
-                                
-                		2 passing
-                		0 failing
-                		0 skipped"""));
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules.mod1
-                    
-                    
-                		No tests found"""));
+        String regexMod2 = "cloud_project_with_modules\\.mod2\\s+No tests found";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexMod2 + ".*"));
+        String regexCloudProject = "cloud_project_with_modules\\s+\\[pass\\] testMain\\s+\\[pass\\] testMainTwo\\s+" +
+                "2 passing\\s+0 failing\\s+0 skipped";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexCloudProject + ".*"));
+        String regexMod1 = "cloud_project_with_modules\\.mod1\\s+No tests found";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexMod1 + ".*"));
     }
 
     @Test
@@ -292,25 +255,13 @@ public class BalTestCMDOptionsTests {
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--tests", "cloud_project_with_modules.mod1:*"});
         cleaningUpDir = projectDir;
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules.mod2
-                                
-                                
-                		No tests found"""));
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules
-                                
-                                
-                		No tests found"""));
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules.mod1
-                		[pass] testMod
-                		[pass] testModTwo
-                                
-                                
-                		2 passing
-                		0 failing
-                		0 skipped"""));
+        String regexMod2 = "cloud_project_with_modules\\.mod2\\s+No tests found";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexMod2 + ".*"));
+        String regexCloudProject = "cloud_project_with_modules\\s+No tests found";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexCloudProject + ".*"));
+        String regexMod1 = "cloud_project_with_modules\\.mod1\\s+\\[pass] testMod\\s+\\[pass] testModTwo\\s+" +
+                "2 passing\\s+0 failing\\s+0 skipped";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexMod1 + ".*"));
     }
 
     @Test
@@ -319,28 +270,14 @@ public class BalTestCMDOptionsTests {
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{"--tests", "cloud_project_with_modules.mod2:testMod2Two,cloud_project_with_modules:*"});
         cleaningUpDir = projectDir;
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules.mod2
-                		[pass] testMod2Two
-                                
-                                
-                		1 passing
-                		0 failing
-                		0 skipped"""));
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules
-                		[pass] testMain
-                		[pass] testMainTwo
-                                
-                                
-                		2 passing
-                		0 failing
-                		0 skipped"""));
-        Assert.assertTrue(actualOutcome.contains("""
-                cloud_project_with_modules.mod1
-                                
-                                
-                		No tests found"""));
+        String regexMod2 = "cloud_project_with_modules\\.mod2\\s+\\[pass\\] testMod2Two\\s+1 passing\\s+" +
+                "0 failing\\s+0 skipped";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexMod2 + ".*"));
+        String regexCloudProject = "cloud_project_with_modules\\s+\\[pass\\] testMain\\s+\\[pass\\] testMainTwo\\s+" +
+                "2 passing\\s+0 failing\\s+0 skipped";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexCloudProject + ".*"));
+        String regexMod1 = "cloud_project_with_modules\\.mod1\\s+No tests found";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexMod1 + ".*"));
     }
 
     @Test
@@ -350,15 +287,9 @@ public class BalTestCMDOptionsTests {
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[]{projectDir.resolve("single-test-file-execution.bal").toAbsolutePath().toString()});
         cleaningUpDir = projectDir;
-        Assert.assertTrue(actualOutcome.contains("""
-                        single-test-file-execution.bal
-                        		[pass] testFunc
-                        		[pass] testFunc2
-                                                
-                                                
-                        		2 passing
-                        		0 failing
-                        		0 skipped"""));
+        String regexPattern = "\\s*single-test-file-execution\\.bal\\s+\\[pass\\] testFunc\\s+\\[pass\\] " +
+                "testFunc2\\s+2 passing\\s+0 failing\\s+0 skipped\\s*";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexPattern + ".*"));
         //Check for the existence of the target directory (It shouldn't exist)
         Assert.assertFalse(Files.exists(projectDir.resolve("target")));
     }
@@ -378,9 +309,9 @@ public class BalTestCMDOptionsTests {
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
                 new String[0]);
         cleaningUpDir = projectDir;
-        Assert.assertTrue(actualOutcome.contains("""
-                        error: value not provided for required configurable variable 'myVal'
-                        	at cloud_tests/test_with_config_but_val_not_provided:0.0.0(tests/tes.bal:3)"""));
+        String regexPattern = "error: value not provided for required configurable variable 'myVal'\\s+at " +
+                "cloud_tests/test_with_config_but_val_not_provided:0\\.0\\.0\\(tests/tes\\.bal:3\\)";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexPattern + ".*"));
         Assert.assertTrue(actualOutcome.contains("error [k8s plugin]: Error running the docker image: " +
                 "test_with_config_but_val_not_provided-testable:latest"));
     }
@@ -433,14 +364,11 @@ public class BalTestCMDOptionsTests {
         Path projectDir = SOURCE_DIR_PATH.resolve("project-with-resources");
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir, new String[0]);
         cleaningUpDir = projectDir;
-        Assert.assertTrue(actualOutcome.contains("""
-                project_with_resources_for_tests
-                		[pass] testReadingResourceCsv
-                		[pass] testReadingResourceTxt"""));
-
-        Assert.assertTrue(actualOutcome.contains("""
-                project_with_resources_for_tests.mod1
-                		[pass] testModuleTestResourceFile"""));
+        String regexPattern1 = "\\s*project_with_resources_for_tests\\s+\\[pass] testReadingResourceCsv\\s+" +
+                "\\[pass] testReadingResourceTxt\\s*";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexPattern1 + ".*"));
+        String regexPattern2 = "\\s*project_with_resources_for_tests\\.mod1\\s+\\[pass] testModuleTestResourceFile\\s*";
+        Assert.assertTrue(actualOutcome.matches("(?s).*" + regexPattern2 + ".*"));
     }
 
     @AfterMethod

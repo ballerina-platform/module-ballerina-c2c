@@ -248,14 +248,6 @@ public class DockerModel {
         this.commandArg += commandArg;
     }
 
-    public void setIsTest(boolean isTest) {
-        this.isTest = isTest;
-    }
-
-    public boolean getIsTest() {
-        return this.isTest;
-    }
-
     public String getEntryPoint() {
         if (this.entryPoint == null) {
             return null;

@@ -398,7 +398,7 @@ public class KubernetesTestUtils {
     }
 
     /**
-     * Compile a ballerina project in a given directory for the project tests
+     * Compile a ballerina project in a given directory for the project tests.
      * @param sourceDirectory   Ballerina project directory
      * @param testArgs        Arguments to be passed to the test command (--code-coverage, --test-report, etc.)
      * @return  Output of the test command
@@ -440,7 +440,7 @@ public class KubernetesTestUtils {
     }
 
     /**
-     * Compile a ballerina project in a given directory for the project tests
+     * Compile a ballerina project in a given directory for the project tests.
      * @param sourceDirectory   Ballerina project directory
      * @param cloudArg          Cloud flag to be passed to the test command (eg: "--cloud=docker")
      * @param testArgs          Arguments to be passed to the test command (--code-coverage, --test-report, etc.)

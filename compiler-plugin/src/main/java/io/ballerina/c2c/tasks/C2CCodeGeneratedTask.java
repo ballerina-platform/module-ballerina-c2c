@@ -73,6 +73,7 @@ import java.util.stream.Stream;
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
 import static io.ballerina.c2c.utils.DockerGenUtils.extractJarName;
+import static io.ballerina.c2c.utils.DockerGenUtils.getTargetDir;
 import static io.ballerina.c2c.utils.DockerGenUtils.getTestSuiteJsonCopiedDir;
 import static io.ballerina.c2c.utils.DockerGenUtils.getWorkDir;
 import static io.ballerina.c2c.utils.KubernetesUtils.printError;
@@ -156,7 +157,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                     Gson gson = new Gson();
 
                     testSuiteMap = gson.fromJson(br,
-                            new TypeToken<Map<String, TestSuite>> () { }.getType());
+                            new TestSuiteTypeToken().getType());
 
                     for (ModuleDescriptor moduleDescriptor :
                             currentPackage.moduleDependencyGraph().toTopologicallySortedList()) {
@@ -197,8 +198,8 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 cmd.set(TesterinaConstants.RunTimeArgs.TEST_SUITE_JSON_PATH, Paths.get(getTestSuiteJsonCopiedDir())
                         .resolve(TesterinaConstants.TESTERINA_TEST_SUITE).toString());
 
-                // Target directory is -> to load the test suite json (work directory is the target)
-                cmd.set(TesterinaConstants.RunTimeArgs.TARGET_DIR, getWorkDir());
+                // Target directory is -> to load the test suite json
+                cmd.set(TesterinaConstants.RunTimeArgs.TARGET_DIR, getTargetDir());
                 Path jacocoAgentJarPath = Path.of(TestUtils.getJacocoAgentJarPath());
                 cmd.set(TesterinaConstants.RunTimeArgs.JACOCO_AGENT_PATH,
                         getCopiedJarPath(jacocoAgentJarPath.getFileName()).toString());
@@ -372,5 +373,9 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 .filter(jarLibrary -> jarLibrary.path().getFileName().toString().endsWith(executableFatJar))
                 .findFirst()
                 .ifPresent(jarLibrary -> dataHolder.setJarPath(jarLibrary.path()));
+    }
+
+    // Type token for gson to avoid the spotbugs warning
+    private static class TestSuiteTypeToken extends TypeToken<Map<String, TestSuite>> {
     }
 }

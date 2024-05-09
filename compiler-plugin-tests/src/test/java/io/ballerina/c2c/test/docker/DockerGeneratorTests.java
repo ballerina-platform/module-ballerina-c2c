@@ -42,8 +42,8 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -61,6 +61,8 @@ public class DockerGeneratorTests {
             "docker-cloud-test", "docker-gen-files");
     private static final String DOCKER_IMAGE = "anuruddhal/test-gen-image:v1";
     private static final String DOCKER_TEST_IMAGE = "anuruddhal/test-gen-tests-image:v1";
+
+    private static final int BTESTMAIN_ARGS_COUNT = 11;
     private final PrintStream out = System.out;
     private Path cleaningUpDir = null;
 
@@ -158,7 +160,7 @@ public class DockerGeneratorTests {
         Path jacocoAgentJarPath = TEST_SOURCE_DIR_PATH.resolve("jacocoagent.jar");
         dockerModel.setJacocoAgentJarPath(jacocoAgentJarPath);
         List<String> cmdArgs = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < BTESTMAIN_ARGS_COUNT; i++) { //The number of args that are passed to BTestMain
             cmdArgs.add("arg" + i);
         }
         dockerModel.setSourceRoot(TEST_SOURCE_DIR_PATH);
@@ -169,7 +171,7 @@ public class DockerGeneratorTests {
         cleaningUpDir = TEST_SOURCE_DIR_PATH.resolve("target").resolve("docker");
         Assert.assertTrue(dockerFile.exists());
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
-        String copyJsonSuite = "COPY test_suit.json /home/ballerina/cache/tests_cache/";
+        String copyJsonSuite = "COPY test_suit.json /home/ballerina/target/cache/tests_cache/";
         Assert.assertTrue(dockerFileContent.contains(copyJsonSuite));
         String copyJacocoAgent = "COPY jacocoagent.jar /home/ballerina/jars/";
         Assert.assertTrue(dockerFileContent.contains(copyJacocoAgent));
@@ -183,10 +185,16 @@ public class DockerGeneratorTests {
         Assert.assertTrue(dockerFileContent.contains(copyTestConfig2));
         String copyTestConfig3 = "COPY config-files/conf/" + KubernetesConstants.BALLERINA_CONF_FILE_NAME +
                 " /home/ballerina/conf/tests/";
+        Assert.assertTrue(dockerFileContent.contains("&& mkdir -p /home/ballerina/target \\"));
+        Assert.assertTrue(dockerFileContent.contains("&& chown -R ballerina:troupe /home/ballerina/target \\"));
+        Assert.assertTrue(dockerFileContent.contains("&& chmod -R 777 /home/ballerina/target \\"));
         Assert.assertTrue(dockerFileContent.contains(copyTestConfig3));
-        String dockerCMD = "CMD java -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/ballerina -cp \"" +
-                "dummy_class_path\" org.ballerinalang.test.runtime.BTestMain \"arg0\" \"arg1\" \"arg2\" \"arg3\" " +
-                "\"arg4\" \"arg5\" \"arg6\" \"arg7\" \"arg8\" \"arg9\"";
+        String dockerEntryPoint = "ENTRYPOINT [\"java\",\"-XX:+HeapDumpOnOutOfMemoryError\"," +
+                "\"-XX:HeapDumpPath=/home/ballerina\",\"-cp\",\"dummy_class_path\"," +
+                "\"org.ballerinalang.test.runtime.BTestMain\"]";
+        Assert.assertTrue(dockerFileContent.contains(dockerEntryPoint));
+        String dockerCMD = "CMD [\"arg0\",\"arg1\",\"arg2\",\"arg3\",\"arg4\",\"arg5\",\"arg6\",\"arg7\"," +
+                "\"arg8\",\"arg9\",\"arg10\"]";
         Assert.assertTrue(dockerFileContent.contains(dockerCMD));
     }
 
@@ -210,7 +218,7 @@ public class DockerGeneratorTests {
         Path jacocoAgentJarPath = TEST_SOURCE_DIR_PATH.resolve("jacocoagent.jar");
         dockerModel.setJacocoAgentJarPath(jacocoAgentJarPath);
         List<String> cmdArgs = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < BTESTMAIN_ARGS_COUNT; i++) {
             cmdArgs.add("arg" + i);
         }
         dockerModel.setBaseImage(DockerGenConstants.NATIVE_RUNTIME_BASE_IMAGE);
@@ -246,9 +254,11 @@ public class DockerGeneratorTests {
             String copyNativeImage = "COPY --from=build /app/build/hello .";
             Assert.assertTrue(dockerFileContent.contains(copyNativeImage));
             // The args are changed inside the createTestArtifacts method
-            String dockerCMD = "CMD [\"./hello\", \"true\", \"cache/tests_cache/test_suit.json\", " +
-                    "\"arg2\", \"arg3\", \"arg4\", \"arg5\", " +
-                    "\"arg6\", \"arg7\", \"arg8\", \"arg9\"]";
+            String dockerEntryPoint = "ENTRYPOINT [\"./hello\"]";
+            Assert.assertTrue(dockerFileContent.contains(dockerEntryPoint));
+            String dockerCMD = "CMD [\"true\",\"cache/tests_cache/test_suit.json\"," +
+                    "\"arg2\",\"arg3\",\"arg4\",\"arg5\"," +
+                    "\"arg6\",\"arg7\",\"arg8\",\"arg9\",\"arg10\"]";
             Assert.assertTrue(dockerFileContent.contains(dockerCMD));
             passed = true;
         }
@@ -269,7 +279,7 @@ public class DockerGeneratorTests {
         return configFiles;
     }
 
-    private Set<Path> getTestJarFilePaths() throws IOException{
+    private Set<Path> getTestJarFilePaths() throws IOException {
         return Files.list(TEST_SOURCE_DIR_PATH.resolve("jars")).collect(Collectors.toSet());
     }
 
