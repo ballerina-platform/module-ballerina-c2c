@@ -289,11 +289,6 @@ public class DockerGenerator {
                                     .append(path)
                                     .append(" ").append(getWorkDir())
                                     .append("/jars/ ").append(LINE_SEPARATOR);
-                            //TODO: Remove once https://github.com/moby/moby/issues/37965 is fixed.
-                            boolean isCiBuild = "true".equals(System.getenv().get("CI_BUILD"));
-                            if (isCiBuild) {
-                                testDockerFileContent.append("RUN true ").append(LINE_SEPARATOR);
-                            }
                         }
                 );
 
