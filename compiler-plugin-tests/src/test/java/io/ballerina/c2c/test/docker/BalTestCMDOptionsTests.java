@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package io.ballerina.c2c.test.docker.testing;
+package io.ballerina.c2c.test.docker;
 
 import io.ballerina.c2c.test.utils.KubernetesTestUtils;
 import org.apache.commons.io.FileUtils;
