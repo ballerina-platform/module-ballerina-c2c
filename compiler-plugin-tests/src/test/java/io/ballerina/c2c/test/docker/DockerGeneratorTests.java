@@ -18,16 +18,21 @@
 
 package io.ballerina.c2c.test.docker;
 
+import io.ballerina.c2c.DockerGenConstants;
+import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.DockerGenException;
 import io.ballerina.c2c.models.CopyFileModel;
 import io.ballerina.c2c.models.DockerModel;
 import io.ballerina.c2c.test.utils.DockerTestUtils;
 import io.ballerina.c2c.utils.DockerGenerator;
 import io.ballerina.c2c.utils.DockerImageName;
+import io.ballerina.c2c.utils.NativeDockerGenerator;
+import io.ballerina.projects.internal.model.Target;
 import org.apache.commons.io.FileUtils;
 import org.ballerinalang.model.elements.PackageID;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 import org.wso2.ballerinalang.compiler.util.Name;
 
@@ -37,9 +42,11 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,8 +57,14 @@ import java.util.stream.Collectors;
 public class DockerGeneratorTests {
 
     private static final Path SOURCE_DIR_PATH = Paths.get("src", "test", "resources");
+    private static final Path TEST_SOURCE_DIR_PATH = Paths.get("src", "test", "resources",
+            "docker-cloud-test", "docker-gen-files");
     private static final String DOCKER_IMAGE = "anuruddhal/test-gen-image:v1";
+    private static final String DOCKER_TEST_IMAGE = "anuruddhal/test-gen-tests-image:v1";
+
+    private static final int BTESTMAIN_ARGS_COUNT = 11;
     private final PrintStream out = System.out;
+    private Path cleaningUpDir = null;
 
     @Test(expectedExceptions = DockerGenException.class,
             expectedExceptionsMessageRegExp = "given docker name 'dockerName:latest' is invalid: image name " +
@@ -107,6 +120,7 @@ public class DockerGeneratorTests {
         Assert.assertTrue(dockerFile.exists());
 
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
+        cleaningUpDir = outputDir;
         Assert.assertTrue(dockerFileContent.contains("ENTRYPOINT [\"java\",\"-Xdiag\"," +
                 "\"-cp\",\"hello.jar:jars/*\",\"wso2.bal.1.$_init\"]"));
         Assert.assertTrue(dockerFileContent.contains("USER ballerina"));
@@ -122,14 +136,168 @@ public class DockerGeneratorTests {
                 "-cp", "hello.jar:jars/*", "wso2.bal.1.$_init"));
     }
 
+    @Test
+    public void buildTestDockerImageTest() throws IOException, DockerGenException {
+        DockerModel dockerModel = new DockerModel();
+        dockerModel.setName("test-gen-tests-image");
+        dockerModel.setRegistry("anuruddhal");
+        dockerModel.setTag("v1");
+        dockerModel.setJarFileName("hello.jar");
+        dockerModel.setTest(true);
+        DockerGenerator handler = new DockerGenerator(dockerModel);
+        Set<Path> jarFilePaths = getTestJarFilePaths();
+        PackageID packageID = new PackageID(new Name("wso2"), new Name("bal"), new Name("1.0.0"));
+        dockerModel.setPkgId(packageID);
+        dockerModel.setDependencyJarPaths(jarFilePaths);
+        dockerModel.setTestSuiteJsonPath(TEST_SOURCE_DIR_PATH.resolve("target").resolve("cache")
+                .resolve("tests_cache").resolve("test_suit.json"));
+        dockerModel.setClassPath("dummy_class_path");
+        dockerModel.setJacocoAgentJarPath(TEST_SOURCE_DIR_PATH.resolve("jacocoagent.jar"));
+        Target target = new Target(TEST_SOURCE_DIR_PATH.resolve("target"));
+        dockerModel.setTarget(target);
+        List<Path> configFiles = getConfigPaths();
+        dockerModel.setTestConfigPaths(configFiles);
+        Path jacocoAgentJarPath = TEST_SOURCE_DIR_PATH.resolve("jacocoagent.jar");
+        dockerModel.setJacocoAgentJarPath(jacocoAgentJarPath);
+        List<String> cmdArgs = new ArrayList<>();
+        for (int i = 0; i < BTESTMAIN_ARGS_COUNT; i++) { //The number of args that are passed to BTestMain
+            cmdArgs.add("arg" + i);
+        }
+        dockerModel.setSourceRoot(TEST_SOURCE_DIR_PATH);
+        dockerModel.setTestRunTimeCmdArgs(cmdArgs);
+        handler.createTestArtifacts(out, "\t@kubernetes:Docker \t\t\t", TEST_SOURCE_DIR_PATH.resolve("target")
+                .resolve("docker"));
+        File dockerFile = TEST_SOURCE_DIR_PATH.resolve("target").resolve("docker").resolve("Dockerfile").toFile();
+        cleaningUpDir = TEST_SOURCE_DIR_PATH.resolve("target").resolve("docker");
+        Assert.assertTrue(dockerFile.exists());
+        String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
+        String copyJsonSuite = "COPY test_suit.json /home/ballerina/target/cache/tests_cache/";
+        Assert.assertTrue(dockerFileContent.contains(copyJsonSuite));
+        String copyJacocoAgent = "COPY jacocoagent.jar /home/ballerina/jars/";
+        Assert.assertTrue(dockerFileContent.contains(copyJacocoAgent));
+        String copyTestJar = "COPY hello.jar /home/ballerina/jars/";
+        Assert.assertTrue(dockerFileContent.contains(copyTestJar));
+        String copyTestConfig1 = "COPY config-files/mod1/" + KubernetesConstants.BALLERINA_CONF_FILE_NAME +
+                " /home/ballerina/conf/modules/mod1/tests/";
+        Assert.assertTrue(dockerFileContent.contains(copyTestConfig1));
+        String copyTestConfig2 = "COPY config-files/mod2/" + KubernetesConstants.BALLERINA_CONF_FILE_NAME +
+                " /home/ballerina/conf/modules/mod2/tests/";
+        Assert.assertTrue(dockerFileContent.contains(copyTestConfig2));
+        String copyTestConfig3 = "COPY config-files/conf/" + KubernetesConstants.BALLERINA_CONF_FILE_NAME +
+                " /home/ballerina/conf/tests/";
+        Assert.assertTrue(dockerFileContent.contains("&& mkdir -p /home/ballerina/target \\"));
+        Assert.assertTrue(dockerFileContent.contains("&& chown -R ballerina:troupe /home/ballerina/target \\"));
+        Assert.assertTrue(dockerFileContent.contains("&& chmod -R 777 /home/ballerina/target \\"));
+        Assert.assertTrue(dockerFileContent.contains(copyTestConfig3));
+        String dockerEntryPoint = "ENTRYPOINT [\"java\",\"-XX:+HeapDumpOnOutOfMemoryError\"," +
+                "\"-XX:HeapDumpPath=/home/ballerina\",\"-cp\",\"dummy_class_path\"," +
+                "\"org.ballerinalang.test.runtime.BTestMain\"]";
+        Assert.assertTrue(dockerFileContent.contains(dockerEntryPoint));
+        String dockerCMD = "CMD [\"arg0\",\"arg1\",\"arg2\",\"arg3\",\"arg4\",\"arg5\",\"arg6\",\"arg7\"," +
+                "\"arg8\",\"arg9\",\"arg10\"]";
+        Assert.assertTrue(dockerFileContent.contains(dockerCMD));
+    }
+
+    @Test
+    public void buildNativeTestDockerImageTest() throws IOException {
+        DockerModel dockerModel = new DockerModel();
+        dockerModel.setName("test-gen-tests-image");
+        dockerModel.setRegistry("anuruddhal");
+        dockerModel.setTag("v1");
+        dockerModel.setJarFileName("hello.jar");
+        dockerModel.setFatJarPath(TEST_SOURCE_DIR_PATH.resolve("jars").resolve("hello.jar"));
+        dockerModel.setTest(true);
+        Set<Path> jarFilePaths = getTestJarFilePaths();
+        PackageID packageID = new PackageID(new Name("wso2"), new Name("bal"), new Name("1.0.0"));
+        dockerModel.setPkgId(packageID);
+        dockerModel.setDependencyJarPaths(jarFilePaths);
+        Target target = new Target(TEST_SOURCE_DIR_PATH.resolve("target"));
+        dockerModel.setTarget(target);
+        List<Path> configFiles = getConfigPaths();
+        dockerModel.setTestConfigPaths(configFiles);
+        Path jacocoAgentJarPath = TEST_SOURCE_DIR_PATH.resolve("jacocoagent.jar");
+        dockerModel.setJacocoAgentJarPath(jacocoAgentJarPath);
+        List<String> cmdArgs = new ArrayList<>();
+        for (int i = 0; i < BTESTMAIN_ARGS_COUNT; i++) {
+            cmdArgs.add("arg" + i);
+        }
+        dockerModel.setBaseImage(DockerGenConstants.NATIVE_RUNTIME_BASE_IMAGE);
+        dockerModel.setSourceRoot(TEST_SOURCE_DIR_PATH);
+        dockerModel.setTestRunTimeCmdArgs(cmdArgs);
+        NativeDockerGenerator nativeDockerGenerator = new NativeDockerGenerator(dockerModel);
+        Path outputDir = TEST_SOURCE_DIR_PATH.resolve("target").resolve("docker");
+        Files.createDirectories(outputDir);
+        String defaultBuilderCmd = "native-image -jar " +
+                dockerModel.getFatJarPath().getFileName().toString() +
+                " -H:Name=hello --no-fallback -H:+StaticExecutableWithDynamicLibC";
+        dockerModel.setBuilderCmd(defaultBuilderCmd);
+
+        boolean passed = false;
+        try {
+            nativeDockerGenerator.createTestArtifacts(out, "\t@kubernetes:Docker \t\t\t", outputDir);
+        } catch (DockerGenException e) {
+            // This is expected
+            File dockerFile = TEST_SOURCE_DIR_PATH.resolve("target").resolve("docker").resolve("Dockerfile").toFile();
+            cleaningUpDir = TEST_SOURCE_DIR_PATH.resolve("target").resolve("docker");
+            Assert.assertTrue(dockerFile.exists());
+            String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
+            String copyJar = "COPY hello.jar .";
+            Assert.assertTrue(dockerFileContent.contains(copyJar));
+            String copyReflectJson = "COPY reflect-config.json .";
+            Assert.assertTrue(dockerFileContent.contains(copyReflectJson));
+            String nativeImageCMD = "RUN native-image -jar hello.jar -H:Name=hello --no-fallback " +
+                    "-H:+StaticExecutableWithDynamicLibC " +
+                    "-H:IncludeResources=excludedClasses.txt " +
+                    "-H:IncludeResources=cache/tests_cache/test_suit.json " +
+                    "-H:ReflectionConfigurationFiles=reflect-config.json";
+            Assert.assertTrue(dockerFileContent.contains(nativeImageCMD));
+            String copyNativeImage = "COPY --from=build /app/build/hello .";
+            Assert.assertTrue(dockerFileContent.contains(copyNativeImage));
+            // The args are changed inside the createTestArtifacts method
+            String dockerEntryPoint = "ENTRYPOINT [\"./hello\"]";
+            Assert.assertTrue(dockerFileContent.contains(dockerEntryPoint));
+            String dockerCMD = "CMD [\"true\",\"cache/tests_cache/test_suit.json\"," +
+                    "\"arg2\",\"arg3\",\"arg4\",\"arg5\"," +
+                    "\"arg6\",\"arg7\",\"arg8\",\"arg9\",\"arg10\"]";
+            Assert.assertTrue(dockerFileContent.contains(dockerCMD));
+            passed = true;
+        }
+        Assert.assertTrue(passed);
+    }
+
+    private static List<Path> getConfigPaths() {
+        Path configFilePath1 = TEST_SOURCE_DIR_PATH.resolve("conf").resolve("modules").resolve("mod1")
+                .resolve("tests").resolve(KubernetesConstants.BALLERINA_CONF_FILE_NAME);
+        Path configFilePath2 = TEST_SOURCE_DIR_PATH.resolve("conf").resolve("modules").resolve("mod2")
+                .resolve("tests").resolve(KubernetesConstants.BALLERINA_CONF_FILE_NAME);
+        Path configFilePath3 = TEST_SOURCE_DIR_PATH.resolve("conf").resolve("tests")
+                        .resolve(KubernetesConstants.BALLERINA_CONF_FILE_NAME);
+        List<Path> configFiles = new ArrayList<>();
+        configFiles.add(configFilePath1);
+        configFiles.add(configFilePath2);
+        configFiles.add(configFilePath3);
+        return configFiles;
+    }
+
+    private Set<Path> getTestJarFilePaths() throws IOException {
+        return Files.list(TEST_SOURCE_DIR_PATH.resolve("jars")).collect(Collectors.toSet());
+    }
+
     private Set<Path> getJarFilePaths() throws IOException {
         return Files.list(SOURCE_DIR_PATH.resolve("docker-test")).collect(Collectors.toSet());
     }
 
-    @AfterClass
+    @AfterMethod
     public void cleanUp() throws IOException {
-        FileUtils.deleteDirectory(SOURCE_DIR_PATH.resolve("target").toFile());
-        DockerTestUtils.deleteDockerImage(DOCKER_IMAGE);
+        if (cleaningUpDir != null) {
+            FileUtils.deleteDirectory(cleaningUpDir.toFile());
+            cleaningUpDir = null;
+        }
     }
 
+    @AfterClass
+    private void deleteDockerImage() {
+        DockerTestUtils.deleteDockerImage(DOCKER_IMAGE);
+        DockerTestUtils.deleteDockerImage(DOCKER_TEST_IMAGE);
+    }
 }

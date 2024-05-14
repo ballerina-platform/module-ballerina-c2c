@@ -49,3 +49,6 @@ velocity.log*
 examples/**/Dependencies.toml
 compiler-plugin-tests/**/Dependencies.toml
 cloud-tooling/bin/
+
+# Resource files for testing
+!compiler-plugin-tests/src/test/resources/docker-cloud-test/docker-gen-files/**

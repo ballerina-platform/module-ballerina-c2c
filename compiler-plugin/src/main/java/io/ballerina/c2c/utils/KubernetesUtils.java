@@ -36,6 +36,7 @@ import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.KubernetesModel;
 import io.ballerina.c2c.models.SecretModel;
 import io.ballerina.c2c.util.C2CDiagnosticCodes;
+import io.ballerina.cli.utils.DebugUtils;
 import io.ballerina.projects.Package;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.tools.diagnostics.Diagnostic;
@@ -48,8 +49,11 @@ import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import org.ballerinalang.model.elements.PackageID;
 import org.wso2.ballerinalang.compiler.util.Name;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -57,6 +61,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -358,10 +363,17 @@ public class KubernetesUtils {
         dockerModel.setRegistry(deploymentModel.getRegistry());
         dockerModel.setName(dockerImage);
         dockerModel.setTag(imageTag);
-        dockerModel.setPorts(deploymentModel.getPorts().stream()
-                .map(ContainerPort::getContainerPort)
-                .collect(Collectors.toSet()));
-        dockerModel.setService(true);
+
+        if (!dockerModel.isTest()) {
+            dockerModel.setService(true);
+            dockerModel.setPorts(deploymentModel.getPorts().stream()
+                    .map(ContainerPort::getContainerPort)
+                    .collect(Collectors.toSet()));
+        } else {
+            dockerModel.setService(false);
+            dockerModel.setPorts(Collections.emptySet());
+        }
+
         dockerModel.addCommandArg(deploymentModel.getCommandArgs());
         return dockerModel;
     }
@@ -434,4 +446,64 @@ public class KubernetesUtils {
             throw new KubernetesPluginException(diagnostic);
         }
     }
+
+    public static void runCommand(String dockerImage) {
+        ProcessBuilder processBuilder;
+        if (DebugUtils.isInDebugMode()) {
+            String debugPort = System.getProperty("debug");
+            processBuilder = new ProcessBuilder("docker", "run", "--rm", "-p", debugPort + ":" + debugPort,
+                    dockerImage);
+        } else {
+            processBuilder = new ProcessBuilder("docker", "run", "--rm", dockerImage);
+        }
+        int exitCode = executeProcess(processBuilder);
+        if (exitCode != 0) {
+            printError("Error running the docker image: " + dockerImage);
+        }
+
+    }
+
+    private static int executeProcess(ProcessBuilder processBuilder) {
+        try {
+            Process process = processBuilder.start();
+
+            // Get the output stream of the process
+            InputStream inputStream = process.getInputStream();
+            InputStream errorStream = process.getErrorStream();
+
+            // Handle output stream
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.contains("Untagged") || line.contains("Deleted")) {
+                        continue;
+                    }
+                    OUT.println(line);
+                }
+            }
+
+            // Handle error stream
+            try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream))) {
+                String errorLine;
+                while ((errorLine = errorReader.readLine()) != null) {
+                    ERR.println(errorLine);
+                }
+            }
+
+            // Wait for the process to finish
+            return process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            printError("Error executing the process: " + processBuilder.command());
+            return -1;
+        }
+    }
+
+    public static void deleteDockerImage(String imageName) {
+        ProcessBuilder processBuilder = new ProcessBuilder("docker", "rmi", imageName);
+        int exitCode = executeProcess(processBuilder);
+        if (exitCode != 0) {
+            printError("Error deleting the docker image: " + imageName);
+        }
+    }
+
 }
