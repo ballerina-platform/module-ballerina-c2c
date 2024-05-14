@@ -105,117 +105,134 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
         final Package currentPackage = compilerLifecycleEventContext.currentPackage();
 
         if (balCommand == BalCommand.BUILD) {
-            PackageDescriptor descriptor = currentPackage.descriptor();
-            executablePath.ifPresent(path -> {
-                String executableJarName = "$anon".equals(descriptor.org().value()) ? path.getFileName().toString() :
-                        descriptor.org().value() + "-" + descriptor.name().value() +
-                                "-" + descriptor.version().value() + ".jar";
-                String outputName = "$anon".equals(descriptor.org().value()) ? extractJarName(path.getFileName()) :
-                        descriptor.name().value().toLowerCase(Locale.ROOT);
-                dataHolder.setOutputName(outputName);
-                addDependencyJars(compilerLifecycleEventContext.compilation(), executableJarName);
-                dataHolder.setSourceRoot(executablePath.get().getParent()
-                        .getParent().getParent());
-                codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage),
-                        path, compilerLifecycleEventContext.currentPackage(), balCommand);
-            });
-        } else {
+            setupForCreatingCloudBuildArtifacts(compilerLifecycleEventContext, currentPackage,
+                    executablePath, balCommand);
+        } else if (balCommand == BalCommand.TEST) {
             if (cloud.equals(KubernetesConstants.K8S)) {
                 // Do not support k8s for test
                 printError(KubernetesConstants.K8S + " cloud build only supported for build");
                 pluginLog.error(KubernetesConstants.K8S + " cloud build only supported for build");
                 return;
             }
-            JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilerLifecycleEventContext.compilation(),
-                    JvmTarget.JAVA_17);
-            dataHolder.getDockerModel().setTest(true);
-            executablePath.ifPresent(path -> {
-                Target target;
-                Path testsCachePath;
-                try {
-                    target = new Target(project.targetDir());
-                    testsCachePath = target.getTestsCachePath();
-                } catch (IOException e) {
-                    printError("error while creating target directory: " + e.getMessage());
-                    pluginLog.error("error while creating target directory: " + e.getMessage());
-                    return;
-                }
-
-                Path jsonFilePath = testsCachePath.resolve(TesterinaConstants.TESTERINA_TEST_SUITE);
-                if (!Files.exists(jsonFilePath)) {
-                    printError("error while finding the test suit json");
-                    pluginLog.error("error while finding the test suit json");
-                    return;
-                }
-
-                Map<String, TestSuite> testSuiteMap;
-                List<Path> classPaths = new ArrayList<>();
-                List<Path> moduleJarPaths = TestUtils.getModuleJarPaths(jBallerinaBackend, currentPackage);
-                moduleJarPaths = moduleJarPaths.stream().map(Path::getFileName).toList();
-
-                try (BufferedReader br = Files.newBufferedReader(jsonFilePath, StandardCharsets.UTF_8)) {
-                    Gson gson = new Gson();
-
-                    testSuiteMap = gson.fromJson(br,
-                            new TestSuiteTypeToken().getType());
-
-                    for (ModuleDescriptor moduleDescriptor :
-                            currentPackage.moduleDependencyGraph().toTopologicallySortedList()) {
-                        // Add the test execution dependencies
-                        addTestDependencyJars(project, compilerLifecycleEventContext.compilation(),
-                                moduleDescriptor, testSuiteMap, classPaths, moduleJarPaths);
-                    }
-                } catch (IOException e) {
-                    printError("error while reading the test suit json");
-                    pluginLog.error("error while reading the test suit json");
-                    return;
-                }
-
-                // Rewrite the json
-                TestUtils.writeToTestSuiteJson(testSuiteMap, testsCachePath);
-
-                StringJoiner classPath = TestUtils.joinClassPaths(classPaths);
-                this.dataHolder.getDockerModel().setTestSuiteJsonPath(jsonFilePath);
-                this.dataHolder.getDockerModel().setClassPath(classPath.toString());
-                this.dataHolder.getDockerModel().setSourceRoot(project.sourceRoot());
-                this.dataHolder.getDockerModel().setTarget(target);
-                this.dataHolder.getDockerModel().setTestConfigPaths(getTestConfigPaths(project));
-
-                // Set the command line args for the BTestMain
-                List<String> cmd;
-
-                // Read the mainArgs.txt and get the cmd args
-                Path mainArgsPath = path.getParent().resolve(ProjectConstants.TEST_RUNTIME_MAIN_ARGS_FILE);
-                try {
-                    cmd = Files.readAllLines(mainArgsPath);
-                } catch (IOException e) {
-                    printError("error while reading the mainArgs.txt");
-                    pluginLog.error("error while reading the mainArgs.txt");
-                    return;
-                }
-
-                // Replace test suite json path [1], target [2], jacoco agent jar path [3]
-                cmd.set(TesterinaConstants.RunTimeArgs.TEST_SUITE_JSON_PATH, Paths.get(getTestSuiteJsonCopiedDir())
-                        .resolve(TesterinaConstants.TESTERINA_TEST_SUITE).toString());
-
-                // Target directory is -> to load the test suite json
-                cmd.set(TesterinaConstants.RunTimeArgs.TARGET_DIR, getTargetDir());
-                Path jacocoAgentJarPath = Path.of(TestUtils.getJacocoAgentJarPath());
-                cmd.set(TesterinaConstants.RunTimeArgs.JACOCO_AGENT_PATH,
-                        getCopiedJarPath(jacocoAgentJarPath.getFileName()).toString());
-                this.dataHolder.getDockerModel().setJacocoAgentJarPath(jacocoAgentJarPath);
-                this.dataHolder.getDockerModel().setTestRunTimeCmdArgs(cmd);
-                if (!project.kind().equals(ProjectKind.SINGLE_FILE_PROJECT)) {
-                    this.dataHolder.setOutputName(project.currentPackage()
-                            .packageName().toString().toLowerCase(Locale.ROOT)  + "-" + TesterinaConstants.TESTABLE);
-                } else {
-                    this.dataHolder.setOutputName(extractJarName(path.getFileName()) + "-" +
-                            TesterinaConstants.TESTABLE);
-                }
-                this.dataHolder.setSourceRoot(project.sourceRoot());
-                codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage), path, currentPackage, balCommand);
-            });
+            setupForRunningTestsInCloud(compilerLifecycleEventContext, executablePath, project,
+                    currentPackage, balCommand);
+        } else {
+            printError("unsupported command for c2c plugin: " + balCommand);
+            pluginLog.error("unsupported command for c2c plugin: " + balCommand);
         }
+    }
+
+    private void setupForCreatingCloudBuildArtifacts(CompilerLifecycleEventContext compilerLifecycleEventContext,
+                                                     Package currentPackage, Optional<Path> executablePath,
+                                                     BalCommand balCommand) {
+        PackageDescriptor descriptor = currentPackage.descriptor();
+        executablePath.ifPresent(path -> {
+            String executableJarName = "$anon".equals(descriptor.org().value()) ? path.getFileName().toString() :
+                    descriptor.org().value() + "-" + descriptor.name().value() +
+                            "-" + descriptor.version().value() + ".jar";
+            String outputName = "$anon".equals(descriptor.org().value()) ? extractJarName(path.getFileName()) :
+                    descriptor.name().value().toLowerCase(Locale.ROOT);
+            dataHolder.setOutputName(outputName);
+            addDependencyJars(compilerLifecycleEventContext.compilation(), executableJarName);
+            dataHolder.setSourceRoot(executablePath.get().getParent()
+                    .getParent().getParent());
+            codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage),
+                    path, compilerLifecycleEventContext.currentPackage(), balCommand);
+        });
+    }
+
+    private void setupForRunningTestsInCloud(CompilerLifecycleEventContext compilerLifecycleEventContext,
+                                             Optional<Path> executablePath, Project project, Package currentPackage,
+                                             BalCommand balCommand) {
+        JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilerLifecycleEventContext.compilation(),
+                JvmTarget.JAVA_17);
+        dataHolder.getDockerModel().setTest(true);
+        executablePath.ifPresent(path -> {
+            Target target;
+            Path testsCachePath;
+            try {
+                target = new Target(project.targetDir());
+                testsCachePath = target.getTestsCachePath();
+            } catch (IOException e) {
+                printError("error while creating target directory: " + e.getMessage());
+                pluginLog.error("error while creating target directory: " + e.getMessage());
+                return;
+            }
+
+            Path jsonFilePath = testsCachePath.resolve(TesterinaConstants.TESTERINA_TEST_SUITE);
+            if (!Files.exists(jsonFilePath)) {
+                printError("error while finding the test suit json");
+                pluginLog.error("error while finding the test suit json");
+                return;
+            }
+
+            Map<String, TestSuite> testSuiteMap;
+            List<Path> classPaths = new ArrayList<>();
+            List<Path> moduleJarPaths = TestUtils.getModuleJarPaths(jBallerinaBackend, currentPackage);
+            moduleJarPaths = moduleJarPaths.stream().map(Path::getFileName).toList();
+
+            try (BufferedReader br = Files.newBufferedReader(jsonFilePath, StandardCharsets.UTF_8)) {
+                Gson gson = new Gson();
+
+                testSuiteMap = gson.fromJson(br,
+                        new TestSuiteTypeToken().getType());
+
+                for (ModuleDescriptor moduleDescriptor :
+                        currentPackage.moduleDependencyGraph().toTopologicallySortedList()) {
+                    // Add the test execution dependencies
+                    addTestDependencyJars(project, compilerLifecycleEventContext.compilation(),
+                            moduleDescriptor, testSuiteMap, classPaths, moduleJarPaths);
+                }
+            } catch (IOException e) {
+                printError("error while reading the test suit json");
+                pluginLog.error("error while reading the test suit json");
+                return;
+            }
+
+            // Rewrite the json
+            TestUtils.writeToTestSuiteJson(testSuiteMap, testsCachePath);
+
+            StringJoiner classPath = TestUtils.joinClassPaths(classPaths);
+            this.dataHolder.getDockerModel().setTestSuiteJsonPath(jsonFilePath);
+            this.dataHolder.getDockerModel().setClassPath(classPath.toString());
+            this.dataHolder.getDockerModel().setSourceRoot(project.sourceRoot());
+            this.dataHolder.getDockerModel().setTarget(target);
+            this.dataHolder.getDockerModel().setTestConfigPaths(getTestConfigPaths(project));
+
+            // Set the command line args for the BTestMain
+            List<String> cmd;
+
+            // Read the mainArgs.txt and get the cmd args
+            Path mainArgsPath = path.getParent().resolve(ProjectConstants.TEST_RUNTIME_MAIN_ARGS_FILE);
+            try {
+                cmd = Files.readAllLines(mainArgsPath);
+            } catch (IOException e) {
+                printError("error while reading the mainArgs.txt");
+                pluginLog.error("error while reading the mainArgs.txt");
+                return;
+            }
+
+            // Replace test suite json path [1], target [2], jacoco agent jar path [3]
+            cmd.set(TesterinaConstants.RunTimeArgs.TEST_SUITE_JSON_PATH, Paths.get(getTestSuiteJsonCopiedDir())
+                    .resolve(TesterinaConstants.TESTERINA_TEST_SUITE).toString());
+
+            // Target directory is -> to load the test suite json
+            cmd.set(TesterinaConstants.RunTimeArgs.TARGET_DIR, getTargetDir());
+            Path jacocoAgentJarPath = Path.of(TestUtils.getJacocoAgentJarPath());
+            cmd.set(TesterinaConstants.RunTimeArgs.JACOCO_AGENT_PATH,
+                    getCopiedJarPath(jacocoAgentJarPath.getFileName()).toString());
+            this.dataHolder.getDockerModel().setJacocoAgentJarPath(jacocoAgentJarPath);
+            this.dataHolder.getDockerModel().setTestRunTimeCmdArgs(cmd);
+            if (!project.kind().equals(ProjectKind.SINGLE_FILE_PROJECT)) {
+                this.dataHolder.setOutputName(project.currentPackage()
+                        .packageName().toString().toLowerCase(Locale.ROOT)  + "-" + TesterinaConstants.TESTABLE);
+            } else {
+                this.dataHolder.setOutputName(extractJarName(path.getFileName()) + "-" +
+                        TesterinaConstants.TESTABLE);
+            }
+            this.dataHolder.setSourceRoot(project.sourceRoot());
+            codeGeneratedInternal(KubernetesUtils.getProjectID(currentPackage), path, currentPackage, balCommand);
+        });
     }
 
     private List<Path> getTestConfigPaths(Project project) {
