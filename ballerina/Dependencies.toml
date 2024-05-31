@@ -10,7 +10,7 @@ distribution-version = "2201.9.0"
 [[package]]
 org = "ballerina"
 name = "cloud"
-version = "3.0.0"
+version = "3.0.1"
 modules = [
 	{org = "ballerina", packageName = "cloud", moduleName = "cloud"}
 ]
