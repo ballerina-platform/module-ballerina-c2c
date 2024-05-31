@@ -21,6 +21,7 @@ package io.ballerina.c2c.utils;
 import io.ballerina.projects.TomlDocument;
 import io.ballerina.toml.api.Toml;
 import io.ballerina.toml.semantic.TomlType;
+import io.ballerina.toml.semantic.ast.TomlArrayValueNode;
 import io.ballerina.toml.semantic.ast.TomlBooleanValueNode;
 import io.ballerina.toml.semantic.ast.TomlLongValueNode;
 import io.ballerina.toml.semantic.ast.TomlStringValueNode;
@@ -32,6 +33,8 @@ import io.ballerina.toml.semantic.diagnostics.TomlNodeLocation;
 import io.ballerina.toml.syntax.tree.SyntaxTree;
 import io.ballerina.tools.diagnostics.Diagnostic;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -61,6 +64,25 @@ public class TomlHelper {
             return defaultValue;
         }
         return output;
+    }
+
+    public static List<Long> getNumberArray(Toml toml, String key) {
+        Optional<TomlValueNode> valueNode = toml.get(key);
+        List<Long> values = new ArrayList<>();
+        if (valueNode.isEmpty()) {
+            return values;
+        }
+        TomlValueNode tomlValueNode = valueNode.get();
+        if (tomlValueNode.kind() == TomlType.ARRAY) {
+            TomlArrayValueNode tomlArrayValueNode = (TomlArrayValueNode) tomlValueNode;
+            for (TomlValueNode element : tomlArrayValueNode.elements()) {
+                if (element.kind() == TomlType.INTEGER) {
+                    TomlLongValueNode longValueNode = (TomlLongValueNode) element;
+                    values.add(longValueNode.getValue());
+                }
+            }
+        }
+        return values;
     }
 
     public static Long getLong(Toml toml, String key) {

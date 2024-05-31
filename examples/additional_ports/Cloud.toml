@@ -1,0 +1,8 @@
+[container.image]
+repository="xlight05"
+name="diff_port"
+additionalPorts = [9092]
+
+[[container.copy.files]]
+sourceFile="Config.toml"
+target="./Config.toml"

@@ -315,10 +315,14 @@ public class C2CVisitor extends NodeVisitor {
                 }
                 return Optional.of(new ListenerInfo(path, portNumber));
             }
-        } else {
+        } else if (expression instanceof BasicLiteralNode) {
             //on new http:Listener(9091)
             int port = Integer.parseInt(((BasicLiteralNode) expression).literalToken().text());
             return Optional.of(new ListenerInfo(path, port));
+        } else {
+            diagnostics.add(C2CDiagnosticCodes
+                    .createDiagnostic(C2CDiagnosticCodes.FAILED_PORT_RETRIEVAL, expression.location()));
+            return Optional.empty();
         }
     }
 
