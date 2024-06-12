@@ -30,19 +30,24 @@ import io.ballerina.c2c.util.ScheduledTask;
 import io.ballerina.c2c.util.ServiceInfo;
 import io.ballerina.c2c.util.Task;
 import io.ballerina.c2c.utils.KubernetesUtils;
+import io.ballerina.projects.CloudToml;
 import io.ballerina.projects.Package;
 import io.ballerina.projects.Project;
 import io.ballerina.projects.plugins.AnalysisTask;
 import io.ballerina.projects.plugins.CompilationAnalysisContext;
+import io.ballerina.toml.api.Toml;
 import io.ballerina.tools.diagnostics.Diagnostic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import static io.ballerina.c2c.KubernetesConstants.CONTAINER_IMAGE;
 import static io.ballerina.c2c.KubernetesConstants.DOCKER_CERT_PATH;
 import static io.ballerina.c2c.KubernetesConstants.DOCKER_HOST;
 import static io.ballerina.c2c.KubernetesConstants.SVC_POSTFIX;
 import static io.ballerina.c2c.utils.KubernetesUtils.getValidName;
+import static io.ballerina.c2c.utils.TomlHelper.getNumberArray;
 
 /**
  * An {@code AnalysisTask} that is triggered for code to cloud.
@@ -53,6 +58,7 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
 
     @Override
     public void perform(CompilationAnalysisContext compilationAnalysisContext) {
+
         Package currentPackage = compilationAnalysisContext.currentPackage();
         final Project project = compilationAnalysisContext.currentPackage().project();
         String cloud = project.buildOptions().cloud();
@@ -65,8 +71,9 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
         List<Diagnostic> c2cDiagnostics = new ArrayList<>();
         ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(currentPackage.project(), c2cDiagnostics);
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+
         try {
-            addServices(serviceList);
+            addServices(serviceList, currentPackage);
         } catch (KubernetesPluginException e) {
             compilationAnalysisContext.reportDiagnostic(e.getDiagnostic());
         }
@@ -80,6 +87,7 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
     }
 
     private void addJobs(ProjectServiceInfo projectServiceInfo) {
+
         if (projectServiceInfo.getTask().isPresent()) {
             Task task = projectServiceInfo.getTask().get();
             JobModel jobModel = new JobModel();
@@ -99,36 +107,59 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
         }
     }
 
-    private void addServices(List<ServiceInfo> serviceList) throws KubernetesPluginException {
+    private void addServices(List<ServiceInfo> serviceList, Package currentPackage) throws KubernetesPluginException {
+
+        KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
+
         for (ServiceInfo serviceInfo : serviceList) {
             List<ListenerInfo> listeners = serviceInfo.getListeners();
             for (ListenerInfo listener : listeners) {
-                ServiceModel serviceModel = new ServiceModel();
-                if (KubernetesUtils.isBlank(serviceModel.getName())) {
-                    serviceModel.setName(getValidName(serviceInfo.getServicePath() + SVC_POSTFIX));
-                }
+                addService(getValidName(serviceInfo.getServicePath() + SVC_POSTFIX), listener.getPort(), dataHolder);
+            }
+        }
 
-                int port = listener.getPort();
-                if (serviceModel.getPort() == -1) {
-                    serviceModel.setPort(port);
-                }
-                if (serviceModel.getTargetPort() == -1) {
-                    serviceModel.setTargetPort(port);
-                }
-
-                serviceModel.setProtocol("http");
-
-                KubernetesContext.getInstance().getDataHolder().addServiceModel(serviceModel);
+        Optional<CloudToml> cloudToml = currentPackage.cloudToml();
+        if (cloudToml.isPresent()) {
+            List<Long> numberArray = getNumberArray(new Toml(cloudToml.get().tomlAstNode()),
+                    CONTAINER_IMAGE + ".additionalPorts");
+            for (int i = 0, numberArraySize = numberArray.size(); i < numberArraySize; i++) {
+                Long port = numberArray.get(i);
+                addService("custom-port-" + i + SVC_POSTFIX, port.intValue(), dataHolder);
             }
         }
     }
 
+    private static void addService(String svcName, int port, KubernetesDataHolder dataHolder) {
+
+        List<ServiceModel> serviceModelList = dataHolder.getServiceModelList();
+        if (serviceModelList.stream().anyMatch(serviceModel -> serviceModel.getPort() == port)) {
+            return;
+        }
+        ServiceModel serviceModel = new ServiceModel();
+        if (KubernetesUtils.isBlank(serviceModel.getName())) {
+            serviceModel.setName(getValidName(svcName));
+        }
+
+        if (serviceModel.getPort() == -1) {
+            serviceModel.setPort(port);
+        }
+        if (serviceModel.getTargetPort() == -1) {
+            serviceModel.setTargetPort(port);
+        }
+
+        serviceModel.setProtocol("http");
+
+        dataHolder.addServiceModel(serviceModel);
+    }
+
     private void addHPA() {
+
         PodAutoscalerModel podAutoscalerModel = new PodAutoscalerModel();
         KubernetesContext.getInstance().getDataHolder().setPodAutoscalerModel(podAutoscalerModel);
     }
 
     private void addDeployments() {
+
         DeploymentModel deploymentModel = new DeploymentModel();
 
         String dockerHost = System.getenv(DOCKER_HOST);

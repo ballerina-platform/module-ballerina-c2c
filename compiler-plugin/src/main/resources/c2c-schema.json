@@ -80,6 +80,13 @@
                 "pattern": "`entrypoint` should not be empty"
               }
             },
+            "additionalPorts": {
+              "description": "Additional ports to expose in the container",
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
             "user": {
               "description": "Sets the username to use when running the image",
               "type": "object",

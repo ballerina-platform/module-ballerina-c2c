@@ -66,6 +66,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static io.ballerina.c2c.KubernetesConstants.CONTAINER_IMAGE;
 import static io.ballerina.c2c.KubernetesConstants.DEPLOYMENT_POSTFIX;
 import static io.ballerina.c2c.KubernetesConstants.EXECUTABLE_JAR;
 import static io.ballerina.c2c.KubernetesConstants.JOB_POSTFIX;
@@ -91,6 +92,7 @@ public class KubernetesUtils {
      * @throws IOException If an error occurs when writing to a file
      */
     public static void writeToFile(String context, String outputFileName) throws IOException {
+
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         writeToFile(dataHolder.getK8sArtifactOutputPath(), context, outputFileName);
     }
@@ -104,6 +106,7 @@ public class KubernetesUtils {
      * @throws IOException If an error occurs when writing to a file
      */
     public static void writeToFile(Path outputDir, String context, String fileSuffix) throws IOException {
+
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         final String outputName = dataHolder.getOutputName();
         Path artifactFileName = outputDir.resolve(outputName + fileSuffix);
@@ -138,6 +141,7 @@ public class KubernetesUtils {
      * @throws KubernetesPluginException If an error occurs when reading file
      */
     public static byte[] readFileContent(Path targetFilePath) throws KubernetesPluginException {
+
         return readFileContent(targetFilePath, C2CDiagnosticCodes.PATH_CONTENT_READ_FAILED);
     }
 
@@ -149,6 +153,7 @@ public class KubernetesUtils {
      */
     public static byte[] readFileContent(Path targetFilePath, C2CDiagnosticCodes code)
             throws KubernetesPluginException {
+
         File file = targetFilePath.toFile();
         // append if file exists
         if (file.exists() && !file.isDirectory()) {
@@ -169,6 +174,7 @@ public class KubernetesUtils {
      * @param msg message to be printed
      */
     public static void printError(String msg) {
+
         ERR.println("error [k8s plugin]: " + msg);
     }
 
@@ -178,6 +184,7 @@ public class KubernetesUtils {
      * @param msg message to be printed
      */
     public static void printInstruction(String msg) {
+
         OUT.println(msg);
     }
 
@@ -188,6 +195,7 @@ public class KubernetesUtils {
      * @throws KubernetesPluginException if an error occurs while deleting
      */
     public static void deleteDirectory(Path path) throws KubernetesPluginException {
+
         Path pathToBeDeleted = path.toAbsolutePath();
         if (!Files.exists(pathToBeDeleted)) {
             return;
@@ -211,6 +219,7 @@ public class KubernetesUtils {
      * @return true if the String is empty or null
      */
     public static boolean isBlank(String str) {
+
         int strLen;
         if (str != null && (strLen = str.length()) != 0) {
             for (int i = 0; i < strLen; ++i) {
@@ -229,6 +238,7 @@ public class KubernetesUtils {
      * @return valid name
      */
     public static String getValidName(String name) {
+
         if (name.startsWith("/")) {
             name = name.substring(1);
         }
@@ -243,30 +253,34 @@ public class KubernetesUtils {
     }
 
     public static PackageID getProjectID(Package currentPackage) {
+
         return new PackageID(new Name(currentPackage.packageOrg().value()),
                 new Name(currentPackage.packageName().value()),
                 new Name(currentPackage.packageVersion().value().toString()));
     }
 
     public static Optional<String> getExtension(String filename) {
+
         return Optional.ofNullable(filename)
                 .filter(f -> f.contains("."))
                 .map(f -> f.substring(filename.lastIndexOf(".") + 1));
     }
 
     public static String getFileNameOfSecret(SecretModel secretModel) {
+
         Map<String, String> data = secretModel.getData();
         return data.keySet().iterator().next();
     }
 
     public static String getFileNameOfConfigMap(ConfigMapModel configMapModel) {
+
         Map<String, String> data = configMapModel.getData();
         return data.keySet().iterator().next();
     }
 
     public static void resolveDockerToml(KubernetesModel model) throws KubernetesPluginException {
+
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
-        final String containerImage = "container.image";
         Toml toml = dataHolder.getBallerinaCloud();
         DockerModel dockerModel = dataHolder.getDockerModel();
         dockerModel.setJarFileName(extractJarName(dataHolder.getJarPath()) + EXECUTABLE_JAR);
@@ -293,21 +307,22 @@ public class KubernetesUtils {
         dockerModel.setBaseImage(defaultBaseImage);
         if (toml != null) {
             dockerModel
-                    .setRegistry(TomlHelper.getString(toml, containerImage + ".repository", null));
-            dockerModel.setTag(TomlHelper.getString(toml, containerImage + ".tag", dockerModel.getTag()));
-            dockerModel.setBaseImage(TomlHelper.getString(toml, containerImage + ".base", defaultBaseImage));
-            dockerModel.setEntryPoint(TomlHelper.getString(toml, containerImage + ".entrypoint",
+                    .setRegistry(TomlHelper.getString(toml, CONTAINER_IMAGE + ".repository", null));
+            dockerModel.setTag(TomlHelper.getString(toml, CONTAINER_IMAGE + ".tag", dockerModel.getTag()));
+            dockerModel.setBaseImage(TomlHelper.getString(toml, CONTAINER_IMAGE + ".base", defaultBaseImage));
+            dockerModel.setEntryPoint(TomlHelper.getString(toml, CONTAINER_IMAGE + ".entrypoint",
                     dockerModel.getEntryPoint()));
-            if (model instanceof DeploymentModel) {
+            if (model instanceof DeploymentModel deploymentModel) {
 
-                dockerModel.setName(TomlHelper.getString(toml, containerImage + ".name",
+                dockerModel.setName(TomlHelper.getString(toml, CONTAINER_IMAGE + ".name",
                         model.getName().replace(DEPLOYMENT_POSTFIX, "")));
                 String imageName = isBlank(dockerModel.getRegistry()) ?
                         dockerModel.getName() + ":" + dockerModel.getTag() :
                         dockerModel.getRegistry() + "/" + dockerModel.getName() + ":" + dockerModel.getTag();
-                ((DeploymentModel) model).setImage(imageName);
+                deploymentModel.setImage(imageName);
+
             } else {
-                dockerModel.setName(TomlHelper.getString(toml, containerImage + ".name",
+                dockerModel.setName(TomlHelper.getString(toml, CONTAINER_IMAGE + ".name",
                         model.getName().replace(JOB_POSTFIX, "")));
                 String imageName = isBlank(dockerModel.getRegistry()) ?
                         dockerModel.getName() + ":" + dockerModel.getTag() :
@@ -345,6 +360,7 @@ public class KubernetesUtils {
      * @param deploymentModel Deployment model
      */
     public static DockerModel getDockerModel(DeploymentModel deploymentModel) {
+
         KubernetesDataHolder dataHolder = KubernetesContext.getInstance().getDataHolder();
         DockerModel dockerModel = dataHolder.getDockerModel();
         String dockerImage = deploymentModel.getImage();
@@ -367,6 +383,7 @@ public class KubernetesUtils {
     }
 
     public static boolean isBuildOptionDockerOrK8s(String buildOption) {
+
         switch (buildOption) {
             case "k8s":
             case "docker":
@@ -376,6 +393,7 @@ public class KubernetesUtils {
     }
 
     public static <T> String asYaml(T object) throws KubernetesPluginException {
+
         try {
             return YAML_MAPPER.writeValueAsString(object);
         } catch (JsonProcessingException e) {
@@ -386,6 +404,7 @@ public class KubernetesUtils {
     }
 
     public static boolean isThinJar(Toml ballerinaCloud, DockerModel dockerModel) {
+
         if (!TomlHelper.getBoolean(ballerinaCloud, "settings.thinJar", true)) {
             return false;
         }
@@ -395,6 +414,7 @@ public class KubernetesUtils {
     }
 
     public static List<VolumeMount> generateConfigMapVolumeMounts(Collection<ConfigMapModel> configMapModels) {
+
         List<VolumeMount> volumeMounts = new ArrayList<>();
         for (ConfigMapModel configMapModel : configMapModels) {
             final String mountPath = configMapModel.getMountPath();
@@ -412,6 +432,7 @@ public class KubernetesUtils {
     }
 
     public static List<VolumeMount> generateSecretVolumeMounts(Collection<SecretModel> secretModels) {
+
         List<VolumeMount> volumeMounts = new ArrayList<>();
         for (SecretModel secretModel : secretModels) {
             VolumeMountBuilder volumeMountBuilder = new VolumeMountBuilder()
@@ -428,6 +449,7 @@ public class KubernetesUtils {
     }
 
     public static void validateFileExistence(File file) throws KubernetesPluginException {
+
         if (!file.exists()) {
             Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(
                     C2CDiagnosticCodes.PATH_CONTENT_READ_FAILED, new NullLocation(), file.getAbsolutePath());
