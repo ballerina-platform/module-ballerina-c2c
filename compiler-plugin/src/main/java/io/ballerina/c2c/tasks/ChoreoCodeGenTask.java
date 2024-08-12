@@ -62,9 +62,9 @@ public class ChoreoCodeGenTask implements CompilerLifecycleTask<CompilerLifecycl
         Optional<Path> executablePath = compilerLifecycleEventContext.getGeneratedArtifactPath();
         final PackageID currentPackage = KubernetesContext.getInstance().getCurrentPackage();
         executablePath.ifPresent(path -> {
-            String executableJarName = "$anon".equals(currentPackage.orgName.getValue()) ? path.getFileName().toString() :
-                    currentPackage.orgName.getValue() + "-" + currentPackage.name.getValue() +
-                            "-" + currentPackage.version.getValue() + ".jar";
+            String executableJarName = "$anon".equals(currentPackage.orgName.getValue()) ?
+                    path.getFileName().toString() : currentPackage.orgName.getValue() + "-" +
+                    currentPackage.name.getValue() + "-" + currentPackage.version.getValue() + ".jar";
             String outputName = "$anon".equals(currentPackage.orgName.getValue()) ? extractJarName(path.getFileName()) :
                     currentPackage.name.getValue();
             dataHolder.setOutputName(outputName);
