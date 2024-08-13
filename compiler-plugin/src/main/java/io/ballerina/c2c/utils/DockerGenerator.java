@@ -232,8 +232,8 @@ public class DockerGenerator {
         appendCommonCommands(dockerfileContent);
         if (isBlank(this.dockerModel.getEntryPoint())) {
             PackageID packageID = this.dockerModel.getPkgId();
-            String mainClass = JarResolver.getQualifiedClassName(packageID.orgName.value, packageID.name.value,
-                    packageID.version.value, MODULE_INIT_CLASS_NAME);
+            String mainClass = JarResolver.getQualifiedClassName(packageID.orgName.getValue(),
+                    packageID.name.getValue(), packageID.version.getValue(), MODULE_INIT_CLASS_NAME);
             List<String> args = new ArrayList<>();
             args.add("java");
             args.add("-Xdiag");
