@@ -14,6 +14,8 @@ Supports following artifact generation:
 - Docker image  
 - Dockerfile 
 
+**The base image required for the module is published to [Dockerhub](https://hub.docker.com/r/ballerina/jvm-runtime)**
+
 ## Docker artifact generation
 
 Build the Ballerina Program with `--cloud=docker` option to generate Docker artifacts (Dockerfile and Docker image). 

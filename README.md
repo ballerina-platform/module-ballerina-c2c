@@ -18,6 +18,8 @@ Code2cloud extension implementation for ballerina.
 
 **Refer [samples](examples) for more info.**
 
+**The base image required for the module is published to [Dockerhub](https://hub.docker.com/r/ballerina/jvm-runtime)**
+
 ## How to build
 
 1. Download and install JDK 17
