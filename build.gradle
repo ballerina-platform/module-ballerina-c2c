@@ -40,9 +40,9 @@ ext.projectReportingOutputEncoding = "UTF-8"
 ext.puppycrawlCheckstyleVersion = "10.12.0"
 ext.slf4jVersion = "1.7.26"
 ext.testngVersion = "7.6.1"
-ext.lombokVersion = "1.18.28"
+ext.lombokVersion = "1.18.30"
 ext.commonIoVersion = "2.13.0"
-ext.jacksonYamlVersion = " 2.15.2"
+ext.jacksonYamlVersion = "2.17.3"
 ext.commonsCodecVersion = "1.16.0"
 
 allprojects {

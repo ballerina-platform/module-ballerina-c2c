@@ -28,7 +28,10 @@ jobs:
 
   build-jre-docker:
     needs: pre-validate-registry-sync
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest ]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout branch
         uses: actions/checkout@v3
