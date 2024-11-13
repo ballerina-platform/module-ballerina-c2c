@@ -20,7 +20,7 @@ ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 RUN apk upgrade --no-cache && apk add --no-cache fontconfig libretls musl-locales musl-locales-lang ttf-dejavu tzdata zlib libc6-compat gcompat\
     && rm -rf /var/cache/apk/*
 
-ENV JAVA_VERSION jdk-27.0.5_11
+ENV JAVA_VERSION jdk-21.0.5_11
 
 
 RUN set -eux; \
