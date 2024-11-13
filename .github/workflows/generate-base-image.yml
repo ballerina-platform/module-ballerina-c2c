@@ -194,24 +194,24 @@ jobs:
 
       - name: Build and push only major.minor.patch tag
         if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_ONE_TAG == 1 }}
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker-images/base-image/Dockerfile
           push: true
-          platform: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
             ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
 
       - name: Build and push only major.minor.patch, major.minor
         if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_TWO_TAG == 1 }}
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker-images/base-image/Dockerfile
           push: true
-          platform: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
             ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
@@ -219,11 +219,11 @@ jobs:
             ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
       - name: Build and push only major.minor.patch, major.minor, major
         if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_THREE_TAG == 1 }}
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker-images/base-image/Dockerfile
-          platform: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
@@ -234,12 +234,12 @@ jobs:
             ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}
       - name: Build and push only major.minor.patch, major.minor, major, latest
         if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_FOUR_TAG == 1 }}
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker-images/base-image/Dockerfile
           push: true
-          platform: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
             ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
