@@ -29,6 +29,15 @@ jobs:
   build-jre-docker:
     needs: pre-validate-registry-sync
     runs-on: ubuntu-latest
+    outputs:
+      TAG: ${{ steps.tag-gen.outputs.TAG }}
+      MAJ_MIN_TAG: ${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
+      MAJ_TAG: ${{ steps.tag-gen.outputs.MAJ_TAG }}
+      GENERATE_ONLY_ONE_TAG: ${{ steps.tag-gen.outputs.GENERATE_ONLY_ONE_TAG }}
+      GENERATE_ONLY_TWO_TAG: ${{ steps.tag-gen.outputs.GENERATE_ONLY_TWO_TAG }}
+      GENERATE_ONLY_THREE_TAG: ${{ steps.tag-gen.outputs.GENERATE_ONLY_THREE_TAG }}
+      GENERATE_ONLY_FOUR_TAG: ${{ steps.tag-gen.outputs.GENERATE_ONLY_FOUR_TAG }}
+      DOCKER_HUB_NAME: ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}
     steps:
       - name: Checkout branch
         uses: actions/checkout@v3
@@ -191,80 +200,107 @@ jobs:
 
           echo ::set-output name=DOCKER_HUB_NAME::$docker_hub_name
         id: tag-gen
+  push-images:
+    needs: build-jre-docker
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest ]
+    runs-on: ${{ matrix.os }}
 
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.BAL_DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.BAL_DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Login to ACR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io
+          username: ${{ secrets.DOCKER_ACR_USERNAME }}
+          password: ${{ secrets.DOCKER_ACR_PASSWORD }}
       - name: Build and push only major.minor.patch tag
-        if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_ONE_TAG == 1 }}
+        if: ${{ needs.build-jre-docker.outputs.GENERATE_ONLY_ONE_TAG == '1' }}
         uses: docker/build-push-action@v3
         with:
           context: .
           file: ./docker-images/base-image/Dockerfile
           push: true
           tags: |
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
-            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
+            ${{ needs.build-jre-docker.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ needs.build-jre-docker.outputs.TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ needs.build-jre-docker.outputs.TAG }}
 
       - name: Build and push only major.minor.patch, major.minor
-        if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_TWO_TAG == 1 }}
+        if: ${{ needs.build-jre-docker.outputs.GENERATE_ONLY_TWO_TAG == '1' }}
         uses: docker/build-push-action@v3
         with:
           context: .
           file: ./docker-images/base-image/Dockerfile
           push: true
           tags: |
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
-            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
-            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
+            ${{ needs.build-jre-docker.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ needs.build-jre-docker.outputs.TAG }}
+            ${{ needs.build-jre-docker.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ needs.build-jre-docker.outputs.MAJ_MIN_TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ needs.build-jre-docker.outputs.TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ needs.build-jre-docker.outputs.MAJ_MIN_TAG }}
+
       - name: Build and push only major.minor.patch, major.minor, major
-        if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_THREE_TAG == 1 }}
+        if: ${{ needs.build-jre-docker.outputs.GENERATE_ONLY_THREE_TAG == '1' }}
         uses: docker/build-push-action@v3
         with:
           context: .
           file: ./docker-images/base-image/Dockerfile
           push: true
           tags: |
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}
-            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
-            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
-            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}
+            ${{ needs.build-jre-docker.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ needs.build-jre-docker.outputs.TAG }}
+            ${{ needs.build-jre-docker.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ needs.build-jre-docker.outputs.MAJ_MIN_TAG }}
+            ${{ needs.build-jre-docker.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ needs.build-jre-docker.outputs.MAJ_TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ needs.build-jre-docker.outputs.TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ needs.build-jre-docker.outputs.MAJ_MIN_TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ needs.build-jre-docker.outputs.MAJ_TAG }}
+
       - name: Build and push only major.minor.patch, major.minor, major, latest
-        if: ${{ steps.tag-gen.outputs.GENERATE_ONLY_FOUR_TAG == 1 }}
+        if: ${{ needs.build-jre-docker.outputs.GENERATE_ONLY_FOUR_TAG == '1' }}
         uses: docker/build-push-action@v3
         with:
           context: .
           file: ./docker-images/base-image/Dockerfile
           push: true
           tags: |
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}
-            ${{ steps.tag-gen.outputs.DOCKER_HUB_NAME }}/jvm-runtime:latest
-            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.TAG }}
-            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_MIN_TAG }}
-            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ steps.tag-gen.outputs.MAJ_TAG}}
+            ${{ needs.build-jre-docker.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ needs.build-jre-docker.outputs.TAG }}
+            ${{ needs.build-jre-docker.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ needs.build-jre-docker.outputs.MAJ_MIN_TAG }}
+            ${{ needs.build-jre-docker.outputs.DOCKER_HUB_NAME }}/jvm-runtime:${{ needs.build-jre-docker.outputs.MAJ_TAG }}
+            ${{ needs.build-jre-docker.outputs.DOCKER_HUB_NAME }}/jvm-runtime:latest
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ needs.build-jre-docker.outputs.TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ needs.build-jre-docker.outputs.MAJ_MIN_TAG }}
+            ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:${{ needs.build-jre-docker.outputs.MAJ_TAG }}
             ${{ secrets.DOCKER_ACR_NAME }}.azurecr.io/ballerina/jvm-runtime:latest
+
       - name: Send Notifications
         run: |
           tags=""
-          if [[ ${{ steps.tag-gen.outputs.GENERATE_ONLY_ONE_TAG }} == 1 ]]
+          if [[ ${{ needs.build-jre-docker.outputs.GENERATE_ONLY_ONE_TAG }} == '1' ]]
           then
-            tags="${{ steps.tag-gen.outputs.TAG }} (patch)"
-          elif [[ ${{ steps.tag-gen.outputs.GENERATE_ONLY_TWO_TAG }} == 1 ]]
+            tags="${{ needs.build-jre-docker.outputs.TAG }} (patch)"
+          elif [[ ${{ needs.build-jre-docker.outputs.GENERATE_ONLY_TWO_TAG }} == '1' ]]
           then
-            tags="${{ steps.tag-gen.outputs.TAG }} (patch), ${{ steps.tag-gen.outputs.MAJ_MIN_TAG }} (minor)"
-          elif [[ ${{ steps.tag-gen.outputs.GENERATE_ONLY_THREE_TAG }} == 1 ]]
+            tags="${{ needs.build-jre-docker.outputs.TAG }} (patch), ${{ needs.build-jre-docker.outputs.MAJ_MIN_TAG }} (minor)"
+          elif [[ ${{ needs.build-jre-docker.outputs.GENERATE_ONLY_THREE_TAG }} == '1' ]]
           then
-            tags="${{ steps.tag-gen.outputs.TAG }} (patch), ${{ steps.tag-gen.outputs.MAJ_MIN_TAG }} (minor), ${{ steps.tag-gen.outputs.MAJ_TAG }} (major)"
-          elif [[ ${{ steps.tag-gen.outputs.GENERATE_ONLY_FOUR_TAG }} == 1 ]]
+            tags="${{ needs.build-jre-docker.outputs.TAG }} (patch), ${{ needs.build-jre-docker.outputs.MAJ_MIN_TAG }} (minor), ${{ needs.build-jre-docker.outputs.MAJ_TAG }} (major)"
+          elif [[ ${{ needs.build-jre-docker.outputs.GENERATE_ONLY_FOUR_TAG }} == '1' ]]
           then
-            tags="${{ steps.tag-gen.outputs.TAG }} (patch), ${{ steps.tag-gen.outputs.MAJ_MIN_TAG }} (minor), ${{ steps.tag-gen.outputs.MAJ_TAG }} (major), latest"
+            tags="${{ needs.build-jre-docker.outputs.TAG }} (patch), ${{ needs.build-jre-docker.outputs.MAJ_MIN_TAG }} (minor), ${{ needs.build-jre-docker.outputs.MAJ_TAG }} (major), latest"
           else
-            tags="no tags has been updated"
+            tags="no tags have been updated"
           fi
           docker run  -e SPACE_ID="${{ secrets.SPACE_ID }}" -e MESSAGE_KEY="${{ secrets.MESSAGE_KEY }}" -e CHAT_TOKEN="${{ secrets.CHAT_TOKEN }}" -e TAGS="${tags}" ballerina/base_image_update_notifications
-  post-validate-registry-sync:
-    needs: build-jre-docker
-    uses: ./.github/workflows/validate-registry-sync.yml
-    secrets: inherit
