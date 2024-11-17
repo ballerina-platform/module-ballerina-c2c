@@ -55,4 +55,8 @@
     <Match>
         <Bug pattern="EI_EXPOSE_REP, EI_EXPOSE_REP2, MS_EXPOSE_REP" />
     </Match>
+    <Match>
+        <Class name="io.ballerina.c2c.utils.DockerImageName"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
 </FindBugsFilter>
