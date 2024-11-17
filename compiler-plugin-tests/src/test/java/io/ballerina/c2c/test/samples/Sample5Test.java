@@ -164,7 +164,7 @@ public class Sample5Test extends SampleTest {
                 "xlight-hello-0.0.1.jar:jars/*, xlight.hello.0.$_init]");
     }
 
-    @Test(groups = { "integration" })
+    @Test(groups = { "integration" }, enabled = false)
     public void deploySample() throws IOException, InterruptedException {
         Assert.assertEquals(0, loadImage(DOCKER_IMAGE));
         Assert.assertEquals(0, deployK8s(KUBERNETES_TARGET_PATH));

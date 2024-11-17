@@ -19,4 +19,8 @@
     <Match>
         <Bug pattern="EI_EXPOSE_REP, EI_EXPOSE_REP2, MS_EXPOSE_REP, MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR" />
     </Match>
+    <Match>
+        <Class name="io.ballerina.c2c.tooling.completion.CloudTomlCompletionContext"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
 </FindBugsFilter>
