@@ -6,11 +6,11 @@
     "source": "source/project1/Ballerina.toml",
     "items": [
         {
-            "label": "platform.java17.dependency",
+            "label": "platform.java21.dependency",
             "kind": "Snippet",
             "detail": "Table Array",
             "sortText": "C",
-            "insertText": "[[platform.java17.dependency]]"
+            "insertText": "[[platform.java21.dependency]]"
         },
         {
             "label": "package",
