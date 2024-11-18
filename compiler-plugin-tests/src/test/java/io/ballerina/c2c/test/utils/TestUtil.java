@@ -92,7 +92,7 @@ public class TestUtil {
         defaultBuilder.addCompilationCacheFactory(new FileSystemCache.FileSystemCacheFactory(repo.resolve("cache")));
         Project project = BuildProject.load(defaultBuilder, sourcePath);
         PackageCompilation packageCompilation = project.currentPackage().getCompilation();
-        JBallerinaBackend.from(packageCompilation, JvmTarget.JAVA_17);
+        JBallerinaBackend.from(packageCompilation, JvmTarget.JAVA_21);
     }
 
     /**

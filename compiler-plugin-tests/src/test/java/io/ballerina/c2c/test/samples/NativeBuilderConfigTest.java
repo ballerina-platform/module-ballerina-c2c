@@ -52,7 +52,7 @@ public class NativeBuilderConfigTest {
         Assert.assertTrue(dockerFile.exists());
         Assert.assertTrue(content.contains("RUN native-image -jar custom_builder.jar -H:Name=custom_builder " +
                 "--no-fallback --static --libc=musl"));
-        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image-community:17-muslib-ol8 as build"));
+        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image-community:21-muslib-ol9 as build"));
         Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
@@ -65,7 +65,7 @@ public class NativeBuilderConfigTest {
         Assert.assertTrue(dockerFile.exists());
         Assert.assertTrue(content.contains("RUN native-image -jar custom_builder.jar -H:Name=custom_builder " +
                 "--no-fallback --static --libc=musl"));
-        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image-community:17-muslib-ol8 as build"));
+        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image-community:21-muslib-ol9 as build"));
         Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }

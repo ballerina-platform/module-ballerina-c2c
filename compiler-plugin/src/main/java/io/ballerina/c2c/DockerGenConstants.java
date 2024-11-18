@@ -27,7 +27,7 @@ public class DockerGenConstants {
     public static final String REGISTRY_SEPARATOR = "/";
     public static final String TAG_SEPARATOR = ":";
     public static final String JRE_SLIM_BASE = "ballerina/jvm-runtime:3.0";
-    public static final String NATIVE_BUILDER_IMAGE = "ghcr.io/graalvm/native-image-community:21-ol8";
+    public static final String NATIVE_BUILDER_IMAGE = "ghcr.io/graalvm/native-image-community:21-ol9";
     public static final String NATIVE_RUNTIME_BASE_IMAGE = "gcr.io/distroless/base";
     public static final int MAX_BALLERINA_LAYERS = 110;
 

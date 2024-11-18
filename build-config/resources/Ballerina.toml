@@ -7,5 +7,5 @@ license = ["Apache-2.0"]
 keywords = ["cloud", "kubernetes", "docker", "k8s", "c2c"]
 distribution = "2201.8.0"
 
-[platform.java17]
+[platform.java21]
 graalvmCompatible = true
