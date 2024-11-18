@@ -126,7 +126,7 @@ public class NativeTest extends SampleTest {
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(content.contains("RUN native-image -jar hello.jar -H:Name=hello --no-fallback " +
                 "-H:+StaticExecutableWithDynamicLibC"));
-        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image-community:17-ol8 as build"));
+        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image-community:21-ol9 as build"));
         Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
     }
 

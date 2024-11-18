@@ -7,5 +7,5 @@ tag = "1.0.0"
 buildImage = false
 
 [graalvm.builder]
-base = "ghcr.io/graalvm/native-image-community:17-muslib-ol8"
+base = "ghcr.io/graalvm/native-image-community:21-muslib-ol9"
 buildCmd = "native-image -jar custom_builder.jar -H:Name=custom_builder --no-fallback --static --libc=musl"
