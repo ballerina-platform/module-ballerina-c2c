@@ -67,7 +67,7 @@
               "description": "Base container of the container image",
               "type": "string",
               "pattern": "^(?!\\s*$).+",
-              "default": "ballerina/jvm-runtime:2.0",
+              "default": "ballerina/jvm-runtime:3.0",
               "message": {
                 "pattern": "`base` should not be empty"
               }
