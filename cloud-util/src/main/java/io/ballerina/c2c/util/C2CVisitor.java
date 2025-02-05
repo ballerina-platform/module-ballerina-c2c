@@ -484,6 +484,9 @@ public class C2CVisitor extends NodeVisitor {
                     .createDiagnostic(C2CDiagnosticCodes.FAILED_VARIABLE_RETRIEVAL, expressionNode.location(), name));
             return Optional.empty();
         }
+        if (expressionNode.kind() != SyntaxKind.MAPPING_CONSTRUCTOR) {
+            return Optional.empty();
+        }
         MappingConstructorExpressionNode expressionNode1 = (MappingConstructorExpressionNode) expressionNode;
         SeparatedNodeList<MappingFieldNode> fields = expressionNode1.fields();
         for (MappingFieldNode field : fields) {
