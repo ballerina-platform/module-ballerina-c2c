@@ -109,9 +109,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                     executablePath, balCommand);
         } else if (balCommand == BalCommand.TEST) {
             if (cloud.equals(KubernetesConstants.K8S)) {
-                // Do not support k8s for test
-                printError(KubernetesConstants.K8S + " cloud build only supported for build");
-                pluginLog.error(KubernetesConstants.K8S + " cloud build only supported for build");
+                // Ignore running tests and generating artifacts.
                 return;
             }
             setupForRunningTestsInCloud(compilerLifecycleEventContext, executablePath, project,
