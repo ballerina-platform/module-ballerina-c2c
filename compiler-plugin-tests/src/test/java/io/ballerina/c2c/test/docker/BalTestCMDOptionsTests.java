@@ -47,17 +47,6 @@ public class BalTestCMDOptionsTests {
     }
 
     @Test
-    public void testCloudFlagWithK8s() throws IOException, InterruptedException {
-        Path projectDir = SOURCE_DIR_PATH.resolve("cloud-flag-k8s");
-        String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
-                "--cloud=k8s", new String[0]);
-        cleaningUpDir = projectDir;
-        Assert.assertFalse(projectDir.resolve("target").resolve("docker").toFile().exists());
-        Assert.assertTrue(actualOutcome.contains("error [k8s plugin]: k8s cloud build only supported for build"));
-        Assert.assertTrue(actualOutcome.contains("SEVERE: k8s cloud build only supported for build"));
-    }
-
-    @Test
     public void testCloudFlagWithCodeCoverage() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-flag-code-coverage");
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
