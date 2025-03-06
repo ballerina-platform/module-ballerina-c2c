@@ -1,11 +1,11 @@
 [package]
 org = "ballerina"
 name = "cloud"
-version = "3.2.1"
+version = "3.3.0"
 repository = "https://github.com/ballerina-platform/module-ballerina-c2c"
 license = ["Apache-2.0"]
 keywords = ["cloud", "kubernetes", "docker", "k8s", "c2c"]
-distribution = "2201.8.0"
+distribution = "2201.12.0"
 
 [platform.java21]
 graalvmCompatible = true
