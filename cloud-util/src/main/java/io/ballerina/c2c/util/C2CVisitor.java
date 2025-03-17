@@ -42,6 +42,7 @@ import io.ballerina.compiler.syntax.tree.MappingConstructorExpressionNode;
 import io.ballerina.compiler.syntax.tree.MappingFieldNode;
 import io.ballerina.compiler.syntax.tree.MetadataNode;
 import io.ballerina.compiler.syntax.tree.ModuleVariableDeclarationNode;
+import io.ballerina.compiler.syntax.tree.NamedArgumentNode;
 import io.ballerina.compiler.syntax.tree.Node;
 import io.ballerina.compiler.syntax.tree.NodeList;
 import io.ballerina.compiler.syntax.tree.NodeVisitor;
@@ -282,13 +283,27 @@ public class C2CVisitor extends NodeVisitor {
         }
         if (arguments.size() > paramNo) {
             FunctionArgumentNode functionArgumentNode = arguments.get(paramNo);
-            ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
-            if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
-                return getListenerInfo(listenerName, expression);
-            } else if (expression instanceof BasicLiteralNode) {
-                BasicLiteralNode basicLiteralNode = (BasicLiteralNode) expression;
-                int port = Integer.parseInt(basicLiteralNode.literalToken().text());
-                return Optional.of(new ListenerInfo(listenerName, port));
+            if (functionArgumentNode.kind() == SyntaxKind.POSITIONAL_ARG) {
+                // Listener with positional argument - on new http:Listener(9091)
+                ExpressionNode expression = ((PositionalArgumentNode) functionArgumentNode).expression();
+                if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+                    return getListenerInfo(listenerName, expression);
+                } else if (expression instanceof BasicLiteralNode basicLiteralNode) {
+                    int port = Integer.parseInt(basicLiteralNode.literalToken().text());
+                    return Optional.of(new ListenerInfo(listenerName, port));
+                }
+            } else if (functionArgumentNode.kind() == SyntaxKind.NAMED_ARG) {
+                // Listener with named argument - on new http:Listener(port = 9091)
+                NamedArgumentNode namedArgumentNode = (NamedArgumentNode) functionArgumentNode;
+                if (namedArgumentNode.argumentName().name().text().equals("port")) {
+                    ExpressionNode expression = namedArgumentNode.expression();
+                    if (expression.kind() == SyntaxKind.SIMPLE_NAME_REFERENCE) {
+                        return getListenerInfo(listenerName, expression);
+                    } else if (expression instanceof BasicLiteralNode basicLiteralNode) {
+                        int port = Integer.parseInt(basicLiteralNode.literalToken().text());
+                        return Optional.of(new ListenerInfo(listenerName, port));
+                    }
+                }
             }
         }
         return Optional.empty();
