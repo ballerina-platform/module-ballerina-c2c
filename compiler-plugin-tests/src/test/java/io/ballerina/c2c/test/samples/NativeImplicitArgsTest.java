@@ -51,7 +51,7 @@ public class NativeImplicitArgsTest {
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
         Assert.assertTrue(content.contains("RUN native-image --static --libc=musl -jar impl_args.jar " +
-                "-H:Name=impl_args --no-fallback"));
+                "-o impl_args --no-fallback"));
         Assert.assertTrue(content.contains("FROM alpine"));
         Assert.assertFalse(content.contains("-H:+StaticExecutableWithDynamicLibC"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
@@ -64,7 +64,7 @@ public class NativeImplicitArgsTest {
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
         Assert.assertTrue(content.contains("RUN native-image --static --libc=musl -jar impl_args.jar " +
-                "-H:Name=impl_args --no-fallback"));
+                "-o impl_args --no-fallback"));
         Assert.assertFalse(content.contains("-H:+StaticExecutableWithDynamicLibC"));
 
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);

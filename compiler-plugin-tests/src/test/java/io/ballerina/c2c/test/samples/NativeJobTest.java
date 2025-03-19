@@ -19,6 +19,7 @@
 package io.ballerina.c2c.test.samples;
 
 import com.github.dockerjava.api.command.InspectImageResponse;
+import io.ballerina.c2c.DockerGenConstants;
 import io.ballerina.c2c.KubernetesConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.test.utils.KubernetesTestUtils;
@@ -69,10 +70,10 @@ public class NativeJobTest extends SampleTest {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         Assert.assertTrue(dockerFile.exists());
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
-        Assert.assertTrue(content.contains("RUN native-image -jar hello.jar -H:Name=hello --no-fallback " +
+        Assert.assertTrue(content.contains("RUN native-image -jar hello.jar -o hello --no-fallback " +
                 "-H:+StaticExecutableWithDynamicLibC"));
-        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image-community:21-ol9 as build"));
-        Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
+        Assert.assertTrue(content.contains("FROM " + DockerGenConstants.NATIVE_BUILDER_IMAGE + " as build"));
+        Assert.assertTrue(content.contains("FROM " + DockerGenConstants.NATIVE_RUNTIME_BASE_IMAGE));
     }
 
     @Test

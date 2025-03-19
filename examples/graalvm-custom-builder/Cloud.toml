@@ -8,4 +8,4 @@ buildImage = false
 
 [graalvm.builder]
 base = "ghcr.io/graalvm/native-image-community:21-muslib-ol9"
-buildCmd = "native-image -jar custom_builder.jar -H:Name=custom_builder --no-fallback --static --libc=musl"
+buildCmd = "native-image -jar custom_builder.jar -o custom_builder --no-fallback --static --libc=musl"

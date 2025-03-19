@@ -28,7 +28,7 @@ public class DockerGenConstants {
     public static final String TAG_SEPARATOR = ":";
     public static final String JRE_SLIM_BASE = "ballerina/jvm-runtime:3.0";
     public static final String NATIVE_BUILDER_IMAGE = "ghcr.io/graalvm/native-image-community:21-ol9";
-    public static final String NATIVE_RUNTIME_BASE_IMAGE = "gcr.io/distroless/base";
+    public static final String NATIVE_RUNTIME_BASE_IMAGE = "gcr.io/distroless/cc";
     public static final int MAX_BALLERINA_LAYERS = 110;
 
     public static final String SCHEMA_FILE_NAME = "c2c-schema.json";
