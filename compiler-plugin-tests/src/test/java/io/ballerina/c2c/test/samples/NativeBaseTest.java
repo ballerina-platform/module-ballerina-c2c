@@ -18,6 +18,7 @@
 
 package io.ballerina.c2c.test.samples;
 
+import io.ballerina.c2c.DockerGenConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.test.utils.KubernetesTestUtils;
 import io.ballerina.c2c.utils.KubernetesUtils;
@@ -52,7 +53,7 @@ public class NativeBaseTest {
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
         Assert.assertTrue(content.contains("FROM alpine"));
-        Assert.assertTrue(content.contains("FROM ghcr.io/graalvm/native-image-community:21-ol9 as build"));
+        Assert.assertTrue(content.contains("FROM " + DockerGenConstants.NATIVE_BUILDER_IMAGE + " as build"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 }

@@ -229,7 +229,7 @@ public class DockerGeneratorTests {
         Files.createDirectories(outputDir);
         String defaultBuilderCmd = "native-image -jar " +
                 dockerModel.getFatJarPath().getFileName().toString() +
-                " -H:Name=hello --no-fallback -H:+StaticExecutableWithDynamicLibC";
+                " -o hello --no-fallback -H:+StaticExecutableWithDynamicLibC";
         dockerModel.setBuilderCmd(defaultBuilderCmd);
 
         boolean passed = false;
@@ -245,7 +245,7 @@ public class DockerGeneratorTests {
             Assert.assertTrue(dockerFileContent.contains(copyJar));
             String copyReflectJson = "COPY reflect-config.json .";
             Assert.assertTrue(dockerFileContent.contains(copyReflectJson));
-            String nativeImageCMD = "RUN native-image -jar hello.jar -H:Name=hello --no-fallback " +
+            String nativeImageCMD = "RUN native-image -jar hello.jar -o hello --no-fallback " +
                     "-H:+StaticExecutableWithDynamicLibC " +
                     "-H:IncludeResources=excludedClasses.txt " +
                     "-H:IncludeResources=cache/tests_cache/test_suit.json " +

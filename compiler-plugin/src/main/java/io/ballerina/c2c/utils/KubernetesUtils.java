@@ -283,7 +283,7 @@ public class KubernetesUtils {
         if (!dockerModel.getGraalvmBuildArgs().equals("")) {
             defaultBuilderCmd.append(dockerModel.getGraalvmBuildArgs()).append(" ");
         }
-        defaultBuilderCmd.append("-jar ").append(fatJarFileName).append(" -H:Name=")
+        defaultBuilderCmd.append("-jar ").append(fatJarFileName).append(" -o ")
                 .append(executableName).append(" --no-fallback");
 
         //Avoid adding mostly static flag if --static flag is given

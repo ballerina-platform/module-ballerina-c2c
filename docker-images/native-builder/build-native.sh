@@ -18,4 +18,4 @@ native-image \
 ${3:+$(echo " $3")} \
 -jar "$1" \
 --no-fallback \
--H:Name="${2}"
+-o "${2}"

@@ -18,6 +18,7 @@
 
 package io.ballerina.c2c.test.samples;
 
+import io.ballerina.c2c.DockerGenConstants;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.test.utils.KubernetesTestUtils;
 import io.ballerina.c2c.utils.KubernetesUtils;
@@ -44,6 +45,7 @@ public class NativeArgsTest {
     private static final Path SOURCE_DIR_PATH = SAMPLE_DIR.resolve("graalvm-build-args");
     private static final Path DOCKER_TARGET_PATH =
             SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("native_args");
+
     @Test
     public void validateDockerBuildOption() throws IOException, InterruptedException, KubernetesPluginException {
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH), 0);
@@ -51,19 +53,19 @@ public class NativeArgsTest {
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
         Assert.assertTrue(content.contains("RUN native-image --gc=epsilon -jar native_args.jar " +
-                "-H:Name=native_args --no-fallback -H:+StaticExecutableWithDynamicLibC"));
-        Assert.assertTrue(content.contains("FROM gcr.io/distroless/base"));
+                "-o native_args --no-fallback -H:+StaticExecutableWithDynamicLibC"));
+        Assert.assertTrue(content.contains("FROM " + DockerGenConstants.NATIVE_BUILDER_IMAGE));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 
-    @Test(dependsOnMethods = { "validateDockerBuildOption" })
+    @Test(dependsOnMethods = {"validateDockerBuildOption"})
     public void validateK8sBuildOption() throws IOException, InterruptedException, KubernetesPluginException {
         Assert.assertEquals(KubernetesTestUtils.compileBallerinaProject(SOURCE_DIR_PATH, "k8s"), 0);
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
         Assert.assertTrue(content.contains("RUN native-image --gc=epsilon -jar native_args.jar " +
-                "-H:Name=native_args --no-fallback -H:+StaticExecutableWithDynamicLibC"));
+                "-o native_args --no-fallback -H:+StaticExecutableWithDynamicLibC"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);
     }
 }
