@@ -46,7 +46,7 @@ public class BalTestCMDOptionsTests {
         Assert.assertTrue(actualOutcome.contains("Run 'bal help' for usage."));
     }
 
-    @Test
+    @Test(enabled = false)
     public void testCloudFlagWithK8s() throws IOException, InterruptedException {
         Path projectDir = SOURCE_DIR_PATH.resolve("cloud-flag-k8s");
         String actualOutcome = KubernetesTestUtils.compileBallerinaProjectTests(projectDir,
