@@ -18,6 +18,7 @@
 
 package io.ballerina.c2c;
 
+import io.ballerina.c2c.diagnostics.NullLocation;
 import io.ballerina.c2c.exceptions.KubernetesPluginException;
 import io.ballerina.c2c.handlers.ChoreoHandler;
 import io.ballerina.c2c.handlers.ConfigMapHandler;
@@ -32,7 +33,9 @@ import io.ballerina.c2c.models.DockerModel;
 import io.ballerina.c2c.models.KubernetesContext;
 import io.ballerina.c2c.models.KubernetesDataHolder;
 import io.ballerina.c2c.models.ServiceModel;
+import io.ballerina.c2c.util.C2CDiagnosticCodes;
 import io.ballerina.c2c.utils.KubernetesUtils;
+import io.ballerina.tools.diagnostics.Diagnostic;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 
@@ -62,14 +65,19 @@ public class ArtifactManager {
      * @throws KubernetesPluginException if an error occurs while generating artifacts
      */
     public void createArtifacts(String cloudType, boolean isNative) throws KubernetesPluginException {
-        if (cloudType.equals("k8s")) {
-            createKubernetesArtifacts(isNative);
-        } else if (cloudType.equals("docker")) {
-            createDockerArtifacts(isNative);
-        } else {
-            createChoreoArtifacts(isNative);
+        switch (cloudType) {
+            case "k8s" -> createKubernetesArtifacts(isNative);
+            case "docker" -> createDockerArtifacts(isNative);
+            case "openshift" -> createOpenshiftArtifacts(isNative);
+            case "choreo" -> createChoreoArtifacts(isNative);
+            default -> {
+                Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.ARTIFACT_GEN_FAILED,
+                        new NullLocation(), "deployment", cloudType);
+                throw new KubernetesPluginException(diagnostic);
+            }
         }
     }
+
 
     /**
      * Generate kubernetes artifacts.
@@ -79,6 +87,28 @@ public class ArtifactManager {
     public void createKubernetesArtifacts(boolean isNative) throws KubernetesPluginException {
         // add default kubernetes instructions.
         setDefaultKubernetesInstructions();
+        OUT.println("\nGenerating artifacts\n");
+        if (kubernetesDataHolder.getJobModel() != null) {
+            new CloudTomlResolver().resolveToml(kubernetesDataHolder.getJobModel());
+            new ConfigMapHandler().createArtifacts();
+            new SecretHandler().createArtifacts();
+            new JobHandler().createArtifacts();
+        } else {
+            new CloudTomlResolver().resolveToml(kubernetesDataHolder.getDeploymentModel());
+            new ServiceHandler().createArtifacts();
+            new ConfigMapHandler().createArtifacts();
+            new SecretHandler().createArtifacts();
+            new DeploymentHandler().createArtifacts();
+            new HPAHandler().createArtifacts();
+        }
+        new DockerHandler(isNative).createArtifacts();
+        printInstructions();
+    }
+
+    public void createOpenshiftArtifacts(boolean isNative) throws KubernetesPluginException {
+        // add default kubernetes instructions.
+        setDefaultOpenshiftInstructions();
+        kubernetesDataHolder.setK8sArtifactOutputPath(kubernetesDataHolder.getOpenshiftArtifactOutputPath());
         OUT.println("\nGenerating artifacts\n");
         if (kubernetesDataHolder.getJobModel() != null) {
             new CloudTomlResolver().resolveToml(kubernetesDataHolder.getJobModel());
@@ -190,5 +220,14 @@ public class ArtifactManager {
                             " --type=NodePort --name=" + kubernetesDataHolder.getDeploymentModel().getName()
                             .replace(KubernetesConstants.DEPLOYMENT_POSTFIX, "-svc-local"));
         }
+    }
+
+
+    /**
+     * Set instructions for openshift artifacts.
+     */
+    private void setDefaultOpenshiftInstructions() {
+        instructions.put("Execute the below command to deploy the openshift artifacts: ",
+                "\toc apply -f " + this.kubernetesDataHolder.getOpenshiftArtifactOutputPath().toAbsolutePath());
     }
 }
