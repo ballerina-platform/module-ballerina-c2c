@@ -57,6 +57,7 @@ dependencies {
     implementation group: 'io.fabric8', name: 'kubernetes-model-apps', version: "${fabric8KubernetesClientVersion}"
     implementation group: 'io.fabric8', name: 'kubernetes-model-autoscaling', version: "${fabric8KubernetesClientVersion}"
     implementation group: 'io.fabric8', name: 'kubernetes-model-batch', version: "${fabric8KubernetesClientVersion}"
+    implementation group: 'io.fabric8', name: 'openshift-client', version: "${fabric8KubernetesClientVersion}"
 
     implementation group: 'org.ballerinalang', name: 'ballerina-cli', version: "${ballerinaLangVersion}"
     implementation group: 'org.ballerinalang', name: 'ballerina-lang', version: "${ballerinaLangVersion}"
