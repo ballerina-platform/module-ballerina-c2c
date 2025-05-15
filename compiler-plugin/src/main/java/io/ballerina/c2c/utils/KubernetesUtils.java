@@ -55,7 +55,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -124,16 +123,13 @@ public class KubernetesUtils {
         File newFile = artifactFileName.toFile();
         // append if file exists
         if (newFile.exists()) {
-            Files.write(artifactFileName, context.getBytes(StandardCharsets.UTF_8),
+            Files.writeString(artifactFileName, context,
                     StandardOpenOption.APPEND);
             return;
         }
         //create required directories
-        if (newFile.getParentFile().mkdirs()) {
-            Files.write(artifactFileName, context.getBytes(StandardCharsets.UTF_8));
-            return;
-        }
-        Files.write(artifactFileName, context.getBytes(StandardCharsets.UTF_8));
+        newFile.getParentFile().mkdirs();
+        Files.writeString(artifactFileName, context);
     }
 
     /**
@@ -378,13 +374,11 @@ public class KubernetesUtils {
         return dockerModel;
     }
 
-    public static boolean isBuildOptionDockerOrK8s(String buildOption) {
-        switch (buildOption) {
-            case "k8s":
-            case "docker":
-                return true;
-        }
-        return false;
+    public static boolean isValidBuildOption(String buildOption) {
+        return switch (buildOption) {
+            case "k8s", "docker", "openshift" -> true;
+            default -> false;
+        };
     }
 
     public static <T> String asYaml(T object) throws KubernetesPluginException {

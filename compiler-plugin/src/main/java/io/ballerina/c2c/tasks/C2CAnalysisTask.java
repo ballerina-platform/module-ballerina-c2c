@@ -56,7 +56,7 @@ public class C2CAnalysisTask implements AnalysisTask<CompilationAnalysisContext>
         Package currentPackage = compilationAnalysisContext.currentPackage();
         final Project project = compilationAnalysisContext.currentPackage().project();
         String cloud = project.buildOptions().cloud();
-        if (cloud == null || !KubernetesUtils.isBuildOptionDockerOrK8s(cloud)) {
+        if (cloud == null || !KubernetesUtils.isValidBuildOption(cloud)) {
             return;
         }
         KubernetesContext.getInstance().setCurrentPackage(KubernetesUtils.getProjectID(currentPackage));

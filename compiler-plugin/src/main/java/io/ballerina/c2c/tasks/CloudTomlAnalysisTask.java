@@ -50,7 +50,7 @@ public class CloudTomlAnalysisTask implements AnalysisTask<CompilationAnalysisCo
     public void perform(CompilationAnalysisContext compilationAnalysisContext) {
         final Project project = compilationAnalysisContext.currentPackage().project();
         String cloud = project.buildOptions().cloud();
-        if (cloud == null || !KubernetesUtils.isBuildOptionDockerOrK8s(cloud)) {
+        if (cloud == null || !KubernetesUtils.isValidBuildOption(cloud)) {
             return;
         }
         TomlDiagnosticChecker tomlDiagnosticChecker = new TomlDiagnosticChecker(project);

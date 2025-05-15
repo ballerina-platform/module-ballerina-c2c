@@ -72,6 +72,7 @@ import java.util.stream.Stream;
 
 import static io.ballerina.c2c.KubernetesConstants.DOCKER;
 import static io.ballerina.c2c.KubernetesConstants.KUBERNETES;
+import static io.ballerina.c2c.KubernetesConstants.OPENSHIFT;
 import static io.ballerina.c2c.utils.DockerGenUtils.extractJarName;
 import static io.ballerina.c2c.utils.DockerGenUtils.getTargetDir;
 import static io.ballerina.c2c.utils.DockerGenUtils.getTestSuiteJsonCopiedDir;
@@ -96,7 +97,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
     public void perform(CompilerLifecycleEventContext compilerLifecycleEventContext) {
         final Project project = compilerLifecycleEventContext.currentPackage().project();
         String cloud = project.buildOptions().cloud();
-        if (cloud == null || !KubernetesUtils.isBuildOptionDockerOrK8s(cloud)) {
+        if (cloud == null || !KubernetesUtils.isValidBuildOption(cloud)) {
             return;
         }
 
@@ -271,6 +272,8 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             // artifacts location for a single bal file.
             Path kubernetesOutputPath = executableJarFile.getParent().resolve(KUBERNETES);
             Path dockerOutputPath = executableJarFile.getParent().resolve(DOCKER);
+            Path openshiftOutputPath = executableJarFile.getParent().resolve(OPENSHIFT);
+
             if (null != executableJarFile.getParent().getParent().getParent() &&
                     Files.exists(executableJarFile.getParent().getParent().getParent())) {
                 // if executable came from a ballerina project
@@ -285,6 +288,10 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                                 .resolve(DOCKER)
                                 .resolve("test")
                                 .resolve(extractJarName(executableJarFile));
+                        openshiftOutputPath = projectRoot.resolve("target")
+                                .resolve(OPENSHIFT)
+                                .resolve("test")
+                                .resolve(extractJarName(executableJarFile));
 
                     } else {
                         kubernetesOutputPath = projectRoot.resolve("target")
@@ -292,6 +299,9 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                                 .resolve(extractJarName(executableJarFile));
                         dockerOutputPath = projectRoot.resolve("target")
                                 .resolve(DOCKER)
+                                .resolve(extractJarName(executableJarFile));
+                        openshiftOutputPath = projectRoot.resolve("target")
+                                .resolve(OPENSHIFT)
                                 .resolve(extractJarName(executableJarFile));
                     }
                     //Read and parse ballerina cloud
@@ -301,6 +311,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             }
             dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
             dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
+            dataHolder.setOpenshiftArtifactOutputPath(openshiftOutputPath);
             ArtifactManager artifactManager = new ArtifactManager();
             try {
                 KubernetesUtils.deleteDirectory(kubernetesOutputPath);
