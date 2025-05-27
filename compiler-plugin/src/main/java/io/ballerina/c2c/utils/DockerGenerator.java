@@ -236,6 +236,7 @@ public class DockerGenerator {
                     packageID.name.getValue(), packageID.version.getValue(), MODULE_INIT_CLASS_NAME);
             List<String> args = new ArrayList<>();
             args.add("java");
+            args.add("-XX:+ExitOnOutOfMemoryError");
             args.add("-Xdiag");
             if (this.dockerModel.isEnableDebug()) {
                 args.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" +
