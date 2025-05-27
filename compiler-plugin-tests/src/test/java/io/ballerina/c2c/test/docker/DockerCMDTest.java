@@ -69,7 +69,7 @@ public class DockerCMDTest {
         PackageID packageID = new PackageID(new Name("wso2"), new Name("bal"), new Name("1.0.0"));
         dockerModel.setPkgId(packageID);
         dockerModel.setDependencyJarPaths(jarFilePaths);
-        dockerModel.setEntryPoint("ENTRYPOINT java -Xdiag -cp '${APP}:jars/*' '$_init' " +
+        dockerModel.setEntryPoint("ENTRYPOINT java -XX:+ExitOnOutOfMemoryError -Xdiag -cp '${APP}:jars/*' '$_init' " +
                 "--b7a.http.accesslog.console=true");
         Path outputDir = SOURCE_DIR_PATH.resolve("target");
         Files.createDirectories(outputDir);
@@ -83,8 +83,8 @@ public class DockerCMDTest {
         Assert.assertNotNull(getDockerImage(DOCKER_IMAGE));
         InspectImageResponse imageInspect = getDockerImage(DOCKER_IMAGE);
         Assert.assertEquals(Arrays.toString(Objects.requireNonNull(imageInspect.getConfig()).getEntrypoint()),
-                "[/bin/sh, -c, java -Xdiag -cp 'hello.jar:jars/*' '$_init' --b7a.http.accesslog" +
-                        ".console=true]");
+                "[/bin/sh, -c, java -XX:+ExitOnOutOfMemoryError -Xdiag -cp 'hello.jar:jars/*' " +
+                        "'$_init' --b7a.http.accesslog.console=true]");
     }
 
     private Set<Path> getJarFilePaths() throws IOException {
