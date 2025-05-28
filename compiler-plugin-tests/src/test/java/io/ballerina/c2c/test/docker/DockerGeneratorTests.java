@@ -121,8 +121,8 @@ public class DockerGeneratorTests {
 
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
         cleaningUpDir = outputDir;
-        Assert.assertTrue(dockerFileContent.contains("ENTRYPOINT [\"java\",\"-Xdiag\"," +
-                "\"-cp\",\"hello.jar:jars/*\",\"wso2.bal.1.$_init\"]"));
+        Assert.assertTrue(dockerFileContent.contains("ENTRYPOINT [\"java\",\"-XX:+ExitOnOutOfMemoryError\"," +
+                "\"-Xdiag\",\"-cp\",\"hello.jar:jars/*\",\"wso2.bal.1.$_init\"]"));
         Assert.assertTrue(dockerFileContent.contains("USER ballerina"));
     }
 
@@ -132,8 +132,8 @@ public class DockerGeneratorTests {
         Assert.assertEquals(DockerTestUtils.getExposedPorts(DOCKER_IMAGE).size(), 1);
         Assert.assertEquals(Objects.requireNonNull(DockerTestUtils.getDockerImage(DOCKER_IMAGE).getConfig()
                 .getEnv()).length, 8);
-        Assert.assertEquals(DockerTestUtils.getEntryPoint(DOCKER_IMAGE), Arrays.asList("java", "-Xdiag",
-                "-cp", "hello.jar:jars/*", "wso2.bal.1.$_init"));
+        Assert.assertEquals(DockerTestUtils.getEntryPoint(DOCKER_IMAGE), Arrays.asList("java",
+                "-XX:+ExitOnOutOfMemoryError", "-Xdiag", "-cp", "hello.jar:jars/*", "wso2.bal.1.$_init"));
     }
 
     @Test

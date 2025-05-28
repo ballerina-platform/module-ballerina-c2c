@@ -157,8 +157,8 @@ public class MixedConfigJobTest {
 
     @Test
     public void validateDockerImage() {
-        Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(), "[java, -Xdiag, -cp," +
-                " anjana-mix_configs_job-0.1.0.jar:jars/*, anjana.mix_configs_job.0.$_init]");
+        Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(), "[java, -XX:+ExitOnOutOfMemoryError, " +
+                "-Xdiag, -cp, anjana-mix_configs_job-0.1.0.jar:jars/*, anjana.mix_configs_job.0.$_init]");
     }
 
     @AfterClass

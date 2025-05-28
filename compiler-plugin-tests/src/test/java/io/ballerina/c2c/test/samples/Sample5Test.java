@@ -160,8 +160,8 @@ public class Sample5Test extends SampleTest {
         Assert.assertEquals(ports.size(), 1);
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
-        Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(), "[java, -Xdiag, -cp, " +
-                "xlight-hello-0.0.1.jar:jars/*, xlight.hello.0.$_init]");
+        Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(), "[java, -XX:+ExitOnOutOfMemoryError, " +
+                "-Xdiag, -cp, xlight-hello-0.0.1.jar:jars/*, xlight.hello.0.$_init]");
     }
 
     @Test(groups = { "integration" })

@@ -126,7 +126,8 @@ public class ComplexPackageNameTest {
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
         Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(),
-                "[java, -Xdiag, -cp, anjana-testObservation_0.1.5-0.1.0.jar:jars/*, " +
+                "[java, -XX:+ExitOnOutOfMemoryError, -Xdiag, -cp, " +
+                        "anjana-testObservation_0.1.5-0.1.0.jar:jars/*, " +
                         "anjana.testObservation_0&00461&00465.0.$_init]");
     }
 
