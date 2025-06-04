@@ -43,6 +43,7 @@ public class KubernetesConstants {
     public static final String CONFIG_MAP_FILE_POSTFIX = "_config_map";
     public static final String VOLUME_CLAIM_FILE_POSTFIX = "_volume_claim";
     public static final String HPA_FILE_POSTFIX = "_hpa";
+    public static final String BUILD_CONFIG_FILE_POSTFIX = "_build_config";
     public static final String YAML = ".yaml";
     public static final String DOCKER_LATEST_TAG = ":latest";
     public static final String BALLERINA_HOME = "/home/ballerina";
@@ -58,6 +59,7 @@ public class KubernetesConstants {
     public static final String CPU = "cpu";
     public static final String CHOREO = "choreo";
     public static final String K8S = "k8s";
+    public static final String OPENSHIFT = "openshift";
     
     /**
      * Restart policy enum.
