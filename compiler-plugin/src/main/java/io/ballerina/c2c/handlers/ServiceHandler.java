@@ -59,6 +59,10 @@ public class ServiceHandler extends AbstractArtifactHandler {
         }
         List<ServicePort> servicePorts = new ArrayList<>();
         for (ServiceModel serviceModel : serviceModels) {
+            // check if the port is already defined in list
+            if (servicePorts.stream().anyMatch(p -> p.getPort() == serviceModel.getPort())) {
+                continue;
+            }
             count++;
             if (null == serviceModel.getPortName()) {
                 serviceModel.setPortName(KubernetesUtils.getValidName("port-" + count + "-" + commonService.getName()));
