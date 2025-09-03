@@ -78,7 +78,6 @@ public class ArtifactManager {
         }
     }
 
-
     /**
      * Generate kubernetes artifacts.
      *
