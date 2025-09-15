@@ -31,7 +31,7 @@
             <class name="io.ballerina.c2c.test.docker.DockerInvalidCopyTest"/>
             <class name="io.ballerina.c2c.test.docker.BalTestCMDOptionsTests"/>
             <class name="io.ballerina.c2c.test.samples.JobTest"/>
-<!--            <class name="io.ballerina.c2c.test.samples.OpenshiftSampleTest"/>-->
+            <class name="io.ballerina.c2c.test.samples.OpenshiftSampleTest"/>
             <class name="io.ballerina.c2c.test.samples.Sample1Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample2Test"/>
             <class name="io.ballerina.c2c.test.samples.Sample3Test"/>

@@ -57,7 +57,7 @@ public class OpenshiftSampleTest extends SampleTest {
             SOURCE_DIR_PATH.resolve("target").resolve(DOCKER).resolve("hello");
     private static final Path OPENSHIFT_TARGET_PATH =
             SOURCE_DIR_PATH.resolve("target").resolve(OPENSHIFT).resolve("hello");
-    private static final String DOCKER_IMAGE = "anuruddhal/hello-api:1.0.0";
+    private static final String DOCKER_IMAGE = "ballerina/hello-api:1.0.0";
     private static final Path INGRESS_PATH =
             Paths.get("src", "test", "resources", "openshift-yaml-with-ballerina-project");
     private Deployment deployment;
@@ -129,8 +129,8 @@ public class OpenshiftSampleTest extends SampleTest {
         Assert.assertEquals(ports.size(), 1);
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
-        Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(), "[java, -Xdiag, -cp, " +
-                "hello-hello-0.0.1.jar:jars/*, hello.hello.0.$_init]");
+        Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(), "[java, -XX:+ExitOnOutOfMemoryError, " +
+                "-Xdiag, -cp, hello-hello-0.0.1.jar:jars/*, hello.hello.0.$_init]");
     }
 
     @Test(groups = {"integration"})
