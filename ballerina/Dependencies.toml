@@ -5,12 +5,12 @@
 
 [ballerina]
 dependencies-toml-version = "2"
-distribution-version = "2201.13.0-m2"
+distribution-version = "2201.13.0-m3"
 
 [[package]]
 org = "ballerina"
 name = "cloud"
-version = "3.3.3"
+version = "4.0.0"
 modules = [
 	{org = "ballerina", packageName = "cloud", moduleName = "cloud"}
 ]
