@@ -37,6 +37,9 @@ dependency-reduced-pom.xml
 *.ipr
 *.iws
 
+# VS Code
+.vscode/
+
 # MacOS
 *.DS_Store
 
