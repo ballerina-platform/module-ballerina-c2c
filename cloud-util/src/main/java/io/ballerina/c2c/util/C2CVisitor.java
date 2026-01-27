@@ -67,6 +67,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Visitor for validation related to code to cloud.
@@ -82,6 +83,8 @@ public class C2CVisitor extends NodeVisitor {
     private final SemanticModel semanticModel;
     private final List<Diagnostic> diagnostics;
     private Task task = null;
+    private static final Set<String> C2C_SUPPORTED_LISTENERS = Set.of("http", "grpc", "graphql", "tcp", "udp",
+            "websocket", "websub", "websubhub", "ai");
 
     public C2CVisitor(Map<String, Node> moduleLevelVariables, SemanticModel semanticModel,
                       List<Diagnostic> diagnostics) {
@@ -454,20 +457,7 @@ public class C2CVisitor extends NodeVisitor {
                 return false;
             }
             String moduleName = module.get().getName().get();
-            switch (moduleName) {
-                case "http":
-                case "grpc":
-                case "graphql":
-                case "tcp":
-                case "udp":
-                case "websocket":
-                case "websub":
-                case "websubhub":
-                    //TODO add other stdlib
-                    return true;
-                default:
-                    return false;
-            }
+            return C2C_SUPPORTED_LISTENERS.contains(moduleName);
         }
         return false;
     }
