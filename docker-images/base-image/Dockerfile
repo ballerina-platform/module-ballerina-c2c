@@ -17,7 +17,7 @@ FROM alpine:3.21.3
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 # fontconfig and ttf-dejavu added to support serverside image generation by Java programs
-RUN apk upgrade --no-cache && apk add --no-cache fontconfig libretls musl-locales musl-locales-lang ttf-dejavu tzdata zlib libc6-compat gcompat libgcc\
+RUN apk add --no-cache fontconfig libretls musl-locales musl-locales-lang ttf-dejavu tzdata zlib libc6-compat gcompat libgcc \
     && rm -rf /var/cache/apk/*
 
 ENV JAVA_VERSION jdk-21.0.11+10
@@ -26,11 +26,11 @@ RUN set -eux; \
     ARCH="$(apk --print-arch)"; \
     case "${ARCH}" in \
        amd64|x86_64) \
-         ESUM='b6f6a049d9b76b89b95a5da1f2bc9f9addc6e1052e3b3be575432e0fa773e9a0'; \
+         ESUM='b75c9f0dd052adfd213f0c2c1cc0c8a6d4539a8de9f7947d2b8fc45d18289975'; \
          BINARY_URL='https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.11%2B10/OpenJDK21U-jre_x64_alpine-linux_hotspot_21.0.11_10.tar.gz'; \
          ;; \
        aarch64) \
-         ESUM='3dab98730234e1a87aec14bcb3e3947ef7a56c748e3b070cfe25aa5eb3e6fc2e'; \
+         ESUM='33399db5fb4f542df36a706d6642a3ba1fab3d247da707273a11ef29e39f0705'; \
          BINARY_URL='https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.11%2B10/OpenJDK21U-jre_aarch64_alpine-linux_hotspot_21.0.11_10.tar.gz'; \
         ;;\
       *) \
