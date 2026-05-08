@@ -17,8 +17,8 @@ FROM alpine:3.21.3
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 # fontconfig and ttf-dejavu added to support serverside image generation by Java programs
-RUN apk add --no-cache fontconfig libretls musl-locales musl-locales-lang ttf-dejavu tzdata zlib libc6-compat gcompat libgcc \
-    && rm -rf /var/cache/apk/*
+RUN apk upgrade --no-cache \
+    && apk add --no-cache fontconfig libretls musl-locales musl-locales-lang ttf-dejavu tzdata zlib libc6-compat gcompat libgcc
 
 ENV JAVA_VERSION jdk-21.0.11+10
 
