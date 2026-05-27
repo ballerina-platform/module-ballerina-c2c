@@ -90,9 +90,9 @@ jacocoTestReport {
         xml.required = true
         html.required = true
         csv.required = true
-        xml.destination = new File("${buildDir}/reports/jacoco/report.xml")
-        html.destination = new File("${buildDir}/reports/jacoco/report.html")
-        csv.destination = new File("${buildDir}/reports/jacoco/report.csv")
+        xml.outputLocation = layout.buildDirectory.file("reports/jacoco/report.xml")
+        html.outputLocation = layout.buildDirectory.dir("reports/jacoco/report.html")
+        csv.outputLocation = layout.buildDirectory.file("reports/jacoco/report.csv")
     }
 }
 

@@ -16,7 +16,7 @@
  */
 
 plugins {
-    id "com.github.johnrengelman.shadow"
+    id "com.gradleup.shadow"
 }
 
 apply from: "$rootDir/gradle/javaProject.gradle"
@@ -87,7 +87,6 @@ dependencies {
 jar {
     enabled = false
     dependsOn(shadowJar {
-        project.configurations.implementation.canBeResolved = true
         configurations = [project.configurations.fatJar]
         exclude 'cloud-compiler-plugin'
         archiveClassifier = null
@@ -99,6 +98,6 @@ test {
         suites 'src/test/resources/testng.xml'
     }
     systemProperties = [
-            buildDir: System.getProperty('buildDir', "$project.buildDir")
+            buildDir: System.getProperty('buildDir', layout.buildDirectory.get().asFile.absolutePath)
     ]
 }

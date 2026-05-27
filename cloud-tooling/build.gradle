@@ -16,7 +16,7 @@
  */
 
 plugins {
-    id "com.github.johnrengelman.shadow"
+    id "com.gradleup.shadow"
 }
 
 apply from: "$rootDir/gradle/javaProject.gradle"
