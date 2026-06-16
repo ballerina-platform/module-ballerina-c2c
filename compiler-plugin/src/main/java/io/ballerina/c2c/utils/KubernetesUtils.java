@@ -285,6 +285,7 @@ public class KubernetesUtils {
         //Avoid adding mostly static flag if --static flag is given
         if (!dockerModel.getGraalvmBuildArgs().contains("--static")) {
             defaultBuilderCmd.append(" -H:+StaticExecutableWithDynamicLibC");
+            defaultBuilderCmd.append(" --initialize-at-build-time=org.slf4j.impl.JDK14LoggerAdapter");
         }
         dockerModel.setBuilderCmd(defaultBuilderCmd.toString());
         String defaultBaseImage = DockerGenConstants.JRE_SLIM_BASE;
