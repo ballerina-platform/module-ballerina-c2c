@@ -146,7 +146,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                                              Optional<Path> executablePath, Project project, Package currentPackage,
                                              BalCommand balCommand) {
         JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilerLifecycleEventContext.compilation(),
-                JvmTarget.JAVA_25);
+                JvmTarget.JAVA_21);
         dataHolder.getDockerModel().setTest(true);
         executablePath.ifPresent(path -> {
             Target target;
@@ -342,7 +342,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                                        Map<String, TestSuite> testSuiteMap,
                                        List<Path> classPaths, List<Path> moduleJarPaths) {
         JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilation,
-                JvmTarget.JAVA_25);
+                JvmTarget.JAVA_21);
         JarResolver jarResolver = jBallerinaBackend.jarResolver();
 
         Collection<JarLibrary> dependencies = jarResolver.getJarFilePathsRequiredForTestExecution(
@@ -389,7 +389,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
 
     private void addDependencyJars(PackageCompilation compilation, String executableFatJar) {
         JBallerinaBackend jBallerinaBackend = JBallerinaBackend.from(compilation,
-                JvmTarget.JAVA_25);
+                JvmTarget.JAVA_21);
         io.ballerina.projects.JarResolver jarResolver = jBallerinaBackend.jarResolver();
         // Add dependency jar files to docker model.
         dataHolder.getDockerModel().addDependencyJarPaths(
