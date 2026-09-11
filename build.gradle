@@ -17,14 +17,14 @@
 
 plugins {
     id "com.github.spotbugs-base" version "${spotbugsPluginVersion}"
-    id "com.github.johnrengelman.shadow" version "${shadowJarPluginVersion}"
+    id "com.gradleup.shadow" version "${shadowJarPluginVersion}"
     id "de.undercouch.download" version "${downloadPluginVersion}"
     id "net.researchgate.release" version "${releasePluginVersion}"
     id 'maven-publish'
 }
 
 ext.ballerinaLangVersion = project.ballerinaLangVersion
-ext.ballerinaSourceDirectory = "$buildDir/../src/main/ballerina"
+ext.ballerinaSourceDirectory = "${layout.buildDirectory.get().asFile}/../src/main/ballerina"
 ext.dockerJavaVersion = "3.3.2"
 ext.fabric8KubernetesClientVersion = "6.7.2"
 ext.testngVersion = "7.6.1"
@@ -40,7 +40,7 @@ ext.projectReportingOutputEncoding = "UTF-8"
 ext.puppycrawlCheckstyleVersion = "10.12.0"
 ext.slf4jVersion = "1.7.26"
 ext.testngVersion = "7.6.1"
-ext.lombokVersion = "1.18.30"
+ext.lombokVersion = "1.18.38"
 ext.commonIoVersion = "2.13.0"
 ext.jacksonYamlVersion = "2.17.3"
 ext.commonsCodecVersion = "1.16.0"
@@ -50,6 +50,9 @@ allprojects {
     version = project.version
 
     apply plugin: 'jacoco'
+jacoco {
+    toolVersion = jacocoVersion
+}
     apply plugin: 'maven-publish'
 
     repositories {
@@ -82,6 +85,14 @@ allprojects {
 }
 
 subprojects {
+
+    plugins.withId('java') {
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(25)
+            }
+        }
+    }
 
     configurations {
         ballerinaStdLibs
@@ -134,6 +145,6 @@ release {
     }
 }
 
-task build {
+tasks.named('build') {
     dependsOn(':cloud-ballerina:build')
 }
