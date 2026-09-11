@@ -105,6 +105,8 @@ public class HelmChartHandler extends AbstractArtifactHandler {
         writeFile(templatesDir.resolve("deployment.yaml"),
                 HelmWorkloadTemplateWriter.deploymentYaml(chartName, deploymentModel));
         writeFile(templatesDir.resolve("hpa.yaml"), HelmHpaTemplateWriter.hpaYaml(chartName));
+        writeFile(templatesDir.resolve("poddisruptionbudget.yaml"),
+                HelmPodDisruptionBudgetTemplateWriter.podDisruptionBudgetYaml(chartName));
         if (!dataHolder.getServiceModelList().isEmpty()) {
             writeFile(templatesDir.resolve("service.yaml"), HelmServiceTemplateWriter.serviceYaml(chartName));
         }

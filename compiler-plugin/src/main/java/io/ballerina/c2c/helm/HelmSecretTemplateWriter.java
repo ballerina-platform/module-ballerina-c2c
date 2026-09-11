@@ -34,6 +34,13 @@ import static io.ballerina.c2c.helm.HelmTemplateUtils.yamlQuote;
  * one-shot, non-persisted Secret generation. The data here is rendered exactly as
  * {@code handlers/SecretHandler} already renders it for the plain {@code k8s} target (the
  * {@code SecretModel}'s data values are already base64-encoded).
+ * <p>
+ * Checked against WSO2's own reference charts before settling on this: {@code helm-mi}'s
+ * {@code mi-secrets.yaml} puts a registry-credential username/password straight into
+ * {@code values.yaml} and base64-encodes them in a template -- the exact pattern this class
+ * avoids. That reinforces, rather than challenges, keeping Secret content static here; no CSI/
+ * external-secret-store support (Azure Key Vault, etc.) is planned for now either -- add it
+ * manually on top of the generated chart if needed.
  *
  * @since 1.0.0
  */

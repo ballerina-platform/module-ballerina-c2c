@@ -26,6 +26,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.autoscaling.v2.HorizontalPodAutoscaler;
+import io.fabric8.kubernetes.api.model.policy.v1.PodDisruptionBudget;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import org.testng.Assert;
@@ -69,6 +70,8 @@ public class HelmTest {
         Assert.assertTrue(Files.isRegularFile(CHART_PATH.resolve("templates").resolve("deployment.yaml")));
         Assert.assertTrue(Files.isRegularFile(CHART_PATH.resolve("templates").resolve("service.yaml")));
         Assert.assertTrue(Files.isRegularFile(CHART_PATH.resolve("templates").resolve("hpa.yaml")));
+        Assert.assertTrue(Files.isRegularFile(
+                CHART_PATH.resolve("templates").resolve("poddisruptionbudget.yaml")));
         Assert.assertTrue(Files.isRegularFile(CHART_PATH.resolve("templates").resolve("serviceaccount.yaml")));
         Assert.assertTrue(Files.isRegularFile(
                 CHART_PATH.resolve("templates").resolve("configmap-hello-config-map.yaml")));
@@ -98,6 +101,9 @@ public class HelmTest {
         Assert.assertEquals(autoscaling.get("minReplicas"), 2);
         Assert.assertEquals(autoscaling.get("maxReplicas"), 4);
         Assert.assertEquals(autoscaling.get("targetCPUUtilizationPercentage"), 60);
+        Map<?, ?> pdb = (Map<?, ?>) values.get("podDisruptionBudget");
+        Assert.assertEquals(pdb.get("enabled"), Boolean.TRUE);
+        Assert.assertEquals(pdb.get("maxUnavailable"), 1);
     }
 
     @Test(dependsOnMethods = "testChartStructure")
@@ -115,14 +121,30 @@ public class HelmTest {
         Assert.assertEquals(deployment.getSpec().getTemplate().getSpec().getContainers().get(0).getImage(),
                 "anuruddhal/hello-api:helm-test");
         Assert.assertEquals(deployment.getMetadata().getNamespace(), "default");
+        Assert.assertEquals(deployment.getSpec().getSelector().getMatchLabels().get("app"), "hello",
+                "the plain 'app' selector label should be present alongside app.kubernetes.io/*, "
+                        + "for compatibility with externally-authored selectors");
 
         Service service = (Service) findByKind(resources, "Service");
         Assert.assertEquals(service.getSpec().getType(), "ClusterIP");
         Assert.assertEquals(service.getSpec().getPorts().get(0).getPort().intValue(), 9090);
+        Assert.assertEquals(service.getSpec().getSelector().get("app"), "hello");
 
         HorizontalPodAutoscaler hpa = (HorizontalPodAutoscaler) findByKind(resources, "HorizontalPodAutoscaler");
         Assert.assertEquals(hpa.getSpec().getMinReplicas().intValue(), 2);
         Assert.assertEquals(hpa.getSpec().getMaxReplicas().intValue(), 4);
+
+        PodDisruptionBudget pdb = (PodDisruptionBudget) findByKind(resources, "PodDisruptionBudget");
+        Assert.assertEquals(pdb.getSpec().getMaxUnavailable().getIntVal().intValue(), 1);
+        Assert.assertEquals(pdb.getSpec().getSelector().getMatchLabels().get("app"), "hello");
+    }
+
+    @Test(dependsOnMethods = "testChartStructure")
+    public void testPodDisruptionBudgetCanBeDisabled() throws IOException, InterruptedException {
+        String rendered = KubernetesTestUtils.helmTemplate(CHART_PATH, "--set", "podDisruptionBudget.enabled=false");
+        List<HasMetadata> resources = loadResources(rendered);
+        Assert.assertTrue(resources.stream().noneMatch(r -> "PodDisruptionBudget".equals(r.getKind())),
+                "podDisruptionBudget.enabled=false should omit the PodDisruptionBudget");
     }
 
     @Test(dependsOnMethods = "testChartStructure")

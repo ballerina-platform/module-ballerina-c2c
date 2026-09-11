@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Improvements
 
 - Support directories to be mounted as Configmaps/Secrets [778](https://github.com/ballerina-platform/module-ballerina-c2c/issues/778)
-- Add a `helm` cloud target (`bal build --cloud=helm`) that packages the deployment as an installable, values-driven Helm chart. Config files mounted via `cloud.config.files` are rendered through Helm's `tpl` so `{{ .Values.x }}` placeholders in your own `Config.toml` become live Helm values, overridable per environment without rebuilding the image.
+- Add a `helm` cloud target (`bal build --cloud=helm`) that packages the deployment as an installable, values-driven Helm chart. Config files mounted via `cloud.config.files` are rendered through Helm's `tpl` so `{{ .Values.x }}` placeholders in your own `Config.toml` become live Helm values, overridable per environment without rebuilding the image. Generated resources also carry a plain `app: <name>` selector label (overridable via `nameOverride`) for compatibility with externally-authored selectors, and a `PodDisruptionBudget` (`podDisruptionBudget.enabled`, on by default) protects scaled-up deployments from voluntary disruption.
 
 ### Breaking Changes
 - Windows containers are not supported anymore. [773](https://github.com/ballerina-platform/module-ballerina-c2c/issues/773)

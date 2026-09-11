@@ -129,11 +129,16 @@ public final class HelmChartMetadataWriter {
                 {{/*
                 Selector labels -- kept separate from the common labels above since selector
                 labels on an existing Deployment/Job are immutable; only these are used for
-                matchLabels/selectors.
+                matchLabels/selectors. Includes a plain, release-independent "app" label (not
+                just the release-scoped app.kubernetes.io/instance) so an externally-authored
+                resource -- a hand-written NetworkPolicy, a ServiceMonitor, another chart -- can
+                select this chart's pods by a stable name across releases. Override it the same
+                way as the chart name itself, via nameOverride.
                 */}}
                 {{- define "@@CHART@@.selectorLabels" -}}
                 app.kubernetes.io/name: {{ include "@@CHART@@.name" . }}
                 app.kubernetes.io/instance: {{ .Release.Name }}
+                app: {{ include "@@CHART@@.name" . }}
                 {{- end -}}
 
                 {{/*
@@ -209,6 +214,14 @@ public final class HelmChartMetadataWriter {
                   create: true
                   # Name of the ServiceAccount to use. Defaults to the release's full name.
                   name: ""
+
+                podDisruptionBudget:
+                  # Whether a PodDisruptionBudget should be created for this release.
+                  enabled: true
+                  # Maximum pods that may be unavailable at once during a voluntary disruption
+                  # (node drain/upgrade). A no-op at the default replicaCount of 1 (100% may
+                  # already be unavailable); starts protecting once you scale up.
+                  maxUnavailable: 1
 
                 # Off by default: c2c's own base image does not switch to a non-root user, so
                 # enforcing runAsNonRoot here would make `helm install` fail out of the box.

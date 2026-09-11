@@ -73,6 +73,7 @@ target/helm/hello
     ├── configmap-hello-config-map.yaml
     ├── deployment.yaml
     ├── hpa.yaml
+    ├── poddisruptionbudget.yaml
     ├── service.yaml
     └── serviceaccount.yaml
 ```
@@ -134,6 +135,21 @@ $ helm upgrade demo target/helm/hello --set replicaCount=3 --set autoscaling.ena
 `podSecurityContext`/`securityContext` are present in `values.yaml` but empty by default, since
 c2c's own base image does not run as a non-root user out of the box -- set them once your image
 does.
+
+Every generated resource that selects pods (Deployment, Service, HPA, PodDisruptionBudget) also
+carries a plain `app: hello` label alongside the standard `app.kubernetes.io/*` ones -- override
+the name it uses with `nameOverride`, so an externally-authored resource (a hand-written
+NetworkPolicy, a ServiceMonitor, another chart) can select this chart's pods by a stable name
+that doesn't change with the release name.
+
+A `PodDisruptionBudget` (`podDisruptionBudget.enabled: true`, `maxUnavailable: 1` by default) is
+created so a node drain/upgrade can't take down more than one pod at a time once you've scaled
+past a single replica -- at the default `replicaCount: 1` it's a no-op (100% may already be
+unavailable), so it's safe to leave on regardless of scale:
+
+```bash
+$ helm upgrade demo target/helm/hello --set podDisruptionBudget.enabled=false
+```
 
 ### Uninstall
 

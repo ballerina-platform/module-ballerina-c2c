@@ -66,9 +66,10 @@ public class HelmJobTest {
         Assert.assertTrue(Files.isRegularFile(CHART_PATH.resolve("templates").resolve("cronjob.yaml")),
                 "a scheduled @cloud:Task should render templates/cronjob.yaml, not job.yaml");
         Assert.assertTrue(Files.isRegularFile(CHART_PATH.resolve("templates").resolve("serviceaccount.yaml")));
-        // A job-based chart has no Service/HPA/replicas concept.
+        // A job-based chart has no Service/HPA/replicas/PodDisruptionBudget concept.
         Assert.assertFalse(Files.exists(CHART_PATH.resolve("templates").resolve("service.yaml")));
         Assert.assertFalse(Files.exists(CHART_PATH.resolve("templates").resolve("hpa.yaml")));
+        Assert.assertFalse(Files.exists(CHART_PATH.resolve("templates").resolve("poddisruptionbudget.yaml")));
     }
 
     @Test(dependsOnMethods = "testChartStructure")
