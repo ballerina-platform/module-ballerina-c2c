@@ -59,6 +59,8 @@
             <class name="io.ballerina.c2c.test.MixedConfigJobTest"/>
             <class name="io.ballerina.c2c.test.ServiceExtractionTest"/>
             <class name="io.ballerina.c2c.test.JobTest"/>
+            <class name="io.ballerina.c2c.test.HelmTest"/>
+            <class name="io.ballerina.c2c.test.HelmJobTest"/>
             <class name="io.ballerina.c2c.test.EnvTest"/>
             <class name="io.ballerina.c2c.test.CustomDiagnosticsTest"/>
             <class name="io.ballerina.c2c.test.codeactions.diagnostic.InvalidServicePath"/>
