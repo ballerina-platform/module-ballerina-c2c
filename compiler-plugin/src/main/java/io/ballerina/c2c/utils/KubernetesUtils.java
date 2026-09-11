@@ -376,7 +376,7 @@ public class KubernetesUtils {
 
     public static boolean isValidBuildOption(String buildOption) {
         return switch (buildOption) {
-            case "k8s", "docker", "openshift" -> true;
+            case "k8s", "docker", "openshift", "helm" -> true;
             default -> false;
         };
     }

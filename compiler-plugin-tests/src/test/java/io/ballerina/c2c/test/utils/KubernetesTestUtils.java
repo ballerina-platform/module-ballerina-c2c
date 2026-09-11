@@ -90,6 +90,7 @@ public class KubernetesTestUtils {
     private static final String COMPILING = "Compiling: ";
     private static final String EXIT_CODE = "Exit code: ";
     private static final String KUBECTL = "kubectl";
+    private static final String HELM = "helm";
     private static final String GENERATING_ARTIFACTS = "Generating artifacts";
     private static final String RUNNING_DOCKER_CONTAINER = "Running the generated Docker image";
 
@@ -310,6 +311,100 @@ public class KubernetesTestUtils {
             return result.contains(message);
         }
         return false;
+    }
+
+    /**
+     * Run {@code helm lint} against a chart directory.
+     *
+     * @param chartDirectory Helm chart directory
+     * @return Exit code (0 = no lint failures)
+     */
+    public static int helmLint(Path chartDirectory) throws InterruptedException, IOException {
+        ProcessBuilder pb = new ProcessBuilder(HELM, "lint", chartDirectory.toAbsolutePath().toString());
+        log.debug(EXECUTING_COMMAND + pb.command());
+        Process process = pb.start();
+        int exitCode = process.waitFor();
+        logOutput(process.getInputStream());
+        logOutput(process.getErrorStream());
+        log.info(EXIT_CODE + exitCode);
+        return exitCode;
+    }
+
+    /**
+     * Renders a chart's templates via {@code helm template} and returns the combined rendered
+     * YAML (all resources, {@code ---}-separated).
+     *
+     * @param chartDirectory Helm chart directory
+     * @param extraArgs      additional {@code helm template} arguments, e.g. {@code --set x=y}
+     */
+    public static String helmTemplate(Path chartDirectory, String... extraArgs)
+            throws InterruptedException, IOException {
+        List<String> command = new ArrayList<>();
+        command.add(HELM);
+        command.add("template");
+        command.add("test-release");
+        command.add(chartDirectory.toAbsolutePath().toString());
+        command.addAll(Arrays.asList(extraArgs));
+        ProcessBuilder pb = new ProcessBuilder(command);
+        log.debug(EXECUTING_COMMAND + pb.command());
+        Process process = pb.start();
+        String output;
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            output = br.lines().collect(Collectors.joining("\n"));
+        }
+        int exitCode = process.waitFor();
+        logOutput(process.getErrorStream());
+        log.info(EXIT_CODE + exitCode);
+        if (exitCode != 0) {
+            throw new IOException("helm template failed with exit code " + exitCode + " for " + chartDirectory);
+        }
+        return output;
+    }
+
+    /**
+     * {@code helm install}s a chart into the current kube-context.
+     */
+    public static int helmInstall(String releaseName, Path chartDirectory, String... extraArgs)
+            throws InterruptedException, IOException {
+        List<String> command = new ArrayList<>();
+        command.add(HELM);
+        command.add("install");
+        command.add(releaseName);
+        command.add(chartDirectory.toAbsolutePath().toString());
+        command.addAll(Arrays.asList(extraArgs));
+        return runHelmCommand(command);
+    }
+
+    /**
+     * {@code helm upgrade}s an already-installed release, e.g. with new {@code --set} overrides.
+     */
+    public static int helmUpgrade(String releaseName, Path chartDirectory, String... extraArgs)
+            throws InterruptedException, IOException {
+        List<String> command = new ArrayList<>();
+        command.add(HELM);
+        command.add("upgrade");
+        command.add(releaseName);
+        command.add(chartDirectory.toAbsolutePath().toString());
+        command.addAll(Arrays.asList(extraArgs));
+        return runHelmCommand(command);
+    }
+
+    /**
+     * {@code helm uninstall}s a release.
+     */
+    public static int helmUninstall(String releaseName) throws InterruptedException, IOException {
+        return runHelmCommand(List.of(HELM, "uninstall", releaseName));
+    }
+
+    private static int runHelmCommand(List<String> command) throws InterruptedException, IOException {
+        ProcessBuilder pb = new ProcessBuilder(command);
+        log.debug(EXECUTING_COMMAND + pb.command());
+        Process process = pb.start();
+        int exitCode = process.waitFor();
+        logOutput(process.getInputStream());
+        logOutput(process.getErrorStream());
+        log.info(EXIT_CODE + exitCode);
+        return exitCode;
     }
 
     /**

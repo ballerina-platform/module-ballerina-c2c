@@ -1,0 +1,8 @@
+[container.image]
+repository="anuruddhal" # Container repository to host the container
+name="hello-api" # Name of the container
+tag="helm-sample" # Tag of the container
+
+[[cloud.config.files]]
+file="./conf/Config.toml" # Path of the external file
+name="hello-config-map"

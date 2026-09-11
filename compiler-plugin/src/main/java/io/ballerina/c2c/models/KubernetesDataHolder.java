@@ -45,6 +45,7 @@ public class KubernetesDataHolder {
     private Path dockerArtifactOutputPath;
     private Path choreoArtifactOutputPath;
     private Path openshiftArtifactOutputPath;
+    private Path helmArtifactOutputPath;
     private String namespace;
     private Path sourceRoot;
     private PackageID packageID;

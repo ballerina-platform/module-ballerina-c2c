@@ -273,6 +273,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             Path kubernetesOutputPath = executableJarFile.getParent().resolve(KUBERNETES);
             Path dockerOutputPath = executableJarFile.getParent().resolve(DOCKER);
             Path openshiftOutputPath = executableJarFile.getParent().resolve(OPENSHIFT);
+            Path helmOutputPath = executableJarFile.getParent().resolve(KubernetesConstants.HELM);
 
             if (null != executableJarFile.getParent().getParent().getParent() &&
                     Files.exists(executableJarFile.getParent().getParent().getParent())) {
@@ -292,6 +293,10 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                                 .resolve(OPENSHIFT)
                                 .resolve("test")
                                 .resolve(extractJarName(executableJarFile));
+                        helmOutputPath = projectRoot.resolve("target")
+                                .resolve(KubernetesConstants.HELM)
+                                .resolve("test")
+                                .resolve(extractJarName(executableJarFile));
 
                     } else {
                         kubernetesOutputPath = projectRoot.resolve("target")
@@ -303,6 +308,9 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                         openshiftOutputPath = projectRoot.resolve("target")
                                 .resolve(OPENSHIFT)
                                 .resolve(extractJarName(executableJarFile));
+                        helmOutputPath = projectRoot.resolve("target")
+                                .resolve(KubernetesConstants.HELM)
+                                .resolve(extractJarName(executableJarFile));
                     }
                     //Read and parse ballerina cloud
                     cloudToml.ifPresent(
@@ -312,10 +320,12 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
             dataHolder.setK8sArtifactOutputPath(kubernetesOutputPath);
             dataHolder.setDockerArtifactOutputPath(dockerOutputPath);
             dataHolder.setOpenshiftArtifactOutputPath(openshiftOutputPath);
+            dataHolder.setHelmArtifactOutputPath(helmOutputPath);
             ArtifactManager artifactManager = new ArtifactManager();
             try {
                 KubernetesUtils.deleteDirectory(kubernetesOutputPath);
                 KubernetesUtils.deleteDirectory(dockerOutputPath);
+                KubernetesUtils.deleteDirectory(helmOutputPath);
                 artifactManager.populateDeploymentModel();
                 artifactManager.createArtifacts(buildType, buildOptions.nativeImage());
             } catch (KubernetesPluginException e) {
@@ -327,6 +337,7 @@ public class C2CCodeGeneratedTask implements CompilerLifecycleTask<CompilerLifec
                 try {
                     KubernetesUtils.deleteDirectory(kubernetesOutputPath);
                     KubernetesUtils.deleteDirectory(dockerOutputPath);
+                    KubernetesUtils.deleteDirectory(helmOutputPath);
                 } catch (KubernetesPluginException ignored) {
                     //ignored
                 }

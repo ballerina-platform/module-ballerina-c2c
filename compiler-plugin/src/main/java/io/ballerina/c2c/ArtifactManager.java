@@ -28,6 +28,7 @@ import io.ballerina.c2c.handlers.HPAHandler;
 import io.ballerina.c2c.handlers.JobHandler;
 import io.ballerina.c2c.handlers.SecretHandler;
 import io.ballerina.c2c.handlers.ServiceHandler;
+import io.ballerina.c2c.helm.HelmChartHandler;
 import io.ballerina.c2c.models.DeploymentModel;
 import io.ballerina.c2c.models.DockerModel;
 import io.ballerina.c2c.models.KubernetesContext;
@@ -39,7 +40,10 @@ import io.ballerina.tools.diagnostics.Diagnostic;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +74,7 @@ public class ArtifactManager {
             case "docker" -> createDockerArtifacts(isNative);
             case "openshift" -> createOpenshiftArtifacts(isNative);
             case "choreo" -> createChoreoArtifacts(isNative);
+            case "helm" -> createHelmArtifacts(isNative);
             default -> {
                 Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.ARTIFACT_GEN_FAILED,
                         new NullLocation(), "deployment", cloudType);
@@ -122,6 +127,60 @@ public class ArtifactManager {
             new DeploymentHandler().createArtifacts();
             new HPAHandler().createArtifacts();
         }
+        new DockerHandler(isNative).createArtifacts();
+        printInstructions();
+    }
+
+    /**
+     * Generate a Helm chart wrapping the same deployment {@code k8s} would have produced.
+     * <p>
+     * The real {@code ServiceHandler}/{@code ConfigMapHandler}/{@code SecretHandler}/
+     * {@code DeploymentHandler}/{@code HPAHandler} (or {@code JobHandler}) are run first, exactly
+     * as {@link #createKubernetesArtifacts}, so every model-resolution side effect they perform
+     * (ports copied from services onto the deployment, {@code BAL_CONFIG_FILES} injected, the
+     * {@code DockerModel} derived, autoscaling resolved) happens identically to the plain
+     * {@code k8s} target. Their YAML output itself is redirected to a throwaway directory and
+     * discarded -- the {@link HelmChartHandler} reads the now fully-resolved
+     * {@code KubernetesDataHolder} afterward and writes Helm-templated YAML instead.
+     *
+     * @throws KubernetesPluginException if an error occurs while generating artifacts
+     */
+    public void createHelmArtifacts(boolean isNative) throws KubernetesPluginException {
+        setDefaultHelmInstructions();
+        OUT.println("\nGenerating artifacts\n");
+        Path realK8sOutputPath = kubernetesDataHolder.getK8sArtifactOutputPath();
+        Path scratchDir;
+        try {
+            scratchDir = Files.createTempDirectory("c2c-helm-resolve");
+        } catch (IOException e) {
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.ARTIFACT_GEN_FAILED,
+                    new NullLocation(), "helm", "unable to create a working directory");
+            throw new KubernetesPluginException(diagnostic);
+        }
+        try {
+            kubernetesDataHolder.setK8sArtifactOutputPath(scratchDir);
+            if (kubernetesDataHolder.getJobModel() != null) {
+                new CloudTomlResolver().resolveToml(kubernetesDataHolder.getJobModel());
+                new ConfigMapHandler().createArtifacts();
+                new SecretHandler().createArtifacts();
+                new JobHandler().createArtifacts();
+            } else {
+                new CloudTomlResolver().resolveToml(kubernetesDataHolder.getDeploymentModel());
+                new ServiceHandler().createArtifacts();
+                new ConfigMapHandler().createArtifacts();
+                new SecretHandler().createArtifacts();
+                new DeploymentHandler().createArtifacts();
+                new HPAHandler().createArtifacts();
+            }
+        } finally {
+            kubernetesDataHolder.setK8sArtifactOutputPath(realK8sOutputPath);
+            try {
+                KubernetesUtils.deleteDirectory(scratchDir);
+            } catch (KubernetesPluginException ignored) {
+                // best-effort cleanup of the throwaway resolution directory
+            }
+        }
+        new HelmChartHandler().createArtifacts();
         new DockerHandler(isNative).createArtifacts();
         printInstructions();
     }
@@ -228,5 +287,14 @@ public class ArtifactManager {
     private void setDefaultOpenshiftInstructions() {
         instructions.put("Execute the below command to deploy the openshift artifacts: ",
                 "\toc apply -f " + this.kubernetesDataHolder.getOpenshiftArtifactOutputPath().toAbsolutePath());
+    }
+
+    /**
+     * Set instructions for the generated Helm chart.
+     */
+    private void setDefaultHelmInstructions() {
+        instructions.put("Execute the below command to install the Helm chart: ",
+                "\thelm install <release-name> "
+                        + this.kubernetesDataHolder.getHelmArtifactOutputPath().toAbsolutePath());
     }
 }
