@@ -274,7 +274,8 @@ public class KubernetesUtils {
 
         String fatJarFileName = dockerModel.getFatJarPath().getFileName().toString();
         String executableName = fatJarFileName.replaceFirst(".jar", "");
-        StringBuilder defaultBuilderCmd = new StringBuilder().append("native-image ");
+        StringBuilder defaultBuilderCmd = new StringBuilder().append("native-image ")
+                .append(DockerGenConstants.NATIVE_IMAGE_JDK_FLAGS);
         //TODO see if we need double quotes to name or jar
         if (!dockerModel.getGraalvmBuildArgs().equals("")) {
             defaultBuilderCmd.append(dockerModel.getGraalvmBuildArgs()).append(" ");

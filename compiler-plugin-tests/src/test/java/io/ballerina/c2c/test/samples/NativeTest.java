@@ -125,8 +125,9 @@ public class NativeTest extends SampleTest {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         Assert.assertTrue(dockerFile.exists());
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
-        Assert.assertTrue(content.contains("RUN native-image -jar hello.jar -o hello --no-fallback " +
-                "-H:+StaticExecutableWithDynamicLibC"));
+        Assert.assertTrue(content.contains("RUN native-image -J--sun-misc-unsafe-memory-access=allow "
+                + "--enable-native-access=ALL-UNNAMED -jar hello.jar -o hello --no-fallback "
+                + "-H:+StaticExecutableWithDynamicLibC"));
         Assert.assertTrue(content.contains("FROM " + DockerGenConstants.NATIVE_BUILDER_IMAGE + " as build"));
         Assert.assertTrue(content.contains("FROM " + DockerGenConstants.NATIVE_RUNTIME_BASE_IMAGE));
     }

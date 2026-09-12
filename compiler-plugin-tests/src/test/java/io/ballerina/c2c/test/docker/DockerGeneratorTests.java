@@ -121,8 +121,10 @@ public class DockerGeneratorTests {
 
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
         cleaningUpDir = outputDir;
-        Assert.assertTrue(dockerFileContent.contains("ENTRYPOINT [\"java\",\"-XX:+ExitOnOutOfMemoryError\"," +
-                "\"-Xdiag\",\"-cp\",\"hello.jar:jars/*\",\"wso2.bal.1.$_init\"]"));
+        Assert.assertTrue(dockerFileContent.contains("ENTRYPOINT [\"java\","
+                + "\"--sun-misc-unsafe-memory-access=allow\",\"--enable-native-access=ALL-UNNAMED\","
+                + "\"-XX:+ExitOnOutOfMemoryError\",\"-Xdiag\",\"-cp\","
+                + "\"hello.jar:jars/*\",\"wso2.bal.1.$_init\"]"));
         Assert.assertTrue(dockerFileContent.contains("USER ballerina"));
     }
 
@@ -133,6 +135,7 @@ public class DockerGeneratorTests {
         Assert.assertEquals(Objects.requireNonNull(DockerTestUtils.getDockerImage(DOCKER_IMAGE).getConfig()
                 .getEnv()).length, 8);
         Assert.assertEquals(DockerTestUtils.getEntryPoint(DOCKER_IMAGE), Arrays.asList("java",
+                "--sun-misc-unsafe-memory-access=allow", "--enable-native-access=ALL-UNNAMED",
                 "-XX:+ExitOnOutOfMemoryError", "-Xdiag", "-cp", "hello.jar:jars/*", "wso2.bal.1.$_init"));
     }
 
@@ -189,9 +192,10 @@ public class DockerGeneratorTests {
         Assert.assertTrue(dockerFileContent.contains("&& chown -R ballerina:troupe /home/ballerina/target \\"));
         Assert.assertTrue(dockerFileContent.contains("&& chmod -R 777 /home/ballerina/target \\"));
         Assert.assertTrue(dockerFileContent.contains(copyTestConfig3));
-        String dockerEntryPoint = "ENTRYPOINT [\"java\",\"-XX:+HeapDumpOnOutOfMemoryError\"," +
-                "\"-XX:HeapDumpPath=/home/ballerina\",\"-cp\",\"dummy_class_path\"," +
-                "\"org.ballerinalang.test.runtime.BTestMain\"]";
+        String dockerEntryPoint = "ENTRYPOINT [\"java\",\"-XX:+HeapDumpOnOutOfMemoryError\","
+                + "\"-XX:HeapDumpPath=/home/ballerina\","
+                + "\"--sun-misc-unsafe-memory-access=allow\",\"--enable-native-access=ALL-UNNAMED\","
+                + "\"-cp\",\"dummy_class_path\",\"org.ballerinalang.test.runtime.BTestMain\"]";
         Assert.assertTrue(dockerFileContent.contains(dockerEntryPoint));
         String dockerCMD = "CMD [\"arg0\",\"arg1\",\"arg2\",\"arg3\",\"arg4\",\"arg5\",\"arg6\",\"arg7\"," +
                 "\"arg8\",\"arg9\",\"arg10\"]";
