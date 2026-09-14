@@ -25,15 +25,11 @@
     </Match>
     <!-- Pre-existing issues surfaced by SpotBugs 4.9.x (bundled in plugin >= 6.2.0) -->
     <Match>
-        <BugCode name="THROWS"/>
+        <Class name="io.ballerina.c2c.tooling.completion.CloudTomlCompletionContext"/>
+        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"/>
     </Match>
     <Match>
-        <BugCode name="AT"/>
-    </Match>
-    <Match>
-        <BugCode name="USELESS_STRING"/>
-    </Match>
-    <Match>
-        <BugCode name="DM"/>
+        <Class name="io.ballerina.c2c.tooling.completion.CloudTomlSnippetManager"/>
+        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"/>
     </Match>
 </FindBugsFilter>

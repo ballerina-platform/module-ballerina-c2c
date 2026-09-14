@@ -27,7 +27,9 @@ description = 'Ballerina - Code2Cloud Extension Annotations'
 
 buildscript {
     repositories {
-        mavenLocal()
+        if (project.hasProperty('useMavenLocal')) {
+            mavenLocal()
+        }
         maven {
             url = 'https://maven.pkg.github.com/ballerina-platform/plugin-gradle'
             credentials {
