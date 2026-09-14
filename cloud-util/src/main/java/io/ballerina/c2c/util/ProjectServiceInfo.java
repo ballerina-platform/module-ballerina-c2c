@@ -72,7 +72,10 @@ public class ProjectServiceInfo {
                 C2CVisitor visitor = new C2CVisitor(moduleLevelVariables, semanticModel, diagnostics);
                 node.accept(visitor);
                 serviceList.addAll(visitor.getServices());
-                this.task = visitor.getTask();
+                Task discoveredTask = visitor.getTask();
+                if (discoveredTask != null) {
+                    this.task = discoveredTask;
+                }
             }
         }
     }
