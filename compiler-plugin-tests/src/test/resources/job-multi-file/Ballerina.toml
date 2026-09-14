@@ -1,0 +1,8 @@
+[package]
+org = "hello"
+name = "hello_multi_file_job"
+version = "0.0.1"
+
+[build-options]
+observabilityIncluded = true
+cloud = "k8s"
