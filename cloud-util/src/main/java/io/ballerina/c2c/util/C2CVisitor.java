@@ -35,6 +35,7 @@ import io.ballerina.compiler.syntax.tree.BasicLiteralNode;
 import io.ballerina.compiler.syntax.tree.ExplicitNewExpressionNode;
 import io.ballerina.compiler.syntax.tree.ExpressionNode;
 import io.ballerina.compiler.syntax.tree.FunctionArgumentNode;
+import io.ballerina.compiler.syntax.tree.FunctionCallExpressionNode;
 import io.ballerina.compiler.syntax.tree.FunctionDefinitionNode;
 import io.ballerina.compiler.syntax.tree.IdentifierToken;
 import io.ballerina.compiler.syntax.tree.ImplicitNewExpressionNode;
@@ -85,6 +86,9 @@ public class C2CVisitor extends NodeVisitor {
     private Task task = null;
     private static final Set<String> C2C_SUPPORTED_LISTENERS = Set.of("http", "grpc", "graphql", "tcp", "udp",
             "websocket", "websub", "websubhub", "ai");
+    private static final String HTTP_MODULE_NAME = "http";
+    private static final String GET_DEFAULT_LISTENER_FUNCTION_NAME = "getDefaultListener";
+    private static final int HTTP_DEFAULT_LISTENER_PORT = 9090;
 
     public C2CVisitor(Map<String, Node> moduleLevelVariables, SemanticModel semanticModel,
                       List<Diagnostic> diagnostics) {
@@ -254,6 +258,15 @@ public class C2CVisitor extends NodeVisitor {
                     return Collections.emptyList();
                 }
                 listenerInfo = httpsListener.get();
+            } else if (expressionNode.kind() == SyntaxKind.FUNCTION_CALL) {
+                //Inline default listener
+                //on http:getDefaultListener()
+                Optional<ListenerInfo> defaultListenerInfo =
+                        getDefaultListenerInfo(servicePath, (FunctionCallExpressionNode) expressionNode);
+                if (defaultListenerInfo.isEmpty()) {
+                    return Collections.emptyList();
+                }
+                listenerInfo = defaultListenerInfo.get();
             } else {
                 if (expressionNode.kind() != SyntaxKind.EXPLICIT_NEW_EXPRESSION) {
                     return Collections.emptyList();
@@ -479,7 +492,14 @@ public class C2CVisitor extends NodeVisitor {
 
     private Optional<ListenerInfo> getHttpListener(String variableName) {
         Node node = this.moduleLevelVariables.get(variableName);
-        if (node == null || !(node.kind() == SyntaxKind.IMPLICIT_NEW_EXPRESSION)) {
+        if (node == null) {
+            return Optional.empty();
+        }
+        if (node.kind() == SyntaxKind.FUNCTION_CALL) {
+            //listener http:Listener httpListener = http:getDefaultListener();
+            return getDefaultListenerInfo(variableName, (FunctionCallExpressionNode) node);
+        }
+        if (node.kind() != SyntaxKind.IMPLICIT_NEW_EXPRESSION) {
             return Optional.empty();
         }
 
@@ -490,6 +510,27 @@ public class C2CVisitor extends NodeVisitor {
         }
         ListenerInfo listener = listenerInfo.get();
         return Optional.of(listener);
+    }
+
+    private Optional<ListenerInfo> getDefaultListenerInfo(String name, FunctionCallExpressionNode functionCall) {
+        Optional<Symbol> functionSymbol = semanticModel.symbol(functionCall);
+        if (functionSymbol.isEmpty()) {
+            return Optional.empty();
+        }
+        Symbol symbol = functionSymbol.get();
+        if (symbol.getName().isEmpty() || !GET_DEFAULT_LISTENER_FUNCTION_NAME.equals(symbol.getName().get())) {
+            return Optional.empty();
+        }
+        Optional<ModuleSymbol> module = symbol.getModule();
+        if (module.isEmpty() || module.get().getName().isEmpty()
+                || !HTTP_MODULE_NAME.equals(module.get().getName().get())) {
+            return Optional.empty();
+        }
+        // The default listener port is configurable at runtime via `ballerina.http.defaultListenerPort`,
+        // similar to a configurable variable used as a port.
+        diagnostics.add(C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.CONFIGURABLE_OVERRIDE,
+                functionCall.location(), "ballerina.http.defaultListenerPort"));
+        return Optional.of(new ListenerInfo(name, HTTP_DEFAULT_LISTENER_PORT));
     }
 
     private Optional<Integer> getPortNumberFromVariable(String variableName) {
