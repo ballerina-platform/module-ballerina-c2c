@@ -361,16 +361,24 @@ public class ServiceExtractionTest {
         ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project, diagnostics);
         List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
 
-        Assert.assertEquals(serviceList.size(), 1);
+        Assert.assertEquals(serviceList.size(), 2);
         ServiceInfo serviceInfo = serviceList.get(0);
         Assert.assertEquals(serviceInfo.getServicePath().trim(), "/helloWorld");
         ListenerInfo listener = serviceInfo.getListeners().get(0);
         Assert.assertEquals(listener.getPort(), 9090);
 
-        Assert.assertEquals(diagnostics.size(), 1);
-        Assert.assertEquals(diagnostics.get(0).message(),
-                "default value of configurable variable `ballerina.http.defaultListenerPort` could be overridden " +
-                        "in runtime");
+        // Inline usage - service /inline on http:getDefaultListener()
+        ServiceInfo inlineServiceInfo = serviceList.get(1);
+        Assert.assertEquals(inlineServiceInfo.getServicePath().trim(), "/inline");
+        ListenerInfo inlineListener = inlineServiceInfo.getListeners().get(0);
+        Assert.assertEquals(inlineListener.getPort(), 9090);
+
+        Assert.assertEquals(diagnostics.size(), 2);
+        for (Diagnostic diagnostic : diagnostics) {
+            Assert.assertEquals(diagnostic.message(),
+                    "default value of configurable variable `ballerina.http.defaultListenerPort` could be " +
+                            "overridden in runtime");
+        }
     }
 
     @Test

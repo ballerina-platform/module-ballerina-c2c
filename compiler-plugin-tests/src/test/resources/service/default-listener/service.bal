@@ -22,3 +22,9 @@ service /helloWorld on httpListener {
         return "Hello, World!";
     }
 }
+
+service /inline on http:getDefaultListener() {
+    resource function get sayHello() returns string {
+        return "Hello, World!";
+    }
+}
