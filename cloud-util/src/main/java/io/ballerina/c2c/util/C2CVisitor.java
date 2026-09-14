@@ -87,6 +87,7 @@ public class C2CVisitor extends NodeVisitor {
     private static final Set<String> C2C_SUPPORTED_LISTENERS = Set.of("http", "grpc", "graphql", "tcp", "udp",
             "websocket", "websub", "websubhub", "ai");
     private static final String HTTP_MODULE_NAME = "http";
+    private static final String BALLERINA_ORG_NAME = "ballerina";
     private static final String GET_DEFAULT_LISTENER_FUNCTION_NAME = "getDefaultListener";
     private static final int HTTP_DEFAULT_LISTENER_PORT = 9090;
 
@@ -523,7 +524,8 @@ public class C2CVisitor extends NodeVisitor {
         }
         Optional<ModuleSymbol> module = symbol.getModule();
         if (module.isEmpty() || module.get().getName().isEmpty()
-                || !HTTP_MODULE_NAME.equals(module.get().getName().get())) {
+                || !HTTP_MODULE_NAME.equals(module.get().getName().get())
+                || !BALLERINA_ORG_NAME.equals(module.get().id().orgName())) {
             return Optional.empty();
         }
         // The default listener port is configurable at runtime via `ballerina.http.defaultListenerPort`,
