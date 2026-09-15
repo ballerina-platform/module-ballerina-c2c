@@ -354,6 +354,34 @@ public class ServiceExtractionTest {
     }
 
     @Test
+    public void testDefaultListener() {
+        Path projectPath = Paths.get("src", "test", "resources", "service", "default-listener");
+        BuildProject project = BuildProject.load(projectPath);
+        List<Diagnostic> diagnostics = new ArrayList<>();
+        ProjectServiceInfo projectServiceInfo = new ProjectServiceInfo(project, diagnostics);
+        List<ServiceInfo> serviceList = projectServiceInfo.getServiceList();
+
+        Assert.assertEquals(serviceList.size(), 2);
+        ServiceInfo serviceInfo = serviceList.get(0);
+        Assert.assertEquals(serviceInfo.getServicePath().trim(), "/helloWorld");
+        ListenerInfo listener = serviceInfo.getListeners().get(0);
+        Assert.assertEquals(listener.getPort(), 9090);
+
+        // Inline usage - service /inline on http:getDefaultListener()
+        ServiceInfo inlineServiceInfo = serviceList.get(1);
+        Assert.assertEquals(inlineServiceInfo.getServicePath().trim(), "/inline");
+        ListenerInfo inlineListener = inlineServiceInfo.getListeners().get(0);
+        Assert.assertEquals(inlineListener.getPort(), 9090);
+
+        Assert.assertEquals(diagnostics.size(), 2);
+        for (Diagnostic diagnostic : diagnostics) {
+            Assert.assertEquals(diagnostic.message(),
+                    "default value of configurable variable `ballerina.http.defaultListenerPort` could be " +
+                            "overridden in runtime");
+        }
+    }
+
+    @Test
     public void testNamedArgListener() {
         Path projectPath = Paths.get("src", "test", "resources", "service", "named-param-port");
         BuildProject project = BuildProject.load(projectPath);
