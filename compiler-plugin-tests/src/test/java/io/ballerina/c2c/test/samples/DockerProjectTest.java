@@ -64,8 +64,10 @@ public class DockerProjectTest extends SampleTest {
         Assert.assertEquals(ports.get(0), "9095/tcp");
         Assert.assertEquals(ports.get(1), "9096/tcp");
         // Validate ballerina.conf in run command
-        Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(), "[java, -XX:+ExitOnOutOfMemoryError, " +
-                "-Xdiag, -cp, hello-hello-0.0.1.jar:jars/*, hello.hello.0.$_init]");
+        Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(), "[java, "
+                + "--sun-misc-unsafe-memory-access=allow, --enable-native-access=ALL-UNNAMED, "
+                + "-XX:+ExitOnOutOfMemoryError, -Xdiag, -cp, "
+                + "hello-hello-0.0.1.jar:jars/*, hello.hello.0.$_init]");
     }
 
     @Test(groups = { "integration" })
