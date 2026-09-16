@@ -52,7 +52,7 @@ public class NativeArgsTest {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
-        Assert.assertTrue(content.contains("RUN native-image -J--sun-misc-unsafe-memory-access=allow "
+        Assert.assertTrue(content.contains("RUN native-image "
                 + "--enable-native-access=ALL-UNNAMED --gc=epsilon -jar native_args.jar "
                 + "-o native_args --no-fallback -H:+StaticExecutableWithDynamicLibC"));
         Assert.assertTrue(content.contains("FROM " + DockerGenConstants.NATIVE_BUILDER_IMAGE));
@@ -65,7 +65,7 @@ public class NativeArgsTest {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
-        Assert.assertTrue(content.contains("RUN native-image -J--sun-misc-unsafe-memory-access=allow "
+        Assert.assertTrue(content.contains("RUN native-image "
                 + "--enable-native-access=ALL-UNNAMED --gc=epsilon -jar native_args.jar "
                 + "-o native_args --no-fallback -H:+StaticExecutableWithDynamicLibC"));
         KubernetesUtils.deleteDirectory(DOCKER_TARGET_PATH);

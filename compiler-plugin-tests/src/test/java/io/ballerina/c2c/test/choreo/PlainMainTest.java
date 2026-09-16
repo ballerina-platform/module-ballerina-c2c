@@ -74,7 +74,7 @@ public class PlainMainTest {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
         Assert.assertTrue(dockerFileContent.contains("ENTRYPOINT [\"java\","
-                + "\"--sun-misc-unsafe-memory-access=allow\",\"--enable-native-access=ALL-UNNAMED\","
+                + "\"--enable-native-access=ALL-UNNAMED\","
                 + "\"-XX:+ExitOnOutOfMemoryError\",\"-Xdiag\",\"-cp\","
                 + "\"hello-hello-0.0.1.jar:jars/*\",\"hello.hello.0.$_init\"]"));
         Assert.assertTrue(dockerFileContent.contains("USER ballerina"));

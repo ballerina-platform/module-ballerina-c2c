@@ -158,7 +158,7 @@ public class MixedConfigJobTest {
     @Test
     public void validateDockerImage() {
         Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(), "[java, "
-                + "--sun-misc-unsafe-memory-access=allow, --enable-native-access=ALL-UNNAMED, "
+                + "--enable-native-access=ALL-UNNAMED, "
                 + "-XX:+ExitOnOutOfMemoryError, -Xdiag, -cp, "
                 + "anjana-mix_configs_job-0.1.0.jar:jars/*, anjana.mix_configs_job.0.$_init]");
     }

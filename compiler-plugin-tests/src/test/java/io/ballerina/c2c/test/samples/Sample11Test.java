@@ -119,7 +119,7 @@ public class Sample11Test extends SampleTest {
         Assert.assertEquals(ports.get(0), "9090/tcp");
         // Validate ballerina.conf in run command
         Assert.assertEquals(getEntryPoint(DOCKER_IMAGE).toString(), "[java, "
-                + "--sun-misc-unsafe-memory-access=allow, --enable-native-access=ALL-UNNAMED, "
+                + "--enable-native-access=ALL-UNNAMED, "
                 + "-XX:+ExitOnOutOfMemoryError, -Xdiag, -cp, "
                 + "hello-hello-0.0.1.jar:jars/*, hello.hello.0.$_init]");
     }
