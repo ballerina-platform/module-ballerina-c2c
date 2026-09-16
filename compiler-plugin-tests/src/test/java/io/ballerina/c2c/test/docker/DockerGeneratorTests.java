@@ -194,7 +194,7 @@ public class DockerGeneratorTests {
         Assert.assertTrue(dockerFileContent.contains(copyTestConfig3));
         String dockerEntryPoint = "ENTRYPOINT [\"java\",\"-XX:+HeapDumpOnOutOfMemoryError\","
                 + "\"-XX:HeapDumpPath=/home/ballerina\","
-                + "\"--sun-misc-unsafe-memory-access=allow\",\"--enable-native-access=ALL-UNNAMED\","
+                + "\"--enable-native-access=ALL-UNNAMED\",\"--sun-misc-unsafe-memory-access=allow\","
                 + "\"-cp\",\"dummy_class_path\",\"org.ballerinalang.test.runtime.BTestMain\"]";
         Assert.assertTrue(dockerFileContent.contains(dockerEntryPoint));
         String dockerCMD = "CMD [\"arg0\",\"arg1\",\"arg2\",\"arg3\",\"arg4\",\"arg5\",\"arg6\",\"arg7\"," +
