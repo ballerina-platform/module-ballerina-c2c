@@ -342,7 +342,6 @@ public class DockerGenerator {
 
     private void addDockerTestEntryPoint(StringBuilder testDockerFileContent) {
         ArrayList<String> args = new ArrayList<>(TestUtils.getInitialCmdArgs("java", getWorkDir()));
-        args.add(DockerGenConstants.ENABLE_NATIVE_ACCESS_FLAG);
 
         if (this.dockerModel.isEnableDebug()) {
             args.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" +
