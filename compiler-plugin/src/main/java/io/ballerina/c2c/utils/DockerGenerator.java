@@ -236,7 +236,6 @@ public class DockerGenerator {
                     packageID.name.getValue(), packageID.version.getValue(), MODULE_INIT_CLASS_NAME);
             List<String> args = new ArrayList<>();
             args.add("java");
-            args.add(DockerGenConstants.SUN_MISC_UNSAFE_MEMORY_ACCESS_FLAG);
             args.add(DockerGenConstants.ENABLE_NATIVE_ACCESS_FLAG);
             args.add("-XX:+ExitOnOutOfMemoryError");
             args.add("-Xdiag");
@@ -343,7 +342,6 @@ public class DockerGenerator {
 
     private void addDockerTestEntryPoint(StringBuilder testDockerFileContent) {
         ArrayList<String> args = new ArrayList<>(TestUtils.getInitialCmdArgs("java", getWorkDir()));
-        args.add(DockerGenConstants.SUN_MISC_UNSAFE_MEMORY_ACCESS_FLAG);
         args.add(DockerGenConstants.ENABLE_NATIVE_ACCESS_FLAG);
 
         if (this.dockerModel.isEnableDebug()) {

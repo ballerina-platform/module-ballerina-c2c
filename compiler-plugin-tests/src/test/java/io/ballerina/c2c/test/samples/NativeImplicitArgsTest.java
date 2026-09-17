@@ -50,7 +50,7 @@ public class NativeImplicitArgsTest {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
-        Assert.assertTrue(content.contains("RUN native-image -J--sun-misc-unsafe-memory-access=allow "
+        Assert.assertTrue(content.contains("RUN native-image "
                 + "--enable-native-access=ALL-UNNAMED --static --libc=musl -jar impl_args.jar "
                 + "-o impl_args --no-fallback"));
         Assert.assertTrue(content.contains("FROM alpine"));
@@ -64,7 +64,7 @@ public class NativeImplicitArgsTest {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String content = Files.readString(dockerFile.toPath(), StandardCharsets.UTF_8);
         Assert.assertTrue(dockerFile.exists());
-        Assert.assertTrue(content.contains("RUN native-image -J--sun-misc-unsafe-memory-access=allow "
+        Assert.assertTrue(content.contains("RUN native-image "
                 + "--enable-native-access=ALL-UNNAMED --static --libc=musl -jar impl_args.jar "
                 + "-o impl_args --no-fallback"));
         Assert.assertFalse(content.contains("-H:+StaticExecutableWithDynamicLibC"));

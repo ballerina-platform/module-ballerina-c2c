@@ -114,7 +114,7 @@ public class Sample1Test extends SampleTest {
         File dockerFile = DOCKER_TARGET_PATH.resolve("Dockerfile").toFile();
         String dockerFileContent = new String(Files.readAllBytes(dockerFile.toPath()));
         Assert.assertTrue(dockerFileContent.contains("ENTRYPOINT [\"java\","
-                + "\"--sun-misc-unsafe-memory-access=allow\",\"--enable-native-access=ALL-UNNAMED\","
+                + "\"--enable-native-access=ALL-UNNAMED\","
                 + "\"-XX:+ExitOnOutOfMemoryError\",\"-Xdiag\",\"-cp\","
                 + "\"hello_world.jar:jars/*\",\"$_init\"]"));
         Assert.assertTrue(dockerFileContent.contains("USER ballerina"));
