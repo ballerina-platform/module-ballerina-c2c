@@ -294,7 +294,7 @@ public class ArtifactManager {
      */
     private void setDefaultHelmInstructions() {
         instructions.put("Execute the below command to install the Helm chart: ",
-                "\thelm install <release-name> "
-                        + this.kubernetesDataHolder.getHelmArtifactOutputPath().toAbsolutePath());
+                "\thelm install <release-name> \""
+                        + this.kubernetesDataHolder.getHelmArtifactOutputPath().toAbsolutePath() + "\"");
     }
 }

@@ -129,7 +129,7 @@ touching `Config.toml`.
 values too:
 
 ```bash
-$ helm upgrade demo target/helm/hello --set replicaCount=3 --set autoscaling.enabled=false
+helm upgrade demo target/helm/hello --set replicaCount=3 --set autoscaling.enabled=false
 ```
 
 `podSecurityContext`/`securityContext` are present in `values.yaml` but empty by default, since
@@ -140,7 +140,10 @@ Every generated resource that selects pods (Deployment, Service, HPA, PodDisrupt
 carries a plain `app: hello` label alongside the standard `app.kubernetes.io/*` ones -- override
 the name it uses with `nameOverride`, so an externally-authored resource (a hand-written
 NetworkPolicy, a ServiceMonitor, another chart) can select this chart's pods by a stable name
-that doesn't change with the release name.
+that doesn't change with the release name. Because that `app` label is not release-scoped, give
+each release in a namespace its own unique `nameOverride`, or have the external resource also
+match on `app.kubernetes.io/instance` -- otherwise two releases sharing one `nameOverride` would
+both match the same `app: <name>` selector.
 
 A `PodDisruptionBudget` (`podDisruptionBudget.enabled: true`, `maxUnavailable: 1` by default) is
 created so a node drain/upgrade can't take down more than one pod at a time once you've scaled
@@ -148,12 +151,12 @@ past a single replica -- at the default `replicaCount: 1` it's a no-op (100% may
 unavailable), so it's safe to leave on regardless of scale:
 
 ```bash
-$ helm upgrade demo target/helm/hello --set podDisruptionBudget.enabled=false
+helm upgrade demo target/helm/hello --set podDisruptionBudget.enabled=false
 ```
 
 ### Uninstall
 
 ```bash
-$ helm uninstall demo
-$ docker rmi anuruddhal/hello-api:helm-sample
+helm uninstall demo
+docker rmi anuruddhal/hello-api:helm-sample
 ```

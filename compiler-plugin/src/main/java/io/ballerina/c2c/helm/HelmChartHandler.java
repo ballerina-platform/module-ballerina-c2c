@@ -81,8 +81,9 @@ public class HelmChartHandler extends AbstractArtifactHandler {
             writeFile(templatesDir.resolve("configmap-" + configMapModel.getName() + ".yaml"),
                     HelmConfigMapTemplateWriter.configMapYaml(chartName, configMapModel));
             for (Map.Entry<String, String> entry : configMapModel.getData().entrySet()) {
-                writeFile(chartDir.resolve(HelmConfigMapTemplateWriter.filesPath(configMapModel, entry.getKey())),
-                        entry.getValue());
+                Path filePath = resolveWithinChart(chartDir,
+                        HelmConfigMapTemplateWriter.filesPath(configMapModel, entry.getKey()));
+                writeFile(filePath, entry.getValue());
             }
         }
         for (SecretModel secretModel : dataHolder.getSecretModelSet()) {
@@ -129,6 +130,22 @@ public class HelmChartHandler extends AbstractArtifactHandler {
             return "0.0.0";
         }
         return dataHolder.getPackageID().version.getValue();
+    }
+
+    /**
+     * Resolves a chart-relative path and rejects it unless it stays within {@code chartDir}, guarding
+     * against a {@code cloud.config.files[].name}/{@code ConfigMapModel} name containing traversal
+     * segments (e.g. {@code ../../outside}).
+     */
+    private Path resolveWithinChart(Path chartDir, String relativePath) throws KubernetesPluginException {
+        Path normalizedChartDir = chartDir.normalize();
+        Path resolved = normalizedChartDir.resolve(relativePath).normalize();
+        if (!resolved.startsWith(normalizedChartDir)) {
+            Diagnostic diagnostic = C2CDiagnosticCodes.createDiagnostic(C2CDiagnosticCodes.ARTIFACT_GEN_FAILED,
+                    new NullLocation(), "helm chart file", relativePath);
+            throw new KubernetesPluginException(diagnostic);
+        }
+        return resolved;
     }
 
     private void writeFile(Path path, String content) throws KubernetesPluginException {

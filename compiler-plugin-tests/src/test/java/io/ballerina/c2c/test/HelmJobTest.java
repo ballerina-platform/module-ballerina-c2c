@@ -111,6 +111,30 @@ public class HelmJobTest {
         Assert.assertTrue(overridden.contains("anuruddhal/hello-api:v2"));
     }
 
+    @Test(dependsOnMethods = "testChartStructure")
+    public void testPodSecurityContextAndNodeSelectorOverridesRender() throws IOException, InterruptedException {
+        String rendered = KubernetesTestUtils.helmTemplate(CHART_PATH,
+                "--set", "podSecurityContext.runAsNonRoot=true",
+                "--set", "securityContext.readOnlyRootFilesystem=true",
+                "--set", "nodeSelector.disktype=ssd");
+        List<HasMetadata> resources;
+        try (KubernetesClient client = new KubernetesClientBuilder().build()) {
+            resources = client.load(new ByteArrayInputStream(rendered.getBytes(StandardCharsets.UTF_8))).items();
+        }
+        CronJob cronJob = (CronJob) resources.stream()
+                .filter(r -> "CronJob".equals(r.getKind()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No CronJob found in rendered chart"));
+        var podSpec = cronJob.getSpec().getJobTemplate().getSpec().getTemplate().getSpec();
+        Assert.assertTrue(Boolean.TRUE.equals(podSpec.getSecurityContext().getRunAsNonRoot()),
+                "Job chart should render .Values.podSecurityContext on the pod spec");
+        Assert.assertTrue(Boolean.TRUE.equals(
+                podSpec.getContainers().get(0).getSecurityContext().getReadOnlyRootFilesystem()),
+                "Job chart should render .Values.securityContext on the container");
+        Assert.assertEquals(podSpec.getNodeSelector().get("disktype"), "ssd",
+                "Job chart should render .Values.nodeSelector on the pod spec");
+    }
+
     @AfterClass
     public void cleanUp() throws KubernetesPluginException {
         KubernetesUtils.deleteDirectory(SOURCE_DIR_PATH.resolve("target"));

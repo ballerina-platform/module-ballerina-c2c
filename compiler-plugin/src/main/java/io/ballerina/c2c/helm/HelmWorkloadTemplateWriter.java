@@ -164,6 +164,10 @@ public final class HelmWorkloadTemplateWriter {
                 .append(pad).append("    restartPolicy: ").append(jobModel.getRestartPolicy()).append('\n')
                 .append(pad).append("    serviceAccountName: {{ include \"").append(chartName)
                 .append(".serviceAccountName\" . }}\n")
+                .append(pad).append("    {{- with .Values.podSecurityContext }}\n")
+                .append(pad).append("    securityContext:\n")
+                .append(pad).append("      {{- toYaml . | nindent ").append(specIndent + 6).append(" }}\n")
+                .append(pad).append("    {{- end }}\n")
                 .append(pad).append("    {{- with .Values.image.pullSecrets }}\n")
                 .append(pad).append("    imagePullSecrets:\n")
                 .append(pad).append("      {{- range . }}\n")
@@ -174,8 +178,16 @@ public final class HelmWorkloadTemplateWriter {
                 .append(pad).append("      - name: {{ include \"").append(chartName).append(".name\" . }}\n")
                 .append(pad).append("        image: \"{{ .Values.image.repository }}:{{ .Values.image.tag }}\"\n")
                 .append(pad).append("        imagePullPolicy: {{ .Values.image.pullPolicy }}\n")
+                .append(pad).append("        {{- with .Values.securityContext }}\n")
+                .append(pad).append("        securityContext:\n")
+                .append(pad).append("          {{- toYaml . | nindent ").append(specIndent + 10).append(" }}\n")
+                .append(pad).append("        {{- end }}\n")
                 .append(renderEnvBlock(jobModel.getEnvVars(), specIndent + 8))
                 .append(renderVolumeMounts(volumeMounts, pad + "        "))
+                .append(pad).append("    {{- with .Values.nodeSelector }}\n")
+                .append(pad).append("    nodeSelector:\n")
+                .append(pad).append("      {{- toYaml . | nindent ").append(specIndent + 6).append(" }}\n")
+                .append(pad).append("    {{- end }}\n")
                 .append(renderVolumesBlock(secretModels, configMapModels, Set.of(), specIndent + 4));
         return out.toString();
     }

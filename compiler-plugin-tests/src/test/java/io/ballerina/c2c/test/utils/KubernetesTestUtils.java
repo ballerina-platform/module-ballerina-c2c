@@ -321,11 +321,11 @@ public class KubernetesTestUtils {
      */
     public static int helmLint(Path chartDirectory) throws InterruptedException, IOException {
         ProcessBuilder pb = new ProcessBuilder(HELM, "lint", chartDirectory.toAbsolutePath().toString());
+        pb.redirectErrorStream(true);
         log.debug(EXECUTING_COMMAND + pb.command());
         Process process = pb.start();
-        int exitCode = process.waitFor();
         logOutput(process.getInputStream());
-        logOutput(process.getErrorStream());
+        int exitCode = process.waitFor();
         log.info(EXIT_CODE + exitCode);
         return exitCode;
     }
@@ -348,12 +348,20 @@ public class KubernetesTestUtils {
         ProcessBuilder pb = new ProcessBuilder(command);
         log.debug(EXECUTING_COMMAND + pb.command());
         Process process = pb.start();
+        Thread stderrDrain = new Thread(() -> {
+            try {
+                logOutput(process.getErrorStream());
+            } catch (IOException e) {
+                log.warn("Error while draining helm template stderr", e);
+            }
+        });
+        stderrDrain.start();
         String output;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             output = br.lines().collect(Collectors.joining("\n"));
         }
+        stderrDrain.join();
         int exitCode = process.waitFor();
-        logOutput(process.getErrorStream());
         log.info(EXIT_CODE + exitCode);
         if (exitCode != 0) {
             throw new IOException("helm template failed with exit code " + exitCode + " for " + chartDirectory);
@@ -398,11 +406,11 @@ public class KubernetesTestUtils {
 
     private static int runHelmCommand(List<String> command) throws InterruptedException, IOException {
         ProcessBuilder pb = new ProcessBuilder(command);
+        pb.redirectErrorStream(true);
         log.debug(EXECUTING_COMMAND + pb.command());
         Process process = pb.start();
-        int exitCode = process.waitFor();
         logOutput(process.getInputStream());
-        logOutput(process.getErrorStream());
+        int exitCode = process.waitFor();
         log.info(EXIT_CODE + exitCode);
         return exitCode;
     }
