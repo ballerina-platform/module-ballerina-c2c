@@ -14,7 +14,9 @@
 # limitations under the License.
 
 native-image \
+--enable-native-access=ALL-UNNAMED \
 -H:+StaticExecutableWithDynamicLibC \
+--initialize-at-build-time=org.slf4j.impl.JDK14LoggerAdapter \
 ${3:+$(echo " $3")} \
 -jar "$1" \
 --no-fallback \

@@ -274,7 +274,8 @@ public class KubernetesUtils {
 
         String fatJarFileName = dockerModel.getFatJarPath().getFileName().toString();
         String executableName = fatJarFileName.replaceFirst(".jar", "");
-        StringBuilder defaultBuilderCmd = new StringBuilder().append("native-image ");
+        StringBuilder defaultBuilderCmd = new StringBuilder().append("native-image ")
+                .append(DockerGenConstants.NATIVE_IMAGE_JDK_FLAGS);
         //TODO see if we need double quotes to name or jar
         if (!dockerModel.getGraalvmBuildArgs().equals("")) {
             defaultBuilderCmd.append(dockerModel.getGraalvmBuildArgs()).append(" ");
@@ -285,6 +286,7 @@ public class KubernetesUtils {
         //Avoid adding mostly static flag if --static flag is given
         if (!dockerModel.getGraalvmBuildArgs().contains("--static")) {
             defaultBuilderCmd.append(" -H:+StaticExecutableWithDynamicLibC");
+            defaultBuilderCmd.append(" --initialize-at-build-time=org.slf4j.impl.JDK14LoggerAdapter");
         }
         dockerModel.setBuilderCmd(defaultBuilderCmd.toString());
         String defaultBaseImage = DockerGenConstants.JRE_SLIM_BASE;

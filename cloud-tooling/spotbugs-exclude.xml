@@ -23,4 +23,13 @@
         <Class name="io.ballerina.c2c.tooling.completion.CloudTomlCompletionContext"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
+    <!-- Pre-existing issues surfaced by SpotBugs 4.9.x (bundled in plugin >= 6.2.0) -->
+    <Match>
+        <Class name="io.ballerina.c2c.tooling.completion.CloudTomlCompletionContext"/>
+        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"/>
+    </Match>
+    <Match>
+        <Class name="io.ballerina.c2c.tooling.completion.CloudTomlSnippetManager"/>
+        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"/>
+    </Match>
 </FindBugsFilter>

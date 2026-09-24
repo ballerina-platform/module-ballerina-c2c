@@ -236,6 +236,7 @@ public class DockerGenerator {
                     packageID.name.getValue(), packageID.version.getValue(), MODULE_INIT_CLASS_NAME);
             List<String> args = new ArrayList<>();
             args.add("java");
+            args.add(DockerGenConstants.ENABLE_NATIVE_ACCESS_FLAG);
             args.add("-XX:+ExitOnOutOfMemoryError");
             args.add("-Xdiag");
             if (this.dockerModel.isEnableDebug()) {
