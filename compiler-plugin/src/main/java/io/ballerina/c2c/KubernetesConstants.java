@@ -60,7 +60,14 @@ public class KubernetesConstants {
     public static final String CHOREO = "choreo";
     public static final String K8S = "k8s";
     public static final String OPENSHIFT = "openshift";
-    
+    public static final String HELM = "helm";
+    public static final String HELM_TEMPLATES_DIR = "templates";
+    public static final String HELM_FILES_DIR = "files";
+    public static final String HELM_CHART_FILE = "Chart.yaml";
+    public static final String HELM_VALUES_FILE = "values.yaml";
+    public static final String HELM_IGNORE_FILE = ".helmignore";
+    public static final String HELM_HELPERS_FILE = "_helpers.tpl";
+
     /**
      * Restart policy enum.
      */
