@@ -15,6 +15,7 @@ Code2cloud extension implementation for ballerina.
 - Docker image generation. 
 - Dockerfile generation. 
 - Kubernetes config map support.
+- Helm chart generation, with values-driven configuration.
 
 **Refer [samples](examples) for more info.**
 

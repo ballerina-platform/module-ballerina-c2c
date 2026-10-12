@@ -1,0 +1,2 @@
+[hello.hello]
+greeting = "{{ .Values.greeting | default "Hello, World" }}"

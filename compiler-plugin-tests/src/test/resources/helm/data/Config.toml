@@ -1,0 +1,3 @@
+[hello.db]
+host = "{{ .Values.dbHost | default "localhost" }}"
+port = 3306

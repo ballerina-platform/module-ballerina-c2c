@@ -1,0 +1,7 @@
+[package]
+org = "hello"
+name = "hello"
+version = "0.0.1"
+
+[build-options]
+cloud = "helm"
