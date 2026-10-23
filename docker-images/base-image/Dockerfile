@@ -56,4 +56,13 @@ ENV LD_PRELOAD=/lib/libgcompat.so.0
 ENV JAVA_HOME=/opt/java/openjdk \
     PATH="/opt/java/openjdk/bin:$PATH"
 
+# Block the compromised eMudhra intermediates, including their Sectigo cross-signs.
+# Remove this workaround once the bundled JRE blocks all these certificates.
+COPY docker-images/base-image/emudhra-blocked-certs.txt /tmp/emudhra-blocked-certs.txt
+RUN set -eux; \
+    test -f "${JAVA_HOME}/lib/security/blocked.certs"; \
+    echo >> "${JAVA_HOME}/lib/security/blocked.certs"; \
+    cat /tmp/emudhra-blocked-certs.txt >> "${JAVA_HOME}/lib/security/blocked.certs"; \
+    rm /tmp/emudhra-blocked-certs.txt
+
 RUN java --version
