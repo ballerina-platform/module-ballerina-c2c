@@ -63,8 +63,4 @@ RUN set -eux; \
     cat /tmp/emudhra-blocked-certs.txt >> "${JAVA_HOME}/lib/security/blocked.certs"; \
     rm /tmp/emudhra-blocked-certs.txt
 
-# Remove affected trust anchors so re-encoded intermediates cannot bypass the blocklist.
-COPY docker-images/base-image/remove-emudhra-roots.sh /tmp/remove-emudhra-roots.sh
-RUN sh /tmp/remove-emudhra-roots.sh && rm /tmp/remove-emudhra-roots.sh
-
 RUN java --version
