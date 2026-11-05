@@ -21,19 +21,19 @@ RUN apk upgrade --no-cache \
     && apk add --no-cache fontconfig libretls musl-locales musl-locales-lang ttf-dejavu tzdata zlib libc6-compat gcompat libgcc \
         'libcrypto3>=3.3.7-r1' 'libssl3>=3.3.7-r1' 'libexpat>=2.8.4-r0'
 
-ENV JAVA_VERSION jdk-21.0.12.1+1
+ENV JAVA_VERSION jdk-21.0.13+9
 
 
 RUN set -eux; \
     ARCH="$(apk --print-arch)"; \
     case "${ARCH}" in \
       amd64|x86_64) \
-          ESUM='7bc7c2f9ba5ffea5f727e14581964bd54294b8edc2be9a79ea6393f8d0799200'; \
-          BINARY_URL='https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jre_x64_alpine-linux_hotspot_21.0.12.1_1.tar.gz'; \
+          ESUM='9138eab0f7d230e17163953f015ec9ae2431dbc49069c658b7f991e45b54fb9b'; \
+          BINARY_URL='https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jre_x64_alpine-linux_hotspot_21.0.13_9.tar.gz'; \
          ;; \
       aarch64) \
-          ESUM='98e15ae359e1f87160ee4c0abb43336513e41712d439fd4a805a5474af32b2c7'; \
-          BINARY_URL='https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jre_aarch64_alpine-linux_hotspot_21.0.12.1_1.tar.gz'; \
+          ESUM='382633eb2ba28cc5b97be1446eb1dd8d2a60a3795be0166a030e4cda338c490e'; \
+          BINARY_URL='https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.13%2B9/OpenJDK21U-jre_aarch64_alpine-linux_hotspot_21.0.13_9.tar.gz'; \
         ;;\
       *) \
          echo "Unsupported arch: ${ARCH}"; \
@@ -55,14 +55,5 @@ ENV LD_PRELOAD=/lib/libgcompat.so.0
 
 ENV JAVA_HOME=/opt/java/openjdk \
     PATH="/opt/java/openjdk/bin:$PATH"
-
-# Block the compromised eMudhra intermediates, including their Sectigo cross-signs.
-# Remove this workaround once the bundled JRE blocks all these certificates.
-COPY docker-images/base-image/emudhra-blocked-certs.txt /tmp/emudhra-blocked-certs.txt
-RUN set -eux; \
-    test -f "${JAVA_HOME}/lib/security/blocked.certs"; \
-    echo >> "${JAVA_HOME}/lib/security/blocked.certs"; \
-    cat /tmp/emudhra-blocked-certs.txt >> "${JAVA_HOME}/lib/security/blocked.certs"; \
-    rm /tmp/emudhra-blocked-certs.txt
 
 RUN java --version
