@@ -1,0 +1,13 @@
+[container.image]
+repository="anuruddhal"
+name="hello-api"
+tag="helm-test"
+
+[cloud.deployment.autoscaling]
+min_replicas=2
+max_replicas=4
+cpu=60
+
+[[cloud.config.files]]
+file="./data/Config.toml"
+name="hello-config-map"

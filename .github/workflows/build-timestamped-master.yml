@@ -38,6 +38,9 @@ jobs:
           set -e
           curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
           curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.17.0/kind-linux-amd64 && chmod +x kind && sudo mv kind /usr/local/bin/
+          curl -fsSL --proto '=https' --tlsv1.2 -o helm.tar.gz https://get.helm.sh/helm-v3.16.3-linux-amd64.tar.gz
+          echo "f5355c79190951eed23c5432a3b920e071f4c00a64f75e077de0dd4cb7b294ea  helm.tar.gz" | sha256sum -c -
+          tar -zxf helm.tar.gz && sudo mv linux-amd64/helm /usr/local/bin/helm
           file="./config.yaml"
           echo '
             kind: Cluster
