@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.21.3
+FROM alpine:3.24.4
 
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 # fontconfig and ttf-dejavu added to support serverside image generation by Java programs
 RUN apk upgrade --no-cache \
-    && apk add --no-cache fontconfig libretls musl-locales musl-locales-lang ttf-dejavu tzdata zlib libc6-compat gcompat libgcc \
-        'libcrypto3>=3.3.7-r1' 'libssl3>=3.3.7-r1' 'libexpat>=2.8.4-r0'
+    && apk add --no-cache fontconfig libretls musl-locales musl-locales-lang ttf-dejavu tzdata zlib libc6-compat gcompat libgcc
 
 ENV JAVA_VERSION jdk-21.0.13.1+2
 
